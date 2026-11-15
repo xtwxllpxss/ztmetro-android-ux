@@ -1,0 +1,77 @@
+/*
+ * ztmetro design tokens — proof artefact, not production code.
+ *
+ * Derived from Windows Phone design guidance (Segoe WP type ramp, 12 px margins,
+ * flat surfaces, accent reserved for interaction) and from the ztmetro shell metrics
+ * used by the project's Linux phone (status strip, navigation bar, tile grid).
+ * Sizes are in density-independent pixels at a 480 px-wide design reference and are
+ * meant to be scaled with the device width.
+ *
+ * This file is NOT the actual ztmetro palette: accents are configurable on purpose.
+ * Licence: MIT (see ../LICENSE).
+ */
+
+:root {
+  /* ---- surfaces: flat, no shadows, no gradients (Metro principle) ---- */
+  --zt-bg:              #000000;   /* phone background / app canvas            */
+  --zt-surface:         #101010;   /* tiles, cards                             */
+  --zt-surface-raised:  #1a1a1a;   /* pressed / selected                       */
+  --zt-surface-muted:   #0a0a0a;   /* chrome (status strip, nav bar)           */
+  --zt-divider:         #262626;   /* 1 px separators                          */
+
+  /* ---- accent: only for interactive/selected elements (WP rule) ---- */
+  --zt-accent:          #1f6feb;   /* placeholder, replace with brand accent   */
+  --zt-accent-pressed:  #1858bd;
+  --zt-accent-foreground: #ffffff;
+
+  /* ---- text ---- */
+  --zt-text:            #ffffff;
+  --zt-text-secondary:  #b8b8b8;
+  --zt-text-disabled:   #6b6b6b;
+  --zt-text-caps:       #d0d0d0;   /* small-caps application titles            */
+
+  /* ---- typography: Segoe-WP-like ramp, Semilight for page titles ---- */
+  --zt-font-family:     "Segoe WP", "Selawik", system-ui, sans-serif;
+  --zt-font-caps:       11.5px;    /* application title, ALL CAPS              */
+  --zt-font-caption:    15px;
+  --zt-font-body:       20px;
+  --zt-font-body-large: 22.7px;
+  --zt-font-list-title: 25.3px;
+  --zt-font-large:      32px;
+  --zt-font-xl:         42.7px;
+  --zt-font-page-title: 72px;      /* page title, Semilight                    */
+  --zt-font-huge:       186.7px;
+
+  --zt-weight-normal:   400;
+  --zt-weight-semilight: 350;      /* approximate; map to closest available     */
+  --zt-weight-semibold: 600;
+
+  /* ---- metrics (ztmetro compositor values, scaled to design reference) ---- */
+  --zt-status-height:   28px;      /* status strip                             */
+  --zt-nav-height:      40px;      /* nav bar (0 when hardware keys exist)     */
+  --zt-app-bar-height:  28px;      /* optional page header over foreign apps   */
+  --zt-margin:          12px;      /* base page margin (WP PhoneMargin)        */
+  --zt-gutter:          12px;      /* tile grid gutter                         */
+  --zt-tile-unit:       72px;      /* small tile; medium = 2x2 units           */
+  --zt-tile-radius:     0;         /* Metro: square tiles                      */
+
+  /* ---- motion: short, linear-ish, no bounce ---- */
+  --zt-motion-fast:     120ms;
+  --zt-motion-normal:   180ms;
+  --zt-motion-page:     250ms;
+  --zt-easing:          cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+/*
+ * Minimal Android/Compose mapping notes (see ../artifacts/launcher-skeleton/):
+ *
+ *   --zt-bg            -> androidx.compose.material3.MaterialTheme.colorScheme.background
+ *   --zt-accent        -> ...primary  (also expose as RRO overlayable if desired)
+ *   --zt-font-page-title -> TextStyle(fontSize = 72.sp at design width 480)
+ *   --zt-status-height -> WindowInsets.statusBars (do NOT draw a fake system bar
+ *                         unless the real one is hidden via immersive mode)
+ *   --zt-margin        -> PaddingValues(horizontal = 12.dp)
+ *
+ * Accessibility: keep >= 48dp touch targets even though tile sizes are derived from
+ * the WP ramp; the minimum readable text size is 11.5sp only for ALL-CAPS labels.
+ */

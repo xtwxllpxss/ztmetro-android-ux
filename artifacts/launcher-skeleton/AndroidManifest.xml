@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro-style launcher — non-building skeleton manifest fragment (see README.md).
+  This is illustrative, not a manifest of a real app. Licence: MIT.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztmetro.launcher">
+
+    <!-- Optional: overlay banners. NOT usable to cover the status bar/IME.
+         Android shows a user toggle for "display over other apps". -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Package visibility: needed to enumerate launchable apps on Android 11+. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application
+        android:label="ztmetro"
+        android:icon="@mipmap/ic_launcher"
+        android:theme="@style/Theme.Ztmetro">
+
+        <!-- HOME role: the only piece of Android UX an ordinary APK can fully own. -->
+        <activity
+            android:name=".LauncherHomeActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:stateNotNeeded="true"
+            android:windowSoftInputMode="adjustPan">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ActionCentreActivity"
+            android:exported="false"
+            android:excludeFromRecents="true" />
+
+        <!-- Live tiles: bound only after the user grants notification access. -->
+        <service
+            android:name=".LiveTileListenerService"
+            android:exported="true"
+            android:label="ztmetro live tiles"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+    </application>
+</manifest>
