@@ -38,8 +38,8 @@ final class MetroGridView extends ViewGroup implements MetroTileView.Listener {
     private final ArrayList<TileStore.Tile> tiles = new ArrayList<>();
     private final ArrayList<Placement> placements = new ArrayList<>();
     private final int columns;
-    private final int gapPx;
-    private final int marginPx;
+    private int gapPx;
+    private int marginPx;
     private final int topPadPx;
     private final int bottomPadPx;
     private final TileArt art;
@@ -50,9 +50,11 @@ final class MetroGridView extends ViewGroup implements MetroTileView.Listener {
     MetroGridView(Context context, TileArt art) {
         super(context);
         columns = context.getResources().getInteger(R.integer.metro_start_columns);
+        // Fallbacks at the 360dp reference; onMeasure derives both from the
+        // real width exactly as ztmetro.c:3266-3269 does.
         gapPx = MetroUi.dimen(context, R.dimen.metro_tile_gap);
         marginPx = MetroUi.dimen(context, R.dimen.metro_start_margin);
-        topPadPx = 0;
+        topPadPx = MetroUi.dimen(context, R.dimen.metro_start_top_pad);
         bottomPadPx = 0;
         this.art = art;
         setClipChildren(false);
@@ -123,6 +125,13 @@ final class MetroGridView extends ViewGroup implements MetroTileView.Listener {
         if (width <= 0) {
             width = Math.round(360f * getResources().getDisplayMetrics().density);
         }
+        // ztmetro.c:3266-3269: gutter = round(width * 0.02),
+        // margin = 2 * gutter, unit = (width - 2*margin - 5*gutter) / 6.
+        // At the 360dp reference this is exactly the 7/14/49.5 tokens; on the
+        // 432dp ugglite panel it becomes 9/18/58.5 instead of stretching the
+        // 360dp values and drifting off the mockup's proportion.
+        gapPx = Math.max(1, Math.round(width * 0.02f));
+        marginPx = 2 * gapPx;
         int available = width - 2 * marginPx - (columns - 1) * gapPx;
         unitPx = Math.max(1f, available / (float) columns);
         pack();

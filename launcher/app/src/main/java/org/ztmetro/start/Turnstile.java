@@ -257,7 +257,9 @@ final class Turnstile {
         View hidden = forward ? fromPage : toPage;
         reset(shown);
         reset(hidden);
-        hidden.setVisibility(View.GONE);
+        // INVISIBLE, never GONE: the app list must stay laid out so the next
+        // turnstile can collect its rows as blocks.
+        hidden.setVisibility(View.INVISIBLE);
         p = forward ? 1f : 0f;
         int shownPage = forward ? toPageId : fromPageId;
         fromPage = null;

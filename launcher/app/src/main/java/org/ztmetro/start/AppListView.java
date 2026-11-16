@@ -40,6 +40,8 @@ public final class AppListView extends ListView
     private final int sidePadding;
     private final int indexReserve;
     private final int rowHeight;
+    private final int sectionRow;
+    private final int sectionGap;
     private Listener listener;
     private String query = "";
 
@@ -50,6 +52,8 @@ public final class AppListView extends ListView
         indexReserve = MetroUi.dimen(context, R.dimen.metro_round_button)
                 + 2 * MetroUi.dimen(context, R.dimen.metro_tile_gap);
         rowHeight = MetroUi.dimen(context, R.dimen.metro_v3_list_row);
+        sectionRow = MetroUi.dimen(context, R.dimen.metro_v3_section_row);
+        sectionGap = MetroUi.dimen(context, R.dimen.metro_v3_section_gap);
         setAdapter(adapter);
         setOnItemClickListener(this);
         setOnItemLongClickListener(this);
@@ -175,9 +179,13 @@ public final class AppListView extends ListView
                 header = (MetroSectionHeaderView) convertView;
             } else {
                 header = new MetroSectionHeaderView(getContext());
-                header.setLayoutParams(new AbsListView.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, rowHeight));
             }
+            // mockup: the first letter block is 36dp (34 line + 2), every later
+            // one carries the 10dp gap at its top, so the letter baseline is
+            // identical for all sections.
+            header.setLayoutParams(new AbsListView.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    position == 0 ? sectionRow : sectionRow + sectionGap));
             header.setLetter((String) row);
             return header;
         }

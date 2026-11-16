@@ -1,0 +1,3 @@
+refusing to build an overlay for 'com.example.unlisted': not in /home/denis/ztux/factory/repo/tools/theme-factory/registry.json (default policy: deny).
+  add it to the registry with evidence, or pass --force-package for a one-off.
+exit=1

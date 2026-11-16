@@ -94,6 +94,17 @@ captures (`/tmp/90-settings.png` vs `/tmp/a0-settings.png`):
 `changed pixels: 1233 / 921600 = 0.13 %`, diff PNG written. So the recipe works;
 it was **not** run on Calendar before/after because there is no device here.
 
+## Safety checks exercised
+
+* package allow list: a profile edited to `com.example.unlisted` is refused with
+  exit 1 and the exact registry path (`policy-refusal.log`) — default deny works.
+* overlay self-check: `build.json.verify.ok = true` (no dex, `hasCode=false`,
+  `targetPackage` present, 0 missing entries).
+* deterministic build: the same command twice produces the same sha256
+  `80e3ef1a…1ea8` (the throwaway key and resource order are stable).
+* a second full run from a deleted `overlay/` directory reproduces 522/0/0 in
+  `verify.log`.
+
 ## Generality
 
 Same tool, unmodified, on the Settings APK (`/tmp/settings.apk`, 86 MB,

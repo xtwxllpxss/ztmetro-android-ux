@@ -84,7 +84,6 @@ final class MetroTileView extends View {
     private final int pressOutMs;
     private final int longPressMs;
     private final float tiltDeg;
-    private final float iconFraction;
     private final int onAccent;
     private final int touchSlop;
     private final float density;
@@ -183,8 +182,6 @@ final class MetroTileView extends View {
                 R.integer.metro_motion_long_press_ms);
         tiltDeg = context.getResources().getInteger(
                 R.integer.metro_motion_tilt_deg);
-        iconFraction = context.getResources().getFraction(
-                R.fraction.metro_v3_icon_fraction, 1, 1);
         flipMs = context.getResources().getInteger(R.integer.metro_live_flip_ms);
         dateFraction = context.getResources().getFraction(
                 R.fraction.metro_live_date_fraction, 1, 1);
@@ -377,12 +374,17 @@ final class MetroTileView extends View {
         pad = tile.size == TileStore.SIZE_SMALL
                 ? Math.min(padPx, Math.max(3, Math.round(height * 0.09f)))
                 : padPx;
-        iconPx = Math.max(1, Math.round(Math.min(width, height) * iconFraction));
+        // mockups/screens/start.html + ztmetro.c:3675-3677: the medium/wide
+        // glyph is centred at (w/2, 0.44 h) at 0.46 h, so its box starts at
+        // 0.21 h; the small tile's glyph is the centre of the tile at 0.56 h,
+        // box starting at 0.22 h. v3 shipped 0.10 h / 44 %, which left every
+        // glyph ~11 dp too high.
+        boolean small = tile.size == TileStore.SIZE_SMALL;
+        iconPx = Math.max(1, Math.round(Math.min(width, height)
+                * (small ? 0.56f : 0.46f)));
         glyphArt = art.art(tile.component, iconPx);
-        // ztmetro centres the glyph horizontally in the upper part of the tile
-        // and keeps the label bottom-left; small tiles carry the glyph only.
         int glyphLeft = (width - iconPx) / 2;
-        int glyphTop = Math.round(height * 0.10f);
+        int glyphTop = Math.round(height * (small ? 0.22f : 0.21f));
         glyphRect.set(glyphLeft, glyphTop, glyphLeft + iconPx, glyphTop + iconPx);
 
         if (tile.size == TileStore.SIZE_SMALL) {

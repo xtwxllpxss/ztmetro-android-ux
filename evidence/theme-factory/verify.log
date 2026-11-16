@@ -7,3 +7,4 @@ VERIFY: PASS
 on the device (root):
   su 0 cmd overlay enable --user 0 org.ztos.overlay.factory.ws_xsoh_etar
   su 0 cmd overlay disable --user 0 org.ztos.overlay.factory.ws_xsoh_etar   # rollback
+exit=0

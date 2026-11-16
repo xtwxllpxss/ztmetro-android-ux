@@ -135,6 +135,40 @@ extra_styles += ramp_style(ramp["body_large"], "BodyLarge",
                            ramp["body_large"]["semibold_weight"])
 extra_styles += ramp_style(ramp["caption"], "SectionHeader",
                            "@color/metro_accent", 600, True)
+# App-list letter head: the mockup (mockups/screens/app-list.html) draws a
+# 27sp Light accent letter at the page margin, not the C's 1.5dp outline square
+# (ztmetro.c:4514-4518). 27 is the C's letter size (ztmetro.c:4517); the face
+# is the app-list title family (sans-serif-light).
+extra_styles += [
+    "",
+    "    <!-- mockup app-list letter head: 27sp Light, accent -->",
+    '    <style name="TextAppearance.Metro.SectionLetter" parent="android:TextAppearance">',
+    '        <item name="android:fontFamily">sans-serif-light</item>',
+    '        <item name="android:textSize">27sp</item>',
+    '        <item name="android:textColor">@color/metro_accent</item>',
+    '        <item name="android:lineSpacingMultiplier">1.26</item>',
+    "    </style>",
+]
+# Page header per mockups/screens/page-header.html and type.header: caps 15sp
+# (0.08em tracking, 70 % white), title 58sp Light on a 70dp line.
+header_title = gen.num(tokens["type"]["header"]["title_size_sp"])
+header_sub = gen.num(tokens["type"]["header"]["subtitle_size_sp"])
+extra_styles += [
+    "",
+    "    <!-- type.header: caps 15sp / title 58sp (page-header mockup) -->",
+    '    <style name="TextAppearance.Metro.HeaderCaps" parent="android:TextAppearance">',
+    '        <item name="android:fontFamily">sans-serif-medium</item>',
+    '        <item name="android:textSize">%ssp</item>' % header_sub,
+    '        <item name="android:textColor">#B3FFFFFF</item>',
+    '        <item name="android:lineSpacingMultiplier">%.3f</item>' % (20.0 / float(header_sub)),
+    "    </style>",
+    '    <style name="TextAppearance.Metro.HeaderTitle" parent="android:TextAppearance">',
+    '        <item name="android:fontFamily">sans-serif-light</item>',
+    '        <item name="android:textSize">%ssp</item>' % header_title,
+    '        <item name="android:textColor">@color/metro_text_primary</item>',
+    '        <item name="android:lineSpacingMultiplier">%.3f</item>' % (70.0 / float(header_title)),
+    "    </style>",
+]
 # Live-tile second face: caption 12sp in white, sentence case. The count and
 # the latest line sit on an accent tile, so the colour is on_accent.
 extra_styles += ramp_style(ramp["caption"], "LiveText",
@@ -166,15 +200,22 @@ xml = "\n".join([
     "         token spacing (start_margin 14dp, tile_gap 7dp) because the official",
     "         ztmetro Start frame measures 14dp/7dp at 360dp; the v3 brief's 2-3dp",
     "         gutters were a misread and are not used. The remaining values are",
-    "         chrome that the C app list/Start draws: 56dp rows, 44% white glyph,",
-    "         13dp list label gap, 48dp circled arrow, 56dp bottom strip. -->",
+    "         chrome that the C app list/Start draws: 55dp rows (LIST_ROW_H),",
+    "         46% white glyph, 13dp list label gap, 48dp circled glyph, 56dp",
+    "         bottom strip. 55/46 come from the mockup: the C pitch is 55",
+    "         (ztmetro.c:159-165) and draw_tile is 0.46 h (ztmetro.c:3677). -->",
     '    <dimen name="metro_v3_tile_pad">8dp</dimen>',
-    '    <dimen name="metro_v3_list_row">56dp</dimen>',
+    '    <dimen name="metro_v3_list_row">55dp</dimen>',
     '    <dimen name="metro_v3_list_gap">13dp</dimen>',
     '    <dimen name="metro_v3_search_underline">1dp</dimen>',
     '    <dimen name="metro_v3_search_pad">8dp</dimen>',
     '    <dimen name="metro_v3_stroke">1.5dp</dimen>',
     '    <dimen name="metro_v3_arrow">48dp</dimen>',
+    '    <dimen name="metro_v3_arrow_right">12dp</dimen>',
+    '    <dimen name="metro_v3_arrow_bottom">64dp</dimen>',
+    '    <dimen name="metro_v3_header_pad_top">8dp</dimen>',
+    '    <dimen name="metro_v3_section_row">36dp</dimen>',
+    '    <dimen name="metro_v3_section_gap">10dp</dimen>',
     '    <dimen name="metro_v3_bottom_bar">56dp</dimen>',
     '    <fraction name="metro_v3_icon_fraction">44%</fraction>',
     '    <integer name="metro_motion_tilt_deg">%s</integer>' % tilt_deg,

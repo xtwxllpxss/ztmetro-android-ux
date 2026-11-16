@@ -161,7 +161,7 @@ public final class StartActivity extends Activity
         startPage.addView(startScroll, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        int arrowPx = MetroUi.dimen(this, R.dimen.metro_v3_arrow);
+        int arrowPx = MetroUi.dimen(this, R.dimen.metro_round_button);
         MetroCircleGlyphView arrow = new MetroCircleGlyphView(
                 this, MetroCircleGlyphView.ARROW_RIGHT, true);
         this.arrow = arrow;
@@ -172,9 +172,13 @@ public final class StartActivity extends Activity
                 selectPage(PAGE_APPS, true);
             }
         });
+        // mockups/screens/start.html: 31dp circle, 12dp from the right edge and
+        // 64dp above the bottom (base.css .applist-arrow + the start.html
+        // bottom:64 override), not vertically centred as v3 shipped it.
         FrameLayout.LayoutParams arrowParams = new FrameLayout.LayoutParams(
-                arrowPx, arrowPx, Gravity.END | Gravity.CENTER_VERTICAL);
-        arrowParams.rightMargin = sidePad;
+                arrowPx, arrowPx, Gravity.END | Gravity.BOTTOM);
+        arrowParams.rightMargin = MetroUi.dimen(this, R.dimen.metro_v3_arrow_right);
+        arrowParams.bottomMargin = MetroUi.dimen(this, R.dimen.metro_v3_arrow_bottom);
         startPage.addView(arrow, arrowParams);
 
         buildAppsPage();
@@ -183,7 +187,9 @@ public final class StartActivity extends Activity
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         pager.addView(appsPage, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        appsPage.setVisibility(View.GONE);
+        // INVISIBLE, not GONE: the ListView must be laid out so the turnstile
+        // can collect its rows as individual blocks (see blockCollector).
+        appsPage.setVisibility(View.INVISIBLE);
 
         setContentView(pager);
         pager.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
@@ -210,11 +216,16 @@ public final class StartActivity extends Activity
         LinearLayout header = new LinearLayout(this);
         appsHeader = header;
         header.setOrientation(LinearLayout.VERTICAL);
-        header.setPadding(sidePad, MetroUi.dimen(this, R.dimen.metro_start_top_pad),
-                sidePad, MetroUi.dimen(this, R.dimen.metro_v3_search_pad));
+        // mockups/screens/page-header.html: caps at 36dp (28dp strip + 8dp),
+        // 16dp page margin; the title follows on its 70dp line with the 29dp
+        // token gap between the caps line and the title line.
+        header.setPadding(MetroUi.dimen(this, R.dimen.metro_page_margin),
+                MetroUi.dimen(this, R.dimen.metro_v3_header_pad_top),
+                MetroUi.dimen(this, R.dimen.metro_page_margin),
+                MetroUi.dimen(this, R.dimen.metro_v3_search_pad));
 
         TextView caps = new TextView(this);
-        caps.setTextAppearance(R.style.TextAppearance_Metro_Caps);
+        caps.setTextAppearance(R.style.TextAppearance_Metro_HeaderCaps);
         caps.setText(R.string.header_caps);
         caps.setLetterSpacing(0.08f);
         caps.setIncludeFontPadding(false);
@@ -224,7 +235,7 @@ public final class StartActivity extends Activity
         header.addView(caps, capsParams);
 
         TextView title = new TextView(this);
-        title.setTextAppearance(R.style.TextAppearance_Metro_PageTitle);
+        title.setTextAppearance(R.style.TextAppearance_Metro_HeaderTitle);
         title.setText(R.string.page_apps);
         title.setIncludeFontPadding(false);
         header.addView(title, new LinearLayout.LayoutParams(
@@ -473,10 +484,22 @@ public final class StartActivity extends Activity
                     stagger.add(2);
                 }
             } else {
+                // The app list turns in per row, not as one slab: the caps/title
+                // header first, then the search row, then each visible letter
+                // head and app row 33 ms apart (ROW_STAGGER_MS), in reading
+                // order, exactly the turnstile the tiles use. Two rows per
+                // step keeps the page under ~0.5 s on a 300-app list.
                 addBlock(blocks, stagger, appsHeader, 0);
                 addBlock(blocks, stagger, appsSearchRow, 1);
-                addBlock(blocks, stagger, appsListFrame, 2);
-                addBlock(blocks, stagger, appsBottom, 3);
+                if (appList != null) {
+                    int n = appList.getChildCount();
+                    for (int i = 0; i < n; i++) {
+                        blocks.add(appList.getChildAt(i));
+                        stagger.add(2 + Math.min(4, i / 2));
+                    }
+                }
+                addBlock(blocks, stagger, alphabet, 7);
+                addBlock(blocks, stagger, appsBottom, 7);
             }
         }
     };
@@ -541,8 +564,8 @@ public final class StartActivity extends Activity
     private void showOnly(int which) {
         View start = pageView(PAGE_START);
         View apps = pageView(PAGE_APPS);
-        start.setVisibility(which == PAGE_START ? View.VISIBLE : View.GONE);
-        apps.setVisibility(which == PAGE_APPS ? View.VISIBLE : View.GONE);
+        start.setVisibility(which == PAGE_START ? View.VISIBLE : View.INVISIBLE);
+        apps.setVisibility(which == PAGE_APPS ? View.VISIBLE : View.INVISIBLE);
         start.setAlpha(1f);
         apps.setAlpha(1f);
     }
