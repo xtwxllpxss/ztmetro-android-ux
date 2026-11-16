@@ -6,9 +6,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
 import android.view.View;
 
@@ -17,11 +20,28 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * Our own status strip — not the system status bar. Operator on the left;
- * date, clock, battery percentage and a drawn battery on the right, 12 sp.
+ * The Action Centre's own status row, 50 dp tall as the ztmetro C draws it and
+ * as {@code mockups/screens/action-centre.html} shows it:
+ *
+ * <ul>
+ *   <li>the 28 dp glyph row: cellular bars, the network type, Wi-Fi on the left;
+ *       the clock and the battery on the right (11.5 / 15 sp);</li>
+ *   <li>the second line at 24.75 dp ({@code ztmetro.c:6503}, "base + 5" with the
+ *       12.1 sp cell): the operator on the left, charge % and date on the
+ *       right, right-aligned at the 14 dp margin.</li>
+ * </ul>
+ *
+ * <p>v3 shipped one 30 dp line with operator/date/clock/percent/battery, so the
+ * grid started 37 dp from the top instead of the mockup's 50. The two rows here
+ * are the C's {@code status_row(details=true)} and give the 50 dp the quick
+ * grid and notification list are measured against.
  */
 final class StatusStripView extends View {
+    static final int HEIGHT_DP = 50;
+    private static final int GLYPH_ROW_DP = 28;
+
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Path path = new Path();
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final SimpleDateFormat clockFormat =
             new SimpleDateFormat("HH:mm", Locale.getDefault());
@@ -31,6 +51,7 @@ final class StatusStripView extends View {
         @Override
         public void run() {
             refreshOperator();
+            refreshRadio();
             invalidate();
             handler.postDelayed(this, 15000);
         }
@@ -39,6 +60,9 @@ final class StatusStripView extends View {
     private int battery = -1;
     private boolean charging;
     private String operator = "ztmetro";
+    private boolean wifiOn;
+    private int signalLevel = -1;
+    private boolean radioRead;
 
     StatusStripView(Context context) {
         super(context);
@@ -49,6 +73,7 @@ final class StatusStripView extends View {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         refreshOperator();
+        refreshRadio();
         readBattery(getContext().registerReceiver(null,
                 new IntentFilter(Intent.ACTION_BATTERY_CHANGED)));
         batteryReceiver = new BroadcastReceiver() {
@@ -106,31 +131,50 @@ final class StatusStripView extends View {
         }
     }
 
+    /** Wi-Fi and signal are read once per tick; no permission means dim bars. */
+    private void refreshRadio() {
+        radioRead = true;
+        try {
+            WifiManager wm = (WifiManager) getContext().getSystemService(Context.WIFI_SERVICE);
+            wifiOn = wm != null && wm.isWifiEnabled();
+        } catch (Throwable ignored) {
+            wifiOn = false;
+        }
+        try {
+            TelephonyManager tm =
+                    (TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE);
+            SignalStrength strength = tm == null ? null : tm.getSignalStrength();
+            signalLevel = strength == null ? -1 : strength.getLevel();
+        } catch (Throwable ignored) {
+            signalLevel = -1;
+        }
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int width = MeasureSpec.getSize(widthMeasureSpec);
-        setMeasuredDimension(width, U.dp(getContext(), 30));
+        setMeasuredDimension(width, U.dp(getContext(), HEIGHT_DP));
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         int w = getWidth();
-        int mid = getHeight() / 2;
+        float mid = U.dp(getContext(), GLYPH_ROW_DP) / 2f;
+        float left = U.dp(getContext(), 14);
+
+        drawSignal(canvas, left, mid);
+        paint.setColor(U.WHITE);
+        paint.setTextSize(U.sp(getContext(), 11.5f));
         paint.setTypeface(U.regular(getContext()));
-        paint.setTextSize(U.sp(getContext(), 12));
-        paint.setLetterSpacing(0.02f);
         paint.setTextAlign(Paint.Align.LEFT);
-        Paint.FontMetrics fm = paint.getFontMetrics();
-        float baseline = mid - (fm.ascent + fm.descent) / 2f;
+        drawCentred(canvas, "4G", left + U.dp(getContext(), 17), mid);
+        drawWifi(canvas, left + U.dp(getContext(), 38), mid);
 
-        paint.setColor(U.WHITE_70);
-        canvas.drawText(operator, U.dp(getContext(), 12), baseline, paint);
-
-        int right = w - U.dp(getContext(), 12);
-        int bw = U.dp(getContext(), 19);
-        int bh = U.dp(getContext(), 9);
+        int right = w - U.dp(getContext(), 14);
+        int bw = U.dp(getContext(), 22);
+        int bh = U.dp(getContext(), 11);
         int bx = right - bw;
-        int by = mid - bh / 2;
+        float by = mid - bh / 2f;
 
         paint.setColor(U.WHITE_50);
         paint.setStyle(Paint.Style.STROKE);
@@ -139,28 +183,77 @@ final class StatusStripView extends View {
         paint.setStyle(Paint.Style.FILL);
         canvas.drawRect(bx + bw + U.dp(getContext(), 1), mid - U.dp(getContext(), 2),
                 bx + bw + U.dp(getContext(), 3), mid + U.dp(getContext(), 2), paint);
-
         if (battery >= 0) {
             int inner = Math.max(0, (bw - U.dp(getContext(), 3)) * battery / 100);
-            paint.setColor(charging ? U.ACCENT : U.WHITE_70);
+            paint.setColor(charging ? U.ACCENT : U.WHITE);
             canvas.drawRect(bx + U.dp(getContext(), 1), by + U.dp(getContext(), 1),
                     bx + U.dp(getContext(), 1) + inner, by + bh - U.dp(getContext(), 1), paint);
         }
 
-        paint.setTextAlign(Paint.Align.RIGHT);
-        String percent = battery >= 0 ? battery + "%" : "--";
-        paint.setColor(U.WHITE_70);
-        canvas.drawText(percent, bx - U.dp(getContext(), 4), baseline, paint);
-        float percentLeft = bx - U.dp(getContext(), 4) - paint.measureText(percent);
-
-        Date now = new Date();
-        String clock = clockFormat.format(now);
+        paint.setTextSize(U.sp(getContext(), 15));
         paint.setColor(U.WHITE);
-        canvas.drawText(clock, percentLeft - U.dp(getContext(), 10), baseline, paint);
-        float clockLeft = percentLeft - U.dp(getContext(), 10) - paint.measureText(clock);
+        paint.setTextAlign(Paint.Align.RIGHT);
+        drawCentred(canvas, clockFormat.format(new Date()),
+                bx - U.dp(getContext(), 8), mid);
 
-        paint.setColor(U.WHITE_70);
-        canvas.drawText(dateFormat.format(now), clockLeft - U.dp(getContext(), 8), baseline, paint);
+        // ---- second line: operator left, charge + date right, 24.75 dp ----
+        paint.setTextSize(U.sp(getContext(), 12.1f));
+        paint.setTypeface(U.regular(getContext()));
+        Paint.FontMetrics fm = paint.getFontMetrics();
+        float top = U.dp(getContext(), 24.75f);
+        float baseline = top - fm.ascent;
         paint.setTextAlign(Paint.Align.LEFT);
+        paint.setColor(U.WHITE);
+        canvas.drawText(operator, left, baseline, paint);
+        paint.setTextAlign(Paint.Align.RIGHT);
+        paint.setColor(U.WHITE_70);
+        canvas.drawText(dateFormat.format(new Date()), right, baseline, paint);
+        float dateLeft = right - paint.measureText(dateFormat.format(new Date()));
+        String percent = battery >= 0 ? battery + "%" : "--";
+        canvas.drawText(percent, dateLeft - U.dp(getContext(), 12), baseline, paint);
+    }
+
+    private void drawCentred(Canvas canvas, String text, float x, float mid) {
+        Paint.FontMetrics fm = paint.getFontMetrics();
+        float baseline = mid - (fm.ascent + fm.descent) / 2f;
+        if (paint.getTextAlign() == Paint.Align.RIGHT) {
+            canvas.drawText(text, x, baseline, paint);
+        } else {
+            canvas.drawText(text, x, baseline, paint);
+        }
+    }
+
+    private void drawSignal(Canvas canvas, float x, float mid) {
+        float barW = U.dp(getContext(), 2.6f);
+        float step = U.dp(getContext(), 3.6f);
+        float bottom = mid + U.dp(getContext(), 5.5f);
+        int[] heights = {4, 6, 8, 11};
+        for (int i = 0; i < 4; i++) {
+            float h = U.dp(getContext(), heights[i]);
+            boolean lit = signalLevel >= 0 && i <= signalLevel;
+            paint.setColor(lit ? U.WHITE : U.WHITE_30);
+            canvas.drawRect(x + i * step, bottom - h, x + i * step + barW, bottom, paint);
+        }
+    }
+
+    private void drawWifi(Canvas canvas, float x, float mid) {
+        paint.setColor(wifiOn ? U.WHITE : U.WHITE_30);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(U.dp(getContext(), 1.4f));
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        float cx = x + U.dp(getContext(), 7);
+        float cy = mid - U.dp(getContext(), 1);
+        path.reset();
+        path.moveTo(cx - U.dp(getContext(), 7), cy - U.dp(getContext(), 1.5f));
+        path.quadTo(cx, cy - U.dp(getContext(), 9), cx + U.dp(getContext(), 7),
+                cy - U.dp(getContext(), 1.5f));
+        canvas.drawPath(path, paint);
+        path.reset();
+        path.moveTo(cx - U.dp(getContext(), 4), cy + U.dp(getContext(), 1.5f));
+        path.quadTo(cx, cy - U.dp(getContext(), 3.5f), cx + U.dp(getContext(), 4),
+                cy + U.dp(getContext(), 1.5f));
+        canvas.drawPath(path, paint);
+        paint.setStyle(Paint.Style.FILL);
+        canvas.drawCircle(cx, cy + U.dp(getContext(), 4), U.dp(getContext(), 1), paint);
     }
 }

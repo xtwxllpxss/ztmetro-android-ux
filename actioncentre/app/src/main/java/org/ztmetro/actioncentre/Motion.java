@@ -25,6 +25,11 @@ final class Motion {
     static final int SHADE_OPEN_MS = 260;
     /** {@code actioncentre/app/src/main/res/anim/ac_slide_down.xml}: 220. */
     static final int SHADE_CLOSE_MS = 220;
+    /** Quick-tile press: down 90 ms, up 150 ms (mockup/UX brief). */
+    static final int TILE_DOWN_MS = 90;
+    static final int TILE_UP_MS = 150;
+    /** One notification row leaving the list: 160 ms slide out. */
+    static final int NOTIF_DISMISS_MS = 160;
     /** {@code ztmetro.c:11761}: drag further than this and it closes. */
     static final int DRAG_COMMIT_DP = 40;
 

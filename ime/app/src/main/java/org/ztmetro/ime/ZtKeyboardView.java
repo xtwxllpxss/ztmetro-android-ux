@@ -8,6 +8,8 @@ import android.graphics.Path;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
+import android.provider.Settings;
 import android.util.TypedValue;
 import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
@@ -32,7 +34,10 @@ import java.util.Locale;
  *
  * Keys are 56 dp high (the KEYBOARD.md default), one dp apart, hard-cornered
  * rectangles on black.  There is no ripple, no StateListAnimator, no rounded
- * corner: the only feedback is the #333333 pressed fill.
+ * corner: a press flashes the fill for 80 ms (see {@link #PRESS_FLASH_MS}), the
+ * only feedback the mockup asks for.  A key-pop preview is deliberately absent:
+ * the 56 dp rows leave no room for one above the pressed key, so it would have
+ * to overlay the row above; deferred rather than drawn badly.
  *
  * Three pages: letters (EN / RU), &123 (digits + the common punctuation) and
  * emoji (24).  Shift is latched caps.  Holding the accent dot in the
@@ -82,15 +87,18 @@ public final class ZtKeyboardView extends View {
     private static final int LAYOUT_GRID8 = 6;     // emoji, eight per row
 
     private static final int COLOR_BACKGROUND = 0xFF000000;
-    private static final int COLOR_KEY = 0xFF1F1F1F;       // letter key
-    private static final int COLOR_KEY_FN = 0xFF121212;    // function key
-    private static final int COLOR_PRESSED = 0xFF333333;   // pressed / latched fill
+    // mockups/out/keyboard.png: letter key #333333, function key #1F1F1F.
+    private static final int COLOR_KEY = 0xFF333333;       // letter key
+    private static final int COLOR_KEY_FN = 0xFF1F1F1F;    // function key
+    private static final int COLOR_PRESSED = 0xFF4D4D4D;   // press flash / latched fill
     private static final int COLOR_TEXT = 0xFFFFFFFF;
     private static final int COLOR_SPACE_TEXT = 0xCCFFFFFF;
     private static final int COLOR_TEXT_DIM = 0x66FFFFFF;
     private static final int COLOR_ACCENT = 0xFF0050EF;
 
     private static final float KEY_HEIGHT_DP = 56f;
+    /** Key press: the fill flashes for 80 ms (the only feedback; no ripple). */
+    private static final int PRESS_FLASH_MS = 80;
     private static final long TRACKPAD_HOLD_MS = 450L;
     private static final long ALT_HOLD_MS = 500L;
 
@@ -194,6 +202,9 @@ public final class ZtKeyboardView extends View {
     private boolean caps;
 
     private Key pressedKey;
+    private Key flashKey;
+    private long flashStart;
+    private int flashDurationMs;
     private Key altKey;
     private boolean altFired;
 
@@ -378,7 +389,9 @@ public final class ZtKeyboardView extends View {
     }
 
     private Key spaceKey() {
-        return new Key(null, null, ACTION_SPACE, ICON_NONE, 13, true);
+        // mockup: .zt-key.bar keeps the letter fill (#333333), not the function
+        // fill; only its label is 13 sp at 80 % white.
+        return new Key(null, null, ACTION_SPACE, ICON_NONE, 13, false);
     }
 
     private Key languageKey() {
@@ -573,14 +586,18 @@ public final class ZtKeyboardView extends View {
 
         fillPaint.setColor(COLOR_ACCENT);
         canvas.drawCircle(dotX, dotY, dotPressed ? dp(3) : dp(2), fillPaint);
+
+        if (flashKey != null && flashDurationMs > 0
+                && SystemClock.uptimeMillis() - flashStart < flashDurationMs) {
+            postInvalidateOnAnimation();
+        }
     }
 
     private void drawKey(Canvas canvas, Key key) {
         boolean active = key == pressedKey || (key.action == ACTION_SHIFT && caps);
-
-        fillPaint.setColor(active
-                ? COLOR_PRESSED
-                : (key.function ? COLOR_KEY_FN : COLOR_KEY));
+        int base = active ? COLOR_PRESSED
+                : (key.function ? COLOR_KEY_FN : COLOR_KEY);
+        fillPaint.setColor(active ? base : flashFill(key, base));
         // Hard rectangle: no rounded corners, no ripple.
         canvas.drawRect(key.left, key.top, key.right, key.bottom, fillPaint);
 
@@ -721,6 +738,7 @@ public final class ZtKeyboardView extends View {
                     return true;
                 }
                 pressedKey = keyAt(x, y);
+                flash(pressedKey);
                 scheduleAlt(pressedKey);
                 invalidate();
                 return true;
@@ -755,6 +773,7 @@ public final class ZtKeyboardView extends View {
                 Key key = keyAt(x, y);
                 if (key != pressedKey) {
                     pressedKey = key;
+                    flash(key);
                     scheduleAlt(key);
                     invalidate();
                 }
@@ -808,6 +827,48 @@ public final class ZtKeyboardView extends View {
             default:
                 return true;
         }
+    }
+
+    /** Start the 80 ms fill flash on a key; scale 0 means no flash at all. */
+    private void flash(Key key) {
+        if (key == null) {
+            flashKey = null;
+            return;
+        }
+        float scale = 1f;
+        try {
+            scale = Settings.Global.getFloat(getContext().getContentResolver(),
+                    Settings.Global.ANIMATOR_DURATION_SCALE, 1f);
+        } catch (Throwable ignored) {
+        }
+        if (Float.isNaN(scale) || scale < 0f) {
+            scale = 1f;
+        }
+        flashKey = key;
+        flashStart = SystemClock.uptimeMillis();
+        flashDurationMs = Math.round(PRESS_FLASH_MS * Math.min(scale, 10f));
+        if (flashDurationMs > 0) {
+            postInvalidateOnAnimation();
+        }
+    }
+
+    /** Colour between the key's resting fill and the pressed flash. */
+    private int flashFill(Key key, int base) {
+        if (key != flashKey || flashDurationMs <= 0) {
+            return base;
+        }
+        long elapsed = SystemClock.uptimeMillis() - flashStart;
+        if (elapsed >= flashDurationMs) {
+            flashKey = null;
+            return base;
+        }
+        float t = 1f - (float) elapsed / flashDurationMs;
+        int r = (int) (((base >> 16) & 0xFF) + (((COLOR_PRESSED >> 16) & 0xFF)
+                - ((base >> 16) & 0xFF)) * t);
+        int g = (int) (((base >> 8) & 0xFF) + (((COLOR_PRESSED >> 8) & 0xFF)
+                - ((base >> 8) & 0xFF)) * t);
+        int b = (int) ((base & 0xFF) + ((COLOR_PRESSED & 0xFF) - (base & 0xFF)) * t);
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 
     private void stepTrackpad(float dx, float dy) {

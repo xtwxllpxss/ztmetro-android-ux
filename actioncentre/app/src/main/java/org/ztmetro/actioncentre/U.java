@@ -16,6 +16,9 @@ final class U {
     static final int WHITE_70 = 0xB3FFFFFF;
     static final int WHITE_50 = 0x80FFFFFF;
     static final int WHITE_40 = 0x66FFFFFF;
+    /** Notification body: 62 % white (ztmetro.c:6395). */
+    static final int WHITE_62 = 0x9EFFFFFF;
+    static final int WHITE_30 = 0x4DFFFFFF;
 
     private static Typeface light;
     private static Typeface regular;

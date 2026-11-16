@@ -8,6 +8,7 @@ import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.SpannableStringBuilder;
@@ -59,7 +60,7 @@ final class LockOverlayView extends FrameLayout {
     private static final int WHITE_55 = 0x8CFFFFFF;
     private static final int MAX_APPS = 5;
     private static final int GLYPH_DP = 26;
-    private static final int COUNT_SIZE_SP = 20;
+    private static final int COUNT_SIZE_SP = 22;
 
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService iconExecutor;
@@ -73,7 +74,16 @@ final class LockOverlayView extends FrameLayout {
 
     LockOverlayView(Context context) {
         super(context);
-        setBackgroundColor(BLACK);
+        // mockups/screens/lock.html + ztmetro.c:6029-6035: black until 25 % from
+        // the top, then a fade to accent x 0.5 at the bottom edge. v3 shipped
+        // flat black, which lost the lock screen's only colour.
+        GradientDrawable fade = new GradientDrawable(
+                GradientDrawable.Orientation.BOTTOM_TOP,
+                new int[]{0xFF002878, BLACK, BLACK});
+        fade.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        fade.setColors(new int[]{0xFF002878, BLACK, BLACK},
+                new float[]{0f, 0.75f, 1f});
+        setBackground(fade);
         setFocusable(false);
         setClickable(false);
         setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
@@ -96,25 +106,31 @@ final class LockOverlayView extends FrameLayout {
         clockView.setText("00:00");
 
         dateView = new TextView(context);
-        dateView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
+        // mockup: two 30 sp Semilight lines (weekday, then "d MMMM"), 36 dp
+        // line height, under the 92 sp clock (ztmetro.c:5930-5945).
+        dateView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 30f);
         dateView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
-        dateView.setTextColor(WHITE_80);
+        dateView.setTextColor(WHITE);
         dateView.setIncludeFontPadding(false);
-        dateView.setSingleLine(true);
+        dateView.setSingleLine(false);
         dateView.setGravity(Gravity.START);
+        dateView.setLineSpacing(0f, 36f / 30f);
 
         countsRow = new LinearLayout(context);
         countsRow.setOrientation(LinearLayout.HORIZONTAL);
         countsRow.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         countsRow.setMinimumHeight(dp(GLYPH_DP));
+        // mockup lock.html: the glyph row starts at x 22, 8 dp in from the
+        // 14 dp clock margin, and the chips are 22 dp apart.
+        countsRow.setPadding(dp(8), 0, 0, 0);
         countsRow.setVisibility(View.GONE);
 
         hintView = new TextView(context);
         hintView.setText(R.string.lock_swipe_hint);
-        hintView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f);
+        hintView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10f);
         hintView.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         hintView.setTextColor(WHITE_55);
-        hintView.setLetterSpacing(0.12f);
+        hintView.setLetterSpacing(0.08f);
         hintView.setGravity(Gravity.CENTER);
         hintView.setIncludeFontPadding(false);
         hintView.setSingleLine(true);
@@ -125,8 +141,8 @@ final class LockOverlayView extends FrameLayout {
         FrameLayout.LayoutParams columnParams = new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT,
                 Gravity.BOTTOM | Gravity.START);
-        columnParams.leftMargin = dp(16);
-        columnParams.rightMargin = dp(16);
+        columnParams.leftMargin = dp(14);
+        columnParams.rightMargin = dp(14);
         columnParams.bottomMargin = dp(18);
         addView(column, columnParams);
         // On a lock screen that still shows a navigation bar, the hint must not
@@ -155,17 +171,17 @@ final class LockOverlayView extends FrameLayout {
 
         LinearLayout.LayoutParams dateParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        dateParams.topMargin = dp(8);
+        dateParams.topMargin = dp(4);
         column.addView(dateView, dateParams);
 
         LinearLayout.LayoutParams countsParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        countsParams.topMargin = dp(20);
+        countsParams.topMargin = dp(22);
         column.addView(countsRow, countsParams);
 
         LinearLayout.LayoutParams hintParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        hintParams.topMargin = dp(22);
+        hintParams.topMargin = dp(30);
         column.addView(hintView, hintParams);
     }
 
@@ -194,8 +210,9 @@ final class LockOverlayView extends FrameLayout {
                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
             clockView.setText(text);
-            dateView.setText(new SimpleDateFormat("EEEE, d MMMM",
-                    Locale.getDefault()).format(new Date()));
+            Date now2 = new Date();
+            dateView.setText(new SimpleDateFormat("EEEE", Locale.getDefault()).format(now2)
+                    + "\n" + new SimpleDateFormat("d MMMM", Locale.getDefault()).format(now2));
         } catch (Throwable ignored) {
             // A failed clock refresh must never take the service down.
         }
@@ -275,7 +292,7 @@ final class LockOverlayView extends FrameLayout {
 
                 LinearLayout.LayoutParams chipParams = new LinearLayout.LayoutParams(
                         LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-                chipParams.rightMargin = dp(12);
+                chipParams.rightMargin = dp(22);
                 countsRow.addView(chip, chipParams);
                 packages.add(packageName);
                 icons.add(icon);

@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -17,8 +18,15 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * One flat notification row. Tap opens the notification's contentIntent;
- * swipe left (or the per-row ×) cancels it. No cards, no radius, no ripple.
+ * One flat notification row, in the mockup's order
+ * ({@code mockups/screens/action-centre.html}, {@code ztmetro.c:6356-6405}):
+ * a 28 dp accent square with the app's initial at x = 14, the app name 22 sp
+ * Semilight, the time 13.5 sp right-aligned, the title 14.5 sp Semibold and the
+ * body 13.5 sp at 62 % white. Rows are 14 dp apart; no cards, no radius.
+ *
+ * <p>Tap opens the notification, swipe left or the per-row × cancels it. The
+ * cancel animates the row out to the left in 160 ms
+ * ({@link Motion#NOTIF_DISMISS_MS}), scaled by ANIMATOR_DURATION_SCALE.
  */
 final class NotificationRowView extends LinearLayout {
     interface Host {
@@ -41,9 +49,9 @@ final class NotificationRowView extends LinearLayout {
         this.host = host;
         this.slop = U.dp(context, 8);
         setOrientation(HORIZONTAL);
-        setGravity(Gravity.CENTER_VERTICAL);
-        setPadding(U.dp(context, 12), U.dp(context, 9), U.dp(context, 4),
-                U.dp(context, 9));
+        setGravity(Gravity.TOP);
+        setPadding(U.dp(context, 14), U.dp(context, 7), U.dp(context, 14),
+                U.dp(context, 7));
         setClickable(true);
         setFocusable(true);
 
@@ -54,9 +62,21 @@ final class NotificationRowView extends LinearLayout {
         setBackground(background);
         setContentDescription(notif.appLabel + ": " + notif.title);
 
+        TextView square = new TextView(context);
+        square.setText(initial(notif.appLabel));
+        square.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        square.setTypeface(U.semibold(context));
+        square.setTextColor(U.WHITE);
+        square.setGravity(Gravity.CENTER);
+        square.setBackgroundColor(U.ACCENT);
+        LayoutParams squareParams = new LayoutParams(U.dp(context, 28), U.dp(context, 28));
+        squareParams.rightMargin = U.dp(context, 10);
+        addView(square, squareParams);
+
         LinearLayout content = new LinearLayout(context);
         content.setOrientation(VERTICAL);
-        addView(content, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
+        LayoutParams contentParams = new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
+        addView(content, contentParams);
 
         LinearLayout meta = new LinearLayout(context);
         meta.setOrientation(HORIZONTAL);
@@ -64,19 +84,19 @@ final class NotificationRowView extends LinearLayout {
         content.addView(meta, new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT));
 
-        TextView sender = new TextView(context);
-        sender.setText(notif.sender);
-        sender.setTextSize(13);
-        sender.setTypeface(U.regular(context));
-        sender.setTextColor(U.WHITE);
-        sender.setSingleLine(true);
-        sender.setEllipsize(TextUtils.TruncateAt.END);
-        meta.addView(sender, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
+        TextView name = new TextView(context);
+        name.setText(notif.appLabel);
+        name.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
+        name.setTypeface(U.light(context));
+        name.setTextColor(U.WHITE);
+        name.setSingleLine(true);
+        name.setEllipsize(TextUtils.TruncateAt.END);
+        meta.addView(name, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
 
         TextView time = new TextView(context);
         time.setText(new SimpleDateFormat("HH:mm", Locale.getDefault())
                 .format(new Date(notif.time)));
-        time.setTextSize(11);
+        time.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13.5f);
         time.setTypeface(U.regular(context));
         time.setTextColor(U.WHITE_50);
         time.setPadding(U.dp(context, 8), 0, 0, 0);
@@ -86,24 +106,26 @@ final class NotificationRowView extends LinearLayout {
         if (!TextUtils.isEmpty(notif.title)) {
             TextView title = new TextView(context);
             title.setText(notif.title);
-            title.setTextSize(13);
-            title.setTypeface(U.light(context));
+            title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14.5f);
+            title.setTypeface(U.semibold(context));
             title.setTextColor(U.WHITE);
             title.setSingleLine(true);
             title.setEllipsize(TextUtils.TruncateAt.END);
-            title.setPadding(0, U.dp(context, 1), 0, 0);
+            title.setPadding(0, U.dp(context, 2), 0, 0);
             content.addView(title, new LayoutParams(LayoutParams.MATCH_PARENT,
                     LayoutParams.WRAP_CONTENT));
         }
 
-        if (!TextUtils.isEmpty(notif.text)) {
+        String bodyText = !TextUtils.isEmpty(notif.text) ? notif.text : notif.sender;
+        if (!TextUtils.isEmpty(bodyText)) {
             TextView body = new TextView(context);
-            body.setText(notif.text);
-            body.setTextSize(12);
-            body.setTypeface(U.light(context));
-            body.setTextColor(U.WHITE_70);
+            body.setText(bodyText);
+            body.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13.5f);
+            body.setTypeface(U.regular(context));
+            body.setTextColor(U.WHITE_62);
             body.setMaxLines(2);
             body.setEllipsize(TextUtils.TruncateAt.END);
+            body.setLineSpacing(0f, 18f / 13.5f);
             body.setPadding(0, U.dp(context, 1), 0, 0);
             content.addView(body, new LayoutParams(LayoutParams.MATCH_PARENT,
                     LayoutParams.WRAP_CONTENT));
@@ -111,20 +133,23 @@ final class NotificationRowView extends LinearLayout {
 
         TextView close = new TextView(context);
         close.setText("\u00d7");
-        close.setTextSize(20);
+        close.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
         close.setTypeface(U.regular(context));
         close.setTextColor(new ColorStateList(
                 new int[][]{new int[]{android.R.attr.state_pressed}, new int[]{}},
                 new int[]{U.ACCENT, U.WHITE_50}));
-        close.setGravity(Gravity.CENTER);
+        close.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
         close.setContentDescription("Удалить уведомление");
         close.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                NotificationRowView.this.host.onDismiss(NotificationRowView.this.notif);
+                dismissAnimated();
             }
         });
-        addView(close, new LayoutParams(U.dp(context, 36), LayoutParams.WRAP_CONTENT));
+        LayoutParams closeParams = new LayoutParams(U.dp(context, 24),
+                LayoutParams.WRAP_CONTENT);
+        closeParams.leftMargin = U.dp(context, 4);
+        addView(close, closeParams);
 
         setOnClickListener(new OnClickListener() {
             @Override
@@ -132,6 +157,13 @@ final class NotificationRowView extends LinearLayout {
                 NotificationRowView.this.host.onOpen(NotificationRowView.this.notif);
             }
         });
+    }
+
+    private static String initial(String label) {
+        if (label == null || label.length() == 0) {
+            return "?";
+        }
+        return label.substring(0, 1).toUpperCase(Locale.getDefault());
     }
 
     @Override
@@ -190,11 +222,19 @@ final class NotificationRowView extends LinearLayout {
         }
     }
 
+    /** Slide out 160 ms; own the view's animation so the scale applies. */
     private void dismissAnimated() {
+        int duration = Motion.ms(getContext(), Motion.NOTIF_DISMISS_MS);
+        animate().cancel();
+        if (duration <= 0) {
+            host.onDismiss(notif);
+            return;
+        }
         animate()
                 .translationX(-getWidth())
                 .alpha(0f)
-                .setDuration(150)
+                .setDuration(duration)
+                .setInterpolator(Motion.WP_LOG)
                 .withEndAction(new Runnable() {
                     @Override
                     public void run() {

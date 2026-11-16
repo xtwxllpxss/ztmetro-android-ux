@@ -99,6 +99,11 @@ final class LockOverlayController {
     private WindowManager.LayoutParams overlayParams;
     private WindowManager.LayoutParams stripParams;
     private boolean attached;
+    /** True while the 120 ms reveal fade still owns the window. */
+    private boolean hiding;
+    /** ztmetro lock overlay: fade in on screen-on, fade out on reveal. */
+    private static final int FADE_IN_MS = 180;
+    private static final int FADE_OUT_MS = 120;
     private boolean started;
     private boolean receiverRegistered;
     private boolean addFailed;
@@ -416,6 +421,14 @@ final class LockOverlayController {
         if (!started || attached || addFailed || userRevealed) {
             return false;
         }
+        // A hide() fade-out may still hold the window; finish it now so the
+        // next show adds a fresh surface instead of failing on an old parent.
+        if (hiding) {
+            content.animate().cancel();
+            content.setAlpha(1f);
+            hiding = false;
+            removeViewsQuietly();
+        }
         if (!isKeyguardLocked()) {
             return false;
         }
@@ -436,7 +449,15 @@ final class LockOverlayController {
 
         try {
             overlayParams = overlayParams();
+            // Fade in 180 ms on screen-on (mockup lock.html; Animator scale via
+            // Motion.ms). The window is opaque, so start fully transparent.
+            int fadeIn = Motion.ms(service, FADE_IN_MS);
+            content.setAlpha(fadeIn > 0 ? 0f : 1f);
             windowManager.addView(content, overlayParams);
+            if (fadeIn > 0) {
+                content.animate().alpha(1f).setDuration(fadeIn)
+                        .setInterpolator(Motion.WP_LOG).start();
+            }
 
             stripParams = stripParams();
             try {
@@ -535,10 +556,32 @@ final class LockOverlayController {
         boolean hadWindow = attached || content.getParent() != null
                 || stripView.getParent() != null;
         attached = false;
-        removeViewsQuietly();
-        if (hadWindow) {
-            Log.i(TAG, "hidden: " + reason);
+        if (!hadWindow) {
+            removeViewsQuietly();
+            return;
         }
+        // Fade out 120 ms on reveal, then drop the window. The touch strip goes
+        // at once so a swipe cannot land on a surface that is already leaving.
+        removeViewQuietly(stripView, "strip");
+        int fadeOut = Motion.ms(service, FADE_OUT_MS);
+        if (fadeOut <= 0 || content.getParent() == null) {
+            removeViewsQuietly();
+            Log.i(TAG, "hidden: " + reason);
+            return;
+        }
+        hiding = true;
+        content.animate().cancel();
+        content.animate().alpha(0f).setDuration(fadeOut)
+                .setInterpolator(Motion.WP_LOG)
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        hiding = false;
+                        removeViewsQuietly();
+                    }
+                })
+                .start();
+        Log.i(TAG, "hidden: " + reason + " (fade " + fadeOut + " ms)");
     }
 
     private void removeViewsQuietly() {

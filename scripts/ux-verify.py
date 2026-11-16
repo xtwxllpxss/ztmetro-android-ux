@@ -251,7 +251,11 @@ class Device:
         return proc.stdout if binary else proc.stdout.decode("utf-8", "replace")
 
     def adb(self, *args: Any, binary: bool = False):
-        remote = f'"{self.adb_path}" ' + " ".join(shlex.quote(str(a)) for a in args)
+        adb_path = self.adb_path
+        # A leading "~" is not expanded inside double quotes; "$HOME" is.
+        if adb_path == "~" or adb_path.startswith("~/"):
+            adb_path = "$HOME" + adb_path[1:]
+        remote = f'"{adb_path}" ' + " ".join(shlex.quote(str(a)) for a in args)
         return self._ssh(remote, binary=binary)
 
     def shell(self, *args: Any) -> str:
@@ -1090,8 +1094,8 @@ def _surface_actioncentre(shot: Shot, ctx: Ctx) -> list[Check]:
     tiles = [c for c in components(accent | off, min_area_px=9000)
              if c["w"] >= 100 and c["h"] >= 100]
     tiles.sort(key=lambda c: (c["y0"], c["x0"]))
-    tile_by_id = [box(c["x0"], c["y0"], c["x1"], c["y1"])
-                  for c in tiles]
+    tile_by_id = [box(c["x0"], c["y0"], c["x1"], c["y1"],
+                      f"tile {i + 1}") for i, c in enumerate(tiles)]
 
     band = a[:int(round(50 * factor)), :]
     nonblack = np.max(band, axis=2) > 20
@@ -1305,8 +1309,8 @@ def annotate(shot: Shot, checks: list[Check], dest: Path) -> None:
                 rec["status"] = FAIL
             elif c.status == SKIP and rec["status"] != FAIL:
                 rec["status"] = SKIP
-            label = b.get("label") or c.id
-            if label not in rec["labels"]:
+            label = b.get("label") or ""
+            if label and label not in rec["labels"]:
                 rec["labels"].append(label)
 
     for (x0, y0, x1, y1), rec in merged.items():

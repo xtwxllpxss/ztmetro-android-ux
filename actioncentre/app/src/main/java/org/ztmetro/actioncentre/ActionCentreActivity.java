@@ -127,6 +127,12 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
         refreshTiles();
     }
 
+    /** Back closes the panel through {@link #finish()}, i.e. the 220 ms slide. */
+    @Override
+    public void onBackPressed() {
+        finish();
+    }
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -356,8 +362,10 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
                 LinearLayout.LayoutParams.WRAP_CONTENT));
         buildTiles();
 
+        // mockup/C: links text 12 dp below the grid, notifications 30 dp below
+        // the links line, so the whole links block is 45 dp tall.
         content.addView(buildLinksRow(), new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, U.dp(this, 36)));
+                LinearLayout.LayoutParams.MATCH_PARENT, U.dp(this, 45)));
 
         // One tap to the system Accessibility page where the shade bridge is
         // switched on. With the service off this row is the only change and the
@@ -488,8 +496,8 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
     private View buildLinksRow() {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(U.dp(this, 12), 0, U.dp(this, 12), 0);
+        row.setGravity(Gravity.TOP);
+        row.setPadding(U.dp(this, 12), U.dp(this, 12), U.dp(this, 12), 0);
 
         TextView clear = link(getString(R.string.link_clear_all));
         clear.setText("\u00d7  " + clear.getText());
@@ -553,6 +561,7 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
         } catch (Throwable ignored) {
             enabled = false;
         }
+        gestureLink.setVisibility(enabled ? View.GONE : View.VISIBLE);
         gestureLink.setText(enabled ? R.string.gesture_enabled : R.string.gesture_enable);
         gestureLink.setContentDescription(getString(
                 enabled ? R.string.gesture_enabled : R.string.gesture_enable)
@@ -816,7 +825,6 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
                 if (group.isEmpty()) {
                     continue;
                 }
-                addAppLabel(group.get(0).appLabel);
                 for (Notif notif : group) {
                     NotificationRowView row = new NotificationRowView(this, notif, this);
                     notificationList.addView(row, new LinearLayout.LayoutParams(
@@ -833,19 +841,6 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
                 }
             });
         }
-    }
-
-    private void addAppLabel(String label) {
-        TextView header = new TextView(this);
-        header.setText(label.toUpperCase(Locale.getDefault()));
-        header.setTextSize(10);
-        header.setTypeface(U.semibold(this));
-        header.setLetterSpacing(0.08f);
-        header.setTextColor(U.ACCENT);
-        header.setPadding(U.dp(this, 12), U.dp(this, 12), U.dp(this, 12), U.dp(this, 4));
-        notificationList.addView(header, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT));
     }
 
     private void addEmptyState(boolean granted, boolean connected) {
