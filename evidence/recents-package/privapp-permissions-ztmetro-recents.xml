@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Priv-app allowlist for org.ztmetro.actioncentre, installed by the
+  ztmetro-recents Magisk module to /system_ext/etc/permissions/.
+
+  What this file CAN grant (permission protection includes `privileged`):
+    * android.permission.REAL_GET_TASKS       signature|privileged
+    * android.permission.START_TASKS_FROM_RECENTS  signature|privileged|recents
+
+  What it deliberately lists but CANNOT grant:
+    * android.permission.REMOVE_TASKS          signature|recents|role
+    * android.permission.MANAGE_ACTIVITY_TASKS signature|recents
+  Neither has the `privileged` protection flag, and
+  PermissionManagerServiceImpl only honours allowlist entries for
+  `bp.isPrivileged()` permissions. Those two are granted by the separate
+  `bp.isRecents()` branch to known package PACKAGE_RECENTS, i.e. to the package
+  that PackageManagerService resolved from config_recentsComponentName. That is
+  exactly why the RRO and this priv-app must ship in the same module: the
+  allowlist gives read access even if the RRO is missing, the RRO gives
+  REMOVE_TASKS (dismissal). Verified against AOSP android16-release
+  PermissionManagerServiceImpl and this ROM's com.android.launcher3.xml, which
+  lists START_TASKS_FROM_RECENTS but not REMOVE_TASKS.
+-->
+<permissions>
+    <privapp-permissions package="org.ztmetro.actioncentre">
+        <permission name="android.permission.REAL_GET_TASKS" />
+        <permission name="android.permission.START_TASKS_FROM_RECENTS" />
+        <permission name="android.permission.REMOVE_TASKS" />
+        <permission name="android.permission.MANAGE_ACTIVITY_TASKS" />
+    </privapp-permissions>
+</permissions>

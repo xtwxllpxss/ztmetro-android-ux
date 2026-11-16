@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The only overridden resource. The value is a flattened ComponentName, as
+     RecentTasks.loadRecentsComponent() parses it with
+     ComponentName.unflattenFromString(). Both system_server (RecentTasks) and
+     PackageManagerService (mRecentsPackage) read this one string. -->
+<resources>
+    <string name="config_recentsComponentName" translatable="false">org.ztmetro.actioncentre/org.ztmetro.actioncentre.RecentsActivity</string>
+</resources>

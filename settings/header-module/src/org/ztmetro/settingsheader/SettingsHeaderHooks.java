@@ -34,13 +34,40 @@ public final class SettingsHeaderHooks {
     private static final String HOMEPAGE_ACTIVITY =
             "com.android.settings.homepage.SettingsHomepageActivity";
 
+    /** The Settings process itself. */
+    public static final String SETTINGS_PACKAGE = "com.android.settings";
+    /** SettingsIntelligence hosts the search UI on LineageOS 23.2 (separate package). */
+    public static final String SEARCH_PACKAGE = SearchSurface.PACKAGE;
+
     private SettingsHeaderHooks() {
     }
 
-    public static void install(ClassLoader settingsClassLoader) {
+    /** True for the two packages the module decorates. */
+    public static boolean isScope(String packageName) {
+        return SETTINGS_PACKAGE.equals(packageName) || SEARCH_PACKAGE.equals(packageName);
+    }
+
+    /** Package-aware entry point: Settings chrome or the search results surface. */
+    public static void install(String packageName, ClassLoader classLoader) {
+        if (SETTINGS_PACKAGE.equals(packageName)) {
+            installSettings(classLoader);
+        } else if (SEARCH_PACKAGE.equals(packageName)) {
+            SearchSurface.install(classLoader);
+        }
+    }
+
+    private static void installSettings(ClassLoader settingsClassLoader) {
         XposedBridge.log(TAG + ": loading in Settings (xposed API "
                 + XposedBridge.getXposedVersion() + "), module resources will be resolved "
                 + "lazily on the first attach");
+
+        // Dialogs are separate windows (requirement 2) and switch state lines need the
+        // checked-change event (requirement 3); both are Settings-process only.
+        DialogStyler.install(settingsClassLoader);
+        TwoStateRow.install(settingsClassLoader);
+        // Builds where search still lives in the Settings package (guarded, usually none
+        // on LineageOS 23.2: search is SettingsIntelligence).
+        SearchSurface.install(settingsClassLoader);
 
         Class<?> base = null;
         Class<?> homepage = null;

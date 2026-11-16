@@ -1,0 +1,11 @@
+Archive:  /home/denis/ztux/perf2/launch-pass2/launcher/build/out/ztmetro-start.apk
+ Length   Method    Size  Cmpr    Date    Time   CRC-32   Name
+--------  ------  ------- ---- ---------- ----- --------  ----
+    3768  Defl:N     1237  67% 1980-01-01 00:00 3cbd74db  AndroidManifest.xml
+     696  Defl:N      319  54% 1980-01-01 00:00 3999c9f5  res/anim/zt_turnstile_in.xml
+     636  Defl:N      298  53% 1980-01-01 00:00 8a8058e5  res/anim/zt_turnstile_out.xml
+     724  Defl:N      361  50% 1980-01-01 00:00 29762d49  res/drawable/ic_launcher.xml
+   11708  Stored    11708   0% 1980-01-01 00:00 7fca6c22  resources.arsc
+  115212  Defl:N    55627  52% 1980-01-01 03:00 d8a8acfc  classes.dex
+--------          -------  ---                            -------
+  132744            69550  48%                            6 files

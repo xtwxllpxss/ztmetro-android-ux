@@ -490,6 +490,32 @@ for literal in animator_duration_scale enabled_notification_listeners; do
     grep -aq "$literal" "$BUILD/verify.dex" \
         || die "$literal missing from classes.dex"
 done
+
+# Pass 2 (perf): the notification listener is released after two minutes hidden
+# and rebound on resume; an ordinary resume no longer reloads the package set or
+# rebuilds the tile views.
+if [ -x "$DEXDUMP" ]; then
+    grep -q "Lorg/ztmetro/start/ListenerWindow;" "$EVIDENCE/dexdump-classes.txt" \
+        || die "dexdump does not list ListenerWindow"
+fi
+for literal in requestUnbind requestRebind tileSignature appSignature; do
+    grep -aq "$literal" "$BUILD/verify.dex" \
+        || die "$literal missing from classes.dex (pass-2 listener cap / tile signature)"
+done
+grep -q "HIDDEN_UNBIND_MS = 2L \* 60L \* 1000L" \
+    "$APP/java/org/ztmetro/start/ListenerWindow.java" \
+    || die "two-minute hidden window is not the configured release delay"
+if grep -q "ListenerWindow.onVisible" "$START_SRC" \
+        && grep -q "ListenerWindow.onHidden" "$START_SRC"; then
+    :
+else
+    die "listener window is not wired into onResume/onPause"
+fi
+if grep -q "refreshIfNeeded" "$START_SRC"; then
+    :
+else
+    die "onResume/onNewIntent still reload unconditionally"
+fi
 grep -q 'metro_live_flip_ms">240<' "$TOKENS_XML" \
     || die "live flip token is not 240ms"
 

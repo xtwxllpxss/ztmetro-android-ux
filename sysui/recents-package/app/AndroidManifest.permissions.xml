@@ -1,0 +1,15 @@
+    <!-- ztmetro-recents system package. These are requested so the grants can
+         land; requesting them from a data install would simply fail.
+         * REAL_GET_TASKS (signature|privileged): covered by the module's
+           privapp-permissions XML. Redundant with the recents-UID bypass but it
+           keeps listing working if the RRO is not applied but the allowlist is.
+         * START_TASKS_FROM_RECENTS (signature|privileged|recents): privapp XML.
+         * REMOVE_TASKS (signature|recents|role) and MANAGE_ACTIVITY_TASKS
+           (signature|recents): NOT privileged, so the allowlist cannot grant
+           them; PermissionManagerServiceImpl grants them to known package
+           PACKAGE_RECENTS, which is this package once the RRO makes
+           config_recentsComponentName point here and the APK is a system app. -->
+    <uses-permission android:name="android.permission.REAL_GET_TASKS" />
+    <uses-permission android:name="android.permission.REMOVE_TASKS" />
+    <uses-permission android:name="android.permission.MANAGE_ACTIVITY_TASKS" />
+    <uses-permission android:name="android.permission.START_TASKS_FROM_RECENTS" />

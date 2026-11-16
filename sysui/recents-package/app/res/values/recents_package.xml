@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings added by the ztmetro-recents system package (the module build
+     overlays this file into the Action Centre resource tree). Kept separate from
+     res/values/strings.xml so the two files never redefine the same name. -->
+<resources>
+    <!-- Header close (exit recents) and per-card dismiss (remove the task). -->
+    <string name="recents_close">×</string>
+    <string name="recents_close_desc">Close recents</string>
+    <string name="recents_dismiss">×</string>
+    <string name="recents_dismiss_desc">Remove task from recents</string>
+
+    <string name="recents_status_tasks_v2">%1$d tasks · REMOVE_TASKS %2$s · %3$s</string>
+    <string name="recents_status_empty">no other tasks visible · REMOVE_TASKS %1$s · %2$s</string>
+    <string name="recents_perm_granted">granted</string>
+    <string name="recents_perm_denied">denied</string>
+    <string name="recents_pkg_system">system package</string>
+    <string name="recents_pkg_data">data package</string>
+    <string name="recents_remove_failed">task not removed: %1$s</string>
+
+    <string name="recents_no_access_title_v2">Recents has no task access</string>
+    <string name="recents_no_access_body_v2">If apps have been used and only this app or HOME appears, system_server has not made org.ztmetro.actioncentre the recents component: the ztmetro-recents module is not installed, its static RRO is not applied, or the phone has not rebooted since it was enabled. This state is logged once to logcat under the tag ztmetro-recents.</string>
+    <string name="recents_change_title_v2">EXPECTED SYSTEM STATE</string>
+    <string name="recents_change_body_v2">1. cmd overlay list must show [x] org.ztmetro.overlay.recents. The overlay is static (applied at boot, not toggleable); no line means the module was not mounted into /product/overlay.\n\n2. The APK must be the system copy: dumpsys package org.ztmetro.actioncentre shows versionCode 2 under /system_ext/priv-app, not a /data/app update.\n\n3. Dismissal needs REMOVE_TASKS. It is granted only when PackageManagerService resolves this package as PACKAGE_RECENTS from the same config string; the privapp allowlist alone cannot grant a signature|recents permission. Check: dumpsys package org.ztmetro.actioncentre | grep REMOVE_TASKS.\n\n4. The recents key and gesture still open Launcher3QuickStep. WMShell builds its own overview and does not read config_recentsComponentName. Until WMShell is patched or QuickStep is replaced, open this screen with: am start -n org.ztmetro.actioncentre/.RecentsActivity</string>
+</resources>

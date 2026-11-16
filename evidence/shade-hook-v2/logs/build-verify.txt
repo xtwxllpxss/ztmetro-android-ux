@@ -1,0 +1,132 @@
+## apksigner verify
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=ztMetro shade hook dev, OU=ztOS, O=ztOS, C=RU
+Signer #1 certificate SHA-256 digest: fed7315b4530d0b4309d544bbd8c78145e66a088bec73ec2a86ad28472455f5a
+Signer #1 certificate SHA-1 digest: 0bcf4c0d569a822d17d02e06c9ad6288853715bd
+Signer #1 certificate MD5 digest: 260fb6bea5884155f44ee5ae144fb0bc
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 2048
+Signer #1 public key SHA-256 digest: c8c207caba01ec9beb507467d7837171aec3a291ae6212438a1510d8b0d496e4
+Signer #1 public key SHA-1 digest: 2a5768208bd678a076912097afe24f6d7ef9cdb0
+Signer #1 public key MD5 digest: e905842eabb54fea9413effd1de0fe06
+
+## aapt2 dump badging
+package: name='org.ztmetro.shadehook' versionCode='2' versionName='2.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+minSdkVersion:'29'
+targetSdkVersion:'36'
+application-label:'ztMetro Shade Hook'
+application: label='ztMetro Shade Hook' icon=''
+feature-group: label=''
+  uses-feature: name='android.hardware.faketouch'
+  uses-implied-feature: name='android.hardware.faketouch' reason='default feature for all apps'
+supports-screens: 'small' 'normal' 'large' 'xlarge'
+supports-any-density: 'true'
+locales: '--_--'
+densities: '160'
+
+## AndroidManifest xposed metadata
+    A: package="org.ztmetro.shadehook" (Raw: "org.ztmetro.shadehook")
+        A: http://schemas.android.com/apk/res/android:minSdkVersion(0x0101020c)=29
+        A: http://schemas.android.com/apk/res/android:targetSdkVersion(0x01010270)=36
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposedmodule" (Raw: "xposedmodule")
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposeddescription" (Raw: "xposeddescription")
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposedminversion" (Raw: "xposedminversion")
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposedscope" (Raw: "xposedscope")
+
+## module resources (scope array, label)
+    resource 0x7f010000 array/xposed_scope
+      () (array) size=2
+        ["android", "com.android.systemui"]
+  type string id=02 entryCount=2
+    resource 0x7f020000 string/app_name
+      () "ztMetro Shade Hook"
+    resource 0x7f020001 string/xposed_description
+      () "Keeps the stock notification shade from opening on a top-edge swipe and opens the Metro Action Centre instead. Scope android (system_server) blocks the status-bar touch transfer; scope com.android.systemui is the fallback that closes a shade which opened anyway. Fail-safe: any error, the lock screen or settings ztmetro_shade_hook=0 leaves the stock shade working."
+
+## classes.dex
+Archive:  /home/denis/ztux/sysuihook/sysui/shade-hook/build/dist/ztmetro-shade-hook.apk
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+     1948  1980-01-01 00:00   AndroidManifest.xml
+     1220  1980-01-01 00:00   resources.arsc
+       34  1980-01-01 00:00   assets/xposed_init
+    17816  2026-11-16 17:04   classes.dex
+      502  2026-11-16 17:04   META-INF/ZTMETRO-.SF
+     1286  2026-11-16 17:04   META-INF/ZTMETRO-.RSA
+      375  2026-11-16 17:04   META-INF/MANIFEST.MF
+---------                     -------
+    23181                     7 files
+## hook target names referenced by classes.dex
+com.android.server.wm.WindowState
+com.android.systemui.shade.NotificationPanelViewController
+com.android.systemui.shade.ShadeControllerImpl
+enabled_accessibility_services
+extra_instant
+instantCollapseShade
+makeExpandedInvisible
+makeExpandedVisible
+onPanelStateChanged
+org.ztmetro.actioncentre
+org.ztmetro.actioncentre.ActionCentreActivity
+transferTouch
+ztmetro_shade_hook
+Processing '/home/denis/ztux/sysuihook/sysui/shade-hook/build/classes.dex'...
+Opened '/home/denis/ztux/sysuihook/sysui/shade-hook/build/classes.dex', DEX version '039'
+DEX file header:
+magic               : 'dex\n039\0'
+checksum            : 0a6324a0
+signature           : 811d...4479
+file_size           : 17816
+header_size         : 112
+link_size           : 0
+link_off            : 0 (0x000000)
+string_ids_size     : 326
+string_ids_off      : 112 (0x000070)
+type_ids_size       : 62
+type_ids_off        : 1416 (0x000588)
+proto_ids_size      : 55
+proto_ids_off       : 1664 (0x000680)
+field_ids_size      : 52
+field_ids_off       : 2324 (0x000914)
+method_ids_size     : 105
+method_ids_off      : 2740 (0x000ab4)
+class_defs_size     : 13
+class_defs_off      : 3580 (0x000dfc)
+data_size           : 13820
+data_off            : 3996 (0x000f9c)
+
+Class #0            -
+  Class descriptor  : 'Lorg/ztmetro/shadehook/FrameworkHooks$1;'
+  Access flags      : 0x0000 ()
+  Superclass        : 'Lde/robv/android/xposed/XC_MethodHook;'
+  Interfaces        -
+  Static fields     -
+  Instance fields   -
+  Direct methods    -
+    #0              : (in Lorg/ztmetro/shadehook/FrameworkHooks$1;)
+      name          : '<init>'
+      type          : '()V'
+      access        : 0x10000 (CONSTRUCTOR)
+      code          -
+      registers     : 1
+      ins           : 1
+  Class descriptor  : 'Lorg/ztmetro/shadehook/FrameworkHooks$1;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/FrameworkHooks;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ModuleEntry;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/R$array;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/R$string;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/R;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/SLog;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ShadeHooks$1;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ShadeHooks$2;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ShadeHooks$3;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ShadeHooks;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ShadeRouter$1;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ShadeRouter;'

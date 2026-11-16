@@ -223,8 +223,20 @@ final class LockOverlayView extends FrameLayout {
                             LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
             authPanel = panel;
         } catch (Throwable ignored) {
-            // Keep whatever the column still holds (the clock is the fallback).
+            // Keep the slot usable: drop a half-inserted panel and make sure the
+            // clock is back at the top of the column. The swipe strip is a
+            // separate window and is never involved here.
             authPanel = null;
+            try {
+                if (panel != null && panel.getParent() == column) {
+                    column.removeView(panel);
+                }
+                if (clockPanel.getParent() == null) {
+                    column.addView(clockPanel, 0, new LinearLayout.LayoutParams(
+                            LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+                }
+            } catch (Throwable ignoredAgain) {
+            }
         }
     }
 

@@ -1,0 +1,144 @@
+ztmetro-shadehook v2 — the exact source lines behind every decision
+Source: LineageOS/android_frameworks_base, branch lineage-23.2,
+commit 797e43244b96c6a0dff5c81b21c4d4be665b082e (same pin as
+repo/evidence/strip-rework/framework-facts.txt).
+Fetched 2026-11-16 on hermes-ubuntu from raw.githubusercontent.com; sha256 of the
+fetched files below. Line numbers are from those exact files.
+
+sha256 of fetched files
+  f658169a23e7f5b5ddc54694ec14a3fb57b421dc87a08e1baf476a3ac100acf7  services/core/java/com/android/server/wm/SystemGesturesPointerEventListener.java
+  cf7b5539d668932205a37a1428d75de679a7e93356f52f03e7a3262a348ba848  services/core/java/com/android/server/wm/DisplayPolicy.java
+  cc4803be99d99334bd4b51ba1d443b4e5230b49767df983a73ac9d0ebff21167  services/core/java/com/android/server/wm/WindowState.java
+  0f0e4ace34fc98fa9decf9e26fef6912e4db78df49abc635340fb66967ff833d  packages/SystemUI/src/com/android/systemui/shade/NotificationPanelViewController.java
+  1401bb54d80be1fed3b4df2b225e6198f9a916de73053c510cabff2c60b4125c  packages/SystemUI/src/com/android/systemui/shade/ShadeControllerImpl.java
+  b8515424a37d9dd52a5881e0fdf1929c2610225e12aee1461a852a1e8a9d9402  packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBarView.java
+  5483b8ba625d1c2de4b19ac4cb2c4240bbf315386e039ce3f7ad826842925c8e  packages/SystemUI/src/com/android/systemui/shade/NotificationShadeWindowViewController.java
+
+Also fetched, not part of the hook (context only):
+  404 for packages/SystemUI/src/com/android/systemui/statusbar/phone/SystemGesturesPointerEventListener.java
+      -> there is NO SystemGesturesPointerEventListener in SystemUI at this pin.
+
+================================================================================
+1. The gesture is recognised in system_server, not in SystemUI
+   services/core/java/com/android/server/wm/SystemGesturesPointerEventListener.java
+================================================================================
+:50   class SystemGesturesPointerEventListener implements PointerEventListener {
+:59     private static final int SWIPE_FROM_TOP = 1;
+:179  public void onPointerEvent(MotionEvent event) {
+:238            final int swipe = detectSwipe(event);
+:239            mSwipeFireable = swipe == SWIPE_NONE;
+:240            if (swipe == SWIPE_FROM_TOP) {
+:241                if (DEBUG) Slog.d(TAG, "Firing onSwipeFromTop");
+:242                mCallbacks.onSwipeFromTop();
+:356  private int detectSwipe(MotionEvent move) {          // per-pointer loop
+:381  private int detectSwipe(int i, long time, float x, float y) {
+:387      final long elapsed = time - mDownTime[i];
+:388      if (fromY <= mSwipeStartThreshold.top
+:389              && y > fromY + mSwipeDistanceThreshold
+:390              && elapsed < SWIPE_TIMEOUT_MS) {
+:391          return SWIPE_FROM_TOP;
+
+  Thresholds (repo/evidence/strip-rework/framework-facts.txt C): 24 dp start and
+  24 dp travel = 48 px on this 320 dpi panel, within 500 ms. The monitor runs on
+  the global monitor channel, so it fires even when the touch belongs to the
+  ztmetro accessibility strip.
+
+================================================================================
+2. DisplayPolicy turns that into a touch transfer to the status bar window
+   services/core/java/com/android/server/wm/DisplayPolicy.java
+================================================================================
+:275  private WindowState mStatusBar = null;
+:492  public void onSwipeFromTop() {
+:493      synchronized (mLock) {
+:494          requestTransientBars(mTopGestureHost,
+:495                  getControllableInsets(mTopGestureHost).top > 0);
+:1375 WindowState getNotificationShade() { return mNotificationShade; }
+
+:2379 void requestTransientBars(WindowState swipeTarget, boolean isGestureOnSystemBar) {
+:2381     if (CLIENT_TRANSIENT) return;
+:2383     if (swipeTarget == null || !mService.mPolicy.isUserSetupComplete()) return;
+:2388     if (!mCanSystemBarsBeShownByUser) return;
+:2399     if (controlTarget == null || controlTarget == getNotificationShade()) {
+              // no transient mode on the lockscreen
+:2423     if (controlTarget.canShowTransient()) {
+              // show transient bars / restore insets
+:2429     } else {
+:2431         controlTarget.showInsets(Type.statusBars() | Type.navigationBars(), null);
+:2434         if (swipeTarget == mStatusBar) {
+:2435             final boolean transferred = mStatusBar.transferTouch();
+:2436             if (!transferred) Slog.i(TAG, "Could not transfer touch to the status bar");
+:2437         }
+:2438     }
+
+  `canShowTransient()` (WindowState.java:3948-3950) is
+  (mAttrs.insetsFlags.behavior & BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE) != 0, i.e.
+  it is about the insets control target, not the shade. On an ordinary unlocked
+  display that target is not a "show transient bars by swipe" window, so the
+  else branch — the one with transferTouch() — is the normal path. That is why
+  the defect reproduces on every top-edge swipe and why a late SystemUI hook can
+  never win.
+
+================================================================================
+3. WindowState#transferTouch() — the single call that steals the gesture
+   services/core/java/com/android/server/wm/WindowState.java
+================================================================================
+:318  final WindowManager.LayoutParams mAttrs = new WindowManager.LayoutParams();
+:2631  *   com.android.server.input.InputManagerInternal#transferTouchGesture(IBinder, IBinder)}.
+:2634  public boolean transferTouch() {
+:2635      return mWmService.mInputManager.transferTouch(mInputChannelToken, getDisplayId());
+:2636  }
+
+  => transferTouch() has exactly one caller in the fetched tree:
+     DisplayPolicy.java:2435, for mStatusBar (the type-2000 window). Returning
+     false there is "no reroute"; InputDispatcher keeps the in-progress gesture on
+     the window that received DOWN (strip-rework framework-facts.txt B: an
+     in-progress touch is only cancelled when the touched window is removed).
+
+================================================================================
+4. Where SystemUI would otherwise pick the gesture up (what the guard prevents)
+================================================================================
+  packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBarView.java
+:251  public boolean onTouchEvent(MotionEvent event) {
+:265      mStatusBarLongPressGestureDetector.handleTouch(event);
+:278      return mTouchEventHandler.onTouchEvent(event);
+:282  public boolean onInterceptTouchEvent(MotionEvent event) {
+:283      return mTouchEventHandler.onInterceptTouchEvent(event);
+
+  packages/SystemUI/src/com/android/systemui/shade/NotificationShadeWindowViewController.java
+:395          mView.onTouchEvent(event);       // NotificationShadeWindowView
+:660      public boolean handleTouchEvent(MotionEvent ev) {
+:667              handled |= mDragDownHelper.onTouchEvent(ev) || handled;
+
+  A transferred touch reaches this handler as a synthetic DOWN at the finger's
+  current position, so by then SystemUI cannot tell "this came from the top edge"
+  from any other tap; the only reliable classification exists before the transfer.
+
+================================================================================
+5. The SystemUI safety net kept from v1 (unchanged targets, verified again)
+================================================================================
+  packages/SystemUI/src/com/android/systemui/shade/NotificationPanelViewController.java
+:790      shadeExpansionStateManager.addStateListener(this::onPanelStateChanged);
+:3797 private void onPanelStateChanged(@PanelState int state) {
+:3805     if (state == STATE_OPENING) {
+:1568         mDownX = event.getX();
+
+  packages/SystemUI/src/com/android/systemui/shade/ShadeControllerImpl.java
+:277  public void instantCollapseShade() {
+:283  public void makeExpandedVisible(boolean force) {
+:301  public void makeExpandedInvisible() {
+:380  public void start() {
+
+  ActionCentre contract:
+  actioncentre/app/src/main/java/org/ztmetro/actioncentre/ActionCentreActivity.java
+:51   public static final String EXTRA_INSTANT = "extra_instant";
+
+================================================================================
+6. system_server context used for the gate
+   core/java/android/app/ActivityThread.java
+================================================================================
+:3448 public ContextImpl getSystemContext() {
+:3458 public Context getSystemUiContext() {
+
+  FrameworkHooks resolves ActivityThread by name, calls currentActivityThread(),
+  then getSystemContext() (fallback getSystemUiContext()). If neither yields a
+  Context the gate reports "off" and the stock shade keeps working.

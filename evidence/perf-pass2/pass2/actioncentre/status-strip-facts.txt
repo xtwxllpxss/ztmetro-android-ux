@@ -1,0 +1,14 @@
+apk:        ztmetro-actioncentre.apk
+size:       353996 bytes
+sha256:     a2306ba97886267aa1ba64f0f7c7b8a01d0430d3ff54231d742b1b1274778525
+window:     TYPE_ACCESSIBILITY_OVERLAY (2032), MATCH_PARENT x 28 dp, gravity TOP|START
+flags:      NOT_FOCUSABLE|NOT_TOUCHABLE|LAYOUT_IN_SCREEN|LAYOUT_NO_LIMITS
+background: #000000 opaque, full width, exactly 28 dp tall
+left:       battery outline + white fill (+ plug when charging), Wi-Fi three arcs, signal four bars
+right:      HH:mm 12 sp, light white
+sources:    ACTION_BATTERY_CHANGED; WifiManager.isWifiEnabled + default-network callback; TelephonyManager.getSignalStrength + signal callback; ACTION_TIME_TICK
+clock:      ACTION_TIME_TICK on the strip (once a minute, screen on only) and a minute-aligned tick in the panel; no 1 Hz timer; no wakelock
+idle:       screen off -> data receiver, network callback and telephony callback are all released; bursts coalesce over 400 ms; unchanged values never invalidate
+keyguard:   removed on ACTION_SCREEN_OFF / keyguard locked; re-added on ACTION_USER_PRESENT / screen-on unlocked
+cutout:     layoutInDisplayCutoutMode=ALWAYS (API 30+), window remains 28 dp
+fail-safe:  addView failure caught; logs and leaves the stock bar untouched

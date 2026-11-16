@@ -33,14 +33,16 @@ final class MetroTinter {
 
     private static ColorStateList sTrackList;
     private static ColorStateList sThumbList;
+    private static ColorStateList sSelectableList;
     private static int sTrackColor;
     private static int sThumbColor;
+    private static int sSelectableOffColor;
 
     private MetroTinter() {
     }
 
     /** Installs the pass colours once per pass; recreates the lists only on a colour change. */
-    static void configure(int trackColor, int thumbColor) {
+    static void configure(int trackColor, int thumbColor, int selectableOffColor) {
         if (sTrackList == null || sTrackColor != trackColor) {
             sTrackColor = trackColor;
             sTrackList = ColorStateList.valueOf(trackColor);
@@ -51,6 +53,15 @@ final class MetroTinter {
             sThumbList = ColorStateList.valueOf(thumbColor);
             THUMB_ARGS[0] = sThumbList;
         }
+        if (sSelectableList == null || sSelectableOffColor != selectableOffColor
+                || sTrackColor != trackColor) {
+            sSelectableOffColor = selectableOffColor;
+            // Selected = accent, unselected = the grey label colour: a radio/checkbox group
+            // stays a flat black list with the one accent dot (requirement 4).
+            sSelectableList = new ColorStateList(
+                    new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}},
+                    new int[]{trackColor, selectableOffColor});
+        }
     }
 
     /** @return true when at least one tint was applied to this button. */
@@ -59,7 +70,13 @@ final class MetroTinter {
             return false;
         }
         CompoundButton button = (CompoundButton) view;
-        if (!button.isEnabled() || sTrackList == null) {
+        if (!button.isEnabled()) {
+            return false;
+        }
+        if (Views.isSelectable(button)) {
+            return tintSelectable(button);
+        }
+        if (sTrackList == null) {
             return false;
         }
         // setTrackTintList/setThumbTintList live on Switch/SwitchCompat, not on the
@@ -83,6 +100,22 @@ final class MetroTinter {
             }
         }
         return applied;
+    }
+
+    /** Radio/checkbox: accent when selected, grey when not (no track/thumb concept). */
+    private static boolean tintSelectable(CompoundButton button) {
+        if (sSelectableList == null) {
+            return false;
+        }
+        try {
+            if (sSelectableList.equals(button.getButtonTintList())) {
+                return false;
+            }
+            button.setButtonTintList(sSelectableList);
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     private static Method[] methodsFor(Class<?> type) {

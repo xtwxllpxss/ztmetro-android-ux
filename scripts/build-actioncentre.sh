@@ -687,11 +687,53 @@ verify_apk() {
         printf 'FAIL  panel suppression hook missing\n' >> "$CHECKS"
         failed=1
     fi
-    if grep -q "postDelayed\|new Timer\|scheduleAtFixedRate" "$STRIP_SRC" "$STRIP_VIEW"; then
+    # Pass 2: no self-reposting loop and no periodic timer. The strip does use ONE
+    # callback-driven one-shot (NETWORK_COALESCE_MS) to fold a capability burst
+    # into a single read, so this checks the period, not the mere presence of
+    # postDelayed.
+    if grep -qE "new Timer|scheduleAtFixedRate|postDelayed\([^,]+, *(1000|2000|15000)L?\)" \
+            "$STRIP_SRC" "$STRIP_VIEW"; then
         printf 'FAIL  status strip uses a timer loop\n' >> "$CHECKS"
         failed=1
     else
         printf 'PASS  status strip has no timer/polling loop\n' >> "$CHECKS"
+    fi
+    # ---- pass 2 (perf): idle strip does no work ----
+    if grep -q "NETWORK_COALESCE_MS" "$STRIP_SRC"; then
+        printf 'PASS  capability bursts coalesce into one one-shot read\n' >> "$CHECKS"
+    else
+        printf 'FAIL  network coalescing missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "unregisterDataSources" "$STRIP_SRC" \
+            && grep -q "ACTION_SCREEN_OFF" "$STRIP_SRC"; then
+        printf 'PASS  data receiver/callbacks released on screen off\n' >> "$CHECKS"
+    else
+        printf 'FAIL  screen-off release missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "if (batteryLevel == levelPercent" \
+            "$APP/java/org/ztmetro/actioncentre/StatusStripOverlayView.java" \
+            && grep -q "if (wifiEnabled == enabled" \
+            "$APP/java/org/ztmetro/actioncentre/StatusStripOverlayView.java"; then
+        printf 'PASS  strip setters reject an unchanged state (no redraw)\n' >> "$CHECKS"
+    else
+        printf 'FAIL  strip setter change guards missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "60000L - (now % 60000L)" \
+            "$APP/java/org/ztmetro/actioncentre/StatusStripView.java"; then
+        printf 'PASS  in-panel clock ticks once a minute (minute-aligned)\n' >> "$CHECKS"
+    else
+        printf 'FAIL  in-panel clock is not minute-aligned\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "no minute tick and no capability wakeup" "$STRIP_SRC" \
+            || grep -q "no minute tick and no capability" "$STRIP_SRC"; then
+        printf 'PASS  screen-off path documented in the service\n' >> "$CHECKS"
+    else
+        printf 'FAIL  screen-off intent not documented\n' >> "$CHECKS"
+        failed=1
     fi
     if grep -q "WAKE_LOCK\|newWakeLock" "$STRIP_SRC" "$STRIP_VIEW"; then
         printf 'FAIL  status strip takes a wakelock\n' >> "$CHECKS"
@@ -813,7 +855,8 @@ verify_apk() {
         printf 'left:       battery outline + white fill (+ plug when charging), Wi-Fi three arcs, signal four bars\n'
         printf 'right:      HH:mm 12 sp, light white\n'
         printf 'sources:    ACTION_BATTERY_CHANGED; WifiManager.isWifiEnabled + default-network callback; TelephonyManager.getSignalStrength + signal callback; ACTION_TIME_TICK\n'
-        printf 'clock:      ACTION_TIME_TICK / TIME_CHANGED / TIMEZONE_CHANGED only; no 1 Hz timer; no wakelock\n'
+        printf 'clock:      ACTION_TIME_TICK on the strip (once a minute, screen on only) and a minute-aligned tick in the panel; no 1 Hz timer; no wakelock\n'
+        printf 'idle:       screen off -> data receiver, network callback and telephony callback are all released; bursts coalesce over 400 ms; unchanged values never invalidate\n'
         printf 'keyguard:   removed on ACTION_SCREEN_OFF / keyguard locked; re-added on ACTION_USER_PRESENT / screen-on unlocked\n'
         printf 'cutout:     layoutInDisplayCutoutMode=ALWAYS (API 30+), window remains 28 dp\n'
         printf 'fail-safe:  addView failure caught; logs and leaves the stock bar untouched\n'

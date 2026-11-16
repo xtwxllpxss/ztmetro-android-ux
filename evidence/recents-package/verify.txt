@@ -1,0 +1,35 @@
+PASS  RRO targets package android
+PASS  RRO is static (immutable, applied at boot)
+PASS  RRO overrides config_recentsComponentName
+PASS  RRO points at the Action Centre RecentsActivity
+PASS  RRO carries no dex code
+PASS  RRO signature verifies
+PASS  APK package is org.ztmetro.actioncentre
+PASS  APK versionCode is 2
+PASS  APK minSdk 29
+PASS  APK targetSdk 36
+PASS  APK requests android.permission.REAL_GET_TASKS
+PASS  APK requests android.permission.REMOVE_TASKS
+PASS  APK requests android.permission.MANAGE_ACTIVITY_TASKS
+PASS  APK requests android.permission.START_TASKS_FROM_RECENTS
+PASS  RecentsActivity class in dex
+PASS  recents surface lists tasks (getRunningTasks)
+PASS  recents surface removes tasks (removeTask)
+PASS  removal uses the Android 16 entry point (ActivityTaskManager)
+PASS  APK signature verifies
+PASS  APK size <= 2621440 bytes
+PASS  module zip contains module.prop
+PASS  module zip contains customize.sh
+PASS  module zip contains service.sh
+PASS  module zip contains uninstall.sh
+PASS  module zip contains system_ext/priv-app/ActionCentre/ztmetro-actioncentre.apk
+PASS  module zip contains system_ext/etc/permissions/privapp-permissions-ztmetro-recents.xml
+PASS  module zip contains system/product/overlay/ztmetro-recents-rro.apk
+PASS  module.prop id=ztmetro-recents
+PASS  module APK is byte-identical to the built APK
+PASS  module RRO is byte-identical to the built RRO
+PASS  privapp XML names the package
+PASS  privapp XML lists REAL_GET_TASKS
+PASS  privapp XML lists REMOVE_TASKS
+PASS  privapp XML lists MANAGE_ACTIVITY_TASKS
+PASS  privapp XML lists START_TASKS_FROM_RECENTS

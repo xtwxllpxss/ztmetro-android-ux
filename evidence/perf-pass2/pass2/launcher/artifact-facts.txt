@@ -1,0 +1,11 @@
+apk:      launcher/build/out/ztmetro-start.apk
+evidence: /home/denis/ztux/perf2/launch-pass2/evidence/transitions-recents/launcher/ztmetro-start.apk
+size:     78251 bytes
+sha256:   c32062fa9394dfd789fef0f22d79a11c5afc0f32f458c914c5df3479ca60bcc1
+package:  org.ztmetro.start
+version:  4 (4.0)
+glyphs:   18 white 24dp paths (GlyphSet); system map before monochrome
+min/target: 29 / 36
+build:    android-sdk, openjdk version "17.0.21" 2026-10-20
+checks:   HOME category, notification listener + BIND permission, no uses-permission,
+          no androidx, live flip 240ms + dexdump service, <3 MB

@@ -238,8 +238,8 @@ grep -q "xposedscope" "$VERIFY" || die "manifest has no xposedscope metadata"
 grep -q "assets/xposed_init" "$VERIFY" \
     || die "APK has no assets/xposed_init (legacy Xposed entry point)"
 grep -q "com.android.systemui" "$VERIFY" || die "scope array does not name SystemUI"
-grep -q "<item>android</item>" "$VERIFY" \
-    || die "scope array does not name android (system_server guard)"
+grep -q '\["android", "com.android.systemui"\]' "$VERIFY" \
+    || die "scope array is not [android, com.android.systemui] (system_server guard + safety net)"
 if grep -q "uses-permission" "$VERIFY"; then
     die "module requests a permission; it must be a passive container"
 fi

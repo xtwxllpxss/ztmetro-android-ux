@@ -377,6 +377,27 @@ step_systemui() {
   fi
 }
 
+# LSPosed/Vector module enablement + scopes: lost on every module APK reinstall,
+# GUI-owned by default; re-applied here so a reboot restores the Settings header
+# and the shade hook without manual taps.
+step_vector() {
+  VECTOR_CLI=/data/adb/modules/zygisk_vector/cli
+  if [ ! -f "$VECTOR_CLI" ]; then
+    log "vector=cli absent (module enablement skipped)"
+    return 0
+  fi
+  for mod in org.ztmetro.settingsheader org.ztmetro.shadehook; do
+    if printf '%s\n' "$PKGS" | grep -qx "$mod"; then
+      sh "$VECTOR_CLI" modules enable "$mod" >/dev/null 2>&1 && \
+        log "vector=module enabled $mod" || warn "vector=$mod enable failed"
+    fi
+  done
+  sh "$VECTOR_CLI" scope add org.ztmetro.settingsheader com.android.settings/0 >/dev/null 2>&1
+  sh "$VECTOR_CLI" scope add org.ztmetro.shadehook android/0 >/dev/null 2>&1
+  sh "$VECTOR_CLI" scope add org.ztmetro.shadehook com.android.systemui/0 >/dev/null 2>&1
+  log "vector=scopes applied (settingsheader->settings, shadehook->android+systemui)"
+}
+
 # --------------------------------------------------------------------------
 # main
 # --------------------------------------------------------------------------
@@ -398,6 +419,7 @@ step_icon_blacklist
 step_home
 step_ime
 step_appops
+step_vector
 step_systemui
 
 log "done changes=$CHANGES warnings=$WARNINGS"

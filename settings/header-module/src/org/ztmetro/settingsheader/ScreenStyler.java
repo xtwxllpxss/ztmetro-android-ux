@@ -105,7 +105,7 @@ final class ScreenStyler {
                 return;
             }
             try {
-                blackOut(target);
+                paintBlack(target);
             } catch (Throwable t) {
                 Log.d(TAG, "black background skipped: " + t);
             }
@@ -131,7 +131,8 @@ final class ScreenStyler {
         }
     }
 
-    private static void blackOut(Activity activity) {
+    /** Black window chrome; shared with the search surface, which has no header. */
+    static void paintBlack(Activity activity) {
         Window window = activity.getWindow();
         if (window != null) {
             try {

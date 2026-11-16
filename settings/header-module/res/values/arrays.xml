@@ -3,5 +3,7 @@
     <!-- Read by LSPosed to prefill the module scope (LSPosed: xposedscope). -->
     <string-array name="xposed_scope">
         <item>com.android.settings</item>
+        <!-- SettingsIntelligence hosts the search results UI on LineageOS 23.2. -->
+        <item>com.android.settings.intelligence</item>
     </string-array>
 </resources>

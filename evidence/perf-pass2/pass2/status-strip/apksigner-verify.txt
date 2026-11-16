@@ -1,0 +1,17 @@
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=ztmetro action centre, O=ztmetro, C=US
+Signer #1 certificate SHA-256 digest: 823da85868034ac779942622380fb37bef9ec4cc66c6e9baa4d4164cd8a7ebad
+Signer #1 certificate SHA-1 digest: abf69c76887cb6ac39b6499d03f4d2ea603b4a05
+Signer #1 certificate MD5 digest: f111528485b1f20dedd404632bcc1ee9
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 2048
+Signer #1 public key SHA-256 digest: 2fded30ac0467828b988a6e0c18fb81058744c75e7dd1bbe20c4138d04450ab9
+Signer #1 public key SHA-1 digest: 13daa427ba50a7f967417252cb50cfde4f83395a
+Signer #1 public key MD5 digest: dffb0658cb2a3dd808560113c4dea7fe

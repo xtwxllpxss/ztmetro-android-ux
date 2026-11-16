@@ -208,7 +208,10 @@ VERIFY="$BUILD_DIR/verify.txt"
     echo
     echo "## module resources (must all live in the module APK, not in Settings)"
     "$AAPT2" dump resources "$APK" \
-        | grep -iE 'metro_header|metro_row|metro_switch|MetroHeader|#ff0050ef|#ff999999|#ffffffff' || true
+        | grep -iE 'metro_header|metro_row|metro_switch|metro_dialog|MetroHeader|#ff0050ef|#ff999999|#ffffffff' || true
+    echo
+    echo "## module scope (xposed_scope string pool)"
+    "$AAPT2" dump strings "$APK" | grep -E 'com\.android\.settings' || true
     echo
     echo "## classes.dex"
     unzip -l "$APK"
@@ -246,6 +249,34 @@ grep -q "metro_row_value" "$VERIFY" || die "row value colour is not in module re
 grep -q "metro_row_label_size" "$VERIFY" || die "row label 15 sp dimen missing"
 grep -q "metro_row_value_size" "$VERIFY" || die "row value 22 sp dimen missing"
 grep -q "metro_switch_track" "$VERIFY" || die "switch track colour missing"
+
+# ---- pass 2 (perf) ----
+# One post-layout row pass and a per-view style tag: no repeated setLayoutParams.
+"$AAPT2" dump resources "$APK" | grep -q "metro_style" \
+    || die "row style tag id (res/values/ids.xml#metro_style) missing from the module"
+grep -q "addOnGlobalLayoutListener" \
+    "$MODULE_DIR/src/org/ztmetro/settingsheader/ScreenPass.java" \
+    || die "post-layout row pass is not the one-shot global-layout listener"
+if grep -q "postDelayed" "$MODULE_DIR/src/org/ztmetro/settingsheader/ScreenPass.java"; then
+    die "ScreenPass still schedules a delayed pass (250/700 ms chain)"
+fi
+grep -q "WeakReference" "$MODULE_DIR/src/org/ztmetro/settingsheader/ScreenPass.java" \
+    || die "recycler list is not weak (process-level view retention)"
+LC_ALL=C grep -a -q "metro_style" "$BUILD_DIR/classes.dex" \
+    || die "row style tag id is not referenced by the compiled code"
+grep -q "metro_dialog_title_size" "$VERIFY" || die "dialog title 20 sp dimen missing"
+LC_ALL=C grep -a -q "com.android.settings.intelligence" "$VERIFY" \
+    || die "search package (SettingsIntelligence) is not in the scope/dex"
+LC_ALL=C grep -a -q 'ВКЛ' "$BUILD_DIR/classes.dex" || die "switch ON label is not in dex"
+LC_ALL=C grep -a -q 'ВЫКЛ' "$BUILD_DIR/classes.dex" || die "switch OFF label is not in dex"
+LC_ALL=C grep -a -q "dialog \[dialog\]:" "$BUILD_DIR/classes.dex" \
+    || die "dialog surface proof line is not in dex"
+LC_ALL=C grep -a -q "switch=" "$BUILD_DIR/classes.dex" \
+    || die "per-pass switch counter is not in dex"
+LC_ALL=C grep -a -q "segmented=" "$BUILD_DIR/classes.dex" \
+    || die "per-pass segmented counter is not in dex"
+LC_ALL=C grep -a -q "entity=" "$BUILD_DIR/classes.dex" \
+    || die "per-pass app-info entity counter is not in dex"
 LC_ALL=C grep -a -q "setContentView" "$VERIFY" || die "dex does not reference setContentView"
 LC_ALL=C grep -a -q "onResume" "$VERIFY" || die "dex does not reference onResume"
 if [ -x "$DEXDUMP" ]; then
@@ -255,6 +286,10 @@ if [ -x "$DEXDUMP" ]; then
         || die "classes.dex does not contain ModuleEntry"
     grep -q 'Lorg/ztmetro/settingsheader/ScreenPass;' "$VERIFY" \
         || die "classes.dex does not contain the single-pass walker (ScreenPass)"
+    for cls in DialogStyler SearchSurface SegmentedStyler TwoStateRow; do
+        grep -q "Lorg/ztmetro/settingsheader/$cls;" "$VERIFY" \
+            || die "classes.dex does not contain $cls (surface not compiled in)"
+    done
 fi
 # The single per-pass proof line: "pass 1/2 attach: N views, M applies, T ms".
 LC_ALL=C grep -a -q ' views, ' "$BUILD_DIR/classes.dex" \

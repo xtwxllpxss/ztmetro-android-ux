@@ -1,0 +1,6 @@
+id=ztmetro-recents
+name=ztMetro Recents
+version=1.0.0
+versionCode=1
+author=xtwxllpxss
+description=Installs the ztMetro Action Centre as /system_ext/priv-app recents provider: static framework RRO config_recentsComponentName -> org.ztmetro.actioncentre/.RecentsActivity, the recents priv-app allowlist, and the overlay itself. Reboot required. The recents key/gesture still opens Launcher3QuickStep: WMShell is not patched. Remove the module and reboot to roll back.

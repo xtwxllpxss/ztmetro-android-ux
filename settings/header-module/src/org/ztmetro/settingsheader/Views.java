@@ -67,13 +67,67 @@ final class Views {
     }
 
     static boolean isTitle(View view) {
-        return view instanceof TextView
-                && (view.getId() == android.R.id.title || "title".equals(idName(view)));
+        if (!(view instanceof TextView)) {
+            return false;
+        }
+        if (view.getId() == android.R.id.title) {
+            return true;
+        }
+        String name = idName(view);
+        // SettingsLib's entity header (app info page) uses its own ids, not @android:id/title.
+        // Without this the app-info header is skipped as "no row content" and stays the stock
+        // centred icon block.
+        return "title".equals(name) || "entity_header_title".equals(name);
     }
 
     static boolean isSummary(View view) {
-        return view instanceof TextView
-                && (view.getId() == android.R.id.summary || "summary".equals(idName(view)));
+        if (!(view instanceof TextView)) {
+            return false;
+        }
+        if (view.getId() == android.R.id.summary) {
+            return true;
+        }
+        String name = idName(view);
+        return "summary".equals(name)
+                || "entity_header_summary".equals(name)
+                || "entity_header_second_summary".equals(name)
+                || "install_type".equals(name);
+    }
+
+    /** SettingsLib entity header block (app info page): app icon + name + version. */
+    static boolean isEntityHeader(View view) {
+        if (!(view instanceof ViewGroup)) {
+            return false;
+        }
+        String name = view.getClass().getSimpleName().toLowerCase(Locale.ROOT);
+        return "entity_header".equals(idName(view)) || name.contains("entityheader");
+    }
+
+    /** A two-state row widget (framework Switch, SwitchCompat, MaterialSwitch). */
+    static boolean isSwitch(View view) {
+        if (!(view instanceof CompoundButton)) {
+            return false;
+        }
+        return view.getClass().getName().toLowerCase(Locale.ROOT).contains("switch");
+    }
+
+    /** A radio/checkbox row widget: selection, not a two-state value line. */
+    static boolean isSelectable(View view) {
+        return view instanceof android.widget.RadioButton
+                || view instanceof android.widget.CheckBox;
+    }
+
+    /** MaterialButtonToggleGroup / the segmented-button preference's group. */
+    static boolean isSegmentedGroup(View view) {
+        if (!(view instanceof ViewGroup)) {
+            return false;
+        }
+        String name = view.getClass().getName().toLowerCase(Locale.ROOT);
+        return name.contains("materialbuttontogglegroup") || "button_group".equals(idName(view));
+    }
+
+    static boolean isBreadcrumb(View view) {
+        return "breadcrumb".equals(idName(view));
     }
 
     /** A view inflated by this module (header, bottom bar, their children). */

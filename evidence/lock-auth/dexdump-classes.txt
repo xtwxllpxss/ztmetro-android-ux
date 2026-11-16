@@ -2,9 +2,9 @@ Processing '/home/denis/ztux/lockauth/build/verify.dex'...
 Opened '/home/denis/ztux/lockauth/build/verify.dex', DEX version '039'
 DEX file header:
 magic               : 'dex\n039\0'
-checksum            : eb00acda
-signature           : 11c0...8a42
-file_size           : 150952
+checksum            : b8dd1e96
+signature           : c81a...43ed
+file_size           : 151036
 header_size         : 112
 link_size           : 0
 link_off            : 0 (0x000000)
@@ -20,7 +20,7 @@ method_ids_size     : 1227
 method_ids_off      : 18024 (0x004668)
 class_defs_size     : 95
 class_defs_off      : 27840 (0x006cc0)
-data_size           : 120072
+data_size           : 120156
 data_off            : 30880 (0x0078a0)
 
 Class #0            -
@@ -5755,7 +5755,7 @@ Class #38            -
       insns size    : 8 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=336
+        0x0000 line=348
       locals        :
         0x0000 - 0x0008 reg=0 this Lorg/ztmetro/actioncentre/LockOverlayView$3$1;
         0x0000 - 0x0008 reg=1 (null) Lorg/ztmetro/actioncentre/LockOverlayView$3;
@@ -5772,10 +5772,10 @@ Class #38            -
       insns size    : 56 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=339
-        0x0010 line=342
-        0x001f line=343
-        0x0023 line=344
+        0x0000 line=351
+        0x0010 line=354
+        0x001f line=355
+        0x0023 line=356
       locals        :
         0x0000 - 0x0038 reg=3 this Lorg/ztmetro/actioncentre/LockOverlayView$3$1;
   source_file_idx   : 470 (LockOverlayView.java)
@@ -5816,7 +5816,7 @@ Class #39            -
       insns size    : 12 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=329
+        0x0000 line=341
       locals        :
         0x0000 - 0x000c reg=0 this Lorg/ztmetro/actioncentre/LockOverlayView$3;
         0x0000 - 0x000c reg=1 (null) Lorg/ztmetro/actioncentre/LockOverlayView;
@@ -5835,10 +5835,10 @@ Class #39            -
       insns size    : 51 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=332
-        0x0009 line=333
-        0x0011 line=334
-        0x0024 line=336
+        0x0000 line=344
+        0x0009 line=345
+        0x0011 line=346
+        0x0024 line=348
       locals        :
         0x0000 - 0x0033 reg=4 this Lorg/ztmetro/actioncentre/LockOverlayView$3;
   source_file_idx   : 470 (LockOverlayView.java)
@@ -5878,18 +5878,18 @@ Class #40            -
       insns size    : 87 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=381
-        0x0005 line=377
-        0x000c line=378
-        0x0017 line=382
-        0x001e line=383
-        0x002d line=384
-        0x002f line=385
-        0x0036 line=386
-        0x0041 line=387
-        0x0045 line=388
-        0x0048 line=389
-        0x004d line=390
+        0x0000 line=393
+        0x0005 line=389
+        0x000c line=390
+        0x0017 line=394
+        0x001e line=395
+        0x002d line=396
+        0x002f line=397
+        0x0036 line=398
+        0x0041 line=399
+        0x0045 line=400
+        0x0048 line=401
+        0x004d line=402
       locals        :
         0x0000 - 0x0057 reg=5 this Lorg/ztmetro/actioncentre/LockOverlayView$LetterIcon;
         0x0000 - 0x0057 reg=6 (null) Lorg/ztmetro/actioncentre/LockOverlayView;
@@ -5906,13 +5906,13 @@ Class #40            -
       insns size    : 89 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=395
-        0x0004 line=396
-        0x0011 line=399
-        0x0029 line=400
-        0x0036 line=401
-        0x003c line=402
-        0x004b line=403
+        0x0000 line=407
+        0x0004 line=408
+        0x0011 line=411
+        0x0029 line=412
+        0x0036 line=413
+        0x003c line=414
+        0x004b line=415
       locals        :
         0x0000 - 0x0059 reg=8 this Lorg/ztmetro/actioncentre/LockOverlayView$LetterIcon;
         0x0000 - 0x0059 reg=9 (null) Landroid/graphics/Canvas;
@@ -5939,8 +5939,8 @@ Class #40            -
       insns size    : 11 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=408
-        0x0005 line=409
+        0x0000 line=420
+        0x0005 line=421
       locals        :
         0x0000 - 0x000b reg=1 this Lorg/ztmetro/actioncentre/LockOverlayView$LetterIcon;
         0x0000 - 0x000b reg=2 (null) I
@@ -6172,7 +6172,7 @@ Class #41            -
       insns size    : 21 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=372
+        0x0000 line=384
       locals        :
         0x0000 - 0x0015 reg=0 this Lorg/ztmetro/actioncentre/LockOverlayView;
         0x0000 - 0x0015 reg=1 (null) F
@@ -6189,7 +6189,7 @@ Class #41            -
         0x0000 - 0x000c
           <any> -> 0x000d
       positions     :
-        0x0000 line=355
+        0x0000 line=367
       locals        :
         0x0000 - 0x000f reg=0 this Lorg/ztmetro/actioncentre/LockOverlayView;
         0x0000 - 0x000f reg=1 (null) Ljava/lang/String;
@@ -6204,7 +6204,7 @@ Class #41            -
       insns size    : 11 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=329
+        0x0000 line=341
       locals        :
         0x0000 - 0x000b reg=2 this Lorg/ztmetro/actioncentre/LockOverlayView;
         0x0000 - 0x000b reg=3 (null) I
@@ -6222,7 +6222,7 @@ Class #41            -
       insns size    : 3 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=233
+        0x0000 line=245
       locals        :
         0x0000 - 0x0003 reg=0 this Lorg/ztmetro/actioncentre/LockOverlayView;
     #1              : (in Lorg/ztmetro/actioncentre/LockOverlayView;)
@@ -6236,7 +6236,7 @@ Class #41            -
       insns size    : 8 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=238
+        0x0000 line=250
       locals        :
         0x0000 - 0x0008 reg=1 this Lorg/ztmetro/actioncentre/LockOverlayView;
     #2              : (in Lorg/ztmetro/actioncentre/LockOverlayView;)
@@ -6266,59 +6266,59 @@ Class #41            -
         0x0000 - 0x0152
           <any> -> 0x0152
       positions     :
-        0x0000 line=249
-        0x0006 line=250
-        0x000b line=251
-        0x0013 line=252
-        0x0019 line=255
-        0x001d line=256
-        0x0022 line=257
-        0x0027 line=258
-        0x003a line=259
-        0x003f line=262
-        0x0049 line=264
-        0x0051 line=267
-        0x005a line=268
-        0x005c line=269
-        0x0069 line=270
-        0x006e line=268
-        0x0072 line=272
-        0x0078 line=275
-        0x007e line=276
-        0x0084 line=280
-        0x0089 line=281
-        0x008e line=282
-        0x00a2 line=283
-        0x00a8 line=284
-        0x00ae line=286
-        0x00b7 line=287
-        0x00bc line=288
-        0x00bf line=290
-        0x00c8 line=291
-        0x00cc line=292
-        0x00d7 line=293
-        0x00da line=294
-        0x00df line=295
-        0x00e7 line=296
-        0x00ea line=298
-        0x00f3 line=299
-        0x0105 line=300
-        0x0108 line=301
-        0x0112 line=302
-        0x0115 line=303
-        0x0118 line=304
-        0x011b line=305
-        0x0123 line=307
-        0x0129 line=308
-        0x012c line=310
-        0x012f line=311
-        0x0132 line=313
-        0x0137 line=315
-        0x013d line=316
-        0x0142 line=317
-        0x0145 line=318
-        0x014a line=320
-        0x014f line=321
+        0x0000 line=261
+        0x0006 line=262
+        0x000b line=263
+        0x0013 line=264
+        0x0019 line=267
+        0x001d line=268
+        0x0022 line=269
+        0x0027 line=270
+        0x003a line=271
+        0x003f line=274
+        0x0049 line=276
+        0x0051 line=279
+        0x005a line=280
+        0x005c line=281
+        0x0069 line=282
+        0x006e line=280
+        0x0072 line=284
+        0x0078 line=287
+        0x007e line=288
+        0x0084 line=292
+        0x0089 line=293
+        0x008e line=294
+        0x00a2 line=295
+        0x00a8 line=296
+        0x00ae line=298
+        0x00b7 line=299
+        0x00bc line=300
+        0x00bf line=302
+        0x00c8 line=303
+        0x00cc line=304
+        0x00d7 line=305
+        0x00da line=306
+        0x00df line=307
+        0x00e7 line=308
+        0x00ea line=310
+        0x00f3 line=311
+        0x0105 line=312
+        0x0108 line=313
+        0x0112 line=314
+        0x0115 line=315
+        0x0118 line=316
+        0x011b line=317
+        0x0123 line=319
+        0x0129 line=320
+        0x012c line=322
+        0x012f line=323
+        0x0132 line=325
+        0x0137 line=327
+        0x013d line=328
+        0x0142 line=329
+        0x0145 line=330
+        0x014a line=332
+        0x014f line=333
       locals        :
         0x0000 - 0x0153 reg=15 this Lorg/ztmetro/actioncentre/LockOverlayView;
     #4              : (in Lorg/ztmetro/actioncentre/LockOverlayView;)
@@ -6334,9 +6334,9 @@ Class #41            -
         0x0006 - 0x000b
           <any> -> 0x000b
       positions     :
-        0x0000 line=363
-        0x0006 line=365
-        0x000b line=368
+        0x0000 line=375
+        0x0006 line=377
+        0x000b line=380
       locals        :
         0x0000 - 0x0012 reg=1 this Lorg/ztmetro/actioncentre/LockOverlayView;
     #5              : (in Lorg/ztmetro/actioncentre/LockOverlayView;)
@@ -6344,32 +6344,38 @@ Class #41            -
       type          : '(Landroid/view/View;)V'
       access        : 0x0000 ()
       code          -
-      registers     : 8
+      registers     : 10
       ins           : 2
       outs          : 4
-      insns size    : 127 16-bit code units
-      catches       : 1
-        0x0001 - 0x007b
-          <any> -> 0x007c
+      insns size    : 161 16-bit code units
+      catches       : 2
+        0x0004 - 0x007c
+          <any> -> 0x007d
+        0x0081 - 0x00a0
+          <any> -> 0x00a0
       positions     :
-        0x0001 line=194
-        0x0009 line=197
-        0x0010 line=198
-        0x001b line=202
-        0x001f line=203
-        0x0024 line=204
-        0x002a line=207
-        0x0032 line=208
-        0x0047 line=215
-        0x004f line=216
-        0x0058 line=218
-        0x0060 line=219
-        0x0067 line=221
-        0x0079 line=224
-        0x007c line=227
+        0x0004 line=194
+        0x000c line=197
+        0x0013 line=198
+        0x001e line=202
+        0x0022 line=203
+        0x0027 line=204
+        0x002b line=207
+        0x0033 line=208
+        0x0048 line=215
+        0x0050 line=216
+        0x0059 line=218
+        0x0061 line=219
+        0x0068 line=221
+        0x007a line=224
+        0x007d line=229
+        0x0081 line=231
+        0x0089 line=232
+        0x008c line=234
+        0x0094 line=235
       locals        :
-        0x0000 - 0x007f reg=6 this Lorg/ztmetro/actioncentre/LockOverlayView;
-        0x0000 - 0x007f reg=7 (null) Landroid/view/View;
+        0x0000 - 0x00a1 reg=8 this Lorg/ztmetro/actioncentre/LockOverlayView;
+        0x0000 - 0x00a1 reg=9 (null) Landroid/view/View;
   source_file_idx   : 470 (LockOverlayView.java)
 
 Class #42            -

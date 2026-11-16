@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ztMetro Settings</string>
-    <string name="xposed_description">ztMetro-izes the stock Settings app: flat black page header (SETTINGS caps label + 48sp lowercase title + subtitle), icon-free flat preference rows, and the 40dp back/ZRN/search bottom bar. Module scope: com.android.settings.</string>
+    <string name="xposed_description">ztMetro-izes the stock Settings app: flat black page header (SETTINGS caps label + 48sp lowercase title + subtitle), icon-free flat preference rows, black square dialogs with accent buttons, ВКЛ/ВЫКЛ switch rows, square segmented/radio groups, and the 40dp back/ZRN/search bottom bar. Module scope: com.android.settings + com.android.settings.intelligence (search results).</string>
     <string name="metro_header_subtitle_static">ztMetro</string>
     <string name="metro_header_label">SETTINGS</string>
     <string name="metro_bottom_label">ZRN</string>

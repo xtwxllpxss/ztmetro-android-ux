@@ -167,6 +167,12 @@ def module_spec(tokens):
             "module spec: the stock icon cell and the disclosure-chevron slot are <= 96 "
             "dp insets of the title; clearing them moves the label to the page margin",
         ),
+        "dialog_title_sp": (
+            20,
+            "deliverable 2026-11-16: Settings alert-dialog title is 20 sp white on the "
+            "flat black, square-corner dialog window (requirement 2); buttons take "
+            "color.accent.base",
+        ),
     }
 
 
@@ -270,6 +276,9 @@ def build(tokens):
     dimens += dimen_line("metro_row_inset_limit",
                          num(spec["row_inset_limit_dp"][0]) + "dp",
                          spec["row_inset_limit_dp"][1])
+    dimens += dimen_line("metro_dialog_title_size",
+                         num(spec["dialog_title_sp"][0]) + "sp",
+                         spec["dialog_title_sp"][1])
     dimens += dimen_line("metro_bottom_bar_height",
                          num(spec["bottom_bar_height_dp"][0]) + "dp",
                          spec["bottom_bar_height_dp"][1])

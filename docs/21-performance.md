@@ -916,3 +916,53 @@ shared between processes: compare packages one at a time and use `dumpsys meminf
 Report format for the lead: one line per metric with baseline → after → delta → verdict,
 plus the raw command outputs in `repo/evidence/perf/<date>/`. Do not update this doc with
 guesses; update it only when the numbers exist.
+
+---
+
+## 7. Pass 2 — code is in, numbers are not
+
+Written 2026-11-16. This section supersedes the "fix" sketches in §2.2, §3.3, §3.4 and P1/P2/P5
+where they differ; the reasoning in §1–§6 still stands. The executable protocol and the
+artifact hashes are in [`../evidence/perf-pass2/`](../evidence/perf-pass2/README.md).
+**Nothing in this section is a device measurement.** `[E]` stays an estimate; `[?]` is what
+the phone must still answer.
+
+### 7.1 What shipped
+
+| Surface | Change | Expected `[E]` | Proof available now |
+|---|---|---|---|
+| Action Centre | **Not merged.** Both accessibility services already live in one process, so a merge saves no PSS and would break the boot re-grant, the static checks and the unverifiable strip z-order. Instead: two receivers (screen/user-present always, data only while screen-on), network+telephony callbacks released on screen off, `onCapabilitiesChanged` bursts coalesced over 400 ms with **one** active-network read shared by Wi-Fi and cellular, every strip setter rejects an unchanged state, panel clock minute-aligned and change-gated, panel `onDraw` allocation-free, keyguard safety net 5 s and skipped while the screen is off | no strip work while the screen is off; unchanged battery/Wi-Fi/signal ⇒ no frame; panel frames stop allocating strings | build-time checks + code |
+| Start | `onResume` no longer reloads `PackageManager` or rebuilds tile views: package broadcasts mark the list dirty, and `tileSignature`/`appSignature` gate `setTiles`/`setApps`. Notification listener released 2 min after `onPause` (`requestUnbind`), rebound on resume (`requestRebind`) | one fewer hitch on HOME; 5–15 MB less retained Start footprint once the listener is released; tile views survive a resume | build-time checks + `StartPerf` log lines |
+| Settings module | One one-shot `OnGlobalLayoutListener` row pass instead of the 250/700 ms chain, `OnHierarchyChangeListener` for rows attached later, `WeakReference` recyclers, per-view style tag (`metro_style`) + epoch so layout params are written at most once, reflection cached per class | 2 walks + 1 row pass per open, no repeated `setLayoutParams`; less main-thread layout work in the first 1.6 s | build-time checks + `ztmetro-header` pass log |
+
+### 7.2 What the phone still has to answer `[?]`
+
+1. PSS before/after for all four surfaces, and whether the Start listener release actually
+   drops the process to cached importance within two minutes.
+2. Settings `gfxinfo` 90th/95th and janky % after the single row pass.
+3. That the strip still hides under the keyguard, passes touches through and repaints on a
+   real state change — the reason the merge was refused.
+4. That a released listener rebinds and repopulates live tiles on the next resume.
+
+### 7.3 Protocol and gates
+
+`repo/evidence/perf-pass2/protocol.sh` implements §5 as 3 runs per label with medians:
+`run before` → install the pass-2 APKs → `run after` → `compare before after`. It records
+Settings (cold open + 3 swipes) and HOME `gfxinfo`, PSS of SystemUI/Settings/Action
+Centre/Start/SurfaceFlinger, idle PSI, cold starts and the module logcat.
+
+Acceptance (after, median of 3): Settings 90th **< 40 ms**, p95 < 33 ms, janky < 8 %;
+Start janky < 5 %; `zt_sum` (Start + Action Centre + Settings) **< 90 MB**; Start + Action
+Centre < 61 MB; PSI `full avg60` < 5; Settings cold `TotalTime` < 1100 ms, Start < 800 ms,
+Action Centre < 500 ms. One change per A/B; do not install two of the three APKs and call
+it a pass result.
+
+### 7.4 Corrections to earlier text
+
+- §3.4 said `StatusStripView` ticks every 15 s while attached. That was the defect, not the
+  design: it is now minute-aligned, change-gated and stopped when the panel is not visible.
+- §2.2 item 2 suggested `OnGlobalLayoutListener` *or* `postOnAnimation`; pass 2 uses the
+  one-shot layout listener plus the hierarchy listener, and no delayed chain at all.
+- P5's "merge onto one listener" for notifications is unchanged in intent but is now
+  implemented as a *lifecycle release* (the system service cannot be merged across two
+  packages without a shared provider); see §2.2 of the evidence report.

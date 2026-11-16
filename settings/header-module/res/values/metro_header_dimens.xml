@@ -28,6 +28,8 @@
   <dimen name="metro_group_gap_limit">40dp</dimen>
   <!-- module spec: the stock icon cell and the disclosure-chevron slot are <= 96 dp insets of the title; clearing them moves the label to the page margin -->
   <dimen name="metro_row_inset_limit">96dp</dimen>
+  <!-- deliverable 2026-11-16: Settings alert-dialog title is 20 sp white on the flat black, square-corner dialog window (requirement 2); buttons take color.accent.base -->
+  <dimen name="metro_dialog_title_size">20sp</dimen>
   <!-- metrics.nav_bar_height_dp (40; ztmetro.c:130 NAV_BAR_H 40) -->
   <dimen name="metro_bottom_bar_height">40dp</dimen>
   <!-- module spec: 11 sp ALL-CAPS 'ZRN' in the 40 dp bar (README requirement; one step below type.ramp[caption_caps] 11.5 so it optically centres in 40 dp) -->

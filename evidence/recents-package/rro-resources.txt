@@ -1,0 +1,5 @@
+Binary APK
+Package name=org.ztmetro.overlay.recents id=7f
+  type string id=01 entryCount=1
+    resource 0x7f010000 string/config_recentsComponentName
+      () "org.ztmetro.actioncentre/org.ztmetro.actioncentre.RecentsActivity"

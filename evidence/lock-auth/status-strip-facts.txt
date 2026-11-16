@@ -1,6 +1,6 @@
 apk:        ztmetro-actioncentre.apk
 size:       353996 bytes
-sha256:     36322939eb5c20dc32f67414b619bec8a6b7e0cf27cd58227bb5902529f89e1d
+sha256:     14fe6514085321609cacb081d0c6947f2bb5542873ee6456f38352f9aef65176
 window:     TYPE_ACCESSIBILITY_OVERLAY (2032), MATCH_PARENT x 28 dp, gravity TOP|START
 flags:      NOT_FOCUSABLE|NOT_TOUCHABLE|LAYOUT_IN_SCREEN|LAYOUT_NO_LIMITS
 background: #000000 opaque, full width, exactly 28 dp tall
