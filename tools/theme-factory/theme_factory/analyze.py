@@ -257,7 +257,7 @@ class Analyzer:
             for config, val in style.values.items():
                 if val.kind != "style" or config.strip() != "v31":
                     continue
-                if any(re.match(r"@0x010[0-9a-f]{4}$", raw) for _, raw in val.attrs):
+                if any(re.match(r"@0x010[0-9a-f]{4,6}$", raw) for _, raw in val.attrs):
                     dynamic_styles.append(style.key)
                     break
         return {"app_theme": chain[0] if chain else None, "chain": chain,
@@ -282,13 +282,39 @@ class Analyzer:
             return "surface"
         if suffix.startswith("outline") or suffix.startswith("scrim"):
             return "surface_key"
+        if suffix.startswith("on_error"):
+            return "text"
+        if suffix.startswith("error_container"):
+            return "surface"
         if suffix.startswith("error"):
             return "destructive"
         if suffix.startswith(("primary", "secondary", "tertiary")):
             return "accent"
         if suffix.startswith("inverse_"):
-            return "surface" if "inverse_surface" in suffix else "text"
+            if "inverse_surface" in suffix:
+                return "surface"
+            if "inverse_primary" in suffix or "inverse_secondary" in suffix or "inverse_tertiary" in suffix:
+                return "accent"
+            return "text"
         return None
+
+    def _status_mapping(self, res, name, role, roles, why):
+        token = self.tokens.role(role)
+        values_before, configs_after = {}, {}
+        for cfg in res.values:
+            c, _, dyn = self.resolve(res.key, cfg)
+            values_before[cfg] = rgb_hex(c) if c else ("dynamic:%s" % dyn if dyn else "")
+            configs_after[cfg] = token["value"]
+        if not configs_after:
+            configs_after[""] = token["value"]
+        return {"resource": res.key, "type": "color", "role": role, "token": token["token"],
+                "value_after": token["value"], "values_before": values_before,
+                "configs_after": configs_after, "confidence": 0.85,
+                "used_as_text": sum(1 for u in roles if u["role"] == "text") > 0,
+                "usage_counts": {"text": sum(1 for u in roles if u["role"] == "text"),
+                                 "surface": sum(1 for u in roles if u["role"] == "surface"),
+                                 "accent": sum(1 for u in roles if u["role"] == "accent")},
+                "evidence": [why, "status colour -> ztmetro status token"]}
 
     def _surface_token(self, name: str, color) -> tuple:
         n = name.lower()
@@ -306,18 +332,19 @@ class Analyzer:
     def _text_token(self, name: str, color) -> tuple:
         n = name.lower()
         if "disabled" in n:
-            return "text_disabled", "disabled text"
+            return "text_disabled", "disabled text (low contrast is the point)"
         if any(k in n for k in ("hint", "muted", "placeholder")):
             return "text_muted", "hint/placeholder text"
-        if any(k in n for k in ("secondary", "variant", "caption", "subtitle", "label")):
+        if any(k in n for k in ("secondary", "variant", "caption", "subtitle", "label",
+                                "owner", "when", "where", "hour", "day_names", "week_num")):
             return "text_secondary", "secondary text"
         if color is not None:
             lum = luminance(color)
-            if lum >= 0.72:
+            if lum >= 0.70:
                 return "text_primary", "light text (lum %.2f) stays white" % lum
-            if lum >= 0.35:
-                return "text_secondary", "mid grey (lum %.2f) -> #999999" % lum
-            return "text_primary", "dark text (lum %.2f) on a light surface becomes white on black" % lum
+            if lum >= 0.12:
+                return "text_secondary", "mid grey (lum %.2f) -> #999999 (hierarchy kept)" % lum
+            return "text_primary", "near-black text (lum %.2f) on a light surface becomes white on black" % lum
         return "text_primary", "text colour with no literal value"
 
     def _accent_token(self, name: str, color, as_text: bool) -> tuple:
@@ -342,10 +369,31 @@ class Analyzer:
             color, trail, dynamic = self.resolve(res.key, cfg)
             if color is not None or dynamic:
                 break
+        if color is not None and color[0] < 128:
+            return {"resource": res.key, "type": res.type, "role": "unmapped",
+                    "reason": "translucent colour (alpha %d/255): scrim/shadow, not a theme slot"
+                              % color[0], "confidence": 0.0}
+        if any(k in res.name.lower() for k in ("shadow", "scrim", "transparent", "ripple")):
+            return {"resource": res.key, "type": res.type, "role": "unmapped",
+                    "reason": "shadow/scrim/ripple: not a ztmetro slot", "confidence": 0.0}
         if color is None and dynamic is None and res.default() and res.default().kind == "file":
             return {"resource": res.key, "type": res.type, "role": "selector",
                     "reason": "colour state list (XML selector); needs a generated selector, not a value",
                     "confidence": 0.0}
+
+        n_lower = name.lower()
+        if name.startswith("m3_ref_palette_"):
+            return {"resource": res.key, "type": res.type, "role": "unmapped",
+                    "reason": "raw Material palette shade; the semantic m3_sys_color_* layer is what "
+                              "components read, so overriding palette shades would be redundant",
+                    "confidence": 0.0}
+        chroma_name = chroma(color) if color is not None else 0.0
+        if chroma_name > 0.35 and any(k in n_lower for k in ("error", "decline", "invalid")):
+            return self._status_mapping(res, name, "destructive", roles,
+                                        "saturated name says error/decline/invalid")
+        if chroma_name > 0.35 and any(k in n_lower for k in ("answer", "success", "confirm")):
+            return self._status_mapping(res, name, "success", roles,
+                                        "saturated name says answer/success")
 
         m3_role = self._role_from_m3(name)
         evidence = []
@@ -370,18 +418,31 @@ class Analyzer:
             surface_hits = role_counts["surface"]
             accent_hits = role_counts["accent"]
             n = name.lower()
-            name_text = any(k in n for k in ("text", "on_", "foreground", "hint", "label"))
-            name_surface = any(k in n for k in ("background", "surface", "window", "panel",
-                                                "dialog", "card", "sheet", "menu"))
+            name_text = any(k in n for k in (
+                "text", "on_", "fg_", "foreground", "hint", "label", "headline", "caption",
+                "subtitle", "title", "owner", "when", "where", "hour_label"))
+            name_surface = any(k in n for k in (
+                "background", "surface", "window", "panel", "dialog", "card", "sheet",
+                "menu", "popup", "row", "container", "toolbar", "app_bar"))
             name_accent = any(k in n for k in ("accent", "primary", "highlight", "selected"))
-            chroma_ok = color is not None and chroma(color) > 0.25
+            chroma_val = chroma(color) if color is not None else 0.0
+            grey = color is not None and chroma_val < 0.18
+            strong_chroma = chroma_val > 0.45
+            # Name evidence for accents only counts when the colour actually has
+            # colour (a black "selected" background is not an accent) or when the
+            # app already uses it in an accent attribute.
+            accent_name_pts = 2.5 if (name_accent and (chroma_val > 0.25 or accent_hits)) else 0.0
             scores = {
-                "text": 2.0 * text_hits + (2.0 if name_text else 0),
-                "surface": 2.0 * surface_hits + (2.0 if name_surface else 0) +
-                           (0.5 if color is not None and chroma(color) < 0.15 else 0),
-                "accent": 2.0 * accent_hits + (2.0 if name_accent else 0) +
-                          (0.5 if chroma_ok else 0),
+                "text": 3.0 * text_hits + (2.5 if name_text else 0) + (0.6 if grey else 0),
+                "surface": 3.0 * surface_hits +
+                           (2.5 if name_surface and (grey or not strong_chroma) else 0) +
+                           (0.6 if grey else 0),
+                "accent": 3.0 * accent_hits + accent_name_pts + (0.8 if chroma_val > 0.35 else 0),
             }
+            if strong_chroma and accent_hits == 0 and not name_surface:
+                scores["accent"] += 1.5
+            if name_surface and text_hits <= surface_hits and abs(scores["surface"] - scores["text"]) < 0.01:
+                scores["surface"] += 0.01
             best = max(scores, key=scores.get)
             if scores[best] < 2.0:
                 return {"resource": res.key, "type": res.type, "role": "unmapped",
@@ -399,13 +460,13 @@ class Analyzer:
                 if hits:
                     evidence.append("used as %s in %d attribute(s)" % (role_name, hits))
             if color is not None:
-                evidence.append("chroma %.2f, luminance %.2f" % (chroma(color), luminance(color)))
+                evidence.append("chroma %.2f, luminance %.2f" % (chroma_val, luminance(color)))
         if dynamic:
             evidence.append("value is a runtime system colour (%s) supplied by Material dynamic colour" % dynamic)
         if color is not None:
             evidence.append("literal %s" % rgb_hex(color))
 
-        as_text = role_counts["text"] > 0
+        as_text = role_counts["text"] > max(role_counts["surface"], role_counts["accent"])
         if role == "surface":
             token, why = self._surface_token(name, color)
         elif role == "text":
@@ -433,6 +494,7 @@ class Analyzer:
         if not configs_after:
             configs_after[""] = token_value
         return {"resource": res.key, "type": "color", "role": role, "token": token,
+                "usage_counts": role_counts, "used_as_text": as_text,
                 "value_after": token_value, "values_before": values_before,
                 "configs_after": configs_after, "confidence": conf,
                 "evidence": evidence}
@@ -458,6 +520,7 @@ class Analyzer:
             colors.append(m)
 
         dimens = []
+        skipped = []
         for res in self.table.of_type("dimen"):
             val = res.default()
             if val is None or val.kind != "dimension":
@@ -465,7 +528,12 @@ class Analyzer:
             name = res.name.lower()
             app_owned = not is_lib_name(name)
             if any(k in name for k in ("corner", "radius")) and (val.dim_unit or "").startswith("d"):
-                if val.dim_value and val.dim_value > 0:
+                if any(k in name for k in ("thumb", "halo", "circular", "center_dot", "tick",
+                                           "indicator", "shadow", "elevation", "spacing")):
+                    skipped.append({"kind": "dimen-size-not-shape", "resource": res.key,
+                                    "reason": "name says radius but it is a widget size (thumb/halo/dot), "
+                                              "not a corner: zeroing it would hide the widget"})
+                elif val.dim_value and val.dim_value > 0:
                     dimens.append({"resource": res.key, "type": "dimen", "role": "radius",
                                    "token": "metrics.corner_radius_dp",
                                    "value_before": val.raw, "value_after": "0dp",
@@ -475,6 +543,12 @@ class Analyzer:
             elif app_owned and val.dim_unit == "sp":
                 ramp = self.tokens.roles["ramp"]
                 target = min(ramp, key=lambda e: abs(e["sp"] - val.dim_value))
+                if abs(target["sp"] - val.dim_value) > 4.0:
+                    skipped.append({"kind": "type-size-far-from-ramp", "resource": res.key,
+                                    "reason": "nearest ramp step is %gsp, %.1fsp away: resizing that far "
+                                              "would change layout metrics, so it is left alone"
+                                              % (target["sp"], abs(target["sp"] - val.dim_value))})
+                    continue
                 dimens.append({"resource": res.key, "type": "dimen", "role": "type",
                                "token": target["token"],
                                "value_before": val.raw,
@@ -489,7 +563,7 @@ class Analyzer:
         app_color_resources = [r for r in self.table.of_type("color")]
         used_total = len([r for r in app_color_resources if r.key in self.usage])
         mapped_used = len([m for m in colors if m["resource"] in self.usage])
-        unmanaged = list(self.hardcoded[:40])
+        unmanaged = list(self.hardcoded[:40]) + skipped
         unmanaged.append({"kind": "styles", "count": len(self.table.of_type("style")),
                           "reason": "style bags are not replaced: an overlay style replaces the whole "
                                     "bag (including parent), which destroys a theme's Material base"})
@@ -533,6 +607,10 @@ class Analyzer:
         for m in mappings:
             if m["role"] not in ("text", "accent"):
                 continue
+            if m["role"] == "text" and m["token"] in ("text_disabled", "text_muted"):
+                continue  # intentionally low contrast, escalating would break the role
+            if m["role"] == "accent" and not (m.get("usage_counts", {}) or {}).get("text"):
+                continue  # pure accent fill: it carries other colours, its own contrast on black is moot
             col = parse_color(m["value_after"])
             if not col:
                 continue

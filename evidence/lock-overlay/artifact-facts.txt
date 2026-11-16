@@ -1,7 +1,7 @@
 apk:        actioncentre/build/out/ztmetro-actioncentre.apk
 evidence:   evidence/lock-overlay/ztmetro-actioncentre.apk
 size:       325179 bytes
-sha256:     30cebbb11e59fe3d1bcf4229f118013987dfb3b726045297defad75fedb33fa9
+sha256:     4179ae089133527988f9f26017283ed34e6b7e282fdd7e98cc640c0ce0a973b6
 package:    org.ztmetro.actioncentre
 version:    1 (1.0)
 min/target: 29 / 36

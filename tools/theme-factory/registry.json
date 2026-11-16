@@ -1,0 +1,36 @@
+{
+  "schema": "ztos.theme-factory.registry/1",
+  "default_policy": "deny",
+  "comment": "Per-app allow list for the resource-level factory. An entry means: this package may be restyled by an RRO built by repo/tools/theme-factory, and someone checked that the result was usable. sha256 pins the exact APK that was analysed; a different build only warns, it does not block (the lead pulls new APKs after every ROM update).",
+  "allow": {
+    "ws.xsoh.etar": {
+      "app": "Etar Calendar (LineageOS 23.2 branch)",
+      "status": "prototype",
+      "sha256": "",
+      "notes": [
+        "current LineageOS/F-Droid package id; the historical org.lineageos.etar id was renamed",
+        "AOSP Calendar Java namespace com.android.calendar survives in the activity name",
+        "declares no <overlayable> -> preinstalled overlay may map any resource",
+        "Material3 theme + optional Monet themes; Monet styles set theme attrs to @android:color/system_* in their (v31) bag, which a value overlay cannot re-point (see docs/23-theme-factory.md §5)"
+      ]
+    },
+    "org.lineageos.etar": {
+      "app": "Etar Calendar (older LineageOS package id)",
+      "status": "expected-compatible",
+      "sha256": "",
+      "notes": ["same app, same resource names; only the manifest package differs"]
+    },
+    "com.android.calendar": {
+      "app": "AOSP Calendar (pre-Etar)",
+      "status": "untested",
+      "sha256": "",
+      "notes": ["kept here so an older device dump is not silently refused; analyse first"]
+    },
+    "com.android.settings": {
+      "app": "LineageOS Settings",
+      "status": "served by repo/overlay/settings",
+      "sha256": "",
+      "notes": ["Settings already has a hand-written RRO; the factory is not the owner of that surface"]
+    }
+  }
+}

@@ -41,7 +41,7 @@ def commands(package: str, overlay_package: str, apk_name: str,
     add(_sh("%s exec-out screencap -p > %s/before.png" % (adb, out_dir)))
     add(_sh("%s shell dumpsys package %s | grep -E 'versionName|codePath' | tee %s/pkg-before.txt"
             % (adb, package, out_dir)))
-    add(_sh("aapt2 dump resources %s > %s/resources-before.txt" % (apk_name, out_dir)))
+    add(_sh("aapt2 dump resources <the APK you analysed> > %s/resources-before.txt" % out_dir))
     add("")
     add("# ---- 2. push into the Magisk module's /product/overlay ------------------")
     add(_sh("%s push %s /data/local/tmp/%s" % (adb, apk_name, apk_name)))
@@ -49,8 +49,11 @@ def commands(package: str, overlay_package: str, apk_name: str,
     add(_sh("%s shell su 0 chmod 644 %s/%s && su 0 chown root:root %s/%s"
             % (adb, module_path, apk_name, module_path, apk_name)))
     add(_sh("%s shell su 0 ls -l %s/%s" % (adb, module_path, apk_name)))
-    add(_sh("# visible without a reboot: the Magisk module binds over /product, so a"))
-    add(_sh("# new file needs only an idmap cache drop (0 = no overlay yet) and pm refresh"))
+    add(_sh("# a preinstalled overlay is scanned by PackageManager at boot only. If this APK"))
+    add(_sh("# is new to the module, reboot once NOW and only then continue: the overlay"))
+    add(_sh("# cannot be enabled in the same session it was copied into."))
+    add(_sh("#   %s reboot" % adb))
+    add(_sh("#   %s wait-for-device" % adb))
     add(_sh("%s shell su 0 cmd overlay list | grep %s   # overlay must now be listed" % (adb, overlay_package)))
     add("")
     add("# ---- 3. enable the overlay for user 0 ----------------------------------")
@@ -70,8 +73,7 @@ def commands(package: str, overlay_package: str, apk_name: str,
     add(_sh("%s shell dumpsys activity top | head -20   # the activity must be the same one" % adb))
     add("")
     add("# ---- 6. crash watchdog + automatic rollback ----------------------------")
-    add(_sh("bash %s/rollback-watchdog.sh --package %s --overlay %s --activity '%s' --seconds 30"
-            % (out_dir, package, overlay_package, activity or "")))
+    add(_sh("bash %s/rollback-watchdog.sh     # 30 s watchdog, auto-disable + crash log" % out_dir))
     add(_sh("# the watchdog: clear logcat, re-enable, restart, wait, then"))
     add(_sh("#   adb logcat -b crash -d | grep -q %s  ->  disable overlay, force-stop," % package))
     add(_sh("#   save /tmp/%s-crash.log and re-launch the app unthemed" % package))
@@ -102,6 +104,12 @@ ADB="adb %(adj)s"
 LOG="%(log)s/%(pkg)s-crash.log"
 
 $ADB logcat -c || exit 2
+# a freshly copied preinstalled overlay only exists after a reboot: fail loudly
+# instead of "enabling" an overlay the PackageManager has never scanned.
+if ! $ADB shell su 0 cmd overlay list | grep -qF "$OVL"; then
+  echo "overlay $OVL is not listed yet: reboot the phone once, then re-run this script"
+  exit 3
+fi
 $ADB shell su 0 cmd overlay enable --user 0 "$OVL" || exit 2
 $ADB shell am force-stop "$PKG"
 $ADB shell %(start)s

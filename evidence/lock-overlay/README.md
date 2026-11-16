@@ -13,13 +13,13 @@ readback from this device.
 |---|---|
 | APK | `repo/evidence/lock-overlay/ztmetro-actioncentre.apk` (build: `repo/actioncentre/build/out/ztmetro-actioncentre.apk`) |
 | size | **325 179 bytes (317.6 KiB)** — limit 2 MiB |
-| sha256 | `30cebbb11e59fe3d1bcf4229f118013987dfb3b726045297defad75fedb33fa9` |
+| sha256 | `4179ae089133527988f9f26017283ed34e6b7e282fdd7e98cc640c0ce0a973b6` |
 | package / version | `org.ztmetro.actioncentre`, versionCode 1 / versionName 1.0 |
 | SDK | minSdk 29, targetSdk 36, compileSdk 36 |
 | signer | v3 RSA-2048, cert SHA-256 `303ddd02…2e78ce` — **same key as the previously shipped Action Centre**, so `adb install -r` upgrades in place and keeps the accessibility grant |
 | build | `ACTIONCENTRE_REMOTE_DIR=ztux/lock EVIDENCE_DIR=$PWD/evidence/lock-overlay repo/scripts/build-actioncentre.sh`: rsync to `hermes-ubuntu:~/ztux/lock`, plain `aapt2` + `javac` (Java 8 bytecode, JDK 17) + `d8 --min-api 29` + `zipalign` + `apksigner`. No Gradle, no AndroidX, no network. The prior keystore was copied from `~/ztux/actbridge/build/keystore/actioncentre.p12`. |
 
-Static verification: **81 PASS / 0 FAIL** (`verify.txt`; the merged build also carries
+Static verification: **84 PASS / 0 FAIL** (`verify.txt`; the merged build also carries
 agent-29's top-edge strip and agent-37's separate 28 dp status-strip service, so the
 log includes their checks). Passed checks relevant to this feature:
 
@@ -37,8 +37,9 @@ log includes their checks). Passed checks relevant to this feature:
 
 Note: the APK is the merged build of the working tree at 14:03 — it also contains the
 24 dp top-edge shade strip (agent-29) and the optional 28 dp status strip
-(agent-37, separate `StatusStripService` + optional `READ_PHONE_STATE`). The lock
-overlay itself adds no permission and no service.
+(agent-37, separate `StatusStripService` + optional `READ_PHONE_STATE`; the panel
+calls `StatusStripService.setPanelVisible()` so that strip is suppressed while the
+Action Centre is open). The lock overlay itself adds no permission and no service.
 
 ## 2. Window type and flags (the part that matters)
 

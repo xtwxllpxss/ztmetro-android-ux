@@ -394,6 +394,20 @@ verify_apk() {
         printf 'FAIL  status strip is touchable or flag missing\n' >> "$CHECKS"
         failed=1
     fi
+    if grep -q "FLAG_NOT_FOCUSABLE" "$STRIP_SRC" \
+            && grep -q "FLAG_LAYOUT_IN_SCREEN" "$STRIP_SRC" \
+            && grep -q "FLAG_LAYOUT_NO_LIMITS" "$STRIP_SRC"; then
+        printf 'PASS  status strip flags NOT_FOCUSABLE|LAYOUT_IN_SCREEN|LAYOUT_NO_LIMITS\n' >> "$CHECKS"
+    else
+        printf 'FAIL  status strip window flags incomplete\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS" "$STRIP_SRC"; then
+        printf 'PASS  status strip draws into the cutout at 28 dp\n' >> "$CHECKS"
+    else
+        printf 'FAIL  cutout handling missing\n' >> "$CHECKS"
+        failed=1
+    fi
     if grep -q "HEIGHT_DP = 28" "$STRIP_VIEW"; then
         printf 'PASS  status strip height is exactly 28 dp\n' >> "$CHECKS"
     else
@@ -429,6 +443,13 @@ verify_apk() {
         printf 'PASS  strip removed on lock/screen-off, re-added on USER_PRESENT\n' >> "$CHECKS"
     else
         printf 'FAIL  keyguard remove/re-add hooks missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "setPanelVisible" "$APP/java/org/ztmetro/actioncentre/ActionCentreActivity.java" \
+            && grep -q "setPanelVisible" "$STRIP_SRC"; then
+        printf 'PASS  strip suppressed while Action Centre panel is resumed\n' >> "$CHECKS"
+    else
+        printf 'FAIL  panel suppression hook missing\n' >> "$CHECKS"
         failed=1
     fi
     if grep -q "postDelayed\|new Timer\|scheduleAtFixedRate" "$STRIP_SRC" "$STRIP_VIEW"; then

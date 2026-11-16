@@ -122,17 +122,18 @@ final class TileArt {
     }
 
     private Art buildArt(ComponentName component, int size) {
-        Drawable original = loadDrawable(component);
-        if (original == null) {
-            return NONE;
-        }
-
-        // 1. Known system packages get the authored white glyph FIRST. This is
-        //    the fix for the browser sparkle / contacts blob: their adaptive or
-        //    monochrome layer is never allowed to win over the WP shape.
+        // 1. Known system packages get the authored white glyph FIRST, before
+        //    the icon drawable is even loaded. This is the fix for the browser
+        //    sparkle / contacts blob: their adaptive or monochrome layer can
+        //    never win over the WP shape.
         int kind = SystemGlyphs.kindFor(component.getPackageName());
         if (kind != SystemGlyphs.NONE) {
             return new Art(TYPE_SYSTEM, null, kind);
+        }
+
+        Drawable original = loadDrawable(component);
+        if (original == null) {
+            return NONE;
         }
 
         // 2. Third-party apps may provide a proper monochrome layer. Keep it

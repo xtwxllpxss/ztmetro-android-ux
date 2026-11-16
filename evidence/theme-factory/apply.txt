@@ -1,0 +1,50 @@
+
+wrote /home/denis/ztux/factory/repo/evidence/theme-factory/overlay/rollback-watchdog.sh
+# ---- 0. preconditions -------------------------------------------------
+  adb  devices        # exactly one authorised device
+  adb  shell su 0 cmd overlay list | grep -i ztmetro   # module already mounted?
+  # the overlay must be preinstalled on /product (read-only): an RRO that is
+  # merely installed via `adb install` cannot map a target without <overlayable>
+
+# ---- 1. BEFORE: prove what the app shows today --------------------------
+  adb  exec-out screencap -p > /home/denis/ztux/factory/repo/evidence/theme-factory/overlay/before.png
+  adb  shell dumpsys package ws.xsoh.etar | grep -E 'versionName|codePath' | tee /home/denis/ztux/factory/repo/evidence/theme-factory/overlay/pkg-before.txt
+  aapt2 dump resources <the APK you analysed> > /home/denis/ztux/factory/repo/evidence/theme-factory/overlay/resources-before.txt
+
+# ---- 2. push into the Magisk module's /product/overlay ------------------
+  adb  push ztmetro-ws_xsoh_etar-rro.apk /data/local/tmp/ztmetro-ws_xsoh_etar-rro.apk
+  adb  shell su 0 cp /data/local/tmp/ztmetro-ws_xsoh_etar-rro.apk /data/adb/modules/ztmetro-overlays/system/product/overlay/ztmetro-ws_xsoh_etar-rro.apk
+  adb  shell su 0 chmod 644 /data/adb/modules/ztmetro-overlays/system/product/overlay/ztmetro-ws_xsoh_etar-rro.apk && su 0 chown root:root /data/adb/modules/ztmetro-overlays/system/product/overlay/ztmetro-ws_xsoh_etar-rro.apk
+  adb  shell su 0 ls -l /data/adb/modules/ztmetro-overlays/system/product/overlay/ztmetro-ws_xsoh_etar-rro.apk
+  # a preinstalled overlay is scanned by PackageManager at boot only. If this APK
+  # is new to the module, reboot once NOW and only then continue: the overlay
+  # cannot be enabled in the same session it was copied into.
+  #   adb  reboot
+  #   adb  wait-for-device
+  adb  shell su 0 cmd overlay list | grep org.ztos.overlay.factory.ws_xsoh_etar   # overlay must now be listed
+
+# ---- 3. enable the overlay for user 0 ----------------------------------
+  adb  shell su 0 cmd overlay enable --user 0 org.ztos.overlay.factory.ws_xsoh_etar
+  adb  shell su 0 cmd overlay list | grep -A1 org.ztos.overlay.factory.ws_xsoh_etar   # expect [x] org.ztos.overlay.factory.ws_xsoh_etar
+
+# ---- 4. restart the app: resources are read at process start ------------
+  adb  shell am force-stop ws.xsoh.etar
+  adb  shell am start -n com.android.calendar.AllInOneActivity
+  sleep 20
+
+# ---- 5. AFTER: same capture as step 1 ----------------------------------
+  adb  exec-out screencap -p > /home/denis/ztux/factory/repo/evidence/theme-factory/overlay/after.png
+  python3 /home/denis/ztux/factory/repo/evidence/theme-factory/overlay/verify.sh --screenshots /home/denis/ztux/factory/repo/evidence/theme-factory/overlay/before.png /home/denis/ztux/factory/repo/evidence/theme-factory/overlay/after.png
+  adb  shell dumpsys activity top | head -20   # the activity must be the same one
+
+# ---- 6. crash watchdog + automatic rollback ----------------------------
+  bash /home/denis/ztux/factory/repo/evidence/theme-factory/overlay/rollback-watchdog.sh     # 30 s watchdog, auto-disable + crash log
+  # the watchdog: clear logcat, re-enable, restart, wait, then
+  #   adb logcat -b crash -d | grep -q ws.xsoh.etar  ->  disable overlay, force-stop,
+  #   save /tmp/ws.xsoh.etar-crash.log and re-launch the app unthemed
+
+# ---- 7. manual rollback (always safe) ----------------------------------
+  adb  shell su 0 cmd overlay disable --user 0 org.ztos.overlay.factory.ws_xsoh_etar
+  adb  shell am force-stop ws.xsoh.etar
+  adb  shell su 0 rm -f /data/adb/modules/ztmetro-overlays/system/product/overlay/ztmetro-ws_xsoh_etar-rro.apk   # only if the APK itself is wrong
+  adb  shell su 0 cmd overlay list | grep org.ztos.overlay.factory.ws_xsoh_etar   # must be gone or disabled

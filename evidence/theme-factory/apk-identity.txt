@@ -1,0 +1,5 @@
+source: https://f-droid.org/repo/ws.xsoh.etar_57.apk (F-Droid build of the LineageOS 23.2 Etar branch)
+dae01d93c8920aa63845868db2190bcc4aa6ff8410b1289de1ce27b1bb89c599  etar-fdroid.apk
+package: name='ws.xsoh.etar' versionCode='57' versionName='1.0.57' platformBuildVersionName='17' platformBuildVersionCode='37' compileSdkVersion='37' compileSdkVersionCodename='17'
+install-location:'auto'
+minSdkVersion:'23'

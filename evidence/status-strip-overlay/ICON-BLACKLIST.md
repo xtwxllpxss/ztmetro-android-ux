@@ -28,7 +28,7 @@ Source read: `LineageOS/android_frameworks_base`, branch `lineage-23.2`, commit
 | `wifi` | `config.xml:88` | stock Wi-Fi glyph |
 | `mobile` | `config.xml:97` | stock cellular signal |
 | `stacked_mobile` | `config.xml:98` | modern stacked mobile slot |
-| `airplane` | `config.xml:103` | airplane-mode icon |
+| `airplane` | `config.xml:103` | airplane-mode icon (optional; not duplicated by the strip) |
 | `rotate` | `config.xml:70` | rotation-lock icon (was default-hidden) |
 | `headset` | `config.xml:71` | headset icon (was default-hidden) |
 
@@ -43,31 +43,34 @@ privacy decision; they are indicators, not decoration.
 ## Recommended command (root shell on the phone)
 
 ```sh
-su -c 'settings put secure icon_blacklist "clock,battery,wifi,mobile,stacked_mobile,airplane,rotate,headset"'
+su 0 settings put secure icon_blacklist "clock,battery,wifi,mobile,stacked_mobile,rotate,headset"
 ```
 
 Verify:
 
 ```sh
-su -c 'settings get secure icon_blacklist'
-# clock,battery,wifi,mobile,stacked_mobile,airplane,rotate,headset
+su 0 settings get secure icon_blacklist
+# clock,battery,wifi,mobile,stacked_mobile,rotate,headset
 ```
 
 `settings put secure` **replaces** the whole list. If the phone already has entries,
 append them to the quoted value. To restore the LineageOS default:
 
 ```sh
-su -c 'settings put secure icon_blacklist "rotate,headset"'
+su 0 settings put secure icon_blacklist "rotate,headset"
 ```
 
 The SystemUI tunable observes the setting live (`TunerService` + content observer), so no
-restart is normally needed. If a slot sticks, restart only SystemUI (`su -c 'killall
-com.android.systemui'`) or reboot; a full reboot is not required.
+restart is normally needed. If a slot sticks, restart only SystemUI (`su 0 killall
+com.android.systemui`) or reboot; a full reboot is not required.
 
 ## Limits
 
 - Notification icons are not SystemUI slots; `icon_blacklist` cannot remove them. The
   opaque 28 dp strip covers the notification row while it is up.
+- Airplane/alarm/Bluetooth/VPN are deliberately not in the recommended list: the strip
+  does not duplicate them, and they stay useful if the overlay is ever absent. Add them
+  to the quoted value if a completely empty stock bar is wanted.
 - `clock`/`battery` also hide those items on the keyguard status bar. That is consistent
   with the ztMetro lock overlay owning the lock screen, but it is a deliberate global
   change.

@@ -295,9 +295,33 @@ if grep -aq "androidx" "$BUILD/verify.dex"; then
 fi
 for symbol in StartNotificationListener MetroTileView MetroGridView \
               MetroListRowView MetroPager MetroCircleGlyphView \
-              MetroSectionHeaderView SystemGlyphs TileArt LiveTiles; do
+              MetroSectionHeaderView SystemGlyphs GlyphSet TileArt LiveTiles; do
     grep -aq "$symbol" "$BUILD/verify.dex" \
         || die "$symbol class missing from classes.dex"
+done
+
+# The glyph pipeline order is the point of v4: the system package map must be
+# consulted before the monochrome layer, otherwise Browser/Contacts go back to
+# being a blob. Check source order and that no circular backdrop is drawn.
+TILE_ART="$APP/java/org/ztmetro/start/TileArt.java"
+KIND_LINE=$(grep -n 'SystemGlyphs.kindFor' "$TILE_ART" | head -n 1 | cut -d: -f1)
+LOAD_LINE=$(grep -n 'Drawable original = loadDrawable' "$TILE_ART" | head -n 1 | cut -d: -f1)
+MONO_LINE=$(grep -n 'Monochrome33.get' "$TILE_ART" | head -n 1 | cut -d: -f1)
+[ -n "$KIND_LINE" ] && [ -n "$LOAD_LINE" ] && [ -n "$MONO_LINE" ] \
+    || die "TileArt lost the system-map, load or monochrome step"
+[ "$KIND_LINE" -lt "$LOAD_LINE" ] \
+    || die "TileArt loads the icon before the system package map"
+[ "$KIND_LINE" -lt "$MONO_LINE" ] \
+    || die "TileArt asks for monochrome before the system package map"
+if grep -q 'drawCircle\|addCircle' "$TILE_ART"; then
+    die "TileArt draws a circular icon backdrop; tiles must stay flat"
+fi
+for literal in org.lineageos.etar org.lineageos.aperture org.lineageos.jelly \
+               org.lineageos.twelve com.android.camera2 com.android.deskclock \
+               com.android.documentsui com.android.calculator2 \
+               org.ztmetro.actioncentre; do
+    grep -aq "$literal" "$BUILD/verify.dex" \
+        || die "system glyph map is missing $literal"
 done
 
 # The v3 redraw must actually be in the resource table, not just in Java.
@@ -403,7 +427,7 @@ DEX_BYTES=$(wc -c < "$BUILD/verify.dex" | tr -d ' ')
     printf 'package classes:\n'
     for symbol in StartActivity MetroTileView MetroGridView MetroPager \
                   MetroCircleGlyphView MetroSectionHeaderView MetroListRowView \
-                  SystemGlyphs TileArt TileStore StartNotificationListener \
+                  SystemGlyphs GlyphSet TileArt TileStore StartNotificationListener \
                   LiveTiles Motion Turnstile; do
         if grep -aq "$symbol" "$BUILD/verify.dex"; then
             printf '  %s: present\n' "$symbol"
@@ -425,21 +449,37 @@ DEX_BYTES=$(wc -c < "$BUILD/verify.dex" | tr -d ' ')
     printf 'settings path        Settings > Apps > Special access > Notification access > ztmetro start\n'
 } > "$EVIDENCE/live-facts.txt"
 {
-    printf 'apk:      launcher/build/out/ztmetro-start.apk (evidence/live-tiles/ztmetro-start.apk)\n'
+    printf 'apk:      launcher/build/out/ztmetro-start.apk\n'
+    printf 'evidence: %s/ztmetro-start.apk\n' "$EVIDENCE"
     printf 'size:     %s bytes\n' "$SIZE_BYTES"
     printf 'sha256:   %s\n' "$SHA"
     printf 'package:  org.ztmetro.start\n'
     printf 'version:  4 (4.0)\n'
+    printf 'glyphs:   18 white 24dp paths (GlyphSet); system map before monochrome\n'
     printf 'min/target: 29 / 36\n'
     printf 'build:    %s, %s\n' "$(basename "$SDK")" "$("$JDK/bin/java" -version 2>&1 | head -n 1)"
     printf 'checks:   HOME category, notification listener + BIND permission, no uses-permission,\n'
     printf '          no androidx, live flip 240ms + dexdump service, <3 MB\n'
 } > "$EVIDENCE/artifact-facts.txt"
 
+# --- 6. offline glyph-sheet proof -------------------------------------------
+# The sheet uses the same GlyphSet.java that just went into classes.dex, bound
+# to Java2D instead of android.graphics.Path. It proves the 48 dp and 24 dp
+# shapes without adb or a device.
+say "rendering glyph sheet (48 dp + 24 dp)"
+rm -rf "$BUILD/glyphsheet"
+mkdir -p "$BUILD/glyphsheet"
+"$JDK/bin/javac" -encoding UTF-8 -d "$BUILD/glyphsheet" \
+    "$APP/java/org/ztmetro/start/GlyphSet.java" \
+    "$ROOT/launcher/tools/GlyphSheet.java"
+"$JDK/bin/java" -Djava.awt.headless=true -cp "$BUILD/glyphsheet" \
+    GlyphSheet "$EVIDENCE/glyphs.png"
+
 say "done"
 printf 'APK:     %s\n' "$APK"
 printf 'evidence:%s\n' "$EVIDENCE/ztmetro-start.apk"
 printf 'size:    %s bytes (%s)\n' "$SIZE_BYTES" "$(du -h "$APK" | awk '{print $1}')"
 printf 'sha256:  %s\n' "$SHA"
+printf 'glyphs:  %s (48 dp + 24 dp, white on black)\n' "$EVIDENCE/glyphs.png"
 printf 'verify:  HOME category, label/icon, minSdk 29 / targetSdk 36, listener service,\n'
 printf '         no uses-permission, no androidx, live flip 240ms, dexdump service, <3 MB\n'

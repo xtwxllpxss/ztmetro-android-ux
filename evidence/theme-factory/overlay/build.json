@@ -1,0 +1,23 @@
+{
+ "apk": "/home/denis/ztux/factory/repo/evidence/theme-factory/overlay/ztmetro-ws_xsoh_etar-rro.apk",
+ "apk_name": "ztmetro-ws_xsoh_etar-rro.apk",
+ "sha256": "80e3ef1a23564b49bf21b4f4783f02aeb1176271c90b4ccf8ac2261cd0fe1ea8",
+ "size": 49496,
+ "android_jar": "/home/denis/android-sdk/platforms/android-36/android.jar",
+ "entries": 522,
+ "overlay_package": "org.ztos.overlay.factory.ws_xsoh_etar",
+ "target": "ws.xsoh.etar",
+ "verify": {
+  "dex_files": [],
+  "is_resource_only": true,
+  "manifest_has_target": true,
+  "has_code_false": true,
+  "resource_entries": 423,
+  "missing_entries": [],
+  "badging_package": "org.ztos.overlay.factory.ws_xsoh_etar",
+  "ok": true
+ },
+ "notes": [
+  "registry has no sha256 pin for this package yet"
+ ]
+}

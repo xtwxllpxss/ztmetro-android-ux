@@ -79,7 +79,7 @@ Package name=org.ztmetro.actioncentre id=7f
     resource 0x7f04000e string/shade_bridge_name
       () "ztMetro Action Centre"
     resource 0x7f04000f string/status_strip_description
-      () "Draws the ztMetro 28 dp status strip over the stock status bar: battery, Wi-Fi, signal and clock. Enable it only together with the ztMetro shade bridge."
+      () "Draws the ztMetro 28 dp status strip over the stock status bar: battery, Wi-Fi, signal and clock. Enable it together with ztMetro Action Centre (the gesture bridge)."
     resource 0x7f040010 string/status_strip_name
       () "ztMetro status strip"
     resource 0x7f040011 string/tile_airplane

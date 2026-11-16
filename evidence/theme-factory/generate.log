@@ -1,0 +1,10 @@
+== aapt2 compile
+== aapt2 link (target ws.xsoh.etar)
+== apksigner sign
+
+== overlay       /home/denis/ztux/factory/repo/evidence/theme-factory/overlay/ztmetro-ws_xsoh_etar-rro.apk
+   sha256        80e3ef1a23564b49bf21b4f4783f02aeb1176271c90b4ccf8ac2261cd0fe1ea8
+   size          49496 bytes, 522 entries
+   resource-only True | targetPackage True | missing 0
+   verify.sh     /home/denis/ztux/factory/repo/evidence/theme-factory/overlay/verify.sh
+   apply         repo/scripts/theme-factory.sh apply --profile repo/evidence/theme-factory/app-profile.json --out /home/denis/ztux/factory/repo/evidence/theme-factory/overlay

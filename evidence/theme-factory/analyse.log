@@ -1,0 +1,12 @@
+== aapt2 dump resources etar-fdroid.apk
+   package ws.xsoh.etar: 7865 resources, 1231 colour resources
+== framework names from /home/denis/android-sdk/platforms/android-36/android.jar
+   framework: 1485 attrs, 856 colours
+== aapt2 dump xmltree over 193 layouts
+
+== app-profile  /home/denis/ztux/factory/repo/evidence/theme-factory/app-profile.json
+   package       ws.xsoh.etar
+   sha256        dae01d93c8920aa63845868db2190bcc4aa6ff8410b1289de1ce27b1bb89c599
+   mappings      accent=71, destructive=15, radius=29, success=1, surface=117, surface_key=4, text=173, type=13
+   coverage      {"colour_resources_total": 1231, "colour_resources_used": 316, "colour_resources_mapped": 234, "mapped_ratio_of_used": 0.741, "layouts_scanned": 193}
+   contrast      166 check(s), 1 escalated

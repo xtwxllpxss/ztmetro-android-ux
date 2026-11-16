@@ -90,7 +90,7 @@ public final class GlyphSheet {
         g.dispose();
         ImageIO.write(image, "PNG", out);
         System.out.println("wrote " + out.getPath() + " (" + width + "x" + height
-                + ", " + GlyphSet.COUNT + " glyphs, 48 dp + 24 dp)");
+                + ", " + (GlyphSet.COUNT - 1) + " glyphs, 48 dp + 24 dp)");
     }
 
     private static void drawHeader(Graphics2D g, String text, Font font,

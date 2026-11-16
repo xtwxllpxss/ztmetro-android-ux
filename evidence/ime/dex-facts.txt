@@ -1,4 +1,4 @@
-classes.dex: 23424 bytes
+classes.dex: 23668 bytes
 androidx occurrences: 0 (build fails if any)
 uses-permission elements: 0 (build fails if any)
 service classes (dexdump):

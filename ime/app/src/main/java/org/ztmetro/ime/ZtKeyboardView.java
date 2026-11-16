@@ -87,6 +87,7 @@ public final class ZtKeyboardView extends View {
     private static final int COLOR_PRESSED = 0xFF333333;   // pressed / latched fill
     private static final int COLOR_TEXT = 0xFFFFFFFF;
     private static final int COLOR_SPACE_TEXT = 0xCCFFFFFF;
+    private static final int COLOR_TEXT_DIM = 0x66FFFFFF;
     private static final int COLOR_ACCENT = 0xFF0050EF;
 
     private static final float KEY_HEIGHT_DP = 56f;
@@ -198,6 +199,7 @@ public final class ZtKeyboardView extends View {
 
     private boolean dotPressed;
     private boolean trackpad;
+    private boolean ignoreTouch;
     private int trackPointerId = -1;
     private float trackLastX;
     private float trackLastY;
@@ -598,9 +600,13 @@ public final class ZtKeyboardView extends View {
                 break;
             }
             case ACTION_LANGUAGE:
-                textPaint.setColor(COLOR_TEXT);
-                textPaint.setTextSize(sp(13));
-                drawCentered(canvas, russian ? "RU" : "EN", cx, cy, textPaint);
+                // Both codes stay visible; the active one is white, the other
+                // dim, so the key reads as the RU/EN toggle the spec asks for.
+                textPaint.setTextSize(sp(12));
+                textPaint.setColor(russian ? COLOR_TEXT : COLOR_TEXT_DIM);
+                drawCentered(canvas, "RU", cx, cy - dp(10), textPaint);
+                textPaint.setColor(russian ? COLOR_TEXT_DIM : COLOR_TEXT);
+                drawCentered(canvas, "EN", cx, cy + dp(10), textPaint);
                 break;
             case ACTION_SPACE:
                 textPaint.setColor(COLOR_SPACE_TEXT);
@@ -704,6 +710,7 @@ public final class ZtKeyboardView extends View {
 
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
+                ignoreTouch = false;
                 if (inDot(x, y)) {
                     dotPressed = true;
                     trackPointerId = event.getPointerId(0);
@@ -722,6 +729,9 @@ public final class ZtKeyboardView extends View {
                 // Extra fingers are ignored, including while the trackpad runs.
                 return true;
             case MotionEvent.ACTION_MOVE: {
+                if (ignoreTouch) {
+                    return true;
+                }
                 if (dotPressed || trackpad) {
                     int index = event.findPointerIndex(trackPointerId);
                     if (index < 0) {
@@ -755,12 +765,19 @@ public final class ZtKeyboardView extends View {
                 if ((dotPressed || trackpad)
                         && event.getPointerId(index) == trackPointerId) {
                     finishTrackpad();
+                    // Fingers still down are not a new typing gesture.
+                    ignoreTouch = event.getPointerCount() > 1;
                 }
                 return true;
             }
             case MotionEvent.ACTION_UP: {
                 if (dotPressed || trackpad) {
                     finishTrackpad();
+                    ignoreTouch = false;
+                    return true;
+                }
+                if (ignoreTouch) {
+                    ignoreTouch = false;
                     return true;
                 }
                 Key key = pressedKey;
@@ -778,6 +795,7 @@ public final class ZtKeyboardView extends View {
                 return true;
             }
             case MotionEvent.ACTION_CANCEL: {
+                ignoreTouch = false;
                 if (dotPressed || trackpad) {
                     finishTrackpad();
                     return true;

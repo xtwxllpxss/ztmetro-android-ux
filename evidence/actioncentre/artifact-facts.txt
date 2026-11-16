@@ -1,7 +1,7 @@
 apk:        actioncentre/build/out/ztmetro-actioncentre.apk
 evidence:   evidence/actioncentre/ztmetro-actioncentre.apk
 size:       325179 bytes
-sha256:     caab0c4716ce2062bc9159211192e207ebb6c222217de78cb4ac9e2daac7cc1a
+sha256:     4179ae089133527988f9f26017283ed34e6b7e282fdd7e98cc640c0ce0a973b6
 package:    org.ztmetro.actioncentre
 version:    1 (1.0)
 min/target: 29 / 36

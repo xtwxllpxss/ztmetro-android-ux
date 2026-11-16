@@ -16,12 +16,15 @@ PASS  dexdump lists StatusStripService
 PASS  dexdump lists StatusStripOverlayView
 PASS  status strip uses TYPE_ACCESSIBILITY_OVERLAY
 PASS  status strip is NOT_TOUCHABLE (passes touches through)
+PASS  status strip flags NOT_FOCUSABLE|LAYOUT_IN_SCREEN|LAYOUT_NO_LIMITS
+PASS  status strip draws into the cutout at 28 dp
 PASS  status strip height is exactly 28 dp
 PASS  battery from ACTION_BATTERY_CHANGED
 PASS  Wi-Fi from WifiManager.isWifiEnabled
 PASS  signal from TelephonyManager.getSignalStrength
 PASS  clock from ACTION_TIME_TICK (no 1 Hz timer)
 PASS  strip removed on lock/screen-off, re-added on USER_PRESENT
+PASS  strip suppressed while Action Centre panel is resumed
 PASS  status strip has no timer/polling loop
 PASS  status strip takes no wakelock
 PASS  status strip is white-only (no green/red)

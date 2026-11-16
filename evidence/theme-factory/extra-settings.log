@@ -1,0 +1,12 @@
+== aapt2 dump resources /tmp/settings.apk
+   package com.android.settings: 20836 resources, 1661 colour resources
+== framework names from /home/denis/android-sdk/platforms/android-36/android.jar
+   framework: 1485 attrs, 856 colours
+
+== app-profile  /home/denis/ztux/factory/repo/evidence/theme-factory/extra/settings-profile.json
+   package       com.android.settings
+   sha256        738994e9f3e65db4c60748e1bba371ec1ce8eb1344ce40935a15f77cb057a9a9
+   mappings      accent=182, destructive=25, radius=83, success=4, surface=210, surface_key=4, text=236, type=65
+   coverage      {"colour_resources_total": 1661, "colour_resources_used": 337, "colour_resources_mapped": 260, "mapped_ratio_of_used": 0.772, "layouts_scanned": 0}
+   contrast      237 check(s), 4 escalated
+rc=0

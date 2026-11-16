@@ -10,7 +10,7 @@ no Gradle, no AndroidX, no Material components, no permissions.
 |---|---|
 | APK | `repo/evidence/ime/ztmetro-ime.apk` (build output: `repo/ime/build/out/ztmetro-ime.apk`) |
 | Size | 20,817 bytes (20.3 KiB) |
-| SHA-256 | `38d8e3dcad4caf58529d6c81bb09ab7e5aac438d6a9bdd1b1a8670e99cc46196` |
+| SHA-256 | `a7c2281ff6df22bb48c37df28c5b8b817cc64e49da393aeb41aba5358bd6745d` |
 | Package / version | `org.ztmetro.ime` / 2 (1.1) |
 | min / target SDK | 29 / 36 |
 | Label | `ztMetro keyboard` |

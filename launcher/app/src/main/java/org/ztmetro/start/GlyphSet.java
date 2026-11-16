@@ -199,9 +199,10 @@ public final class GlyphSet {
 
     private static void calendarFill(Sink s) {
         // Header bar plus the two binding rings; the page itself is stroked.
-        roundRect(s, 3.5f, 6f, 20.5f, 9.8f, 1f);
-        roundRect(s, 7.6f, 2.6f, 9.4f, 7.4f, 0.8f);
-        roundRect(s, 14.6f, 2.6f, 16.4f, 7.4f, 0.8f);
+        // The rings run well above the page so they still read at 24 dp.
+        roundRect(s, 3.5f, 6f, 20.5f, 10f, 1f);
+        roundRect(s, 7.2f, 1.7f, 9.6f, 7.6f, 1f);
+        roundRect(s, 14.4f, 1.7f, 16.8f, 7.6f, 1f);
     }
 
     /* ---- calculator ------------------------------------------------------- */
@@ -315,7 +316,8 @@ public final class GlyphSet {
     /* ---- messages --------------------------------------------------------- */
 
     private static void messagesFill(Sink s) {
-        // One contour (bubble + tail), then three even-odd dot holes.
+        // One contour (bubble + tail), then three even-odd text holes. The
+        // reference ztmetro messaging tile uses rules, not dots.
         s.moveTo(6f, 3.5f);
         s.lineTo(18f, 3.5f);
         s.cubicTo(19.9f, 3.5f, 21.5f, 5.1f, 21.5f, 7f);
@@ -329,9 +331,9 @@ public final class GlyphSet {
         s.lineTo(2.5f, 7f);
         s.cubicTo(2.5f, 5.1f, 4.1f, 3.5f, 6f, 3.5f);
         s.close();
-        circle(s, 7.6f, 10.3f, 1.15f, true);
-        circle(s, 12f, 10.3f, 1.15f, true);
-        circle(s, 16.4f, 10.3f, 1.15f, true);
+        roundRect(s, 5.9f, 7.4f, 18.1f, 8.9f, 0.7f);
+        roundRect(s, 5.9f, 10.2f, 18.1f, 11.7f, 0.7f);
+        roundRect(s, 5.9f, 13f, 18.1f, 14.5f, 0.7f);
     }
 
     /* ---- mail ------------------------------------------------------------- */
