@@ -1,0 +1,45 @@
+# Hook targets present in classes.dex (final APK 34eb8e54)
+
+## hooked classes (dex type refs)
+      7 Landroid/app/Dialog;
+     47 Landroid/widget/CompoundButton;
+    140 Landroid/widget/TextView;
+
+## hook name constants in the disassembly
+      2 onCreate
+      3 onResume
+      1 setChecked
+      1 setText
+      1 show
+
+## target activities / actions
+      2 android.settings.APP_SEARCH_SETTINGS
+      1 com.android.settings.intelligence.search.SearchActivity
+      1 com.android.settings.search.SettingsSearchActivity
+
+## surface proof strings
+dialog [dialog]: 
+Isurface search: rows styled by the ScreenPass row pass/hierarchy listener
+pass 
+row pass [
+!row pass failed (stock rows kept)
+surface appinfo [
+surface segmented [
+surface switch [
+
+## state labels (raw dex byte matches)
+ВКЛ: 2
+ВЫКЛ: 2
+
+## upstream row anchors
+alertTitle
+breadcrumb
+button_group
+entity_header_second_summary
+entity_header_summary
+entity_header_title
+install_type
+list_results
+search_bar
+search_bar_container
+select_dialog_listview

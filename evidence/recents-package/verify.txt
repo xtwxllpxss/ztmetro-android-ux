@@ -16,6 +16,8 @@ PASS  RecentsActivity class in dex
 PASS  recents surface lists tasks (getRunningTasks)
 PASS  recents surface removes tasks (removeTask)
 PASS  removal uses the Android 16 entry point (ActivityTaskManager)
+PASS  removal falls back to the activity_task AIDL transaction
+PASS  AIDL fallback uses the IActivityTaskManager interface token
 PASS  APK signature verifies
 PASS  APK size <= 2621440 bytes
 PASS  module zip contains module.prop

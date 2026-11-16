@@ -53,8 +53,12 @@ table (pressed state of the bottom-bar buttons), so its resource assertion still
 | `src/.../RowIcons.java` | per-view icon/chevron removal inside a row (no walk), switches exempt |
 | `src/.../FlatRows.java` | per-row/group flattening (no walk): black surface, elevation 0, 24 dp page margin, no chevron slot |
 | `src/.../ScreenStyler.java` | black window chrome + exactly two passes: `attach` and one `post-layout` at 150 ms, coalesced per Activity |
-| `src/.../Views.java` | allocation-free id/class classification, title counting, protected-container list |
-| `src/.../MetroTinter.java` | per-view switch tint (no walk): #0050EF opaque track, white thumb, cached reflection/colours |
+| `src/.../Views.java` | allocation-free id/class classification, title counting, protected-container list; entity-header/switch/radio/segmented ids |
+| `src/.../MetroTinter.java` | per-view switch tint (no walk): #0050EF opaque track, white thumb; radio/checkbox accent tint |
+| `src/.../TwoStateRow.java` | ВКЛ/ВЫКЛ 22 sp white value line for switch rows; setChecked/setText sync keeps it after a toggle/rebind (no walk) |
+| `src/.../SegmentedStyler.java` | MaterialButtonToggleGroup → square, black, accent checked, white label (inline in the one walk) |
+| `src/.../DialogStyler.java` | Settings alert dialogs: black square window, 20 sp white title, #0050EF buttons, standard dim untouched |
+| `src/.../SearchSurface.java` | search results surface (`com.android.settings.intelligence`): black window, flat search bar, rows via ScreenPass + its RecyclerView hierarchy listener |
 | `res/layout/metro_header.xml` | caps label + title + subtitle, flat black, tag `ztmetro_header` |
 | `res/layout/metro_bottom_bar.xml` | back arrow, centred `ZRN`, search glyph |
 | `res/drawable/metro_header_bg.xml` | flat black block (no cobalt) |
@@ -68,9 +72,10 @@ sourced module spec inside the generator) and re-run
 
 ## Runtime notes
 
-- Scope is `com.android.settings`; the module does nothing in any other process, and only
-  activities that carry the `ztmetro_header` tag get the bottom bar/row work (dialogs and
-  helper activities stay stock).
+- Scope is `com.android.settings` **and** `com.android.settings.intelligence` (the search
+  results UI on LineageOS 23.2).  Activities that carry the `ztmetro_header` tag get the
+  header/bottom bar; the search activity is decorated by `SearchSurface` only (no page
+  header).  LSPosed must have both packages enabled in the module scope.
 - Image/state: header absent ⇒ stock Settings, by construction.  Every hook body is
   try/catch(Throwable) and every view mutation has a containment/whitelist guard.
 - The stock toolbar/app bar is hidden, except when Settings shows a Save/Done action
@@ -78,10 +83,13 @@ sourced module spec inside the generator) and re-run
   working.  Back is always available in the bottom bar.
 - Logcat tag: `ztmetro-header`.  Relevant lines: `module resources via …`,
   `header attached to …`, `bottom bar attached …`, the per-pass proof
-  `pass 1/2 attach: N views, M applies, T ms` / `pass 2/2 post-layout: …`, and the failure
-  lines `… (Settings stays stock)` / `… (stock rows kept)`.
-- The bottom bar's search glyph starts the stock Settings activity with
-  `action=android.settings.SETTINGS` plus the boolean extra `search`; if nothing resolves
-  the intent the click is a logged no-op.
+  `pass 1/2 attach [settings]: N views, M applies, T ms (rows=…, switch=…, entity=…,
+  segmented=…)`, the per-surface lines `surface switch/appinfo/segmented [settings]: …`,
+  `pass 1/1 attach [search]: …`, `row pass [search]: …`, `dialog [dialog]: …`,
+  and the failure lines `… (Settings stays stock)` / `… (stock rows kept)`.
+- The bottom bar's search glyph opens SettingsIntelligence's exported search activity
+  (`action=android.settings.APP_SEARCH_SETTINGS`, package `com.android.settings.intelligence`),
+  i.e. the restyled search surface; the old `android.settings.SETTINGS` + boolean `search`
+  intent is the fallback, and nothing resolving is a logged no-op.
 - Debug builds use a fresh dev key per build directory: **uninstall before install**
   (see the REPORT for the exact commands).

@@ -18,14 +18,26 @@ directory.
 
 | file | size | sha256 |
 |---|---|---|
-| `actioncentre/ztmetro-actioncentre.apk` | 345 804 bytes | `0b7cfa30a7a23a8b47ae4a9892accafa8920bc4fb6fb1620e53acedf92af1033` |
-| `launcher/ztmetro-start.apk` | 74 155 bytes | `163bf3ac7da5e1a1dfd0581d767f7d33b3caba88d990d5997507deeca77aae4d` |
+| `actioncentre/ztmetro-actioncentre.apk` | 353 996 bytes | `fe5e68d5d97bb595410c0bd6a233be87a6527592dd627ce59d8cb8d520524cbf` |
+| `launcher/ztmetro-start.apk` | 78 251 bytes | `15e53d21fcaaa6b488f84679588f64d9bcac8dd8f105a33864127e5b6cada180` |
 
 Build: `hermes-ubuntu` (`~/ztux/stripmotion`, SDK `~/android-sdk` build-tools
-36.0.0, JDK 17). `apksigner verify` and the static checks in
-`actioncentre/verify.txt` pass; the launcher build's own checks pass
-(`launcher/aapt2-badging.txt`, `launcher/dex-facts.txt`). Package versions are
-unchanged: action centre 1 (1.0), launcher 4 (4.0).
+36.0.0, JDK 17), **rebuilt from the current tree at `639bd18`** (including
+`c3a1ebe`/`bdfc739`/`55c9ee1` lock-auth and boot-apply integration), so this is
+the integration state, not the earlier standalone strip/motion build.
+`apksigner verify` and the static checks in `actioncentre/verify.txt` pass; the
+launcher build's own checks pass (`launcher/aapt2-badging.txt`,
+`launcher/dex-facts.txt`). Package versions are unchanged: action centre 1
+(1.0), launcher 4 (4.0).
+
+### Settings-module reentrancy guards (not in these APKs)
+
+The Settings freeze fix lives in `settings/header-module`
+(`HeaderBinder.sInRefresh`, `ScreenPass.sInRowPass`); the Settings UI is a
+separate app/module and is **not compiled into either APK**. This tree still
+contains both guards, untouched by this change, and this change adds no layout
+listeners that call styling. The Settings navigation fix was not device-tested
+by this agent.
 
 ## FIX 1 — the strip provably receives touches
 

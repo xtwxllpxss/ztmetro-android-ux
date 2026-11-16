@@ -61,12 +61,13 @@ final class SearchSurface {
             }
         }
         if (activity == null) {
-            XposedBridge.log(TAG + ": no search activity in this package — search stays stock");
+            XposedBridge.log(TAG + ": no search activity in this package (search lives in "
+                    + PACKAGE + " on LineageOS 23.2) — nothing to hook here");
             return;
         }
         sInstalled = true;
         try {
-            XposedHelpers.findAndHookMethod(activity, "onCreate", Bundle.class,
+            hookMethod(activity, "onCreate", new Class<?>[]{Bundle.class},
                     new XC_MethodHook() {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) {
@@ -79,7 +80,9 @@ final class SearchSurface {
                             }
                         }
                     });
-            XposedHelpers.findAndHookMethod(activity, "onResume", new XC_MethodHook() {
+            // SearchActivity does not override onResume (it is the fragment's), so the
+            // helper walks the superclass chain instead of failing the whole install.
+            hookMethod(activity, "onResume", new Class<?>[0], new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     if (param.thisObject instanceof Activity) {
@@ -97,6 +100,27 @@ final class SearchSurface {
             XposedBridge.log(TAG + ": search hooks failed, search stays stock");
             XposedBridge.log(t);
         }
+    }
+
+    /** Hooks the nearest declaration of the method up the superclass chain. */
+    private static void hookMethod(Class<?> start, String name, Class<?>[] params,
+                                   XC_MethodHook callback) {
+        for (Class<?> current = start; current != null; current = current.getSuperclass()) {
+            try {
+                Method method = current.getDeclaredMethod(name, params);
+                method.setAccessible(true);
+                XposedBridge.hookMethod(method, callback);
+                return;
+            } catch (NoSuchMethodException ignored) {
+                // keep walking up
+            } catch (Throwable t) {
+                XposedBridge.log(TAG + ": cannot hook " + name + " on "
+                        + start.getName() + " (" + t + ")");
+                return;
+            }
+        }
+        XposedBridge.log(TAG + ": " + name + " not found on " + start.getName()
+                + " — that search refresh is skipped");
     }
 
     /** One ScreenPass attach pass + the flat search bar; rows come from the same walker. */

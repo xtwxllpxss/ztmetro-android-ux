@@ -1,6 +1,6 @@
 # ztmetro-recents build report
 
-- built: 2026-11-16 14:19 UTC
+- built: 2026-11-16 14:25 UTC
 - host: Linux 7.0.0-38-generic x86_64
 - SDK: /home/denis/android-sdk
 - android.jar: /home/denis/android-sdk/platforms/android-36/android.jar
@@ -10,14 +10,14 @@
 ## Artifacts
 
 ```
-a1a31b209bde334bccae058bc57a58ef961a87124f9a94062e22910ce8df50cf  ztmetro-recents.zip
-a5bd0eaa11b0ec6a6beb6205fb3aabcdf753222ec188f0d2434504b0e6881030  ztmetro-actioncentre.apk
+2dceec84feec0ced389d692828109c0a017abe99aeaae02c7daae2575efc09cf  ztmetro-recents.zip
+998148ae1a7b429dfad8bcd7afaf084511256fef9204b236db900ce877343c5b  ztmetro-actioncentre.apk
 e4c1009dea857c866619d78e7eb4eb992a7a2c85bf4f0e79cdb1e0b774c18620  ztmetro-recents-rro.apk
 175ecce8a2f5cf211071aa3053230c8af627aee85f75641c6db13474ba71ff81  privapp-permissions-ztmetro-recents.xml
 ```
 
 ## Verification
 
-35 checks PASS, 0 FAIL
+37 checks PASS, 0 FAIL
 
 Full log: `verify.txt`. Install / verify / rollback: `README.md`.

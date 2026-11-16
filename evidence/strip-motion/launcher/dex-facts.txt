@@ -1,4 +1,4 @@
-classes.dex: 111376 bytes
+classes.dex: 115212 bytes
 androidx occurrences: 0 (build fails if any)
 uses-permission elements: 0 (build fails if any)
 package classes:

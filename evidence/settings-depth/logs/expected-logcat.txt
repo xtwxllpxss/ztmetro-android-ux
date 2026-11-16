@@ -1,0 +1,29 @@
+# Expected `ztmetro-header` log lines for the extended surfaces
+# (tag: ztmetro-header; one line per pass + one line per surface handled)
+#
+# 1. Settings screen pass (all existing screens, now also count switch/entity/segmented):
+pass 1/2 attach [settings]: 812 views, 64 applies, 6 ms (rows=37, switch=2, entity=0, segmented=0)
+surface switch [settings]: 2 row(s) with the ВКЛ/ВЫКЛ value line
+pass 2/2 post-layout [settings]: 812 views, 2 applies, 3 ms (rows=37, switch=2, entity=0, segmented=0)
+row pass [settings]: 12 recycler rows styled, 1 recycler(s)
+#
+# 2. App info (AppInfoDashboardFragment): the entity header row is counted as "entity"
+pass 1/2 attach [settings]: 640 views, 71 applies, 5 ms (rows=19, switch=0, entity=1, segmented=0)
+surface appinfo [settings]: 1 entity header row(s) two-line, icon hidden
+#
+# 3. Segmented buttons (Bluetooth device details on this build):
+surface segmented [settings]: 1 group(s) square/black/accent
+#
+# 4. Search results (com.android.settings.intelligence, one attach pass only;
+#    the existing RecyclerView hierarchy listener styles rows added while typing):
+pass 1/1 attach [search]: 96 views, 21 applies, 2 ms (rows=0, switch=0, entity=0, segmented=0)
+surface search: rows styled by the ScreenPass row pass/hierarchy listener
+row pass [search]: 8 recycler rows styled, 1 recycler(s)
+search surface [search]: black window, flat search card, rows two-line via ScreenPass/lightRow (1 pass)
+#
+# 5. Any Settings alert dialog (hoop after Dialog.show; no Activity walk):
+dialog [dialog]: 11 applies, title=20sp white, corners=0, dim=theme default
+#
+# 6. Switch toggled by the user (re-applies the state line after Settings' own
+#    summary update; debug level so it only shows with logcat -v all):
+switch state line -> ВКЛ (height unchanged: one state line)

@@ -1,0 +1,65 @@
+# Static anchors for the ztMetro Settings surfaces
+# upstream: LineageOS Settings e1b8cd2dde2edd8c513362efc55a770270dce899 (lineage-23.2),
+#           frameworks/base + packages/apps/SettingsIntelligence lineage-23.2
+
+## app info entity header (SettingsLib LayoutPreference settings_entity_header.xml)
+20:    android:id="@+id/entity_header"
+24:        android:id="@+id/entity_header_content"
+28:            android:id="@+id/entity_header_icon"
+32:            android:id="@+id/entity_header_title"
+36:            android:id="@+id/install_type"
+44:            android:id="@+id/entity_header_summary"
+53:            android:id="@+id/entity_header_second_summary"
+70:            android:id="@android:id/button1"
+81:            android:id="@android:id/button2"
+
+## search result row (SettingsIntelligence search_intent_item.xml)
+28:    <include layout="@layout/search_icon_view"/>
+37:            android:id="@android:id/title"
+45:            android:id="@android:id/summary"
+52:        <include layout="@layout/search_breadcrumb_view"/>
+
+## search panel (SettingsIntelligence search_panel.xml)
+27:        android:id="@+id/search_bar_container"
+32:        android:paddingTop="@dimen/search_bar_container_top_padding">
+34:            android:id="@+id/search_bar"
+39:            app:cardCornerRadius="@dimen/search_bar_corner_radius"
+44:                android:id="@+id/search_toolbar"
+47:                android:minHeight="@dimen/search_bar_height"
+48:                android:paddingStart="@dimen/search_bar_padding_start"
+49:                android:paddingEnd="@dimen/search_bar_padding_start"
+75:            android:id="@+id/list_results"
+
+## search activity hooks (SettingsIntelligence SearchActivity.java)
+34:public class SearchActivity extends FragmentActivity {
+37:    public void onCreate(Bundle savedInstanceState) {
+38:        super.onCreate(savedInstanceState);
+41:        setContentView(R.layout.search_main);
+
+## segmented buttons (SettingsLib SegmentedButtonPreference layout)
+28:    <com.google.android.material.button.MaterialButtonToggleGroup
+30:        android:id="@+id/button_group"
+31:        style="@style/Widget.Material3Expressive.MaterialButtonGroup.Connected"
+38:        <com.google.android.material.button.MaterialButton
+45:        <com.google.android.material.button.MaterialButton
+52:        <com.google.android.material.button.MaterialButton
+59:        <com.google.android.material.button.MaterialButton
+66:    </com.google.android.material.button.MaterialButtonToggleGroup>
+71:        android:id="@+id/button_group_text"
+77:            android:id="@+id/button_1_text"
+87:            android:id="@+id/button_2_text"
+97:            android:id="@+id/button_3_text"
+107:            android:id="@+id/button_4_text"
+
+## radio/checkbox preference widgets
+18:<RadioButton xmlns:android="http://schemas.android.com/apk/res/android"
+19:    android:id="@android:id/checkbox"
+
+## alert dialog ids (framework)
+53:            <com.android.internal.widget.DialogTitle android:id="@+id/alertTitle"
+123:            <Button android:id="@+id/button1"
+130:            <Button android:id="@+id/button3"
+137:            <Button android:id="@+id/button2"
+
+## single-choice list ids (framework)
+25:    android:id="@id/select_dialog_listview"

@@ -294,6 +294,12 @@ verify_all() {
   check "removal uses the Android 16 entry point (ActivityTaskManager)" \
     "$(LC_ALL=C grep -a -o -F 'android.app.ActivityTaskManager' "$W/dex/classes.dex" | head -n 1)" \
     "android.app.ActivityTaskManager"
+  check "removal falls back to the activity_task AIDL transaction" \
+    "$(LC_ALL=C grep -a -o -F 'android.os.ServiceManager' "$W/dex/classes.dex" | head -n 1)" \
+    "android.os.ServiceManager"
+  check "AIDL fallback uses the IActivityTaskManager interface token" \
+    "$(LC_ALL=C grep -a -o -F 'android.app.IActivityTaskManager' "$W/dex/classes.dex" | head -n 1)" \
+    "android.app.IActivityTaskManager"
   check "APK signature verifies" \
     "$("$BT/apksigner" verify --min-sdk-version "$MIN_API" "$apk" 2>&1; echo rc=$?)" \
     'rc=0'
@@ -332,6 +338,7 @@ verify_all() {
   # Keep the human-readable evidence next to the hashes.
   cp "$W/dexdump.txt" "$EVID/apk-dexdump.txt"
   cp "$PKG/README.md" "$EVID/README.md" 2>/dev/null || true
+  chmod 0644 "$EVID"/*.txt "$EVID"/*.md 2>/dev/null || true
 
   say "verification: $((TOTAL - FAILED))/$TOTAL checks passed"
 }

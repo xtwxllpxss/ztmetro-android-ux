@@ -413,12 +413,12 @@ else
 fi
 
 step_overlays
+step_appops
 step_accessibility
 step_listeners
 step_icon_blacklist
 step_home
 step_ime
-step_appops
 step_vector
 step_systemui
 

@@ -1,7 +1,7 @@
 apk:        actioncentre/build/out/ztmetro-actioncentre.apk
 evidence:   evidence/strip-motion/actioncentre/ztmetro-actioncentre.apk
-size:       345804 bytes
-sha256:     0b7cfa30a7a23a8b47ae4a9892accafa8920bc4fb6fb1620e53acedf92af1033
+size:       353996 bytes
+sha256:     fe5e68d5d97bb595410c0bd6a233be87a6527592dd627ce59d8cb8d520524cbf
 package:    org.ztmetro.actioncentre
 version:    1 (1.0)
 min/target: 29 / 36
@@ -11,6 +11,7 @@ top strip:  32 dp TYPE_ACCESSIBILITY_OVERLAY window above the status bar, alpha-
 reveal:     lock overlay reveal: alpha 1->0 + scale 1->0.96 over 160 ms (previous build: 120 ms, no scale), then the window is removed; surface TRANSLUCENT so the alpha composites
 strip:      StatusStripService (res/xml/status_strip_service.xml), TYPE_ACCESSIBILITY_OVERLAY 28 dp, NOT_TOUCHABLE; READ_PHONE_STATE optional for live signal
 lock:       LockOverlayController: TYPE_ACCESSIBILITY_OVERLAY, NOT_FOCUSABLE|NOT_TOUCHABLE|LAYOUT_IN_SCREEN, bottom strip starts the unlock proxy
+lock pad:   LockPinPad (LockAuthPanel): 0-9/backspace/enter + 4 accent dots, Canvas square keys, no Material; UI ONLY, PIN never verified/stored/passed; enter starts UnlockProxyActivity -> system credential screen; second touchable window sized to the pad, main surface stays NOT_TOUCHABLE; owner flag LockOverlayController.PIN_PAD_ENABLED
 unlock:     UnlockProxyActivity: requestDismissKeyguard (non-secure) or ConfirmDeviceCredential (secure); overlay stays until USER_PRESENT/credential on top
 fonts:      Open Sans Light/Regular/SemiBold from repo/fonts (OFL, bundled)
 built on:   Linux 7.0.0-38-generic x86_64

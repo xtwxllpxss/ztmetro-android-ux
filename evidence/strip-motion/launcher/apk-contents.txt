@@ -6,6 +6,6 @@ Archive:  /home/denis/ztux/stripmotion/launcher/build/out/ztmetro-start.apk
      636  Defl:N      298  53% 1980-01-01 00:00 8a8058e5  res/anim/zt_turnstile_out.xml
      724  Defl:N      361  50% 1980-01-01 00:00 29762d49  res/drawable/ic_launcher.xml
    11708  Stored    11708   0% 1980-01-01 00:00 7fca6c22  resources.arsc
-  111376  Defl:N    53997  52% 1980-01-01 03:00 72bb2825  classes.dex
+  115212  Defl:N    55627  52% 1980-01-01 03:00 d8a8acfc  classes.dex
 --------          -------  ---                            -------
-  128908            67920  47%                            6 files
+  132744            69550  48%                            6 files

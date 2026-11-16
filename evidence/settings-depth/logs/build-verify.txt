@@ -110,12 +110,12 @@ Archive:  /home/denis/ztux/settingsdepth/repo/settings/header-module/build/dist/
      1224  1980-01-01 00:00   res/layout/metro_header.xml
      5188  1980-01-01 00:00   resources.arsc
        39  1980-01-01 00:00   assets/xposed_init
-    66324  2026-11-16 17:20   classes.dex
-     1225  2026-11-16 17:20   META-INF/ZTMETRO-.SF
-     1299  2026-11-16 17:20   META-INF/ZTMETRO-.RSA
-     1098  2026-11-16 17:20   META-INF/MANIFEST.MF
+    67132  2026-11-16 17:25   classes.dex
+     1225  2026-11-16 17:25   META-INF/ZTMETRO-.SF
+     1299  2026-11-16 17:25   META-INF/ZTMETRO-.RSA
+     1098  2026-11-16 17:25   META-INF/MANIFEST.MF
 ---------                     -------
-    83433                     14 files
+    84241                     14 files
 ## hook target names referenced by classes.dex
 com.android.settings
 com.android.settings.core.SettingsBaseActivity
@@ -131,26 +131,26 @@ Processing '/home/denis/ztux/settingsdepth/repo/settings/header-module/build/cla
 Opened '/home/denis/ztux/settingsdepth/repo/settings/header-module/build/classes.dex', DEX version '039'
 DEX file header:
 magic               : 'dex\n039\0'
-checksum            : 42a985c9
-signature           : 3e5d...7db0
-file_size           : 66324
+checksum            : 8f000c89
+signature           : 29a5...73c0
+file_size           : 67132
 header_size         : 112
 link_size           : 0
 link_off            : 0 (0x000000)
-string_ids_size     : 966
+string_ids_size     : 974
 string_ids_off      : 112 (0x000070)
 type_ids_size       : 148
-type_ids_off        : 3976 (0x000f88)
+type_ids_off        : 4008 (0x000fa8)
 proto_ids_size      : 189
-proto_ids_off       : 4568 (0x0011d8)
-field_ids_size      : 230
-field_ids_off       : 6836 (0x001ab4)
-method_ids_size     : 478
-method_ids_off      : 8676 (0x0021e4)
+proto_ids_off       : 4600 (0x0011f8)
+field_ids_size      : 232
+field_ids_off       : 6868 (0x001ad4)
+method_ids_size     : 481
+method_ids_off      : 8724 (0x002214)
 class_defs_size     : 47
-class_defs_off      : 12500 (0x0030d4)
-data_size           : 52320
-data_off            : 14004 (0x0036b4)
+class_defs_off      : 12572 (0x00311c)
+data_size           : 53056
+data_off            : 14076 (0x0036fc)
 
 Class #0            -
   Class descriptor  : 'Lorg/ztmetro/settingsheader/BottomBar$1;'

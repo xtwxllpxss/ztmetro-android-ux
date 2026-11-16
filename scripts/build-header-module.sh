@@ -277,6 +277,13 @@ LC_ALL=C grep -a -q "segmented=" "$BUILD_DIR/classes.dex" \
     || die "per-pass segmented counter is not in dex"
 LC_ALL=C grep -a -q "entity=" "$BUILD_DIR/classes.dex" \
     || die "per-pass app-info entity counter is not in dex"
+# Surface anchors: the ids/classes the new surfaces dispatch on must exist in the dex,
+# otherwise a heuristic silently degrades to stock rows.
+for anchor in entity_header_title entity_header_summary search_bar search_bar_container \
+              breadcrumb button_group materialbuttontogglegroup alertTitle; do
+    LC_ALL=C grep -a -q "$anchor" "$BUILD_DIR/classes.dex" \
+        || die "surface anchor '$anchor' is not referenced by classes.dex"
+done
 LC_ALL=C grep -a -q "setContentView" "$VERIFY" || die "dex does not reference setContentView"
 LC_ALL=C grep -a -q "onResume" "$VERIFY" || die "dex does not reference onResume"
 if [ -x "$DEXDUMP" ]; then

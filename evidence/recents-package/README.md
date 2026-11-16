@@ -48,6 +48,17 @@ allowlist only when the permission's protection includes `privileged`:
 recents component (`ActivityTaskManagerService.isGetTasksAllowed` returns true
 for `isCallerRecents` before checking REAL_GET_TASKS).
 
+Removal does not depend on a hidden Java accessor: on this ROM's `framework.jar`,
+`ActivityTaskManager.getInstance()` and `getService()` are hidden API **BLOCKED**
+while `removeTask` is `BLOCKED, TEST-API` and `ServiceManager.getService` is
+**UNSUPPORTED** (accessible). The activity therefore tries the clean
+`ActivityTaskManager.removeTask` reflection first, then falls back to the exact
+AIDL transaction behind it (`activity_task` binder, interface token
+`android.app.IActivityTaskManager`, transaction 23, read from this ROM's
+`IActivityTaskManager$Stub$Proxy.removeTask` bytecode, gated on SDK 36). The
+server still enforces REMOVE_TASKS in both cases. Rebuild the package if the ROM
+changes Android version: the transaction code is AIDL-order-specific.
+
 ## Install
 
 Prerequisite: Magisk on the phone (the module is a normal Magisk zip).
