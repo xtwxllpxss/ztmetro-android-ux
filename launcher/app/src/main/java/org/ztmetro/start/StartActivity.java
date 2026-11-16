@@ -68,7 +68,7 @@ public final class StartActivity extends Activity
     private MetroGridView grid;
     private MetroCircleGlyphView arrow;
     private LinearLayout appsPage;
-    private LinearLayout appsHeader;
+    private View appsHeader;
     private LinearLayout appsSearchRow;
     private FrameLayout appsListFrame;
     private LinearLayout appsBottom;
@@ -213,35 +213,47 @@ public final class StartActivity extends Activity
         appsPage.setOrientation(LinearLayout.VERTICAL);
         appsPage.setBackgroundColor(Color.TRANSPARENT);
 
-        LinearLayout header = new LinearLayout(this);
+        // mockups/screens/app-list.html: the app list has no 48sp page title.
+        // Its caps line sits at 34dp (28dp strip + 6dp) and the A-Z list starts
+        // at 56dp, so this header is one 28dp band (caps + the search glyph)
+        // and the list follows immediately. The 31dp search circle is our one
+        // addition: search stays available without the mockup's absent field.
+        FrameLayout header = new FrameLayout(this);
         appsHeader = header;
-        header.setOrientation(LinearLayout.VERTICAL);
-        // mockups/screens/page-header.html: caps at 36dp (28dp strip + 8dp),
-        // 16dp page margin; the title follows on its 70dp line with the 29dp
-        // token gap between the caps line and the title line.
-        header.setPadding(MetroUi.dimen(this, R.dimen.metro_page_margin),
-                MetroUi.dimen(this, R.dimen.metro_v3_header_pad_top),
-                MetroUi.dimen(this, R.dimen.metro_page_margin),
-                MetroUi.dimen(this, R.dimen.metro_v3_search_pad));
+        header.setClipChildren(false);
 
         TextView caps = new TextView(this);
-        caps.setTextAppearance(R.style.TextAppearance_Metro_HeaderCaps);
+        caps.setTextAppearance(R.style.TextAppearance_Metro_Caps);
         caps.setText(R.string.header_caps);
         caps.setLetterSpacing(0.08f);
         caps.setIncludeFontPadding(false);
-        LinearLayout.LayoutParams capsParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        capsParams.bottomMargin = MetroUi.dimen(this, R.dimen.metro_header_gap);
+        FrameLayout.LayoutParams capsParams = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP | Gravity.START);
+        capsParams.leftMargin = sidePad;
+        capsParams.topMargin = MetroUi.dimen(this, R.dimen.metro_v3_header_pad_top);
         header.addView(caps, capsParams);
 
-        TextView title = new TextView(this);
-        title.setTextAppearance(R.style.TextAppearance_Metro_HeaderTitle);
-        title.setText(R.string.page_apps);
-        title.setIncludeFontPadding(false);
-        header.addView(title, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        MetroCircleGlyphView headerSearch = new MetroCircleGlyphView(
+                this, MetroCircleGlyphView.SEARCH, true);
+        headerSearch.setContentDescription(getString(R.string.cd_search));
+        headerSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                focusSearch();
+            }
+        });
+        int searchPx = MetroUi.dimen(this, R.dimen.metro_round_button);
+        FrameLayout.LayoutParams searchParams = new FrameLayout.LayoutParams(
+                searchPx, searchPx, Gravity.END | Gravity.TOP);
+        searchParams.rightMargin = sidePad;
+        // 3dp above the band so the 31dp circle's ink ends exactly on the list
+        // edge at 56dp (the band itself is 28dp).
+        searchParams.topMargin = -MetroUi.dp(this, 3);
+        header.addView(headerSearch, searchParams);
+
         appsPage.addView(header, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                ViewGroup.LayoutParams.MATCH_PARENT, MetroUi.dp(this, 28)));
 
         int glyphPx = MetroUi.dimen(this, R.dimen.metro_v3_arrow);
         LinearLayout searchRow = new LinearLayout(this);
@@ -250,17 +262,12 @@ public final class StartActivity extends Activity
         searchRow.setGravity(Gravity.CENTER_VERTICAL);
         searchRow.setPadding(sidePad, 0, sidePad,
                 MetroUi.dimen(this, R.dimen.metro_v3_search_pad));
+        searchRow.setVisibility(View.GONE);
 
-        MetroCircleGlyphView searchGlyph = new MetroCircleGlyphView(
-                this, MetroCircleGlyphView.SEARCH, true);
-        searchGlyph.setContentDescription(getString(R.string.cd_search));
-        searchGlyph.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                focusSearch();
-            }
-        });
-        searchRow.addView(searchGlyph, new LinearLayout.LayoutParams(glyphPx, glyphPx));
+        searchRow.addView(new View(this), new LinearLayout.LayoutParams(
+                MetroUi.dimen(this, R.dimen.metro_round_button) + MetroUi.dimen(this,
+                        R.dimen.metro_v3_search_pad),
+                MetroUi.dimen(this, R.dimen.metro_round_button)));
 
         LinearLayout fieldWrap = new LinearLayout(this);
         fieldWrap.setOrientation(LinearLayout.VERTICAL);
@@ -578,6 +585,9 @@ public final class StartActivity extends Activity
                 search.setText("");
             }
         }
+        if (appsSearchRow != null) {
+            appsSearchRow.setVisibility(View.GONE);
+        }
     }
 
     private void hideKeyboard() {
@@ -592,6 +602,9 @@ public final class StartActivity extends Activity
 
     private void focusSearch() {
         selectPage(PAGE_APPS, true);
+        if (appsSearchRow != null) {
+            appsSearchRow.setVisibility(View.VISIBLE);
+        }
         search.post(new Runnable() {
             @Override
             public void run() {
@@ -613,6 +626,9 @@ public final class StartActivity extends Activity
             if (search != null && search.hasFocus()) {
                 hideKeyboard();
                 search.clearFocus();
+                if (appsSearchRow != null) {
+                    appsSearchRow.setVisibility(View.GONE);
+                }
                 return;
             }
             selectPage(PAGE_START, true);

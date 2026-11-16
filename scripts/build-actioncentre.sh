@@ -303,14 +303,60 @@ verify_apk() {
         printf 'FAIL  instant-launch extra packaged\n' >> "$CHECKS"
         failed=1
     fi
-    # Regression guard: exactly one BACK in the whole service. A later BACK can
-    # dismiss our own panel once it has focus.
-    back_calls=$(grep -c "performGlobalAction" \
-        "$APP/java/org/ztmetro/actioncentre/ShadeBridgeService.java" 2>/dev/null || true)
-    if [ "${back_calls:-0}" -eq 1 ]; then
-        printf 'PASS  exactly one BACK call in ShadeBridgeService\n' >> "$CHECKS"
+    # BACK policy: two mutually exclusive paths (legacy BACK-first when there is
+    # no strip, and the panel-first path that may send one BACK after 120 ms).
+    # `backSent` is the per-trigger cap; no path sends a second BACK.
+    ACTIVITY_SRC="$APP/java/org/ztmetro/actioncentre/ActionCentreActivity.java"
+    SHADE_SRC="$APP/java/org/ztmetro/actioncentre/ShadeBridgeService.java"
+    back_calls=$(grep -c "performGlobalAction" "$SHADE_SRC" 2>/dev/null || true)
+    if [ "${back_calls:-0}" -le 2 ]; then
+        printf 'PASS  at most two BACK call sites (one per collapse path)\n' >> "$CHECKS"
     else
-        printf 'FAIL  expected exactly one BACK call, found %s\n' "${back_calls:-0}" >> "$CHECKS"
+        printf 'FAIL  expected <= 2 BACK call sites, found %s\n' "${back_calls:-0}" >> "$CHECKS"
+        failed=1
+    fi
+    if grep -qF "BACK_AFTER_START_MS" "$SHADE_SRC" && grep -qF "backSent" "$SHADE_SRC"; then
+        printf 'PASS  panel-first shade path: BACK only after 120 ms, capped at one\n' >> "$CHECKS"
+    else
+        printf 'FAIL  panel-first shade timeline/BACK cap missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -qF "panel start at" "$SHADE_SRC" && grep -qF "panel visible " "$SHADE_SRC"; then
+        printf 'PASS  shade timeline logs detected/start/back/visible\n' >> "$CHECKS"
+    else
+        printf 'FAIL  shade timeline log lines missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    # Notification tap: the contentIntent must be sent with a NEW_TASK fill-in
+    # intent, with an action[0] fallback and a logged result.
+    if grep -qF "new Intent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)" "$ACTIVITY_SRC"; then
+        printf 'PASS  row tap sends contentIntent with FLAG_ACTIVITY_NEW_TASK fill-in\n' >> "$CHECKS"
+    else
+        printf 'FAIL  NEW_TASK fill-in intent for contentIntent missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -qF "actionIntent" "$APP/java/org/ztmetro/actioncentre/Notif.java" \
+            && grep -qF "falling back to action[0]" "$ACTIVITY_SRC"; then
+        printf 'PASS  action[0] fallback carried and used when contentIntent is null\n' >> "$CHECKS"
+    else
+        printf 'FAIL  action[0] fallback missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -qF "cancelKey(notif.key)" "$ACTIVITY_SRC" \
+            && grep -qF "cancelNotification ok" "$ACTIVITY_SRC"; then
+        printf 'PASS  row X cancels the notification and logs the result\n' >> "$CHECKS"
+    else
+        printf 'FAIL  row cancel result is not logged\n' >> "$CHECKS"
+        failed=1
+    fi
+    # Swipe-up close: 60 dp drag or an upward fling, 220 ms slide-down, and the
+    # arm condition that keeps list scrolling intact.
+    if grep -qF "CLOSE_DRAG_DP = 60" "$ACTIVITY_SRC" \
+            && grep -qF "CLOSE_FLING_DP_PER_S" "$ACTIVITY_SRC" \
+            && grep -qF "canScrollVertically(View.FOCUS_DOWN)" "$ACTIVITY_SRC"; then
+        printf 'PASS  swipe-up close: 60 dp / fling, scroll-safe arming\n' >> "$CHECKS"
+    else
+        printf 'FAIL  swipe-up close thresholds/scroll guard missing\n' >> "$CHECKS"
         failed=1
     fi
     if grep -qF "addStripOverlay" "$EVID/dexdump-classes.txt"; then
@@ -516,7 +562,9 @@ verify_apk() {
         printf 'shade open         260 ms  ztmetro.c:138 SHADE_MS (animate, ztmetro.c:6558)\n'
         printf 'shade close        220 ms  res/anim/ac_slide_down.xml (C uses SHADE_MS 260 both ways)\n'
         printf 'drag commit        40 dp   ztmetro.c:11761 (dy > 40)\n'
-        printf 'drag travel        1:1 with the finger, handle drag\n'
+        printf 'drag travel        1:1 with the finger, handle drag (both ways)\n'
+        printf 'close gesture      swipe up > 60 dp or up-fling >= 1200 dp/s -> 220 ms slide-down\n'
+        printf 'close arming       top strip, or list at top with nothing to scroll / empty tail\n'
         printf 'scale              Settings.Global.ANIMATOR_DURATION_SCALE read at every motion start; 0 = instant\n'
         printf 'window             translucent, no window animation: the content slides itself\n'
         printf 'easing             (1 - pow(0.1, t)) / 0.9  core/zrnmetrocore.c:1628 (Log(10))\n'
@@ -531,7 +579,7 @@ verify_apk() {
         printf 'version:    1 (1.0)\n'
         printf 'min/target: %s / 36\n' "$MIN_API"
         printf 'build:      plain javac + aapt2 + d8 + apksigner (no Gradle, no AndroidX)\n'
-        printf 'bridge:     ShadeBridgeService (res/xml/shade_bridge.xml), BIND_ACCESSIBILITY_SERVICE\n'
+        printf 'bridge:     ShadeBridgeService (res/xml/shade_bridge.xml), BIND_ACCESSIBILITY_SERVICE; strip path starts the panel instantly, shade fallback = panel first + one BACK after 120 ms\n'
         printf 'strip:      StatusStripService (res/xml/status_strip_service.xml), TYPE_ACCESSIBILITY_OVERLAY 28 dp, NOT_TOUCHABLE; READ_PHONE_STATE optional for live signal\n'
         printf 'lock:       LockOverlayController: TYPE_ACCESSIBILITY_OVERLAY, NOT_FOCUSABLE|NOT_TOUCHABLE|LAYOUT_IN_SCREEN, bottom strip reveals the stock keyguard\n'
         printf 'fonts:      Open Sans Light/Regular/SemiBold from repo/fonts (OFL, bundled)\n'

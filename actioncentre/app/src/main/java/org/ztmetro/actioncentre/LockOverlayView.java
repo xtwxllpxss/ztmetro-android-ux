@@ -114,7 +114,9 @@ final class LockOverlayView extends FrameLayout {
         dateView.setIncludeFontPadding(false);
         dateView.setSingleLine(false);
         dateView.setGravity(Gravity.START);
-        dateView.setLineSpacing(0f, 36f / 30f);
+        // Android's Open Sans box is 1.36 em; 0.882 x 40.8 dp = the mockup's
+        // 36 dp line, so the two-line block is 72 dp as drawn.
+        dateView.setLineSpacing(0f, 0.882f);
 
         countsRow = new LinearLayout(context);
         countsRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -143,7 +145,7 @@ final class LockOverlayView extends FrameLayout {
                 Gravity.BOTTOM | Gravity.START);
         columnParams.leftMargin = dp(14);
         columnParams.rightMargin = dp(14);
-        columnParams.bottomMargin = dp(18);
+        columnParams.bottomMargin = dp(14);
         addView(column, columnParams);
         // On a lock screen that still shows a navigation bar, the hint must not
         // sit under it. The overlay opts out of inset fitting, so read the
@@ -153,7 +155,7 @@ final class LockOverlayView extends FrameLayout {
             public WindowInsets onApplyWindowInsets(View view, WindowInsets insets) {
                 try {
                     int bottom = Math.max(0, insets.getSystemWindowInsetBottom());
-                    int target = dp(18) + Math.min(dp(48), bottom);
+                    int target = dp(14) + Math.min(dp(48), bottom);
                     FrameLayout.LayoutParams params =
                             (FrameLayout.LayoutParams) column.getLayoutParams();
                     if (params != null && params.bottomMargin != target) {
@@ -171,7 +173,7 @@ final class LockOverlayView extends FrameLayout {
 
         LinearLayout.LayoutParams dateParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        dateParams.topMargin = dp(4);
+        dateParams.topMargin = 0;
         column.addView(dateView, dateParams);
 
         LinearLayout.LayoutParams countsParams = new LinearLayout.LayoutParams(

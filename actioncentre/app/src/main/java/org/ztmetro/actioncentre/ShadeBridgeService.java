@@ -37,11 +37,21 @@ import java.util.List;
  * TYPE_APPLICATION) whose bounds cover at least 85 % of the display; the status
  * bar is the small SystemUI window and is ignored.
  *
- * <p>On a hit the service collapses the stock shade with
- * {@link #GLOBAL_ACTION_BACK} once, waits up to 250 ms for the full-screen
- * SystemUI window to disappear, then starts {@link ActionCentreActivity} with
- * the instant-open extra. There is no second BACK: after the panel starts it can
- * be the focused window, and a late BACK would dismiss our own panel.
+ * <p>Two collapse mechanisms, chosen by whether the top strip exists:
+ *
+ * <ul>
+ *   <li><b>Strip present</b> (normal): start {@link ActionCentreActivity}
+ *       immediately with the instant-open extra, so it draws under the shade;
+ *       after {@value #BACK_AFTER_START_MS} ms send at most one
+ *       {@link #GLOBAL_ACTION_BACK} if the shade window is still there and our
+ *       panel has not taken focus. This removes the blank/launcher frame
+ *       between the shade closing and the panel appearing.</li>
+ *   <li><b>No strip</b> (overlay failed): the legacy path — one BACK, then poll
+ *       for up to 250 ms, then start the panel.</li>
+ * </ul>
+ *
+ * <p>Neither path ever sends a second BACK; a late BACK could dismiss our own
+ * panel once it has focus.
  *
  * <p>Fail-safe: with the service disabled the app has no running code path that
  * touches the shade, so the stock shade behaves exactly as before. Every
@@ -175,7 +185,7 @@ public class ShadeBridgeService extends AccessibilityService {
     // ---- top-edge strip: the common path, before SystemUI sees the gesture ----
 
     /**
-     * Adds a 20 dp full-width transparent window above the status bar. Because
+     * Adds a 24 dp full-width transparent window above the status bar. Because
      * TYPE_ACCESSIBILITY_OVERLAY stacks above TYPE_STATUS_BAR, the top-edge
      * swipe is delivered here instead of to SystemUI, so the stock shade never
      * opens for the common gesture.
@@ -449,15 +459,113 @@ public class ShadeBridgeService extends AccessibilityService {
         collapseDisplay = new Rect(display);
         detectedAtUptime = now;
         detectedAtWall = System.currentTimeMillis();
+        panelStartUptime = 0;
+        backAtUptime = 0;
+        backSent = false;
         panelVisibleLogged = false;
         triggerLabel = "detection";
-        Log.i(TAG, "shade detected: " + shade.describe(display)
-                + " last=" + lastForegroundPackage + "; collapsing with GLOBAL_ACTION_BACK");
-        boolean collapsed = performGlobalAction(GLOBAL_ACTION_BACK);
-        Log.i(TAG, "GLOBAL_ACTION_BACK #1 returned " + collapsed);
         handler.removeCallbacks(collapsePoll);
-        handler.postDelayed(collapsePoll, POLL_INTERVAL_MS);
+        handler.removeCallbacks(shadeWatch);
+        handler.removeCallbacks(shadeGoneWatch);
+
+        if (stripActive) {
+            // Panel-first mechanism. The strip owns the normal gesture, so this
+            // path is only reached when the shade opened some other way while
+            // the strip exists. Start our panel immediately: it draws its first
+            // frame under the shade, so the shade's close reveals the panel
+            // instead of a blank/launcher frame. BACK is only a fallback and
+            // only after the panel had BACK_AFTER_START_MS to draw.
+            Log.i(TAG, "shade detected: " + shade.describe(display)
+                    + " last=" + lastForegroundPackage
+                    + "; strip present -> panel first, BACK only if still visible at "
+                    + BACK_AFTER_START_MS + " ms");
+            startPanel("shade detected; panel drawn under the shade before BACK");
+            handler.postDelayed(shadeWatch, BACK_AFTER_START_MS);
+        } else {
+            // No strip (service/overlay unavailable): the legacy BACK-first
+            // path. Exactly one BACK, then a short poll, then the panel.
+            Log.i(TAG, "shade detected: " + shade.describe(display)
+                    + " last=" + lastForegroundPackage
+                    + "; no strip overlay -> collapsing with GLOBAL_ACTION_BACK");
+            backSent = performGlobalAction(GLOBAL_ACTION_BACK);
+            backAtUptime = SystemClock.uptimeMillis();
+            Log.i(TAG, "GLOBAL_ACTION_BACK #1 at " + (backAtUptime - detectedAtUptime)
+                    + " ms returned " + backSent + " (cap 1)");
+            handler.postDelayed(collapsePoll, POLL_INTERVAL_MS);
+        }
     }
+
+    /**
+     * 120 ms after the panel start: is the stock shade still there? If yes and
+     * the panel has not taken focus, send the single allowed BACK. Never sends a
+     * second one; after this the shade is only observed for the log.
+     */
+    private final Runnable shadeWatch = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                if (collapseDisplay == null || backSent) {
+                    return;
+                }
+                long elapsed = SystemClock.uptimeMillis() - detectedAtUptime;
+                if (findFullscreenSystemUiWindow(collapseDisplay, false) == null) {
+                    Log.i(TAG, "no BACK needed: stock shade gone at " + elapsed + " ms");
+                    return;
+                }
+                if (panelVisibleLogged || isOwnPanelFocused()) {
+                    // Our panel is already in front, so the shade is collapsing
+                    // or not focusable; a BACK here would hit our own panel.
+                    Log.i(TAG, "BACK skipped at " + elapsed
+                            + " ms: Action Centre already focused (shade window still listed)");
+                    handler.postDelayed(shadeGoneWatch, POLL_INTERVAL_MS);
+                    return;
+                }
+                backSent = true;
+                boolean collapsed = performGlobalAction(GLOBAL_ACTION_BACK);
+                backAtUptime = SystemClock.uptimeMillis();
+                Log.i(TAG, "shade still visible at " + elapsed
+                        + " ms; GLOBAL_ACTION_BACK #1 at "
+                        + (backAtUptime - detectedAtUptime) + " ms returned " + collapsed
+                        + " (cap 1)");
+                handler.postDelayed(shadeGoneWatch, POLL_INTERVAL_MS);
+            } catch (Throwable t) {
+                Log.w(TAG, "shade watch failed", t);
+            }
+        }
+    };
+
+    /** Logs when the stock shade window finally leaves; never sends a BACK. */
+    private final Runnable shadeGoneWatch = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                if (collapseDisplay == null) {
+                    return;
+                }
+                long elapsed = SystemClock.uptimeMillis() - detectedAtUptime;
+                if (findFullscreenSystemUiWindow(collapseDisplay, false) == null) {
+                    if (backAtUptime != 0) {
+                        Log.i(TAG, "stock shade gone at " + elapsed
+                                + " ms after detection ("
+                                + (elapsed - (backAtUptime - detectedAtUptime))
+                                + " ms after BACK #1)");
+                    } else {
+                        Log.i(TAG, "stock shade gone at " + elapsed
+                                + " ms after detection (no BACK sent)");
+                    }
+                    return;
+                }
+                if (elapsed < SHADE_SETTLE_MAX_MS) {
+                    handler.postDelayed(this, POLL_INTERVAL_MS);
+                    return;
+                }
+                Log.i(TAG, "stock shade still listed at " + elapsed
+                        + " ms; no second BACK (cap 1)");
+            } catch (Throwable t) {
+                Log.w(TAG, "shade-gone poll failed", t);
+            }
+        }
+    };
 
     /**
      * Scans the interactive windows for the expanded shade: a SystemUI window of
@@ -658,10 +766,15 @@ public class ShadeBridgeService extends AccessibilityService {
                 return;
             }
             panelVisibleLogged = true;
-            long elapsed = SystemClock.uptimeMillis() - detected;
+            long now = SystemClock.uptimeMillis();
+            long elapsed = now - detected;
             long wall = System.currentTimeMillis() - detectedAtWall;
+            long fromStart = panelStartUptime == 0 ? -1 : now - panelStartUptime;
+            String back = backAtUptime == 0 ? "none"
+                    : ((backAtUptime - detected) + " ms");
             Log.i(TAG, "panel visible " + elapsed + " ms after " + triggerLabel
-                    + " (wall-clock delta " + wall + " ms)");
+                    + " (start +" + fromStart + " ms, BACK " + back
+                    + ", wall-clock delta " + wall + " ms)");
         } catch (Throwable t) {
             Log.w(TAG, "panel-visible log failed", t);
         }
@@ -671,6 +784,8 @@ public class ShadeBridgeService extends AccessibilityService {
     public void onInterrupt() {
         try {
             handler.removeCallbacks(collapsePoll);
+            handler.removeCallbacks(shadeWatch);
+            handler.removeCallbacks(shadeGoneWatch);
             if (lockOverlay != null) {
                 lockOverlay.onInterrupt();
             }
@@ -682,6 +797,8 @@ public class ShadeBridgeService extends AccessibilityService {
     public boolean onUnbind(Intent intent) {
         try {
             handler.removeCallbacks(collapsePoll);
+            handler.removeCallbacks(shadeWatch);
+            handler.removeCallbacks(shadeGoneWatch);
             removeStripOverlay();
             if (lockOverlay != null) {
                 lockOverlay.stop();
@@ -697,6 +814,8 @@ public class ShadeBridgeService extends AccessibilityService {
     public void onDestroy() {
         try {
             handler.removeCallbacks(collapsePoll);
+            handler.removeCallbacks(shadeWatch);
+            handler.removeCallbacks(shadeGoneWatch);
             removeStripOverlay();
             if (lockOverlay != null) {
                 lockOverlay.stop();

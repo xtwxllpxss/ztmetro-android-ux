@@ -39,15 +39,10 @@ final class MetroTinter {
     static void apply(Activity activity) {
         try {
             applyWindowBackground(activity);
-            final View root = activity.findViewById(android.R.id.content);
+            View root = activity.findViewById(android.R.id.content);
             if (root == null) return;
+            // ScreenStyler owns the pass schedule; this walk runs once per pass.
             walk(root, 0);
-        } catch (Throwable ignored) {
-                            // cosmetic only
-                        }
-                    }
-                }, delay);
-            }
         } catch (Throwable ignored) {
             // theming is cosmetic: never let it interfere with Settings
         }

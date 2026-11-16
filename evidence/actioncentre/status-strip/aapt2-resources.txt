@@ -1,0 +1,144 @@
+Binary APK
+Package name=org.ztmetro.actioncentre id=7f
+  type anim id=01 entryCount=3
+    resource 0x7f010000 anim/ac_slide_down
+      () (file) res/anim/ac_slide_down.xml type=XML
+    resource 0x7f010001 anim/ac_slide_up
+      () (file) res/anim/ac_slide_up.xml type=XML
+    resource 0x7f010002 anim/ac_stay
+      () (file) res/anim/ac_stay.xml type=XML
+  type color id=02 entryCount=9
+    resource 0x7f020000 color/ac_accent
+      () #ff0050ef
+    resource 0x7f020001 color/ac_accent_pressed
+      () #ff1a5fe0
+    resource 0x7f020002 color/ac_black
+      () #ff000000
+    resource 0x7f020003 color/ac_quick_off
+      () #ff1f1f1f
+    resource 0x7f020004 color/ac_quick_off_pressed
+      () #ff333333
+    resource 0x7f020005 color/ac_row_pressed
+      () #ff141414
+    resource 0x7f020006 color/ac_text_primary
+      () #ffffffff
+    resource 0x7f020007 color/ac_text_secondary
+      () #b3ffffff
+    resource 0x7f020008 color/ac_text_tertiary
+      () #80ffffff
+  type drawable id=03 entryCount=10
+    resource 0x7f030000 drawable/ic_airplane
+      () (file) res/drawable/ic_airplane.xml type=XML
+    resource 0x7f030001 drawable/ic_bluetooth
+      () (file) res/drawable/ic_bluetooth.xml type=XML
+    resource 0x7f030002 drawable/ic_brightness
+      () (file) res/drawable/ic_brightness.xml type=XML
+    resource 0x7f030003 drawable/ic_data
+      () (file) res/drawable/ic_data.xml type=XML
+    resource 0x7f030004 drawable/ic_flashlight
+      () (file) res/drawable/ic_flashlight.xml type=XML
+    resource 0x7f030005 drawable/ic_launcher
+      () (file) res/drawable/ic_launcher.xml type=XML
+    resource 0x7f030006 drawable/ic_rotation
+      () (file) res/drawable/ic_rotation.xml type=XML
+    resource 0x7f030007 drawable/ic_settings
+      () (file) res/drawable/ic_settings.xml type=XML
+    resource 0x7f030008 drawable/ic_tile
+      () (file) res/drawable/ic_tile.xml type=XML
+    resource 0x7f030009 drawable/ic_wifi
+      () (file) res/drawable/ic_wifi.xml type=XML
+  type string id=04 entryCount=34
+    resource 0x7f040000 string/app_name
+      () "Центр действий"
+    resource 0x7f040001 string/close
+      () "Закрыть"
+    resource 0x7f040002 string/empty_notifications
+      () "Нет уведомлений"
+    resource 0x7f040003 string/gesture_enable
+      () "ВКЛЮЧИТЬ ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ"
+    resource 0x7f040004 string/gesture_enable_hint
+      () "Специальные возможности → ztMetro Action Centre"
+    resource 0x7f040005 string/gesture_enabled
+      () "ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ ВКЛЮЧЁН"
+    resource 0x7f040006 string/link_all_settings
+      () "ALL SETTINGS"
+    resource 0x7f040007 string/link_clear_all
+      () "CLEAR ALL"
+    resource 0x7f040008 string/listener_connecting
+      () "Служба уведомлений подключается…"
+    resource 0x7f040009 string/listener_missing
+      () "Доступ к уведомлениям не выдан"
+    resource 0x7f04000a string/listener_missing_action
+      () "Нажмите, чтобы открыть настройки доступа"
+    resource 0x7f04000b string/listener_name
+      () "Центр действий: уведомления"
+    resource 0x7f04000c string/lock_swipe_hint
+      () "↑ СВАЙП ВВЕРХ"
+    resource 0x7f04000d string/shade_bridge_description
+      () "Заменяет жест системной шторки панелью Центра действий: перехватывает свайп у верхнего края экрана и открывает панель; если системная шторка всё же открылась, сворачивает её. Пока телефон заблокирован, рисует экран блокировки ztMetro поверх системного; свайп вверх у нижнего края возвращает системный экран блокировки. Служба не читает содержимое окон."
+    resource 0x7f04000e string/shade_bridge_name
+      () "ztMetro Action Centre"
+    resource 0x7f04000f string/status_strip_description
+      () "Draws the ztMetro 28 dp status strip over the stock status bar: battery, Wi-Fi, signal and clock. Enable it together with ztMetro Action Centre (the gesture bridge)."
+    resource 0x7f040010 string/status_strip_name
+      () "ztMetro status strip"
+    resource 0x7f040011 string/tile_airplane
+      () "АВИАРЕЖИМ"
+    resource 0x7f040012 string/tile_bluetooth
+      () "BLUETOOTH"
+    resource 0x7f040013 string/tile_brightness
+      () "ЯРКОСТЬ %1$d%%"
+    resource 0x7f040014 string/tile_brightness_plain
+      () "ЯРКОСТЬ"
+    resource 0x7f040015 string/tile_data
+      () "МОБ. ДАННЫЕ"
+    resource 0x7f040016 string/tile_flashlight
+      () "ФОНАРИК"
+    resource 0x7f040017 string/tile_name
+      () "Центр действий"
+    resource 0x7f040018 string/tile_rotation
+      () "АВТОПОВОРОТ"
+    resource 0x7f040019 string/tile_settings
+      () "НАСТРОЙКИ"
+    resource 0x7f04001a string/tile_wifi
+      () "WI-FI"
+    resource 0x7f04001b string/toast_brightness
+      () "Яркость: %1$d%%"
+    resource 0x7f04001c string/toast_camera_busy
+      () "Фонарик занят камерой"
+    resource 0x7f04001d string/toast_camera_denied
+      () "Без разрешения камеры фонарик не включить"
+    resource 0x7f04001e string/toast_listener_missing
+      () "Нет доступа к уведомлениям: включите службу в настройках"
+    resource 0x7f04001f string/toast_no_flash
+      () "Фонарик недоступен на этом устройстве"
+    resource 0x7f040020 string/toast_settings_missing
+      () "Системные настройки не найдены"
+    resource 0x7f040021 string/toast_write_settings
+      () "Разрешите изменение системных настроек"
+  type style id=05 entryCount=2
+    resource 0x7f050000 style/Animation.ActionCentre
+      () (style) size=4 parent=0x01030001
+        0x010100b8=@anim/ac_slide_up
+        0x010100b9=@anim/ac_stay
+        0x010100ba=@anim/ac_stay
+        0x010100bb=@anim/ac_slide_down
+    resource 0x7f050001 style/Theme.ActionCentre
+      () (style) size=12 parent=0x0103022e
+        0x01010054=@0x0106000d
+        0x01010056=true
+        0x01010058=true
+        0x01010059=@null
+        0x01010222=true
+        0x010102dd=true
+        0x01010435=@color/ac_accent
+        0x01010451=@0x0106000d
+        0x01010452=@color/ac_black
+        0x010104e0=false
+        0x0101056c=false
+        0x01010586=1
+  type xml id=06 entryCount=2
+    resource 0x7f060000 xml/shade_bridge
+      () (file) res/xml/shade_bridge.xml type=XML
+    resource 0x7f060001 xml/status_strip_service
+      () (file) res/xml/status_strip_service.xml type=XML

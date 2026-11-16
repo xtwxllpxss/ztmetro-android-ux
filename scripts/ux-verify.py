@@ -323,31 +323,54 @@ class Device:
                                    fields.get("physical_density", 0)))
         return value, fields
 
-    def window_state(self) -> dict:
-        text = self.sh('dumpsys window | grep -E "mCurrentFocus|mFocusedApp|isKeyguardShowing"')
+    @staticmethod
+    def parse_window(text: str) -> dict:
         out = {"focus": "", "focused_app": "", "keyguard": None, "raw": text.strip()}
-        m = re.search(r"mCurrentFocus=(\S+)", text)
+        # The window token contains spaces ("Window{abc u0 pkg/.Act}"), so take
+        # the whole line; \S+ truncates it to "Window{abc" and loses the package.
+        m = re.search(r"mCurrentFocus=(.+)$", text, re.MULTILINE)
         if m:
-            out["focus"] = m.group(1)
-        m = re.search(r"mFocusedApp=(\S+)", text)
+            out["focus"] = m.group(1).strip()
+        m = re.search(r"mFocusedApp=(.+)$", text, re.MULTILINE)
         if m:
-            out["focused_app"] = m.group(1)
+            out["focused_app"] = m.group(1).strip()
         m = re.search(r"isKeyguardShowing=(true|false)", text)
         if m:
             out["keyguard"] = (m.group(1) == "true")
         return out
 
+    def window_state(self) -> dict:
+        text = self.sh(
+            'dumpsys window | grep -E "mCurrentFocus|mFocusedApp|isKeyguardShowing"')
+        return self.parse_window(text)
+
     def capture_meta(self) -> dict:
-        """Per-capture readback required by the brief."""
-        win = self.window_state()
-        sdk = self.shell("getprop", "ro.build.version.sdk").strip()
-        pid = self.shell("pidof", "com.android.systemui").strip()
-        overlays_raw = self.shell("cmd", "overlay", "list")
-        overlays = [ln.strip() for ln in overlays_raw.splitlines()
+        """Per-capture readback required by the brief, in one adb round-trip."""
+        script = (
+            'echo @@SDK; getprop ro.build.version.sdk; '
+            'echo @@FS; settings get system font_scale; '
+            'echo @@PID; pidof com.android.systemui; '
+            'echo @@OVL; cmd overlay list | grep -E "ztmetro|ztos"; '
+            'echo @@WIN; dumpsys window | grep -E '
+            '"mCurrentFocus|mFocusedApp|isKeyguardShowing"; true'
+        )
+        text = self.sh(script)
+
+        def section(name: str) -> str:
+            m = re.search(rf"@@{name}\n(.*?)(?=\n@@|\Z)", text, re.S)
+            return m.group(1).strip() if m else ""
+
+        win = self.parse_window(section("WIN"))
+        overlays = [ln.strip() for ln in section("OVL").splitlines()
                     if re.search(r"ztmetro|ztos", ln)]
+        try:
+            font_scale = float(section("FS") or 1.0)
+        except ValueError:
+            font_scale = 1.0
         return {
-            "sdk": sdk,
-            "systemui_pid": pid,
+            "sdk": section("SDK"),
+            "font_scale": font_scale,
+            "systemui_pid": section("PID"),
             "overlays": overlays,
             "overlays_enabled": [ln[4:].strip() for ln in overlays
                                  if ln.startswith("[x]")],
@@ -364,43 +387,64 @@ class Device:
         self.shell("input", "swipe", str(x0), str(y0), str(x1), str(y1), str(ms))
 
     def screencap(self, dest: Path) -> None:
-        """screencap to /sdcard, pull the bytes, remove the device copy."""
-        remote = "/sdcard/ux-verify.png"
+        """Pull the framebuffer.  exec-out is one round-trip; file+cat is the fallback."""
+        magic = b"\x89PNG\r\n\x1a\n"
         data = b""
         last_error = ""
         for attempt in (1, 2):
             try:
-                self.shell("screencap", "-p", remote)
-                data = self.adb("exec-out", "cat", remote, binary=True)
-                if data.startswith(b"\x89PNG\r\n\x1a\n") and len(data) > 20_000:
-                    break
+                data = self.adb("exec-out", "screencap", "-p", binary=True)
+                if data.startswith(magic) and len(data) > 20_000:
+                    dest.write_bytes(data)
+                    return
                 last_error = f"short/invalid PNG ({len(data)} bytes)"
             except DeviceError as exc:
                 last_error = str(exc)
-            if attempt == 1:
-                time.sleep(0.6)
-                try:
-                    data = self.adb("exec-out", "screencap", "-p", binary=True)
-                    if data.startswith(b"\x89PNG\r\n\x1a\n"):
-                        break
-                except DeviceError as exc:
-                    last_error = str(exc)
+            time.sleep(0.6)
+        # fallback: screencap to the device, pull the bytes, remove it
+        remote = "/sdcard/ux-verify.png"
         try:
-            self.shell("rm", "-f", remote)
-        except DeviceError:
-            pass
-        if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+            self.shell("screencap", "-p", remote)
+            data = self.adb("exec-out", "cat", remote, binary=True)
+        except DeviceError as exc:
+            last_error = str(exc)
+        finally:
+            try:
+                self.shell("rm", "-f", remote)
+            except DeviceError:
+                pass
+        if not (data.startswith(magic) and len(data) > 20_000):
             raise DeviceError(f"screencap failed: {last_error}")
         dest.write_bytes(data)
 
+    def collapse_shade(self) -> None:
+        try:
+            self.shell("cmd", "statusbar", "collapse")
+        except DeviceError:
+            pass
+
     def unlock(self) -> bool:
-        """Wake and dismiss a non-secure keyguard.  True if unlocked."""
+        """Wake, close the shade, dismiss a non-secure keyguard."""
         self.key("KEYCODE_WAKEUP")
-        time.sleep(0.4)
+        time.sleep(0.35)
+        self.collapse_shade()
+        time.sleep(0.2)
         if not self.window_state()["keyguard"]:
             return True
-        self.swipe(360, 1100, 360, 300, 300)
-        time.sleep(1.3)
+        # Official path for a non-secure keyguard.  The old 1100->300 swipe
+        # started on the notification list and scrolled it instead.
+        try:
+            self.shell("wm", "dismiss-keyguard")
+        except DeviceError:
+            pass
+        time.sleep(1.2)
+        if not self.window_state()["keyguard"]:
+            self.collapse_shade()
+            return True
+        self.swipe(360, 1240, 360, 400, 250)
+        time.sleep(1.2)
+        self.collapse_shade()
+        time.sleep(0.2)
         return not self.window_state()["keyguard"]
 
 
@@ -1456,15 +1500,25 @@ class Runner:
         time.sleep(0.4)
         if not dev.unlock():
             raise DeviceError("device is locked and the swipe did not unlock it")
+        dev.collapse_shade()
         self._note("KEYCODE_HOME; wait 3 s")
         dev.key("KEYCODE_HOME")
         time.sleep(3.0)
+        # Scroll the grid to the top (the launcher keeps its scroll position).
+        # y=520 is below the launcher's top-25 % pull-down band, so this cannot
+        # open the action centre.
+        self._note("swipe 360 520 -> 360 1120 (scroll Start to the top); wait 0.6 s")
+        dev.swipe(360, 520, 360, 1120, 260)
+        time.sleep(0.6)
         shot, meta = self._capture("start")
         if not _looks_like_start(shot, Ctx(self.factor)):
-            # the launcher remembers the app-list page across runs; BACK returns to Start
-            self._note("launcher was not on Start — KEYCODE_BACK; wait 1 s; recapture")
-            dev.key("KEYCODE_BACK")
-            time.sleep(1.0)
+            # the launcher remembers the app-list page or a shade was still up
+            self._note("not Start — collapse shade, HOME, scroll; recapture")
+            dev.collapse_shade()
+            dev.key("KEYCODE_HOME")
+            time.sleep(1.5)
+            dev.swipe(360, 520, 360, 1120, 260)
+            time.sleep(0.8)
             shot, meta = self._capture("start")
         self.checks += _surface_start(shot, self._set_expected_context(meta))
         self._annotate("start", shot, self.checks)
@@ -1547,6 +1601,7 @@ class Runner:
         time.sleep(0.4)
         if not dev.unlock():
             raise DeviceError("could not unlock the keyguard before the volume capture")
+        dev.collapse_shade()
         self._note("am start -a android.settings.SETTINGS; wait 4 s")
         dev.shell("am", "start", "-a", "android.settings.SETTINGS")
         time.sleep(4.0)
@@ -1763,18 +1818,14 @@ def main(argv: list[str] | None = None) -> int:
     if not density:
         raise DeviceError("wm density returned no density")
     factor = density / 160.0
-    sdk = dev.shell("getprop", "ro.build.version.sdk").strip()
-    pid = dev.shell("pidof", "com.android.systemui").strip()
-    win = dev.window_state()
-    overlays_all = [ln.strip() for ln in
-                    dev.shell("cmd", "overlay", "list").splitlines()
-                    if re.search(r"ztmetro|ztos", ln)]
-    overlays_enabled = [ln[4:].strip() for ln in overlays_all
-                        if ln.startswith("[x]")]
-    try:
-        font_scale = float(dev.shell("settings", "get", "system", "font_scale").strip() or 1.0)
-    except (DeviceError, ValueError):
-        font_scale = 1.0
+    pre = dev.capture_meta()
+    sdk = pre["sdk"]
+    pid = pre["systemui_pid"]
+    win = {"focus": pre["focus"], "focused_app": pre["focused_app"],
+           "keyguard": pre["keyguard"]}
+    overlays_all = pre["overlays"]
+    overlays_enabled = pre["overlays_enabled"]
+    font_scale = pre["font_scale"]
     print(f"device: {size[0] if size else '?'}x{size[1] if size else '?'} px, "
           f"density {density} dpi => {factor:.4f} px/dp, "
           f"fontScale {font_scale:g}, sdk {sdk}", flush=True)
@@ -1853,7 +1904,7 @@ def main(argv: list[str] | None = None) -> int:
     checks = pre_checks + runner.checks
     counts = Counter(c.status for c in checks)
     serial = ""
-    m = re.search(r"^(\S+)\s+device$", dev.devices(), re.MULTILINE)
+    m = re.search(r"^(\S+)\s+device\b", dev.devices(), re.MULTILINE)
     if m:
         serial = m.group(1)
 

@@ -1,12 +1,12 @@
 apk:        actioncentre/build/out/ztmetro-actioncentre.apk
 evidence:   evidence/actioncentre/ztmetro-actioncentre.apk
-size:       325179 bytes
-sha256:     4179ae089133527988f9f26017283ed34e6b7e282fdd7e98cc640c0ce0a973b6
+size:       329275 bytes
+sha256:     72b18449d0949a663b66c502efb8b7151d89faf048d70620345138bc1558abe4
 package:    org.ztmetro.actioncentre
 version:    1 (1.0)
 min/target: 29 / 36
 build:      plain javac + aapt2 + d8 + apksigner (no Gradle, no AndroidX)
-bridge:     ShadeBridgeService (res/xml/shade_bridge.xml), BIND_ACCESSIBILITY_SERVICE
+bridge:     ShadeBridgeService (res/xml/shade_bridge.xml), BIND_ACCESSIBILITY_SERVICE; strip path starts the panel instantly, shade fallback = panel first + one BACK after 120 ms
 strip:      StatusStripService (res/xml/status_strip_service.xml), TYPE_ACCESSIBILITY_OVERLAY 28 dp, NOT_TOUCHABLE; READ_PHONE_STATE optional for live signal
 lock:       LockOverlayController: TYPE_ACCESSIBILITY_OVERLAY, NOT_FOCUSABLE|NOT_TOUCHABLE|LAYOUT_IN_SCREEN, bottom strip reveals the stock keyguard
 fonts:      Open Sans Light/Regular/SemiBold from repo/fonts (OFL, bundled)

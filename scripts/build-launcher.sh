@@ -149,26 +149,6 @@ extra_styles += [
     '        <item name="android:lineSpacingMultiplier">1.26</item>',
     "    </style>",
 ]
-# Page header per mockups/screens/page-header.html and type.header: caps 15sp
-# (0.08em tracking, 70 % white), title 58sp Light on a 70dp line.
-header_title = gen.num(tokens["type"]["header"]["title_size_sp"])
-header_sub = gen.num(tokens["type"]["header"]["subtitle_size_sp"])
-extra_styles += [
-    "",
-    "    <!-- type.header: caps 15sp / title 58sp (page-header mockup) -->",
-    '    <style name="TextAppearance.Metro.HeaderCaps" parent="android:TextAppearance">',
-    '        <item name="android:fontFamily">sans-serif-medium</item>',
-    '        <item name="android:textSize">%ssp</item>' % header_sub,
-    '        <item name="android:textColor">#B3FFFFFF</item>',
-    '        <item name="android:lineSpacingMultiplier">%.3f</item>' % (20.0 / float(header_sub)),
-    "    </style>",
-    '    <style name="TextAppearance.Metro.HeaderTitle" parent="android:TextAppearance">',
-    '        <item name="android:fontFamily">sans-serif-light</item>',
-    '        <item name="android:textSize">%ssp</item>' % header_title,
-    '        <item name="android:textColor">@color/metro_text_primary</item>',
-    '        <item name="android:lineSpacingMultiplier">%.3f</item>' % (70.0 / float(header_title)),
-    "    </style>",
-]
 # Live-tile second face: caption 12sp in white, sentence case. The count and
 # the latest line sit on an accent tile, so the colour is on_accent.
 extra_styles += ramp_style(ramp["caption"], "LiveText",
