@@ -18,18 +18,22 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * v3 glyph pipeline.
+ * v4 glyph pipeline.
  *
- * The first pass used the icon's alpha channel for every app, which turns a
- * full-bleed adaptive icon into a white blob. The corrected order is:
+ * The owner's complaint was blobs and dots on system tiles: silhouetting an
+ * arbitrary adaptive icon (even a monochrome layer) cannot produce the crisp
+ * WP glyphs the reference frame has. The corrected order is:
  *
- *   1. AdaptiveIconDrawable.getMonochrome() (API 33+): the system layer built
- *      for monochrome icons, tinted white.
- *   2. Fixed system packages: one of our own white Path glyphs
- *      (SystemGlyphs) so Camera/Contacts/Clock/etc. are actually readable.
- *   3. Every other app: the original icon in COLOUR, foreground layer only for
- *      an adaptive icon (the brand mark, not a copy of the whole icon tile).
- *   4. If all of that is empty: the app's first letter in white.
+ *   1. Fixed system package map: our own white 24 dp Path glyph
+ *      (SystemGlyphs -> GlyphSet) wins before any icon drawable is consulted.
+ *      Browser, Contacts, Camera, Settings, Clock, etc. are always readable,
+ *      at 48 dp and on the 22 dp small-tile glyph.
+ *   2. Third-party apps: AdaptiveIconDrawable.getMonochrome() (API 33+) if it
+ *      renders a non-degenerate silhouette, tinted white.
+ *   3. Otherwise the app's original brand mark in COLOUR, drawn in the 44 %
+ *      glyph box with no white tint, no white circle and no backdrop.
+ *   4. If all of that is empty: the app's first letter in white (the caller
+ *      draws it for TYPE_NONE).
  *
  * The per-app tile colour still comes from the ztmetro C palette and is a pure
  * function of the component name.
@@ -123,8 +127,17 @@ final class TileArt {
             return NONE;
         }
 
-        // 1. The system's monochrome layer is the correct source for a white
-        //    WP glyph: it is drawn for exactly this purpose.
+        // 1. Known system packages get the authored white glyph FIRST. This is
+        //    the fix for the browser sparkle / contacts blob: their adaptive or
+        //    monochrome layer is never allowed to win over the WP shape.
+        int kind = SystemGlyphs.kindFor(component.getPackageName());
+        if (kind != SystemGlyphs.NONE) {
+            return new Art(TYPE_SYSTEM, null, kind);
+        }
+
+        // 2. Third-party apps may provide a proper monochrome layer. Keep it
+        //    white, but only when the silhouette is neither empty, near-solid
+        //    nor a tiny corner mark.
         if (Build.VERSION.SDK_INT >= 33 && original instanceof AdaptiveIconDrawable) {
             Drawable monochrome = null;
             try {
@@ -140,16 +153,10 @@ final class TileArt {
             }
         }
 
-        // 2. Fixed system list: a readable white Path glyph, not the app's
-        //    full-bleed adaptive silhouette.
-        int kind = SystemGlyphs.kindFor(component.getPackageName());
-        if (kind != SystemGlyphs.NONE) {
-            return new Art(TYPE_SYSTEM, null, kind);
-        }
-
-        // 3. Third-party brand mark in colour. For an adaptive icon the
-        //    foreground layer is the logo; drawing only that avoids pasting a
-        //    miniature app-icon square into the tile.
+        // 3. Third-party brand mark in COLOUR, no white tint and no circle.
+        //    The bitmap fills the callers' 44 % glyph box. For an adaptive icon
+        //    only the foreground layer is drawn, so the brand mark appears
+        //    instead of a miniature app-tile (background plate) pasted in.
         if (original instanceof AdaptiveIconDrawable) {
             Drawable foreground = ((AdaptiveIconDrawable) original).getForeground();
             if (foreground != null) {
@@ -163,6 +170,7 @@ final class TileArt {
         if (whole != null) {
             return new Art(TYPE_COLOR, whole, SystemGlyphs.NONE);
         }
+        // 4. TYPE_NONE: the tile/row draws the app's first letter in white.
         return NONE;
     }
 

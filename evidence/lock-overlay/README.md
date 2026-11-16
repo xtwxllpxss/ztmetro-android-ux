@@ -12,15 +12,16 @@ readback from this device.
 | field | value |
 |---|---|
 | APK | `repo/evidence/lock-overlay/ztmetro-actioncentre.apk` (build: `repo/actioncentre/build/out/ztmetro-actioncentre.apk`) |
-| size | **316 909 bytes (309.5 KiB)** — limit 2 MiB |
-| sha256 | `eeaf472a09c6168403138609783acd3da701577e0e6413ab198a401f5458dc94` |
+| size | **325 179 bytes (317.6 KiB)** — limit 2 MiB |
+| sha256 | `30cebbb11e59fe3d1bcf4229f118013987dfb3b726045297defad75fedb33fa9` |
 | package / version | `org.ztmetro.actioncentre`, versionCode 1 / versionName 1.0 |
 | SDK | minSdk 29, targetSdk 36, compileSdk 36 |
 | signer | v3 RSA-2048, cert SHA-256 `303ddd02…2e78ce` — **same key as the previously shipped Action Centre**, so `adb install -r` upgrades in place and keeps the accessibility grant |
 | build | `ACTIONCENTRE_REMOTE_DIR=ztux/lock EVIDENCE_DIR=$PWD/evidence/lock-overlay repo/scripts/build-actioncentre.sh`: rsync to `hermes-ubuntu:~/ztux/lock`, plain `aapt2` + `javac` (Java 8 bytecode, JDK 17) + `d8 --min-api 29` + `zipalign` + `apksigner`. No Gradle, no AndroidX, no network. The prior keystore was copied from `~/ztux/actbridge/build/keystore/actioncentre.p12`. |
 
-Static verification: **59 PASS / 0 FAIL** (`verify.txt`). Passed checks relevant to
-this feature:
+Static verification: **81 PASS / 0 FAIL** (`verify.txt`; the merged build also carries
+agent-29's top-edge strip and agent-37's separate 28 dp status-strip service, so the
+log includes their checks). Passed checks relevant to this feature:
 
 - `dexdump -f` lists `LockOverlayController` and `LockOverlayView` (plus the
   existing `ShadeBridgeService`, strip, shade detector);
@@ -33,6 +34,11 @@ this feature:
 - `lock_swipe_hint` string is in the resource table;
 - no `SYSTEM_ALERT_WINDOW` permission, no `BLUETOOTH_CONNECT`, no AndroidX;
 - the APK is < 2 MiB.
+
+Note: the APK is the merged build of the working tree at 14:03 — it also contains the
+24 dp top-edge shade strip (agent-29) and the optional 28 dp status strip
+(agent-37, separate `StatusStripService` + optional `READ_PHONE_STATE`). The lock
+overlay itself adds no permission and no service.
 
 ## 2. Window type and flags (the part that matters)
 
@@ -168,6 +174,12 @@ lock overlay reuses it, so **no new user grant**:
    date still draw; the counts row stays empty.
 4. No `Draw over other apps` grant, no root, no LSPosed, no reboot required
    (the service rebinds on update).
+5. The merged APK also contains agent-37's separate 28 dp status strip. It is a
+   **second, independent accessibility service** with its own Settings switch;
+   the lock overlay does not need it. If it is enabled, it asks for the optional
+   `READ_PHONE_STATE` runtime permission for live signal bars (four static bars
+   without it) and, per that agent, removes itself while the keyguard is locked so
+   it never draws over this lock screen.
 
 Check on the phone:
 
@@ -209,7 +221,8 @@ the two new files:
 Resource changes: `res/xml/shade_bridge.xml` event types are now
 `typeWindowStateChanged|typeWindowContentChanged`; `strings.xml` gains
 `lock_swipe_hint` and one sentence in `shade_bridge_description`. No manifest
-change, no new service, no new permission.
+change for the lock overlay, no new service and no new permission for it; the
+merged APK's separate status-strip service is agent-37's.
 
 ## 8. Risks and open questions
 
@@ -232,9 +245,11 @@ change, no new service, no new permission.
 - **App icons, not monochrome glyphs**: small-icon bitmaps are not kept by
   `NotificationRepository`; using the launcher icon is honest and recognisable
   but not pixel-faithful to the C lock screen's notification glyphs.
-- **Status strip stacking:** a separate 28 dp status-strip accessibility overlay
-  (agent-37) is also layer 31 and added later, so it will draw over this lock
-  screen unless it is gated on `isKeyguardLocked()`. Flagged to that agent.
+- **Status strip stacking:** agent-37's separate 28 dp status-strip accessibility
+  overlay is also layer 31. They have confirmed it removes itself on
+  `isKeyguardLocked()`/`ACTION_SCREEN_OFF` and re-adds on `USER_PRESENT`; that
+  gating is static-only here and must be checked together with this overlay on
+  the phone (otherwise a white status row would appear over the black lock).
 - **Security perception:** an opaque full-screen accessibility overlay that looks
   like a lock screen is exactly the shape of a phishing screen. This one never
   asks for a PIN, never reads notification text, never unlocks, and is the

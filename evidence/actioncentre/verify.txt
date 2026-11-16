@@ -11,14 +11,22 @@ PASS  shade bridge bind permission
 PASS  shade bridge intent action
 PASS  shade bridge config meta-data
 PASS  shade bridge config resource in table
+PASS  status strip service registered
+PASS  status strip bind permission
+PASS  status strip config packaged
+PASS  status strip config resource in table
+PASS  status strip config description
+PASS  status strip label string
+PASS  status strip READ_PHONE_STATE (optional)
 PASS  gesture settings row strings
+PASS  lock overlay swipe hint string
 PASS  tile activity alias
 PASS  CAMERA permission
 PASS  WRITE_SETTINGS appop permission
 PASS  slide-up animation resource
 PASS  slide-down animation resource
 PASS  accessibility config packaged
-PASS  accessibility config: TYPE_WINDOW_STATE_CHANGED only
+PASS  accessibility config: window-state + content-changed events
 PASS  accessibility config: generic feedback
 PASS  accessibility config: retrieve windows + report view ids
 PASS  accessibility config: can retrieve window content
@@ -28,6 +36,7 @@ PASS  accessibility config: human description reference
 PASS  accessibility description string
 PASS  launcher is not HOME
 PASS  no BLUETOOTH_CONNECT (dangerous) requested
+PASS  no SYSTEM_ALERT_WINDOW permission
 PASS  dexdump lists ShadeBridgeService
 PASS  dexdump lists onAccessibilityEvent callback
 PASS  dexdump lists geometry detector
@@ -36,6 +45,24 @@ PASS  instant-launch extra packaged
 PASS  exactly one BACK call in ShadeBridgeService
 PASS  dexdump lists top-edge strip overlay
 PASS  strip uses TYPE_ACCESSIBILITY_OVERLAY
+PASS  dexdump lists LockOverlayController
+PASS  dexdump lists LockOverlayView
+PASS  lock overlay uses TYPE_ACCESSIBILITY_OVERLAY
+PASS  lock surface NOT_FOCUSABLE|NOT_TOUCHABLE
+PASS  lock overlay performs no global action (never unlocks)
+PASS  dexdump lists StatusStripService
+PASS  dexdump lists StatusStripOverlayView
+PASS  status strip uses TYPE_ACCESSIBILITY_OVERLAY
+PASS  status strip is NOT_TOUCHABLE (passes touches through)
+PASS  status strip height is exactly 28 dp
+PASS  battery from ACTION_BATTERY_CHANGED
+PASS  Wi-Fi from WifiManager.isWifiEnabled
+PASS  signal from TelephonyManager.getSignalStrength
+PASS  clock from ACTION_TIME_TICK (no 1 Hz timer)
+PASS  strip removed on lock/screen-off, re-added on USER_PRESENT
+PASS  status strip has no timer/polling loop
+PASS  status strip takes no wakelock
+PASS  status strip is white-only (no green/red)
 PASS  no androidx in classes.dex
 PASS  class ActionCentreActivity in dex
 PASS  class ActionCentreListener in dex
@@ -45,6 +72,10 @@ PASS  class QuickGrid in dex
 PASS  class NotificationRowView in dex
 PASS  class StatusStripView in dex
 PASS  class Motion in dex
+PASS  class LockOverlayController in dex
+PASS  class LockOverlayView in dex
+PASS  class StatusStripService in dex
+PASS  class StatusStripOverlayView in dex
 PASS  bundled Open Sans Light asset in APK
 PASS  classes.dex packaged
-PASS  APK smaller than 2 MB (304621 bytes)
+PASS  APK smaller than 2 MB (325179 bytes)

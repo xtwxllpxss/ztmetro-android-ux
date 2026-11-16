@@ -316,14 +316,21 @@ final class LockOverlayController {
             }
 
             if (type == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+                    && imePackages.contains(":" + packageName + ":")) {
+                userRevealed = true;
+                hide("IME window-state: " + packageName);
+                return;
+            }
+            if (type == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
                     && isForeignApp(packageName)) {
                 userRevealed = true;
                 hide("app over keyguard: " + packageName + "/" + className);
                 return;
             }
-            if (isSecureInputClass(className)) {
+            if (type == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+                    && (isSecureInputClass(className) || isSystemDialogClass(className))) {
                 userRevealed = true;
-                hide("keyguard bouncer/input: " + className);
+                hide("system surface over keyguard: " + className);
                 return;
             }
             if (type == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
@@ -366,6 +373,21 @@ final class LockOverlayController {
                 || name.contains("pinview")
                 || name.contains("passwordview")
                 || name.contains("patternview");
+    }
+
+    /**
+     * Power menu, volume panel, shutdown/emergency dialogs: they are system
+     * windows below the overlay layer, so the overlay must yield or the user
+     * would lose them while locked.
+     */
+    private static boolean isSystemDialogClass(String className) {
+        String name = className.toLowerCase(Locale.US);
+        return name.contains("globalactions")
+                || name.contains("volumedialog")
+                || name.contains("volumeui")
+                || name.contains("powerdialog")
+                || name.contains("shutdown")
+                || name.contains("emergency");
     }
 
     private void refreshImePackages() {
@@ -413,7 +435,7 @@ final class LockOverlayController {
         }
 
         try {
-            overlayParams = overlayParams(preDraw);
+            overlayParams = overlayParams();
             windowManager.addView(content, overlayParams);
 
             stripParams = stripParams();
@@ -439,7 +461,7 @@ final class LockOverlayController {
                     + " display=" + displayBounds()
                     + " stripHeight=" + stripParams.height
                     + " preDraw=" + preDraw
-                    + " topWindow=" + snapshot.top);
+                    + " " + snapshot.describe());
             return true;
         } catch (Throwable t) {
             addFailed = true;
@@ -450,7 +472,7 @@ final class LockOverlayController {
         }
     }
 
-    private WindowManager.LayoutParams overlayParams(boolean preDraw) {
+    private WindowManager.LayoutParams overlayParams() {
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -510,30 +532,37 @@ final class LockOverlayController {
         handler.removeCallbacks(minuteRunnable);
         handler.removeCallbacks(prepareRunnable);
         removeNotificationsListener();
-        if (!attached) {
-            return;
-        }
+        boolean hadWindow = attached || content.getParent() != null
+                || stripView.getParent() != null;
         attached = false;
         removeViewsQuietly();
-        Log.i(TAG, "hidden: " + reason);
+        if (hadWindow) {
+            Log.i(TAG, "hidden: " + reason);
+        }
     }
 
     private void removeViewsQuietly() {
-        try {
-            if (windowManager != null && stripView != null
-                    && stripView.getParent() != null) {
-                windowManager.removeViewImmediate(stripView);
-            }
-        } catch (Throwable ignored) {
-        }
-        try {
-            if (windowManager != null && content.getParent() != null) {
-                windowManager.removeViewImmediate(content);
-            }
-        } catch (Throwable ignored) {
-        }
+        removeViewQuietly(stripView, "strip");
+        removeViewQuietly(content, "surface");
         stripParams = null;
         overlayParams = null;
+    }
+
+    private void removeViewQuietly(View view, String name) {
+        if (windowManager == null || view == null || view.getParent() == null) {
+            return;
+        }
+        try {
+            windowManager.removeViewImmediate(view);
+            return;
+        } catch (Throwable t) {
+            Log.w(TAG, "removeViewImmediate(" + name + ") failed; retrying", t);
+        }
+        try {
+            windowManager.removeView(view);
+        } catch (Throwable t) {
+            Log.w(TAG, "removeView(" + name + ") failed; the window is still attached", t);
+        }
     }
 
     // ------------------------------------------------------------- keyguard
@@ -830,7 +859,14 @@ final class LockOverlayController {
                         float dx = Math.abs(event.getX() - downX);
                         if (dy >= dp(SWIPE_UP_DP) && dx < dy) {
                             userRevealed = true;
-                            hide("swipe up: stock keyguard revealed");
+                            // Remove after this touch dispatch returns: never
+                            // detach the window from inside its own onTouchEvent.
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    hide("swipe up: stock keyguard revealed");
+                                }
+                            });
                         }
                         return true;
                     case android.view.MotionEvent.ACTION_CANCEL:

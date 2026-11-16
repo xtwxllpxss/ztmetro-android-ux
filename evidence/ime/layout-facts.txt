@@ -1,0 +1,9 @@
+layout:    KEYBOARD.md (1 dp gaps, 56 dp key height, hard corners)
+letters EN: qwertyuiop (10) / asdfghjkl (centred 9) / shift zxcvbnm backspace
+letters RU: 11 / 11 / shift + 9 + backspace; ё on hold е, ъ on hold ь
+bottom:    &123 | smiley(z) | comma(x) | space(comma..dot) | dot(m) | enter
+pages:     letters (EN/RU), &123 (0-9 and . , ? ! ' " - / : ; @ # $ % & * + = ( )),
+           emoji (24, 3x8), abc returns to letters
+trackpad:  hold the accent dot in the shift/&123 corner 450 ms; sends arrow keys
+deferred:  key-pop preview, prediction/autocorrect, settings key-height UI,
+           direct RU/EN key on the letters page (it sits on the &123/emoji pages)

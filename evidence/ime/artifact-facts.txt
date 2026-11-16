@@ -1,8 +1,8 @@
 apk:       ime/build/out/ztmetro-ime.apk (evidence/ime/ztmetro-ime.apk)
-size:      16721 bytes
-sha256:    5bf853b49a92994eaea58c86541c23d1d1fb53fecf7921516a90e3b9740d729f
+size:      20817 bytes
+sha256:    38d8e3dcad4caf58529d6c81bb09ab7e5aac438d6a9bdd1b1a8670e99cc46196
 package:   org.ztmetro.ime
-version:   1 (1.0)
+version:   2 (1.1)
 min/target: 29 / 36
 build:     android-sdk, openjdk version "17.0.21" 2026-10-20
 checks:    package/label, BIND_INPUT_METHOD service, InputMethod filter,

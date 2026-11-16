@@ -104,6 +104,9 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
                 && getIntent().getBooleanExtra(EXTRA_INSTANT, false);
         root = buildUi();
         setContentView(root);
+        // This screen draws its own strip and hides the system bars; suppress
+        // the global status-strip overlay so it does not add a second row.
+        StatusStripService.setPanelVisible(this, true);
         touchSlop = ViewConfiguration.get(this).getScaledTouchSlop();
         // Our own 260 ms travel replaces the window animation, so it can follow
         // Settings.Global.ANIMATOR_DURATION_SCALE and the handle drag.
@@ -146,6 +149,7 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
     @Override
     protected void onResume() {
         super.onResume();
+        StatusStripService.setPanelVisible(this, true);
         hideSystemBars();
         refreshTiles();
         refreshGestureRow();
@@ -156,6 +160,7 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
     protected void onStop() {
         NotificationRepository.removeListener(repoListener);
         handler.removeCallbacks(periodicRefresh);
+        StatusStripService.setPanelVisible(this, false);
         super.onStop();
     }
 

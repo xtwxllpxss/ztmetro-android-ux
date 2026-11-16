@@ -54,6 +54,14 @@ import android.view.accessibility.AccessibilityEvent;
 public class StatusStripService extends AccessibilityService {
     static final String TAG = "StatusStrip";
 
+    /**
+     * True while ActionCentreActivity is resumed. That screen hides the system
+     * bars and draws its own strip, so the overlay must not add a second one.
+     */
+    private static volatile boolean panelVisible;
+    /** The bound service, if any; same process as ActionCentreActivity. */
+    private static volatile StatusStripService instance;
+
     private WindowManager windowManager;
     private StatusStripOverlayView stripView;
     private WindowManager.LayoutParams stripParams;
@@ -67,17 +75,20 @@ public class StatusStripService extends AccessibilityService {
     private boolean networkCallbackRegistered;
 
     private TelephonyManager telephonyManager;
-    private TelephonyCallback telephonyCallback;
+    /** Api31 callback, kept as Object so API 29/30 never resolve TelephonyCallback. */
+    private Object telephonyCallback;
     private PhoneStateListener phoneStateListener;
     private int lastSignalLevel = -1;
 
     private KeyguardManager keyguardManager;
-    private KeyguardManager.KeyguardLockedStateListener keyguardLockedListener;
+    /** Api33 listener, kept as Object so API 29-32 never resolve the new interface. */
+    private Object keyguardLockedListener;
 
     @Override
     protected void onServiceConnected() {
         try {
             super.onServiceConnected();
+            instance = this;
             windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
             connectivityManager =
                     (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -106,6 +117,10 @@ public class StatusStripService extends AccessibilityService {
 
     private void addOverlay() {
         if (overlayAdded) {
+            return;
+        }
+        if (panelVisible) {
+            Log.i(TAG, "not adding strip: Action Centre panel owns the screen");
             return;
         }
         if (isKeyguardLocked() || !isInteractive()) {
@@ -193,6 +208,30 @@ public class StatusStripService extends AccessibilityService {
             return pm == null || pm.isInteractive();
         } catch (Throwable ignored) {
             return true;
+        }
+    }
+
+    /**
+     * Called by ActionCentreActivity in onCreate/onResume (true) and onStop
+     * (false). Same process, so no broadcast or polling is needed.
+     */
+    static void setPanelVisible(Context context, boolean visible) {
+        panelVisible = visible;
+        StatusStripService service = instance;
+        if (service != null) {
+            service.applyPanelVisibility(visible);
+        }
+    }
+
+    private void applyPanelVisibility(boolean visible) {
+        try {
+            if (visible) {
+                removeOverlay();
+            } else if (!isKeyguardLocked() && isInteractive()) {
+                addOverlay();
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "panel visibility update failed", t);
         }
     }
 
@@ -313,11 +352,9 @@ public class StatusStripService extends AccessibilityService {
         }
         try {
             if (Build.VERSION.SDK_INT >= 31) {
-                SignalCallback callback = new SignalCallback();
-                telephonyManager.registerTelephonyCallback(getMainExecutor(), callback);
-                telephonyCallback = callback;
+                telephonyCallback = Api31.registerSignalCallback(telephonyManager, this);
             } else {
-                PhoneStateListener listener = new PhoneStateListener(getMainLooper()) {
+                PhoneStateListener listener = new PhoneStateListener() {
                     @Override
                     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
                         handleSignalStrength(signalStrength);
@@ -332,12 +369,32 @@ public class StatusStripService extends AccessibilityService {
         }
     }
 
-    /** API 31+ signal callback. Separate class so it is never loaded on API 29/30. */
-    private final class SignalCallback extends TelephonyCallback
-            implements TelephonyCallback.SignalStrengthsListener {
-        @Override
-        public void onSignalStrengthsChanged(SignalStrength signalStrength) {
-            handleSignalStrength(signalStrength);
+    /** API 31+ telephony callback; this class is only loaded on API 31+. */
+    private static final class Api31 {
+        static Object registerSignalCallback(TelephonyManager tm, StatusStripService service) {
+            SignalCallback callback = new SignalCallback(service);
+            tm.registerTelephonyCallback(service.getMainExecutor(), callback);
+            return callback;
+        }
+
+        static void unregisterSignalCallback(TelephonyManager tm, Object callback) {
+            if (callback instanceof TelephonyCallback) {
+                tm.unregisterTelephonyCallback((TelephonyCallback) callback);
+            }
+        }
+
+        private static final class SignalCallback extends TelephonyCallback
+                implements TelephonyCallback.SignalStrengthsListener {
+            private final StatusStripService service;
+
+            SignalCallback(StatusStripService service) {
+                this.service = service;
+            }
+
+            @Override
+            public void onSignalStrengthsChanged(SignalStrength signalStrength) {
+                service.handleSignalStrength(signalStrength);
+            }
         }
     }
 
@@ -346,24 +403,39 @@ public class StatusStripService extends AccessibilityService {
             return;
         }
         try {
-            keyguardLockedListener = new KeyguardManager.KeyguardLockedStateListener() {
-                @Override
-                public void onKeyguardLockedStateChanged(boolean isKeyguardLocked) {
-                    try {
-                        if (isKeyguardLocked) {
-                            removeOverlay();
-                        } else if (isInteractive()) {
-                            addOverlay();
-                        }
-                    } catch (Throwable t) {
-                        Log.w(TAG, "keyguard listener failed", t);
-                    }
-                }
-            };
-            keyguardManager.addKeyguardLockedStateListener(
-                    getMainExecutor(), keyguardLockedListener);
+            keyguardLockedListener = Api33.registerKeyguardListener(keyguardManager, this);
         } catch (Throwable t) {
             Log.w(TAG, "keyguard listener not registered", t);
+        }
+    }
+
+    /** API 33+ keyguard listener; this class is only loaded on API 33+. */
+    private static final class Api33 {
+        static Object registerKeyguardListener(KeyguardManager km, StatusStripService service) {
+            KeyguardManager.KeyguardLockedStateListener listener =
+                    new KeyguardManager.KeyguardLockedStateListener() {
+                        @Override
+                        public void onKeyguardLockedStateChanged(boolean isKeyguardLocked) {
+                            try {
+                                if (isKeyguardLocked) {
+                                    service.removeOverlay();
+                                } else if (service.isInteractive()) {
+                                    service.addOverlay();
+                                }
+                            } catch (Throwable t) {
+                                Log.w(TAG, "keyguard listener failed", t);
+                            }
+                        }
+                    };
+            km.addKeyguardLockedStateListener(service.getMainExecutor(), listener);
+            return listener;
+        }
+
+        static void unregisterKeyguardListener(KeyguardManager km, Object listener) {
+            if (listener instanceof KeyguardManager.KeyguardLockedStateListener) {
+                km.removeKeyguardLockedStateListener(
+                        (KeyguardManager.KeyguardLockedStateListener) listener);
+            }
         }
     }
 
@@ -501,6 +573,9 @@ public class StatusStripService extends AccessibilityService {
     }
 
     private void cleanup() {
+        if (instance == this) {
+            instance = null;
+        }
         removeOverlay();
         if (receiverRegistered && receiver != null) {
             try {
@@ -519,7 +594,7 @@ public class StatusStripService extends AccessibilityService {
         try {
             if (Build.VERSION.SDK_INT >= 31 && telephonyCallback != null
                     && telephonyManager != null) {
-                telephonyManager.unregisterTelephonyCallback(telephonyCallback);
+                Api31.unregisterSignalCallback(telephonyManager, telephonyCallback);
             } else if (phoneStateListener != null && telephonyManager != null) {
                 telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE);
             }
@@ -530,7 +605,7 @@ public class StatusStripService extends AccessibilityService {
         if (keyguardLockedListener != null && keyguardManager != null
                 && Build.VERSION.SDK_INT >= 33) {
             try {
-                keyguardManager.removeKeyguardLockedStateListener(keyguardLockedListener);
+                Api33.unregisterKeyguardListener(keyguardManager, keyguardLockedListener);
             } catch (Throwable ignored) {
             }
         }

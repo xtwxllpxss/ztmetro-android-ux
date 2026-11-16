@@ -1,10 +1,10 @@
-Archive:  /home/denis/ztux/ime/repo/ime/build/out/ztmetro-ime.apk
+Archive:  /home/denis/ztux/ime2/ime/build/out/ztmetro-ime.apk
  Length   Method    Size  Cmpr    Date    Time   CRC-32   Name
 --------  ------  ------- ---- ---------- ----- --------  ----
-    2128  Defl:N      802  62% 1980-01-01 00:00 a0370e0e  AndroidManifest.xml
+    2128  Defl:N      804  62% 1980-01-01 00:00 2f2438cc  AndroidManifest.xml
      740  Defl:N      350  53% 1980-01-01 00:00 20e6f1f4  res/drawable/ic_ime.xml
      812  Defl:N      394  52% 1980-01-01 00:00 9bf49473  res/xml/method.xml
     1276  Stored     1276   0% 1980-01-01 00:00 9e252d51  resources.arsc
-   14880  Defl:N     7825  47% 1980-01-01 03:00 19cb9537  classes.dex
+   23424  Defl:N    12088  48% 1980-01-01 03:00 d834b1f5  classes.dex
 --------          -------  ---                            -------
-   19836            10647  46%                            5 files
+   28380            14912  48%                            5 files

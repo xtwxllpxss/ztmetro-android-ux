@@ -6,7 +6,11 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Typeface;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.TypedValue;
+import android.view.HapticFeedbackConstants;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -17,20 +21,22 @@ import java.util.Locale;
 /**
  * ztMetro keyboard surface.
  *
- * Four rows of square keys, 1dp black gutters, black window, lowercase 20sp
- * letters. The bottom row is the function row: RU/EN, shift, wide space,
- * backspace, enter. No drawable backgrounds, no StateListAnimator, no
- * ripple: the only feedback is the pressed fill #333333.
+ * The layout is the one in upstream/ztOS/ztmetro/KEYBOARD.md:
  *
- * The Latin layout uses 10 columns. Russian needs 33 letters plus the shared
- * function row, so it uses 11 columns (11/11/11) while staying 1:1; that is
- * the one pace deviation from the 10-column brief, forced by the alphabet.
+ *   row 1   ten keys, full width with a 1 dp side gutter
+ *   row 2   a centred nine-column grid at the top row's key width
+ *   row 3   shift + seven letters + backspace, the edge keys reaching the
+ *           screen edges; the letters keep the nine-column grid
+ *   row 4   &123 | smiley (under z) | comma (under x) | space | dot (under m)
+ *           | enter, the outer keys absorbing the side margins
  *
- * Unit keys are square: width == height, computed from the incoming width as
- * (width - (columns + 1) * 1dp) / columns, so the grid always fits the
- * available width. In landscape the IME window is as wide as the screen, so
- * the same formula scales the keys up while keeping 1:1 (>= 32dp on the
- * 640dp-wide target).
+ * Keys are 56 dp high (the KEYBOARD.md default), one dp apart, hard-cornered
+ * rectangles on black.  There is no ripple, no StateListAnimator, no rounded
+ * corner: the only feedback is the #333333 pressed fill.
+ *
+ * Three pages: letters (EN / RU), &123 (digits + the common punctuation) and
+ * emoji (24).  Shift is latched caps.  Holding the accent dot in the
+ * shift/symbol corner for 450 ms turns the keyboard into a cursor trackpad.
  */
 public final class ZtKeyboardView extends View {
 
@@ -43,14 +49,13 @@ public final class ZtKeyboardView extends View {
         void onEnter();
 
         void onLanguageChanged(boolean russian);
+
+        void onArrow(int keycode);
     }
 
-    private static final int COLOR_BACKGROUND = 0xFF000000;
-    private static final int COLOR_KEY = 0xFF1F1F1F;       // ztmetro letter-key dark
-    private static final int COLOR_KEY_FN = 0xFF121212;    // function keys sit darker
-    private static final int COLOR_PRESSED = 0xFF333333;   // ztmetro latched key fill
-    private static final int COLOR_TEXT = 0xFFFFFFFF;
-    private static final int COLOR_SPACE_TEXT = 0xCCFFFFFF;
+    private static final int PAGE_LETTERS = 0;
+    private static final int PAGE_SYMBOLS = 1;
+    private static final int PAGE_EMOJI = 2;
 
     private static final int ACTION_TEXT = 1;
     private static final int ACTION_SPACE = 2;
@@ -58,10 +63,35 @@ public final class ZtKeyboardView extends View {
     private static final int ACTION_ENTER = 4;
     private static final int ACTION_SHIFT = 5;
     private static final int ACTION_LANGUAGE = 6;
+    private static final int ACTION_SYMBOLS = 7;
+    private static final int ACTION_LETTERS = 8;
+    private static final int ACTION_EMOJI = 9;
 
     private static final int ICON_NONE = 0;
     private static final int ICON_SHIFT = 1;
     private static final int ICON_BACKSPACE = 2;
+    private static final int ICON_SMILEY = 3;
+    private static final int ICON_ENTER = 4;
+
+    private static final int LAYOUT_TOP = 0;       // ten-column top row
+    private static final int LAYOUT_NINE = 1;      // centred nine-column grid
+    private static final int LAYOUT_NINE_EXT = 2;  // nine columns, edge shift/backspace
+    private static final int LAYOUT_ELEVEN = 3;    // Russian full rows
+    private static final int LAYOUT_ELEVEN_EXT = 4;
+    private static final int LAYOUT_BOTTOM = 5;    // function row(s)
+    private static final int LAYOUT_GRID8 = 6;     // emoji, eight per row
+
+    private static final int COLOR_BACKGROUND = 0xFF000000;
+    private static final int COLOR_KEY = 0xFF1F1F1F;       // letter key
+    private static final int COLOR_KEY_FN = 0xFF121212;    // function key
+    private static final int COLOR_PRESSED = 0xFF333333;   // pressed / latched fill
+    private static final int COLOR_TEXT = 0xFFFFFFFF;
+    private static final int COLOR_SPACE_TEXT = 0xCCFFFFFF;
+    private static final int COLOR_ACCENT = 0xFF0050EF;
+
+    private static final float KEY_HEIGHT_DP = 56f;
+    private static final long TRACKPAD_HOLD_MS = 450L;
+    private static final long ALT_HOLD_MS = 500L;
 
     private static final String[] EN_ROW_1 = {
             "q", "w", "e", "r", "t", "y", "u", "i", "o", "p"
@@ -70,57 +100,78 @@ public final class ZtKeyboardView extends View {
             "a", "s", "d", "f", "g", "h", "j", "k", "l"
     };
     private static final String[] EN_ROW_3 = {
-            "z", "x", "c", "v", "b", "n", "m", ",", ".", "'"
+            "z", "x", "c", "v", "b", "n", "m"
     };
-    private static final String[][] EN_ROWS = {EN_ROW_1, EN_ROW_2, EN_ROW_3};
 
-    // 11/11/11: every Russian letter is reachable by one tap.
+    // There are 33 Cyrillic letters: 11 + 11 + 9 with shift/backspace as the
+    // edge keys of the third row.  The two left over (ё, ъ) are alternates on
+    // е and ь, as on the stock Russian keyboard.
     private static final String[] RU_ROW_1 = {
             "й", "ц", "у", "к", "е", "н", "г", "ш", "щ", "з", "х"
     };
     private static final String[] RU_ROW_2 = {
-            "ъ", "ф", "ы", "в", "а", "п", "р", "о", "л", "д", "ж"
+            "ф", "ы", "в", "а", "п", "р", "о", "л", "д", "ж", "э"
     };
     private static final String[] RU_ROW_3 = {
-            "э", "я", "ч", "с", "м", "и", "т", "ь", "б", "ю", "ё"
+            "я", "ч", "с", "м", "и", "т", "ь", "б", "ю"
     };
-    private static final String[][] RU_ROWS = {RU_ROW_1, RU_ROW_2, RU_ROW_3};
+
+    private static final String[] SYMBOL_ROW_1 = {
+            "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"
+    };
+    private static final String[] SYMBOL_ROW_2 = {
+            ".", ",", "?", "!", "'", "\"", "-", "/", ":", ";"
+    };
+    private static final String[] SYMBOL_ROW_3 = {
+            "@", "#", "$", "%", "&", "*", "+", "=", "(", ")"
+    };
+
+    private static final String[] EMOJI = {
+            "\uD83D\uDE00", "\uD83D\uDE02", "\uD83D\uDE0D", "\uD83D\uDE0A",
+            "\uD83D\uDE2D", "\uD83D\uDE0E", "\uD83E\uDD14", "\uD83D\uDE05",
+            "\uD83D\uDC4D", "\uD83D\uDC4E", "\uD83D\uDE4F", "\uD83D\uDC4F",
+            "\u2764", "\uD83D\uDD25", "\uD83C\uDF89", "\u2728",
+            "\uD83D\uDE21", "\uD83D\uDE22", "\uD83D\uDE34", "\uD83D\uDE18",
+            "\uD83D\uDE01", "\uD83D\uDCAF", "\u2705", "\uD83D\uDC4B"
+    };
 
     private static final class Key {
         final String label;
+        final String alt;
         final int action;
-        final float units;
-        final boolean function;
         final int icon;
+        final int textSp;
+        final boolean function;
 
         float left;
         float top;
         float right;
         float bottom;
 
-        Key(String label, int action, float units, boolean function, int icon) {
+        Key(String label, String alt, int action, int icon, int textSp, boolean function) {
             this.label = label;
+            this.alt = alt;
             this.action = action;
-            this.units = units;
-            this.function = function;
             this.icon = icon;
+            this.textSp = textSp;
+            this.function = function;
         }
     }
 
     private static final class Row {
         final List<Key> keys = new ArrayList<>();
-        final boolean function;
+        final int layout;
 
-        Row(boolean function) {
-            this.function = function;
+        Row(int layout) {
+            this.layout = layout;
         }
     }
 
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint functionPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint iconPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint fillPaint = new Paint();
     private final Path iconPath = new Path();
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     private final List<Row> rows = new ArrayList<>();
     private Listener listener;
@@ -128,11 +179,57 @@ public final class ZtKeyboardView extends View {
     private float density;
     private float gap;
     private float unit;
-    private int columns = 10;
+    private float pitch;
+    private float nineStart;
+    private float zx;
+    private float rowHeight;
+    private float viewWidth;
+    private float viewHeight;
+    private float dotX;
+    private float dotY;
 
+    private int page = PAGE_LETTERS;
     private boolean russian;
     private boolean caps;
-    private Key pressed;
+
+    private Key pressedKey;
+    private Key altKey;
+    private boolean altFired;
+
+    private boolean dotPressed;
+    private boolean trackpad;
+    private int trackPointerId = -1;
+    private float trackLastX;
+    private float trackLastY;
+    private float trackX;
+    private float trackY;
+    private float trackAccX;
+    private float trackAccY;
+
+    private final Runnable altRunnable = new Runnable() {
+        @Override
+        public void run() {
+            altFired = true;
+            performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+            invalidate();
+        }
+    };
+
+    private final Runnable trackpadRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!dotPressed) {
+                return;
+            }
+            trackpad = true;
+            trackX = trackLastX;
+            trackY = trackLastY;
+            trackAccX = 0f;
+            trackAccY = 0f;
+            performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+            invalidate();
+        }
+    };
 
     public ZtKeyboardView(Context context) {
         super(context);
@@ -143,14 +240,8 @@ public final class ZtKeyboardView extends View {
         setFocusableInTouchMode(true);
 
         textPaint.setColor(COLOR_TEXT);
-        textPaint.setTextSize(sp(20));
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
-
-        functionPaint.setColor(COLOR_TEXT);
-        functionPaint.setTextSize(sp(13));
-        functionPaint.setTextAlign(Paint.Align.CENTER);
-        functionPaint.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
 
         iconPaint.setColor(COLOR_TEXT);
         iconPaint.setStyle(Paint.Style.STROKE);
@@ -178,9 +269,10 @@ public final class ZtKeyboardView extends View {
         }
         this.russian = russian;
         caps = false;
-        pressed = null;
+        pressedKey = null;
         buildRows();
-        layoutKeys(getWidth());
+        requestLayout();
+        layoutRows(getWidth(), getHeight());
         invalidate();
     }
 
@@ -191,66 +283,248 @@ public final class ZtKeyboardView extends View {
         }
     }
 
-    private void buildRows() {
-        rows.clear();
-        String[][] layout = russian ? RU_ROWS : EN_ROWS;
-        columns = russian ? 11 : 10;
-
-        for (String[] labels : layout) {
-            Row row = new Row(false);
-            for (String label : labels) {
-                row.keys.add(new Key(label, ACTION_TEXT, 1f, false, ICON_NONE));
-            }
-            rows.add(row);
+    /** A new editor starts on the letters page, lowercase. */
+    public void resetPage() {
+        pressedKey = null;
+        caps = false;
+        if (page != PAGE_LETTERS) {
+            page = PAGE_LETTERS;
+            buildRows();
+            requestLayout();
+            layoutRows(getWidth(), getHeight());
         }
-
-        Row functionRow = new Row(true);
-        functionRow.keys.add(new Key(null, ACTION_LANGUAGE, 1.5f, true, ICON_NONE));
-        functionRow.keys.add(new Key(null, ACTION_SHIFT, 1.5f, true, ICON_SHIFT));
-        functionRow.keys.add(new Key(null, ACTION_SPACE, 1f, true, ICON_NONE));
-        functionRow.keys.add(new Key(null, ACTION_BACKSPACE, 1.5f, true, ICON_BACKSPACE));
-        functionRow.keys.add(new Key(null, ACTION_ENTER, 1.5f, true, ICON_NONE));
-        rows.add(functionRow);
+        invalidate();
     }
 
-    private void layoutKeys(int width) {
-        if (width <= 0) {
+    private void buildRows() {
+        rows.clear();
+        if (page == PAGE_LETTERS) {
+            if (russian) {
+                addTextRow(RU_ROW_1, LAYOUT_ELEVEN);
+                addTextRow(RU_ROW_2, LAYOUT_ELEVEN);
+                addShiftRow(RU_ROW_3, LAYOUT_ELEVEN_EXT);
+            } else {
+                addTextRow(EN_ROW_1, LAYOUT_TOP);
+                addTextRow(EN_ROW_2, LAYOUT_NINE);
+                addShiftRow(EN_ROW_3, LAYOUT_NINE_EXT);
+            }
+            addBottomRow();
+        } else if (page == PAGE_SYMBOLS) {
+            addTextRow(SYMBOL_ROW_1, LAYOUT_TOP);
+            addTextRow(SYMBOL_ROW_2, LAYOUT_TOP);
+            addTextRow(SYMBOL_ROW_3, LAYOUT_TOP);
+            addBottomRow();
+        } else {
+            for (int r = 0; r < 3; r++) {
+                Row row = new Row(LAYOUT_GRID8);
+                for (int i = 0; i < 8; i++) {
+                    row.keys.add(new Key(EMOJI[r * 8 + i], null, ACTION_TEXT,
+                            ICON_NONE, 24, false));
+                }
+                rows.add(row);
+            }
+            addBottomRow();
+        }
+    }
+
+    private void addTextRow(String[] labels, int layout) {
+        Row row = new Row(layout);
+        for (String label : labels) {
+            row.keys.add(new Key(label, null, ACTION_TEXT, ICON_NONE, 20, false));
+        }
+        rows.add(row);
+    }
+
+    private void addShiftRow(String[] letters, int layout) {
+        Row row = new Row(layout);
+        row.keys.add(new Key(null, null, ACTION_SHIFT, ICON_SHIFT, 0, true));
+        for (String letter : letters) {
+            String alt = null;
+            if ("е".equals(letter)) {
+                alt = "ё";
+            } else if ("ь".equals(letter)) {
+                alt = "ъ";
+            }
+            row.keys.add(new Key(letter, alt, ACTION_TEXT, ICON_NONE, 20, false));
+        }
+        row.keys.add(new Key(null, null, ACTION_BACKSPACE, ICON_BACKSPACE, 0, true));
+        rows.add(row);
+    }
+
+    private void addBottomRow() {
+        Row row = new Row(LAYOUT_BOTTOM);
+        if (page == PAGE_LETTERS) {
+            row.keys.add(new Key("&123", null, ACTION_SYMBOLS, ICON_NONE, 13, true));
+            row.keys.add(new Key(null, null, ACTION_EMOJI, ICON_SMILEY, 0, true));
+            row.keys.add(new Key(",", null, ACTION_TEXT, ICON_NONE, 20, true));
+            row.keys.add(spaceKey());
+            row.keys.add(new Key(".", null, ACTION_TEXT, ICON_NONE, 20, true));
+            row.keys.add(new Key(null, null, ACTION_ENTER, ICON_ENTER, 0, true));
+        } else if (page == PAGE_SYMBOLS) {
+            row.keys.add(new Key("abc", null, ACTION_LETTERS, ICON_NONE, 13, true));
+            row.keys.add(languageKey());
+            row.keys.add(new Key(null, null, ACTION_EMOJI, ICON_SMILEY, 0, true));
+            row.keys.add(spaceKey());
+            row.keys.add(new Key(null, null, ACTION_ENTER, ICON_ENTER, 0, true));
+        } else {
+            row.keys.add(new Key("abc", null, ACTION_LETTERS, ICON_NONE, 13, true));
+            row.keys.add(languageKey());
+            row.keys.add(spaceKey());
+            row.keys.add(new Key(null, null, ACTION_BACKSPACE, ICON_BACKSPACE, 0, true));
+        }
+        rows.add(row);
+    }
+
+    private Key spaceKey() {
+        return new Key(null, null, ACTION_SPACE, ICON_NONE, 13, true);
+    }
+
+    private Key languageKey() {
+        return new Key(null, null, ACTION_LANGUAGE, ICON_NONE, 13, true);
+    }
+
+    private void layoutRows(int width, int height) {
+        if (width <= 0 || height <= 0 || rows.isEmpty()) {
             return;
         }
+        viewWidth = width;
+        viewHeight = height;
+
         gap = dp(1);
-        unit = (width - (columns + 1) * gap) / columns;
+        unit = (width - 11 * gap) / 10f;      // the top row's key width
+        pitch = unit + gap;
+        nineStart = gap + pitch / 2f;         // centred nine-column grid
+        zx = nineStart + pitch;               // z / smiley left edge
+        rowHeight = (height - (rows.size() + 1) * gap) / rows.size();
 
         float y = gap;
         for (Row row : rows) {
-            if (!row.function) {
-                int count = row.keys.size();
-                float rowWidth = count * unit + (count - 1) * gap;
-                float x = (width - rowWidth) / 2f;
-                for (Key key : row.keys) {
-                    key.left = x;
-                    key.top = y;
-                    key.right = x + unit;
-                    key.bottom = y + unit;
-                    x += unit + gap;
-                }
-            } else {
-                // Fixed part: language 1.5u + shift 1.5u + backspace 1.5u +
-                // enter 1.5u = 6u. Space absorbs the rest so the row ends
-                // exactly at the right 1dp gutter.
-                float inner = width - 2 * gap;
-                float spaceWidth = inner - 4 * gap - 6 * unit;
-                float x = gap;
-                for (Key key : row.keys) {
-                    float keyWidth = key.action == ACTION_SPACE ? spaceWidth : key.units * unit;
-                    key.left = x;
-                    key.top = y;
-                    key.right = x + keyWidth;
-                    key.bottom = y + unit;
-                    x += keyWidth + gap;
-                }
-            }
-            y += unit + gap;
+            placeRow(row, y);
+            y += rowHeight + gap;
         }
+
+        dotX = dp(6);
+        dotY = rows.get(Math.min(2, rows.size() - 1)).keys.get(0).bottom;
+    }
+
+    private void placeRow(Row row, float y) {
+        int n = row.keys.size();
+        float h = rowHeight;
+
+        for (int i = 0; i < n; i++) {
+            Key key = row.keys.get(i);
+            key.top = y;
+            key.bottom = y + h;
+        }
+
+        switch (row.layout) {
+            case LAYOUT_TOP: {
+                for (int i = 0; i < n; i++) {
+                    Key key = row.keys.get(i);
+                    key.left = gap + i * pitch;
+                    key.right = key.left + unit;
+                }
+                break;
+            }
+            case LAYOUT_NINE: {
+                for (int i = 0; i < n; i++) {
+                    Key key = row.keys.get(i);
+                    key.left = nineStart + i * pitch;
+                    key.right = key.left + unit;
+                }
+                break;
+            }
+            case LAYOUT_NINE_EXT: {
+                for (int i = 0; i < n; i++) {
+                    Key key = row.keys.get(i);
+                    if (i == 0) {
+                        key.left = 0f;
+                        key.right = nineStart + unit;
+                    } else if (i == n - 1) {
+                        key.left = nineStart + i * pitch;
+                        key.right = viewWidth;
+                    } else {
+                        key.left = nineStart + i * pitch;
+                        key.right = key.left + unit;
+                    }
+                }
+                break;
+            }
+            case LAYOUT_ELEVEN: {
+                float u = (viewWidth - (n + 1) * gap) / n;
+                float p = u + gap;
+                for (int i = 0; i < n; i++) {
+                    Key key = row.keys.get(i);
+                    key.left = gap + i * p;
+                    key.right = key.left + u;
+                }
+                break;
+            }
+            case LAYOUT_ELEVEN_EXT: {
+                float u = (viewWidth - (n + 1) * gap) / n;
+                float p = u + gap;
+                for (int i = 0; i < n; i++) {
+                    Key key = row.keys.get(i);
+                    if (i == 0) {
+                        key.left = 0f;
+                        key.right = gap + u;
+                    } else if (i == n - 1) {
+                        key.left = gap + i * p;
+                        key.right = viewWidth;
+                    } else {
+                        key.left = gap + i * p;
+                        key.right = key.left + u;
+                    }
+                }
+                break;
+            }
+            case LAYOUT_GRID8: {
+                float u = (viewWidth - 9 * gap) / 8f;
+                float p = u + gap;
+                for (int i = 0; i < n; i++) {
+                    Key key = row.keys.get(i);
+                    key.left = gap + i * p;
+                    key.right = key.left + u;
+                }
+                break;
+            }
+            case LAYOUT_BOTTOM:
+            default:
+                placeBottom(row);
+                break;
+        }
+    }
+
+    private void placeBottom(Row row) {
+        int n = row.keys.size();
+        if (n == 6) {
+            // &123 | smiley (z) | comma (x) | space | dot (m) | enter
+            setKey(row, 0, 0f, zx - gap);
+            setKey(row, 1, zx, zx + unit);
+            setKey(row, 2, zx + pitch, zx + pitch + unit);
+            setKey(row, 3, zx + 2 * pitch, zx + 6 * pitch - gap);
+            setKey(row, 4, zx + 6 * pitch, zx + 6 * pitch + unit);
+            setKey(row, 5, zx + 7 * pitch, viewWidth);
+        } else if (n == 5) {
+            // abc | RU/EN | smiley | space | enter
+            setKey(row, 0, 0f, zx - gap);
+            setKey(row, 1, zx, zx + unit);
+            setKey(row, 2, zx + pitch, zx + pitch + unit);
+            setKey(row, 3, zx + 2 * pitch, zx + 7 * pitch - gap);
+            setKey(row, 4, zx + 7 * pitch, viewWidth);
+        } else {
+            // abc | RU/EN | space | backspace
+            setKey(row, 0, 0f, zx - gap);
+            setKey(row, 1, zx, zx + unit);
+            setKey(row, 2, zx + pitch, zx + 7 * pitch - gap);
+            setKey(row, 3, zx + 7 * pitch, viewWidth);
+        }
+    }
+
+    private void setKey(Row row, int index, float left, float right) {
+        Key key = row.keys.get(index);
+        key.left = left;
+        key.right = right;
     }
 
     @Override
@@ -260,51 +534,52 @@ public final class ZtKeyboardView extends View {
             width = getResources().getDisplayMetrics().widthPixels;
         }
 
-        int cols = russian ? 11 : 10;
         float g = dp(1);
-        float u = (width - (cols + 1) * g) / cols;
-        int height = (int) Math.ceil(4 * u + 5 * g);
-
-        if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY) {
+        int height = (int) Math.ceil(4 * dp(KEY_HEIGHT_DP) + 5 * g);
+        if (MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.UNSPECIFIED) {
             int available = MeasureSpec.getSize(heightMeasureSpec);
             if (available > 0 && available < height) {
-                float fit = (available - 5 * g) / 4f;
-                // Landscape 640dp gives ~57dp (RU) / ~63dp (EN), so the fit
-                // only matters if the IME window itself is short.
-                if (fit >= dp(32)) {
-                    u = fit;
-                }
+                // Landscape / split-screen: keep four rows, shrink evenly.
                 height = available;
             }
         }
-
         setMeasuredDimension(width, height);
     }
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        layoutKeys(w);
+        layoutRows(w, h);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.drawColor(COLOR_BACKGROUND);
+
+        if (trackpad) {
+            // Keys hidden; the accent dot shows that the trackpad is live.
+            fillPaint.setColor(COLOR_ACCENT);
+            canvas.drawCircle(dotX, dotY, dp(3), fillPaint);
+            return;
+        }
+
         for (Row row : rows) {
             for (Key key : row.keys) {
                 drawKey(canvas, key);
             }
         }
+
+        fillPaint.setColor(COLOR_ACCENT);
+        canvas.drawCircle(dotX, dotY, dotPressed ? dp(3) : dp(2), fillPaint);
     }
 
     private void drawKey(Canvas canvas, Key key) {
-        boolean isPressed = key == pressed;
-        boolean activeShift = key.action == ACTION_SHIFT && caps;
+        boolean active = key == pressedKey || (key.action == ACTION_SHIFT && caps);
 
-        fillPaint.setColor(isPressed || activeShift
+        fillPaint.setColor(active
                 ? COLOR_PRESSED
                 : (key.function ? COLOR_KEY_FN : COLOR_KEY));
-        // Deliberately a hard rectangle: no rounded corners, no ripple.
+        // Hard rectangle: no rounded corners, no ripple.
         canvas.drawRect(key.left, key.top, key.right, key.bottom, fillPaint);
 
         float cx = (key.left + key.right) / 2f;
@@ -312,20 +587,25 @@ public final class ZtKeyboardView extends View {
 
         switch (key.action) {
             case ACTION_TEXT: {
-                String label = caps ? key.label.toUpperCase(Locale.ROOT) : key.label;
+                String label = key.label;
+                if (caps && label != null && label.length() == 1
+                        && Character.isLetter(label.charAt(0))) {
+                    label = label.toUpperCase(Locale.ROOT);
+                }
+                textPaint.setColor(COLOR_TEXT);
+                textPaint.setTextSize(sp(key.textSp));
                 drawCentered(canvas, label, cx, cy, textPaint);
                 break;
             }
             case ACTION_LANGUAGE:
-                drawCentered(canvas, russian ? "RU" : "EN", cx, cy, functionPaint);
+                textPaint.setColor(COLOR_TEXT);
+                textPaint.setTextSize(sp(13));
+                drawCentered(canvas, russian ? "RU" : "EN", cx, cy, textPaint);
                 break;
             case ACTION_SPACE:
-                functionPaint.setColor(COLOR_SPACE_TEXT);
-                drawCentered(canvas, "space", cx, cy, functionPaint);
-                functionPaint.setColor(COLOR_TEXT);
-                break;
-            case ACTION_ENTER:
-                drawCentered(canvas, "enter", cx, cy, functionPaint);
+                textPaint.setColor(COLOR_SPACE_TEXT);
+                textPaint.setTextSize(sp(13));
+                drawCentered(canvas, "space", cx, cy, textPaint);
                 break;
             case ACTION_SHIFT:
                 drawShiftIcon(canvas, cx, cy);
@@ -333,12 +613,21 @@ public final class ZtKeyboardView extends View {
             case ACTION_BACKSPACE:
                 drawBackspaceIcon(canvas, cx, cy);
                 break;
+            case ACTION_EMOJI:
+                drawSmileyIcon(canvas, cx, cy);
+                break;
+            case ACTION_ENTER:
+                drawEnterIcon(canvas, cx, cy);
+                break;
             default:
                 break;
         }
     }
 
     private void drawCentered(Canvas canvas, String text, float cx, float cy, Paint paint) {
+        if (text == null) {
+            return;
+        }
         Paint.FontMetrics metrics = paint.getFontMetrics();
         float baseline = cy - (metrics.ascent + metrics.descent) / 2f;
         canvas.drawText(text, cx, baseline, paint);
@@ -380,33 +669,121 @@ public final class ZtKeyboardView extends View {
         canvas.drawPath(iconPath, iconPaint);
     }
 
+    private void drawSmileyIcon(Canvas canvas, float cx, float cy) {
+        float r = dp(8);
+        canvas.drawCircle(cx, cy, r, iconPaint);
+
+        fillPaint.setColor(COLOR_TEXT);
+        canvas.drawCircle(cx - dp(2.8f), cy - dp(2.2f), dp(0.9f), fillPaint);
+        canvas.drawCircle(cx + dp(2.8f), cy - dp(2.2f), dp(0.9f), fillPaint);
+
+        iconPath.reset();
+        iconPath.moveTo(cx - dp(4f), cy + dp(1.6f));
+        iconPath.quadTo(cx, cy + dp(5f), cx + dp(4f), cy + dp(1.6f));
+        canvas.drawPath(iconPath, iconPaint);
+    }
+
+    private void drawEnterIcon(Canvas canvas, float cx, float cy) {
+        float w = dp(7);
+        float h = dp(4);
+        iconPath.reset();
+        iconPath.moveTo(cx - w, cy - h);
+        iconPath.lineTo(cx - w, cy + h);
+        iconPath.lineTo(cx + w, cy + h);
+        iconPath.moveTo(cx + w - dp(4), cy + h - dp(4));
+        iconPath.lineTo(cx + w, cy + h);
+        iconPath.lineTo(cx + w - dp(4), cy + h + dp(4));
+        canvas.drawPath(iconPath, iconPaint);
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        switch (event.getActionMasked()) {
+        float x = event.getX();
+        float y = event.getY();
+        int action = event.getActionMasked();
+
+        switch (action) {
             case MotionEvent.ACTION_DOWN: {
-                pressed = keyAt(event.getX(), event.getY());
+                if (inDot(x, y)) {
+                    dotPressed = true;
+                    trackPointerId = event.getPointerId(0);
+                    trackLastX = x;
+                    trackLastY = y;
+                    handler.postDelayed(trackpadRunnable, TRACKPAD_HOLD_MS);
+                    invalidate();
+                    return true;
+                }
+                pressedKey = keyAt(x, y);
+                scheduleAlt(pressedKey);
                 invalidate();
                 return true;
             }
+            case MotionEvent.ACTION_POINTER_DOWN:
+                // Extra fingers are ignored, including while the trackpad runs.
+                return true;
             case MotionEvent.ACTION_MOVE: {
-                Key key = keyAt(event.getX(), event.getY());
-                if (key != pressed) {
-                    pressed = key;
+                if (dotPressed || trackpad) {
+                    int index = event.findPointerIndex(trackPointerId);
+                    if (index < 0) {
+                        return true;
+                    }
+                    float mx = event.getX(index);
+                    float my = event.getY(index);
+                    if (!trackpad) {
+                        trackLastX = mx;
+                        trackLastY = my;
+                        return true;
+                    }
+                    float dx = mx - trackX;
+                    float dy = my - trackY;
+                    trackX = mx;
+                    trackY = my;
+                    stepTrackpad(dx, dy);
+                    return true;
+                }
+
+                Key key = keyAt(x, y);
+                if (key != pressedKey) {
+                    pressedKey = key;
+                    scheduleAlt(key);
                     invalidate();
                 }
                 return true;
             }
+            case MotionEvent.ACTION_POINTER_UP: {
+                int index = event.getActionIndex();
+                if ((dotPressed || trackpad)
+                        && event.getPointerId(index) == trackPointerId) {
+                    finishTrackpad();
+                }
+                return true;
+            }
             case MotionEvent.ACTION_UP: {
-                Key key = pressed;
-                pressed = null;
-                if (key != null && key == keyAt(event.getX(), event.getY())) {
-                    perform(key);
+                if (dotPressed || trackpad) {
+                    finishTrackpad();
+                    return true;
+                }
+                Key key = pressedKey;
+                boolean alt = altFired;
+                cancelAlt();
+                pressedKey = null;
+                if (key != null && key == keyAt(x, y)) {
+                    if (alt && key.alt != null) {
+                        commit(key.alt);
+                    } else {
+                        perform(key);
+                    }
                 }
                 invalidate();
                 return true;
             }
             case MotionEvent.ACTION_CANCEL: {
-                pressed = null;
+                if (dotPressed || trackpad) {
+                    finishTrackpad();
+                    return true;
+                }
+                cancelAlt();
+                pressedKey = null;
                 invalidate();
                 return true;
             }
@@ -415,10 +792,80 @@ public final class ZtKeyboardView extends View {
         }
     }
 
+    private void stepTrackpad(float dx, float dy) {
+        float stepX = dp(9);
+        float stepY = dp(18);
+        trackAccX += dx;
+        trackAccY += dy;
+
+        while (trackAccX >= stepX) {
+            sendArrow(KeyEvent.KEYCODE_DPAD_RIGHT);
+            trackAccX -= stepX;
+        }
+        while (trackAccX <= -stepX) {
+            sendArrow(KeyEvent.KEYCODE_DPAD_LEFT);
+            trackAccX += stepX;
+        }
+        while (trackAccY >= stepY) {
+            sendArrow(KeyEvent.KEYCODE_DPAD_DOWN);
+            trackAccY -= stepY;
+        }
+        while (trackAccY <= -stepY) {
+            sendArrow(KeyEvent.KEYCODE_DPAD_UP);
+            trackAccY += stepY;
+        }
+    }
+
+    private void sendArrow(int keycode) {
+        if (listener != null) {
+            listener.onArrow(keycode);
+        }
+    }
+
+    private void finishTrackpad() {
+        handler.removeCallbacks(trackpadRunnable);
+        dotPressed = false;
+        trackpad = false;
+        trackPointerId = -1;
+        trackAccX = 0f;
+        trackAccY = 0f;
+        invalidate();
+    }
+
+    private void scheduleAlt(Key key) {
+        cancelAlt();
+        if (key != null && key.alt != null) {
+            altKey = key;
+            handler.postDelayed(altRunnable, ALT_HOLD_MS);
+        }
+    }
+
+    private void cancelAlt() {
+        handler.removeCallbacks(altRunnable);
+        altKey = null;
+        altFired = false;
+    }
+
+    private boolean inDot(float x, float y) {
+        float half = dp(14);
+        return x >= dotX - half && x <= dotX + half
+                && y >= dotY - half && y <= dotY + half;
+    }
+
     private Key keyAt(float x, float y) {
-        for (Row row : rows) {
-            for (Key key : row.keys) {
-                if (x >= key.left && x < key.right && y >= key.top && y < key.bottom) {
+        for (int r = 0; r < rows.size(); r++) {
+            Row row = rows.get(r);
+            int n = row.keys.size();
+            for (int i = 0; i < n; i++) {
+                Key key = row.keys.get(i);
+                // Touch targets cover the 1 dp gutters: each key reaches half
+                // a gutter past its drawn edge, and the outer keys reach the
+                // screen edge, so no pixel is dead.
+                float left = i == 0 ? 0f : key.left - gap / 2f;
+                float right = i == n - 1 ? viewWidth : key.right + gap / 2f;
+                float top = r == 0 ? 0f : key.top - gap / 2f;
+                float bottom = r == rows.size() - 1 ? viewHeight : key.bottom + gap / 2f;
+                if (x >= left && x < right && y >= top && y < bottom) {
                     return key;
                 }
             }
@@ -428,17 +875,14 @@ public final class ZtKeyboardView extends View {
 
     private void perform(Key key) {
         switch (key.action) {
-            case ACTION_TEXT: {
-                String text = caps ? key.label.toUpperCase(Locale.ROOT) : key.label;
-                if (listener != null) {
-                    listener.onText(text);
-                }
+            case ACTION_TEXT:
+                commit(caps && key.label.length() == 1
+                        && Character.isLetter(key.label.charAt(0))
+                        ? key.label.toUpperCase(Locale.ROOT)
+                        : key.label);
                 break;
-            }
             case ACTION_SPACE:
-                if (listener != null) {
-                    listener.onText(" ");
-                }
+                commit(" ");
                 break;
             case ACTION_BACKSPACE:
                 if (listener != null) {
@@ -451,24 +895,53 @@ public final class ZtKeyboardView extends View {
                 }
                 break;
             case ACTION_SHIFT:
-                // "shift (caps)": latched caps, not a one-shot shift. Tap again
-                // to return to lowercase.
+                // Latched caps, not one-shot shift. Tap again to release.
                 caps = !caps;
                 invalidate();
                 break;
             case ACTION_LANGUAGE:
                 russian = !russian;
                 caps = false;
-                pressed = null;
                 buildRows();
-                layoutKeys(getWidth());
+                requestLayout();
+                layoutRows(getWidth(), getHeight());
                 invalidate();
                 if (listener != null) {
                     listener.onLanguageChanged(russian);
                 }
                 break;
+            case ACTION_SYMBOLS:
+                page = PAGE_SYMBOLS;
+                caps = false;
+                buildRows();
+                requestLayout();
+                layoutRows(getWidth(), getHeight());
+                invalidate();
+                break;
+            case ACTION_LETTERS:
+                page = PAGE_LETTERS;
+                caps = false;
+                buildRows();
+                requestLayout();
+                layoutRows(getWidth(), getHeight());
+                invalidate();
+                break;
+            case ACTION_EMOJI:
+                page = PAGE_EMOJI;
+                caps = false;
+                buildRows();
+                requestLayout();
+                layoutRows(getWidth(), getHeight());
+                invalidate();
+                break;
             default:
                 break;
+        }
+    }
+
+    private void commit(String text) {
+        if (listener != null) {
+            listener.onText(text);
         }
     }
 

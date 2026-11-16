@@ -48,7 +48,7 @@ public final class ZtMetroIme extends InputMethodService implements ZtKeyboardVi
         setExtractViewShown(false);
 
         if (keyboard != null) {
-            keyboard.setCaps(false);
+            keyboard.resetPage();
 
             // Follow a subtype change made in the system IME picker, but do
             // not overwrite the in-keyboard RU/EN toggle on every focus change.
@@ -64,7 +64,7 @@ public final class ZtMetroIme extends InputMethodService implements ZtKeyboardVi
     @Override
     public void onFinishInput() {
         if (keyboard != null) {
-            keyboard.setCaps(false);
+            keyboard.resetPage();
         }
         super.onFinishInput();
     }
@@ -106,6 +106,11 @@ public final class ZtMetroIme extends InputMethodService implements ZtKeyboardVi
             // text from the IME; a raw DEL still reaches their key handler.
             sendDownUpKeyEvents(KeyEvent.KEYCODE_DEL);
         }
+    }
+
+    @Override
+    public void onArrow(int keycode) {
+        sendDownUpKeyEvents(keycode);
     }
 
     @Override

@@ -16,6 +16,11 @@
     <!-- Normal install-time permissions, no prompt: read Wi-Fi / network state. -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Optional, for the real signal-level bars in the status strip. It is never
+         requested at runtime: without a grant the strip still draws four static
+         bars. Grant it once with `pm grant org.ztmetro.actioncentre
+         android.permission.READ_PHONE_STATE` if real levels are wanted. -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
@@ -73,6 +78,24 @@
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/shade_bridge" />
+        </service>
+
+        <!-- Optional, enabled separately in Settings > Accessibility. Draws the
+             28 dp ztMetro status strip (battery, Wi-Fi, signal, clock) as a
+             TYPE_ACCESSIBILITY_OVERLAY above the stock status bar. The window is
+             NOT_TOUCHABLE; the shade bridge above still receives the top-edge
+             gesture. Disabled service = no window, stock bar untouched. -->
+        <service
+            android:name=".StatusStripService"
+            android:exported="true"
+            android:label="@string/status_strip_name"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/status_strip_service" />
         </service>
 
         <!-- Optional: the user enables this in Settings > Notifications >

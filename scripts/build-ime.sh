@@ -126,8 +126,8 @@ printf '%s\n' "$BADGING" | grep -q "application-label:'ztMetro keyboard'" \
     || die "application label is not 'ztMetro keyboard'"
 printf '%s\n' "$BADGING" | grep -q "minSdkVersion:'29'" || die "minSdk 29 missing"
 printf '%s\n' "$BADGING" | grep -q "targetSdkVersion:'36'" || die "targetSdk 36 missing"
-printf '%s\n' "$BADGING" | grep -q "versionCode='1'" || die "versionCode 1 missing"
-printf '%s\n' "$BADGING" | grep -q "versionName='1.0'" || die "versionName 1.0 missing"
+printf '%s\n' "$BADGING" | grep -q "versionCode='2'" || die "versionCode 2 missing"
+printf '%s\n' "$BADGING" | grep -q "versionName='1.1'" || die "versionName 1.1 missing"
 
 XMLTREE=$("$BT/aapt2" dump xmltree --file AndroidManifest.xml "$APK")
 printf '%s\n' "$XMLTREE" | grep -q "android.permission.BIND_INPUT_METHOD" \
@@ -159,6 +159,10 @@ grep -q "Class descriptor  : 'Lorg/ztmetro/ime/ZtKeyboardView;'" "$BUILD/dexdump
     || die "ZtKeyboardView class missing from dex"
 grep -q "Landroid/inputmethodservice/InputMethodService;" "$BUILD/dexdump.txt" \
     || die "ZtMetroIme is not an InputMethodService in dex"
+# The three pages and the function row must be present in the dex strings.
+for marker in '&123' 'abc' 'space' 'RU' 'EN'; do
+    grep -aq "$marker" "$BUILD/verify.dex" || die "dex is missing the '$marker' label"
+done
 
 SIZE_BYTES=$(wc -c < "$APK" | tr -d ' ')
 if [ "$SIZE_BYTES" -ge 2097152 ]; then
@@ -199,13 +203,27 @@ unzip -lv "$APK" > "$EVIDENCE/apk-contents.txt"
     printf 'size:      %s bytes\n' "$SIZE_BYTES"
     printf 'sha256:    %s\n' "$SHA"
     printf 'package:   %s\n' "$PACKAGE"
-    printf 'version:   1 (1.0)\n'
+    printf 'version:   2 (1.1)\n'
     printf 'min/target: 29 / 36\n'
     printf 'build:     %s, %s\n' "$(basename "$SDK")" "$("$JDK/bin/java" -version 2>&1 | head -n 1)"
     printf 'checks:    package/label, BIND_INPUT_METHOD service, InputMethod filter,\n'
     printf '           android.view.im meta-data, ru+en subtypes, dexdump service,\n'
     printf '           no uses-permission, no androidx, signed v3, <2 MB\n'
 } > "$EVIDENCE/artifact-facts.txt"
+
+cat > "$EVIDENCE/layout-facts.txt" <<'EOF'
+layout:    KEYBOARD.md (1 dp gaps, 56 dp key height, hard corners)
+letters EN: qwertyuiop (10) / asdfghjkl (centred 9) / shift zxcvbnm backspace
+letters RU: 11 / 11 / shift + 9 + backspace; ё on hold е, ъ on hold ь
+bottom:    &123 | smiley(z) | comma(x) | space(comma..dot) | dot(m) | enter
+pages:     letters (EN/RU), &123 (0-9 and . , ? ! ' " - / : ; @ # $ % & * + = ( )),
+           emoji (24, 3x8), abc returns to letters
+trackpad:  hold the accent dot in the shift/&123 corner 450 ms; sends arrow keys
+deferred:  key-pop preview, prediction/autocorrect, settings key-height UI,
+           direct RU/EN key on the letters page (it sits on the &123/emoji pages)
+EOF
+[ -s "$EVIDENCE/layout-facts.txt" ] || die "layout facts are empty"
+[ -s "$EVIDENCE/layout-facts.txt" ] || die "layout facts are empty"
 
 say "done"
 printf 'APK:     %s\n' "$APK"

@@ -11,6 +11,13 @@ PASS  shade bridge bind permission
 PASS  shade bridge intent action
 PASS  shade bridge config meta-data
 PASS  shade bridge config resource in table
+PASS  status strip service registered
+PASS  status strip bind permission
+PASS  status strip config packaged
+PASS  status strip config resource in table
+PASS  status strip config description
+PASS  status strip label string
+PASS  status strip READ_PHONE_STATE (optional)
 PASS  gesture settings row strings
 PASS  lock overlay swipe hint string
 PASS  tile activity alias
@@ -43,6 +50,19 @@ PASS  dexdump lists LockOverlayView
 PASS  lock overlay uses TYPE_ACCESSIBILITY_OVERLAY
 PASS  lock surface NOT_FOCUSABLE|NOT_TOUCHABLE
 PASS  lock overlay performs no global action (never unlocks)
+PASS  dexdump lists StatusStripService
+PASS  dexdump lists StatusStripOverlayView
+PASS  status strip uses TYPE_ACCESSIBILITY_OVERLAY
+PASS  status strip is NOT_TOUCHABLE (passes touches through)
+PASS  status strip height is exactly 28 dp
+PASS  battery from ACTION_BATTERY_CHANGED
+PASS  Wi-Fi from WifiManager.isWifiEnabled
+PASS  signal from TelephonyManager.getSignalStrength
+PASS  clock from ACTION_TIME_TICK (no 1 Hz timer)
+PASS  strip removed on lock/screen-off, re-added on USER_PRESENT
+PASS  status strip has no timer/polling loop
+PASS  status strip takes no wakelock
+PASS  status strip is white-only (no green/red)
 PASS  no androidx in classes.dex
 PASS  class ActionCentreActivity in dex
 PASS  class ActionCentreListener in dex
@@ -54,6 +74,8 @@ PASS  class StatusStripView in dex
 PASS  class Motion in dex
 PASS  class LockOverlayController in dex
 PASS  class LockOverlayView in dex
+PASS  class StatusStripService in dex
+PASS  class StatusStripOverlayView in dex
 PASS  bundled Open Sans Light asset in APK
 PASS  classes.dex packaged
-PASS  APK smaller than 2 MB (316909 bytes)
+PASS  APK smaller than 2 MB (325179 bytes)

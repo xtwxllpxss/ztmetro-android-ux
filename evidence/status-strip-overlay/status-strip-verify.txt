@@ -1,0 +1,32 @@
+PASS  status strip service registered
+PASS  status strip bind permission
+PASS  status strip config packaged
+PASS  status strip config resource in table
+PASS  status strip config description
+PASS  status strip label string
+PASS  status strip READ_PHONE_STATE (optional)
+PASS  lock overlay swipe hint string
+PASS  dexdump lists top-edge strip overlay
+PASS  strip uses TYPE_ACCESSIBILITY_OVERLAY
+PASS  dexdump lists LockOverlayController
+PASS  dexdump lists LockOverlayView
+PASS  lock overlay uses TYPE_ACCESSIBILITY_OVERLAY
+PASS  lock overlay performs no global action (never unlocks)
+PASS  dexdump lists StatusStripService
+PASS  dexdump lists StatusStripOverlayView
+PASS  status strip uses TYPE_ACCESSIBILITY_OVERLAY
+PASS  status strip is NOT_TOUCHABLE (passes touches through)
+PASS  status strip height is exactly 28 dp
+PASS  battery from ACTION_BATTERY_CHANGED
+PASS  Wi-Fi from WifiManager.isWifiEnabled
+PASS  signal from TelephonyManager.getSignalStrength
+PASS  clock from ACTION_TIME_TICK (no 1 Hz timer)
+PASS  strip removed on lock/screen-off, re-added on USER_PRESENT
+PASS  status strip has no timer/polling loop
+PASS  status strip takes no wakelock
+PASS  status strip is white-only (no green/red)
+PASS  class StatusStripView in dex
+PASS  class LockOverlayController in dex
+PASS  class LockOverlayView in dex
+PASS  class StatusStripService in dex
+PASS  class StatusStripOverlayView in dex

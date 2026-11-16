@@ -447,7 +447,7 @@ final class MetroTileView extends View {
     private void drawStaticFace(Canvas canvas) {
         drawFill(canvas);
         if (tile.appearance) {
-            SystemGlyphs.draw(canvas, SystemGlyphs.GEAR, glyphRect);
+            SystemGlyphs.draw(canvas, SystemGlyphs.SETTINGS, glyphRect);
         } else if (glyphArt != null && glyphArt.type == TileArt.TYPE_WHITE) {
             canvas.drawBitmap(glyphArt.bitmap, null, glyphRect, glyphPaint);
         } else if (glyphArt != null && glyphArt.type == TileArt.TYPE_COLOR) {

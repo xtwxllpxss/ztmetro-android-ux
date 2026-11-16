@@ -7,11 +7,11 @@ Verified using v4 scheme (APK Signature Scheme v4): false
 Verified for SourceStamp: false
 Number of signers: 1
 Signer #1 certificate DN: CN=ztMetro keyboard, O=ztmetro, C=US
-Signer #1 certificate SHA-256 digest: 1f5324cbf3d9ad3b7406b80a8b32f1a877b00dc6a814f61f855eed7d20a3067e
-Signer #1 certificate SHA-1 digest: b3b1ac37897b4274028fd76bb427269f93ca8602
-Signer #1 certificate MD5 digest: 15b510a8e93ba05de7831032b2540a1c
+Signer #1 certificate SHA-256 digest: 4babc31e6514c01c4c6997fda64618ed4dea54ba960bfe277b214a65b62a1460
+Signer #1 certificate SHA-1 digest: 0f83ed6e19d5325fe95dcca94462ecac690a59ed
+Signer #1 certificate MD5 digest: f17cbea4317d251926f731810ac5ae6d
 Signer #1 key algorithm: RSA
 Signer #1 key size (bits): 2048
-Signer #1 public key SHA-256 digest: 8f0b16d2ae8da97b2469124f2e80d8d23670b90c4a6c12562fa7f417f04feafd
-Signer #1 public key SHA-1 digest: 336d293887b0e2c6438f08f64264577c47104cfa
-Signer #1 public key MD5 digest: a9453ba90dd3e370d6ef7f76a0a62092
+Signer #1 public key SHA-256 digest: bae0f6972b7dd82bbfb842a7caa3e43c37835fea3385827a05478ba62b6b072f
+Signer #1 public key SHA-1 digest: 527eefb7d72b99c1e5232d99149574f0e481b052
+Signer #1 public key MD5 digest: bae933a0f11789ffb0a2385d00169356

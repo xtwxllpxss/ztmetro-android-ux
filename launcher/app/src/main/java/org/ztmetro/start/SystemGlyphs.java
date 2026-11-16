@@ -1,7 +1,6 @@
 package org.ztmetro.start;
 
 import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
@@ -9,35 +8,46 @@ import android.graphics.RectF;
 import java.util.Locale;
 
 /**
- * White, code-drawn WP glyphs for the fixed system packages whose Android
- * adaptive icon has no usable monochrome layer. Paths are authored in a 0..1
- * box and scaled to the tile; no drawable resources and no third-party icon
- * files are added. The set is deliberately small and literal: gear (settings /
- * action centre), camera body, calendar grid, two people, handset, envelope,
- * globe, photo stack, clock face, musical note, and a 2x2 grid for Action
- * Centre.
+ * White system glyphs for the packages whose Android icon is a brand plate or
+ * an unreadable adaptive silhouette.
+ *
+ * <p>Geometry lives in {@link GlyphSet} (24 dp viewport, 2 dp stroke) so the
+ * offline proof sheet renders exactly these paths. This class only adapts that
+ * geometry to {@link Path}, scales it into the caller's box and paints white.
+ *
+ * <p>Package matching is deliberately conservative: a fixed map for known
+ * LineageOS/AOSP packages first, then keyword rules <em>only</em> inside
+ * system namespaces (com.android., org.lineageos., org.ztmetro., …). A
+ * third-party package such as com.google.android.apps.maps must fall through
+ * to the colour brand mark, not get a white pin.
  */
 final class SystemGlyphs {
 
-    static final int NONE = 0;
-    static final int GEAR = 1;
-    static final int CAMERA = 2;
-    static final int CALENDAR = 3;
-    static final int CONTACTS = 4;
-    static final int HANDSET = 5;
-    static final int ENVELOPE = 6;
-    static final int GLOBE = 7;
-    static final int PHOTOS = 8;
-    static final int CLOCK = 9;
-    static final int NOTE = 10;
-    static final int GRID = 11;
+    static final int NONE = GlyphSet.NONE;
+    static final int BROWSER = GlyphSet.BROWSER;
+    static final int GALLERY = GlyphSet.GALLERY;
+    static final int CALENDAR = GlyphSet.CALENDAR;
+    static final int CALCULATOR = GlyphSet.CALCULATOR;
+    static final int CAMERA = GlyphSet.CAMERA;
+    static final int CONTACTS = GlyphSet.CONTACTS;
+    static final int MUSIC = GlyphSet.MUSIC;
+    static final int SETTINGS = GlyphSet.SETTINGS;
+    static final int CLOCK = GlyphSet.CLOCK;
+    static final int ACTION_CENTRE = GlyphSet.ACTION_CENTRE;
+    static final int PHONE = GlyphSet.PHONE;
+    static final int MESSAGES = GlyphSet.MESSAGES;
+    static final int MAIL = GlyphSet.MAIL;
+    static final int STORE = GlyphSet.STORE;
+    static final int FILES = GlyphSet.FILES;
+    static final int WEATHER = GlyphSet.WEATHER;
+    static final int MAPS = GlyphSet.MAPS;
+    static final int NOTES = GlyphSet.NOTES;
 
-    private static final int COUNT = 12;
+    private static final int COUNT = GlyphSet.COUNT;
 
     private static final class Glyph {
         Path fill;
         Path stroke;
-        float strokeWidth = 0.075f;
     }
 
     private static final Glyph[] CACHE = new Glyph[COUNT];
@@ -50,70 +60,163 @@ final class SystemGlyphs {
         STROKE.setStyle(Paint.Style.STROKE);
         STROKE.setStrokeCap(Paint.Cap.ROUND);
         STROKE.setStrokeJoin(Paint.Join.ROUND);
+        STROKE.setStrokeWidth(GlyphSet.STROKE_WIDTH);
         STROKE.setColor(0xFFFFFFFF);
     }
 
     private SystemGlyphs() {
     }
 
-    /** Package-name match. First match wins; keep the tokens specific. */
+    /**
+     * Exact package map, then a system-namespace keyword fallback. Keep the
+     * exact entries specific: they are the ones the device actually ships.
+     */
     static int kindFor(String packageName) {
         if (packageName == null) {
             return NONE;
         }
         String pkg = packageName.toLowerCase(Locale.US);
-        if (pkg.equals("org.ztmetro.actioncentre") || pkg.equals("org.ztmetro.actioncenter")) {
-            return GRID;
+
+        switch (pkg) {
+            case "org.lineageos.etar":
+            case "com.android.calendar":
+                return CALENDAR;
+            case "org.lineageos.aperture":
+            case "com.android.camera2":
+            case "com.android.camera":
+                return CAMERA;
+            case "org.lineageos.jelly":
+            case "com.android.browser":
+                return BROWSER;
+            case "org.lineageos.twelve":
+            case "org.lineageos.eleven":
+            case "com.android.music":
+                return MUSIC;
+            case "org.ztmetro.actioncentre":
+            case "org.ztmetro.actioncenter":
+            case "org.ztmetro.start":
+                return ACTION_CENTRE;
+            case "com.android.settings":
+                return SETTINGS;
+            case "com.android.dialer":
+            case "com.android.phone":
+                return PHONE;
+            case "com.android.messaging":
+            case "com.android.mms":
+                return MESSAGES;
+            case "com.android.gallery3d":
+                return GALLERY;
+            case "com.android.documentsui":
+                return FILES;
+            case "com.android.deskclock":
+                return CLOCK;
+            case "com.android.calculator2":
+            case "com.android.calculator3":
+                return CALCULATOR;
+            case "com.android.contacts":
+                return CONTACTS;
+            case "com.android.email":
+                return MAIL;
+            case "com.android.vending":
+                return STORE;
+            default:
+                break;
+        }
+
+        if (!isSystemNamespace(pkg)) {
+            return NONE;
+        }
+        if (pkg.contains("actioncentre") || pkg.contains("actioncenter")) {
+            return ACTION_CENTRE;
         }
         if (pkg.contains("settings")) {
-            return GEAR;
+            return SETTINGS;
         }
-        if (pkg.contains("camera") || pkg.contains("snap")) {
+        if (pkg.contains("camera") || pkg.contains("aperture")) {
             return CAMERA;
         }
-        if (pkg.contains("calendar")) {
+        if (pkg.contains("calendar") || pkg.contains("etar")) {
             return CALENDAR;
         }
         if (pkg.contains("contacts")) {
             return CONTACTS;
         }
-        if (pkg.contains("dialer") || pkg.contains("phone")) {
-            return HANDSET;
+        if (pkg.contains("dialer") || pkg.contains("phone")
+                || pkg.contains("telecom")) {
+            return PHONE;
         }
         if (pkg.contains("messaging") || pkg.contains("mms") || pkg.contains("sms")) {
-            return ENVELOPE;
+            return MESSAGES;
         }
         if (pkg.contains("browser") || pkg.contains("jelly")) {
-            return GLOBE;
+            return BROWSER;
         }
-        if (pkg.contains("gallery")) {
-            return PHOTOS;
+        if (pkg.contains("gallery") || pkg.contains("photos")) {
+            return GALLERY;
+        }
+        if (pkg.contains("document") || pkg.contains("files")) {
+            return FILES;
+        }
+        if (pkg.contains("music") || pkg.contains("eleven")
+                || pkg.contains("twelve")) {
+            return MUSIC;
         }
         if (pkg.contains("clock") || pkg.contains("deskclock")) {
             return CLOCK;
         }
-        if (pkg.contains("music") || pkg.contains("eleven")) {
-            return NOTE;
+        if (pkg.contains("calculator")) {
+            return CALCULATOR;
+        }
+        if (pkg.contains("email") || pkg.contains("mail")) {
+            return MAIL;
+        }
+        if (pkg.contains("store") || pkg.contains("vending")) {
+            return STORE;
+        }
+        if (pkg.contains("weather")) {
+            return WEATHER;
+        }
+        if (pkg.contains("maps")) {
+            return MAPS;
+        }
+        if (pkg.contains("notes")) {
+            return NOTES;
         }
         return NONE;
     }
 
+    private static boolean isSystemNamespace(String pkg) {
+        return pkg.startsWith("com.android.")
+                || pkg.startsWith("org.lineageos.")
+                || pkg.startsWith("org.ztmetro.")
+                || pkg.startsWith("org.aosp.")
+                || pkg.startsWith("com.cyanogenmod.");
+    }
+
+    /** Draw the white glyph into {@code box}, keeping the 24 dp aspect square. */
     static void draw(Canvas canvas, int kind, RectF box) {
-        if (kind <= NONE || kind >= COUNT || box.width() <= 0f || box.height() <= 0f) {
+        if (kind <= NONE || kind >= COUNT || box == null
+                || box.width() <= 0f || box.height() <= 0f) {
             return;
         }
         Glyph glyph = glyph(kind);
         if (glyph == null) {
             return;
         }
+        float scale = Math.min(box.width(), box.height()) / GlyphSet.VIEWPORT;
+        if (scale <= 0f) {
+            return;
+        }
+        float left = box.centerX() - GlyphSet.VIEWPORT * scale / 2f;
+        float top = box.centerY() - GlyphSet.VIEWPORT * scale / 2f;
         canvas.save();
-        canvas.translate(box.left, box.top);
-        canvas.scale(box.width(), box.height());
+        canvas.translate(left, top);
+        canvas.scale(scale, scale);
         if (glyph.fill != null) {
             canvas.drawPath(glyph.fill, FILL);
         }
         if (glyph.stroke != null) {
-            STROKE.setStrokeWidth(glyph.strokeWidth);
+            STROKE.setStrokeWidth(GlyphSet.STROKE_WIDTH);
             canvas.drawPath(glyph.stroke, STROKE);
         }
         canvas.restore();
@@ -124,228 +227,58 @@ final class SystemGlyphs {
         if (cached != null) {
             return cached;
         }
-        Glyph glyph;
-        switch (kind) {
-            case GEAR:
-                glyph = gear();
-                break;
-            case CAMERA:
-                glyph = camera();
-                break;
-            case CALENDAR:
-                glyph = calendar();
-                break;
-            case CONTACTS:
-                glyph = contacts();
-                break;
-            case HANDSET:
-                glyph = handset();
-                break;
-            case ENVELOPE:
-                glyph = envelope();
-                break;
-            case GLOBE:
-                glyph = globe();
-                break;
-            case PHOTOS:
-                glyph = photos();
-                break;
-            case CLOCK:
-                glyph = clock();
-                break;
-            case NOTE:
-                glyph = note();
-                break;
-            case GRID:
-                glyph = grid();
-                break;
-            default:
-                return null;
+        Path fill = null;
+        Path stroke = null;
+        PathSink fillSink = new PathSink();
+        GlyphSet.fill(kind, fillSink);
+        if (fillSink.used) {
+            fill = fillSink.path;
+            fill.setFillType(GlyphSet.evenOdd(kind)
+                    ? Path.FillType.EVEN_ODD : Path.FillType.WINDING);
         }
+        PathSink strokeSink = new PathSink();
+        GlyphSet.stroke(kind, strokeSink);
+        if (strokeSink.used) {
+            stroke = strokeSink.path;
+        }
+        if (fill == null && stroke == null) {
+            return null;
+        }
+        Glyph glyph = new Glyph();
+        glyph.fill = fill;
+        glyph.stroke = stroke;
         CACHE[kind] = glyph;
         return glyph;
     }
 
-    private static Glyph gear() {
-        Glyph glyph = new Glyph();
-        // Winding union: overlap the teeth into the disk, then cut the centre
-        // hole with an opposite-direction circle. Even-odd would punch a hole at
-        // every tooth/disk overlap.
-        Path path = new Path();
-        path.addCircle(0.50f, 0.50f, 0.40f, Path.Direction.CW);
-        for (int i = 0; i < 8; i++) {
-            Path tooth = new Path();
-            tooth.addRoundRect(new RectF(-0.065f, -0.48f, 0.065f, -0.34f),
-                    0.025f, 0.025f, Path.Direction.CW);
-            Matrix matrix = new Matrix();
-            matrix.setRotate(45f * i);
-            matrix.postTranslate(0.50f, 0.50f);
-            tooth.transform(matrix);
-            path.addPath(tooth);
+    /** {@link GlyphSet.Sink} over an android.graphics.Path. */
+    private static final class PathSink implements GlyphSet.Sink {
+        final Path path = new Path();
+        boolean used;
+
+        @Override
+        public void moveTo(float x, float y) {
+            path.moveTo(x, y);
+            used = true;
         }
-        path.addCircle(0.50f, 0.50f, 0.15f, Path.Direction.CCW);
-        glyph.fill = path;
-        return glyph;
-    }
 
-    private static Glyph camera() {
-        Glyph glyph = new Glyph();
-        Path path = evenOdd();
-        path.addRoundRect(new RectF(0.08f, 0.28f, 0.92f, 0.84f),
-                0.08f, 0.08f, Path.Direction.CW);
-        path.addRoundRect(new RectF(0.30f, 0.16f, 0.60f, 0.28f),
-                0.03f, 0.03f, Path.Direction.CW);
-        path.addCircle(0.50f, 0.56f, 0.19f, Path.Direction.CW); // lens cut-out
-        path.addCircle(0.79f, 0.37f, 0.035f, Path.Direction.CW); // flash cut-out
-        glyph.fill = path;
-        return glyph;
-    }
+        @Override
+        public void lineTo(float x, float y) {
+            path.lineTo(x, y);
+            used = true;
+        }
 
-    private static Glyph calendar() {
-        Glyph glyph = new Glyph();
-        Path path = evenOdd();
-        path.addRoundRect(new RectF(0.08f, 0.16f, 0.92f, 0.90f),
-                0.06f, 0.06f, Path.Direction.CW);
-        // The inner rounded rect is the transparent page; the bars below are
-        // the white grid, so even-odd gives a frame + grid rather than a blob.
-        path.addRoundRect(new RectF(0.15f, 0.30f, 0.85f, 0.84f),
-                0.03f, 0.03f, Path.Direction.CW);
-        path.addRoundRect(new RectF(0.26f, 0.08f, 0.36f, 0.16f),
-                0.02f, 0.02f, Path.Direction.CW);
-        path.addRoundRect(new RectF(0.64f, 0.08f, 0.74f, 0.16f),
-                0.02f, 0.02f, Path.Direction.CW);
-        path.addRect(0.24f, 0.40f, 0.76f, 0.44f, Path.Direction.CW);
-        path.addRect(0.24f, 0.56f, 0.76f, 0.60f, Path.Direction.CW);
-        // Split verticals at the horizontal rules: overlapping sub-paths would
-        // punch holes in an even-odd fill at every intersection.
-        path.addRect(0.38f, 0.36f, 0.42f, 0.40f, Path.Direction.CW);
-        path.addRect(0.38f, 0.44f, 0.42f, 0.56f, Path.Direction.CW);
-        path.addRect(0.38f, 0.60f, 0.42f, 0.72f, Path.Direction.CW);
-        path.addRect(0.58f, 0.36f, 0.62f, 0.40f, Path.Direction.CW);
-        path.addRect(0.58f, 0.44f, 0.62f, 0.56f, Path.Direction.CW);
-        path.addRect(0.58f, 0.60f, 0.62f, 0.72f, Path.Direction.CW);
-        glyph.fill = path;
-        return glyph;
-    }
+        @Override
+        public void cubicTo(float c1x, float c1y, float c2x, float c2y,
+                            float x, float y) {
+            path.cubicTo(c1x, c1y, c2x, c2y, x, y);
+            used = true;
+        }
 
-    private static Glyph contacts() {
-        Glyph glyph = new Glyph();
-        Path path = new Path(); // winding union: two overlapping people
-        path.addCircle(0.33f, 0.33f, 0.13f, Path.Direction.CW);
-        path.addCircle(0.68f, 0.40f, 0.10f, Path.Direction.CW);
-        path.addOval(new RectF(0.12f, 0.50f, 0.54f, 0.90f), Path.Direction.CW);
-        path.addOval(new RectF(0.48f, 0.54f, 0.84f, 0.90f), Path.Direction.CW);
-        glyph.fill = path;
-        return glyph;
-    }
-
-    private static Glyph handset() {
-        Glyph glyph = new Glyph();
-        // A diagonal receiver: a rounded handle with a wider earpiece at each
-        // end. Winding union of three rounded rects, rotated -45 degrees.
-        Matrix matrix = new Matrix();
-        matrix.setRotate(-45f);
-        matrix.postTranslate(0.50f, 0.50f);
-        Path path = new Path();
-        Path handle = new Path();
-        handle.addRoundRect(new RectF(-0.24f, -0.055f, 0.24f, 0.055f),
-                0.05f, 0.05f, Path.Direction.CW);
-        handle.transform(matrix);
-        Path left = new Path();
-        left.addRoundRect(new RectF(-0.36f, -0.11f, -0.22f, 0.11f),
-                0.05f, 0.05f, Path.Direction.CW);
-        left.transform(matrix);
-        Path right = new Path();
-        right.addRoundRect(new RectF(0.22f, -0.11f, 0.36f, 0.11f),
-                0.05f, 0.05f, Path.Direction.CW);
-        right.transform(matrix);
-        path.addPath(handle);
-        path.addPath(left);
-        path.addPath(right);
-        glyph.fill = path;
-        return glyph;
-    }
-
-    private static Glyph envelope() {
-        Glyph glyph = new Glyph();
-        Path path = evenOdd();
-        path.addRoundRect(new RectF(0.08f, 0.26f, 0.92f, 0.82f),
-                0.04f, 0.04f, Path.Direction.CW);
-        Path flap = new Path();
-        flap.moveTo(0.08f, 0.28f);
-        flap.lineTo(0.50f, 0.60f);
-        flap.lineTo(0.92f, 0.28f);
-        flap.close();
-        path.addPath(flap); // transparent V = envelope flap
-        glyph.fill = path;
-        return glyph;
-    }
-
-    private static Glyph globe() {
-        Glyph glyph = new Glyph();
-        Path stroke = new Path();
-        stroke.addCircle(0.50f, 0.50f, 0.40f, Path.Direction.CW);
-        stroke.addOval(new RectF(0.26f, 0.10f, 0.74f, 0.90f), Path.Direction.CW);
-        stroke.moveTo(0.10f, 0.50f);
-        stroke.lineTo(0.90f, 0.50f);
-        glyph.stroke = stroke;
-        glyph.strokeWidth = 0.075f;
-        return glyph;
-    }
-
-    private static Glyph photos() {
-        Glyph glyph = new Glyph();
-        Path path = new Path(); // winding union: two offset photo cards
-        path.addRoundRect(new RectF(0.18f, 0.16f, 0.88f, 0.76f),
-                0.04f, 0.04f, Path.Direction.CW);
-        path.addRoundRect(new RectF(0.10f, 0.28f, 0.78f, 0.88f),
-                0.04f, 0.04f, Path.Direction.CW);
-        glyph.fill = path;
-        return glyph;
-    }
-
-    private static Glyph clock() {
-        Glyph glyph = new Glyph();
-        Path stroke = new Path();
-        stroke.addCircle(0.50f, 0.50f, 0.40f, Path.Direction.CW);
-        stroke.moveTo(0.50f, 0.50f);
-        stroke.lineTo(0.50f, 0.27f);
-        stroke.moveTo(0.50f, 0.50f);
-        stroke.lineTo(0.67f, 0.62f);
-        glyph.stroke = stroke;
-        glyph.strokeWidth = 0.075f;
-        return glyph;
-    }
-
-    private static Glyph note() {
-        Glyph glyph = new Glyph();
-        Path path = new Path(); // winding union: head + stem + flag
-        path.addOval(new RectF(0.14f, 0.62f, 0.44f, 0.86f), Path.Direction.CW);
-        path.addRect(0.40f, 0.18f, 0.46f, 0.78f, Path.Direction.CW);
-        path.addRect(0.46f, 0.18f, 0.78f, 0.24f, Path.Direction.CW);
-        path.addRect(0.72f, 0.24f, 0.78f, 0.42f, Path.Direction.CW);
-        glyph.fill = path;
-        return glyph;
-    }
-
-    private static Glyph grid() {
-        Glyph glyph = new Glyph();
-        Path path = new Path();
-        path.addRoundRect(new RectF(0.16f, 0.16f, 0.46f, 0.46f),
-                0.03f, 0.03f, Path.Direction.CW);
-        path.addRoundRect(new RectF(0.54f, 0.16f, 0.84f, 0.46f),
-                0.03f, 0.03f, Path.Direction.CW);
-        path.addRoundRect(new RectF(0.16f, 0.54f, 0.46f, 0.84f),
-                0.03f, 0.03f, Path.Direction.CW);
-        path.addRoundRect(new RectF(0.54f, 0.54f, 0.84f, 0.84f),
-                0.03f, 0.03f, Path.Direction.CW);
-        glyph.fill = path;
-        return glyph;
-    }
-
-    private static Path evenOdd() {
-        Path path = new Path();
-        path.setFillType(Path.FillType.EVEN_ODD);
-        return path;
+        @Override
+        public void close() {
+            path.close();
+            used = true;
+        }
     }
 }

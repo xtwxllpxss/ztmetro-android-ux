@@ -19,6 +19,9 @@ BUILD="${BUILD_DIR:-$ROOT/actioncentre/build}"
 OUT="$BUILD/out"
 EVID="$BUILD/evidence"
 EVIDENCE="${EVIDENCE_DIR:-$ROOT/evidence/actioncentre}"
+# The WP status-strip task reports into its own evidence directory; the common
+# APK facts stay in evidence/actioncentre so other tasks keep working.
+STATUS_EVIDENCE="${STATUS_STRIP_EVIDENCE_DIR:-$ROOT/evidence/status-strip-overlay}"
 APK_NAME="ztmetro-actioncentre.apk"
 APK="$OUT/$APK_NAME"
 REMOTE="${ACTIONCENTRE_REMOTE:-hermes-ubuntu}"
@@ -147,16 +150,18 @@ build_apk() {
 
 verify_apk() {
     say "static verification"
-    local badging xmltree resources shade_xml size sha failed=0
+    local badging xmltree resources shade_xml strip_xml size sha failed=0
     badging=$("$BT/aapt2" dump badging "$APK")
     xmltree=$("$BT/aapt2" dump xmltree --file AndroidManifest.xml "$APK")
     resources=$("$BT/aapt2" dump resources "$APK")
     shade_xml=$("$BT/aapt2" dump xmltree --file res/xml/shade_bridge.xml "$APK" 2>/dev/null || true)
+    strip_xml=$("$BT/aapt2" dump xmltree --file res/xml/status_strip_service.xml "$APK" 2>/dev/null || true)
 
     printf '%s\n' "$badging" > "$EVID/aapt2-badging.txt"
     printf '%s\n' "$xmltree" > "$EVID/aapt2-manifest.xmltree.txt"
     printf '%s\n' "$resources" > "$EVID/aapt2-resources.txt"
     printf '%s\n' "$shade_xml" > "$EVID/aapt2-xmltree-shade_bridge.txt"
+    printf '%s\n' "$strip_xml" > "$EVID/aapt2-xmltree-status_strip_service.txt"
     "$BT/apksigner" verify --min-sdk-version "$MIN_API" --verbose --print-certs \
         "$APK" > "$EVID/apksigner-verify.txt" 2>&1 || failed=1
 
@@ -206,6 +211,17 @@ verify_apk() {
     check "shade bridge config meta-data" "$xmltree" \
         "android.accessibilityservice"
     check "shade bridge config resource in table" "$resources" "xml/shade_bridge"
+    check "status strip service registered" "$xmltree" ".StatusStripService"
+    check "status strip bind permission" "$xmltree" \
+        "android.permission.BIND_ACCESSIBILITY_SERVICE"
+    check "status strip config packaged" "$(unzip -l "$APK")" \
+        "res/xml/status_strip_service.xml"
+    check "status strip config resource in table" "$resources" "xml/status_strip_service"
+    check "status strip config description" "$strip_xml" \
+        "description(0x01010020)=@0x7f"
+    check "status strip label string" "$resources" "status_strip_name"
+    check "status strip READ_PHONE_STATE (optional)" "$xmltree" \
+        "android.permission.READ_PHONE_STATE"
     check "gesture settings row strings" "$resources" "gesture_enable"
     check "lock overlay swipe hint string" "$resources" "lock_swipe_hint"
     check "tile activity alias" "$xmltree" ".TileAlias"
@@ -349,6 +365,90 @@ verify_apk() {
     else
         printf 'PASS  lock overlay performs no global action (never unlocks)\n' >> "$CHECKS"
     fi
+    # ---- WP status strip (agent-37): its own accessibility service + view ----
+    STRIP_SRC="$APP/java/org/ztmetro/actioncentre/StatusStripService.java"
+    STRIP_VIEW="$APP/java/org/ztmetro/actioncentre/StatusStripOverlayView.java"
+    if grep -qF "Lorg/ztmetro/actioncentre/StatusStripService;" \
+            "$EVID/dexdump-classes.txt"; then
+        printf 'PASS  dexdump lists StatusStripService\n' >> "$CHECKS"
+    else
+        printf 'FAIL  dexdump lists StatusStripService\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -qF "Lorg/ztmetro/actioncentre/StatusStripOverlayView;" \
+            "$EVID/dexdump-classes.txt"; then
+        printf 'PASS  dexdump lists StatusStripOverlayView\n' >> "$CHECKS"
+    else
+        printf 'FAIL  dexdump lists StatusStripOverlayView\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "TYPE_ACCESSIBILITY_OVERLAY" "$STRIP_SRC"; then
+        printf 'PASS  status strip uses TYPE_ACCESSIBILITY_OVERLAY\n' >> "$CHECKS"
+    else
+        printf 'FAIL  status strip does not use TYPE_ACCESSIBILITY_OVERLAY\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "FLAG_NOT_TOUCHABLE" "$STRIP_SRC"; then
+        printf 'PASS  status strip is NOT_TOUCHABLE (passes touches through)\n' >> "$CHECKS"
+    else
+        printf 'FAIL  status strip is touchable or flag missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "HEIGHT_DP = 28" "$STRIP_VIEW"; then
+        printf 'PASS  status strip height is exactly 28 dp\n' >> "$CHECKS"
+    else
+        printf 'FAIL  status strip height is not 28 dp\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "ACTION_BATTERY_CHANGED" "$STRIP_SRC"; then
+        printf 'PASS  battery from ACTION_BATTERY_CHANGED\n' >> "$CHECKS"
+    else
+        printf 'FAIL  battery source missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "isWifiEnabled" "$STRIP_SRC"; then
+        printf 'PASS  Wi-Fi from WifiManager.isWifiEnabled\n' >> "$CHECKS"
+    else
+        printf 'FAIL  Wi-Fi source missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "getSignalStrength" "$STRIP_SRC"; then
+        printf 'PASS  signal from TelephonyManager.getSignalStrength\n' >> "$CHECKS"
+    else
+        printf 'FAIL  signal source missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "ACTION_TIME_TICK" "$STRIP_SRC"; then
+        printf 'PASS  clock from ACTION_TIME_TICK (no 1 Hz timer)\n' >> "$CHECKS"
+    else
+        printf 'FAIL  clock does not use ACTION_TIME_TICK\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "ACTION_SCREEN_OFF" "$STRIP_SRC" \
+            && grep -q "ACTION_USER_PRESENT" "$STRIP_SRC"; then
+        printf 'PASS  strip removed on lock/screen-off, re-added on USER_PRESENT\n' >> "$CHECKS"
+    else
+        printf 'FAIL  keyguard remove/re-add hooks missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "postDelayed\|new Timer\|scheduleAtFixedRate" "$STRIP_SRC" "$STRIP_VIEW"; then
+        printf 'FAIL  status strip uses a timer loop\n' >> "$CHECKS"
+        failed=1
+    else
+        printf 'PASS  status strip has no timer/polling loop\n' >> "$CHECKS"
+    fi
+    if grep -q "WAKE_LOCK\|newWakeLock" "$STRIP_SRC" "$STRIP_VIEW"; then
+        printf 'FAIL  status strip takes a wakelock\n' >> "$CHECKS"
+        failed=1
+    else
+        printf 'PASS  status strip takes no wakelock\n' >> "$CHECKS"
+    fi
+    if grep -qE "Color\.(GREEN|RED)|0xFF(00FF00|FF0000)" "$STRIP_VIEW"; then
+        printf 'FAIL  status strip uses green/red battery colour\n' >> "$CHECKS"
+        failed=1
+    else
+        printf 'PASS  status strip is white-only (no green/red)\n' >> "$CHECKS"
+    fi
     if grep -aq "androidx" "$BUILD/verify.dex"; then
         printf 'FAIL  AndroidX classes found in dex\n' >> "$CHECKS"
         failed=1
@@ -358,7 +458,8 @@ verify_apk() {
     local symbol
     for symbol in ActionCentreActivity ActionCentreListener ShadeBridgeService \
                   QuickTile QuickGrid NotificationRowView StatusStripView Motion \
-                  LockOverlayController LockOverlayView; do
+                  LockOverlayController LockOverlayView \
+                  StatusStripService StatusStripOverlayView; do
         if grep -aq "$symbol" "$BUILD/verify.dex"; then
             printf 'PASS  class %s in dex\n' "$symbol" >> "$CHECKS"
         else
@@ -409,12 +510,30 @@ verify_apk() {
         printf 'version:    1 (1.0)\n'
         printf 'min/target: %s / 36\n' "$MIN_API"
         printf 'build:      plain javac + aapt2 + d8 + apksigner (no Gradle, no AndroidX)\n'
-        printf 'bridge:     ShadeBridgeService (res/xml/shade_bridge.xml), BIND_ACCESSIBILITY_SERVICE, no new permissions\n'
+        printf 'bridge:     ShadeBridgeService (res/xml/shade_bridge.xml), BIND_ACCESSIBILITY_SERVICE\n'
+        printf 'strip:      StatusStripService (res/xml/status_strip_service.xml), TYPE_ACCESSIBILITY_OVERLAY 28 dp, NOT_TOUCHABLE; READ_PHONE_STATE optional for live signal\n'
         printf 'lock:       LockOverlayController: TYPE_ACCESSIBILITY_OVERLAY, NOT_FOCUSABLE|NOT_TOUCHABLE|LAYOUT_IN_SCREEN, bottom strip reveals the stock keyguard\n'
         printf 'fonts:      Open Sans Light/Regular/SemiBold from repo/fonts (OFL, bundled)\n'
         printf 'built on:   %s\n' "$(uname -srm)"
         printf 'jdk:        %s\n' "$("$JDK/bin/java" -version 2>&1 | head -n 1)"
     } > "$EVID/artifact-facts.txt"
+    {
+        printf 'apk:        %s\n' "$APK_NAME"
+        printf 'size:       %s bytes\n' "$size"
+        printf 'sha256:     %s\n' "$sha"
+        printf 'window:     TYPE_ACCESSIBILITY_OVERLAY (2032), MATCH_PARENT x 28 dp, gravity TOP|START\n'
+        printf 'flags:      NOT_FOCUSABLE|NOT_TOUCHABLE|LAYOUT_IN_SCREEN|LAYOUT_NO_LIMITS\n'
+        printf 'background: #000000 opaque, full width, exactly 28 dp tall\n'
+        printf 'left:       battery outline + white fill (+ plug when charging), Wi-Fi three arcs, signal four bars\n'
+        printf 'right:      HH:mm 12 sp, light white\n'
+        printf 'sources:    ACTION_BATTERY_CHANGED; WifiManager.isWifiEnabled + default-network callback; TelephonyManager.getSignalStrength + signal callback; ACTION_TIME_TICK\n'
+        printf 'clock:      ACTION_TIME_TICK / TIME_CHANGED / TIMEZONE_CHANGED only; no 1 Hz timer; no wakelock\n'
+        printf 'keyguard:   removed on ACTION_SCREEN_OFF / keyguard locked; re-added on ACTION_USER_PRESENT / screen-on unlocked\n'
+        printf 'cutout:     layoutInDisplayCutoutMode=ALWAYS (API 30+), window remains 28 dp\n'
+        printf 'fail-safe:  addView failure caught; logs and leaves the stock bar untouched\n'
+    } > "$EVID/status-strip-facts.txt"
+    grep -Ei 'status strip|strip|signal|battery|clock|wifi|overlay|READ_PHONE_STATE' \
+        "$CHECKS" > "$EVID/status-strip-verify.txt" 2>/dev/null || true
     cp "$APK" "$EVID/$APK_NAME"
 
     cat "$CHECKS"
@@ -422,14 +541,34 @@ verify_apk() {
     printf 'size: %s bytes, sha256: %s\n' "$size" "$sha"
 }
 
+collect_status_strip() {
+    mkdir -p "$STATUS_EVIDENCE"
+    cp "$EVIDENCE/$APK_NAME" "$STATUS_EVIDENCE/$APK_NAME"
+    cp "$EVIDENCE/$APK_NAME.sha256" "$STATUS_EVIDENCE/$APK_NAME.sha256" 2>/dev/null || true
+    cp "$EVIDENCE/verify.txt" "$STATUS_EVIDENCE/verify.txt"
+    cp "$EVIDENCE/status-strip-verify.txt" "$STATUS_EVIDENCE/status-strip-verify.txt"
+    cp "$EVIDENCE/status-strip-facts.txt" "$STATUS_EVIDENCE/status-strip-facts.txt"
+    cp "$EVIDENCE/artifact-facts.txt" "$STATUS_EVIDENCE/artifact-facts.txt"
+    cp "$EVIDENCE/aapt2-manifest.xmltree.txt" "$STATUS_EVIDENCE/aapt2-manifest.xmltree.txt"
+    cp "$EVIDENCE/aapt2-resources.txt" "$STATUS_EVIDENCE/aapt2-resources.txt"
+    cp "$EVIDENCE/aapt2-xmltree-status_strip_service.txt" \
+       "$STATUS_EVIDENCE/aapt2-xmltree-status_strip_service.txt"
+    cp "$EVIDENCE/dexdump-classes.txt" "$STATUS_EVIDENCE/dexdump-classes.txt"
+    cp "$EVIDENCE/apksigner-verify.txt" "$STATUS_EVIDENCE/apksigner-verify.txt"
+    printf 'status-strip evidence: %s\n' "$STATUS_EVIDENCE"
+}
+
 collect_local() {
     mkdir -p "$EVIDENCE"
     cp "$APK" "$EVIDENCE/$APK_NAME"
     cp "$EVID/aapt2-badging.txt" "$EVID/aapt2-manifest.xmltree.txt" \
        "$EVID/aapt2-resources.txt" "$EVID/aapt2-xmltree-shade_bridge.txt" \
+       "$EVID/aapt2-xmltree-status_strip_service.txt" \
        "$EVID/dexdump-classes.txt" "$EVID/apksigner-verify.txt" \
        "$EVID/artifact-facts.txt" "$EVID/verify.txt" \
+       "$EVID/status-strip-facts.txt" "$EVID/status-strip-verify.txt" \
        "$EVID/$APK_NAME.sha256" "$EVIDENCE/"
+    collect_status_strip
 }
 
 remote_build() {
@@ -455,6 +594,7 @@ remote_build() {
     remote_sha=$(awk '{print $1}' "$EVIDENCE/$APK_NAME.sha256")
     [ "$local_sha" = "$remote_sha" ] \
         || die "sha256 mismatch after scp: local $local_sha remote $remote_sha"
+    collect_status_strip
     say "artifact copied back; sha256 matches remote"
 }
 
