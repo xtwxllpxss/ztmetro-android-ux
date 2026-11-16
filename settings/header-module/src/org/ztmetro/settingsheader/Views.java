@@ -99,8 +99,30 @@ final class Views {
         if (!(view instanceof ViewGroup)) {
             return false;
         }
-        String name = view.getClass().getSimpleName().toLowerCase(Locale.ROOT);
-        return "entity_header".equals(idName(view)) || name.contains("entityheader");
+        String className = view.getClass().getSimpleName().toLowerCase(Locale.ROOT);
+        if ("entity_header".equals(idName(view)) || className.contains("entityheader")) {
+            return true;
+        }
+        // Preference wrappers differ between builds: also accept a short group whose
+        // subtree carries the entity title, so the app-info header is never skipped.
+        return hasEntityTitle(view, 2);
+    }
+
+    private static boolean hasEntityTitle(View view, int depth) {
+        if (view instanceof TextView) {
+            return "entity_header_title".equals(idName(view));
+        }
+        if (depth <= 0 || !(view instanceof ViewGroup)) {
+            return false;
+        }
+        ViewGroup group = (ViewGroup) view;
+        int children = Math.min(group.getChildCount(), 8);
+        for (int i = 0; i < children; i++) {
+            if (hasEntityTitle(group.getChildAt(i), depth - 1)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** A two-state row widget (framework Switch, SwitchCompat, MaterialSwitch). */

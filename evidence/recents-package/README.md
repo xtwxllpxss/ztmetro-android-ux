@@ -69,17 +69,19 @@ Prerequisite: Magisk on the phone (the module is a normal Magisk zip).
 ## Verify (no silent assumptions)
 
 ```sh
-# 1. the RRO is registered and enabled as an immutable static overlay
+# 1. the RRO is registered as an immutable static overlay
 adb shell cmd overlay list | grep ztmetro.overlay.recents
-#    expected: [x] org.ztmetro.overlay.recents
+#    expected: [x] org.ztmetro.overlay.recents (static overlays show enabled)
 adb shell cmd overlay dump org.ztmetro.overlay.recents | head
-#    expected: target package "android", state enabled
+#    expected: target package "android", enabled/immutable state
 
-# 2. the APK really is the system copy
+# 2. the APK really is the system copy and the grant landed
 adb shell pm path org.ztmetro.actioncentre
 #    expected: package:/system_ext/priv-app/ActionCentre/ztmetro-actioncentre.apk
 adb shell dumpsys package org.ztmetro.actioncentre | grep -E 'versionCode|REMOVE_TASKS'
-#    expected: versionCode=2 and REMOVE_TASKS granted=true
+#    expected: versionCode=2 and REMOVE_TASKS: granted=true
+adb shell dumpsys activity recents | head -3
+#    expected: mRecentsComponent=ComponentInfo{org.ztmetro.actioncentre/org.ztmetro.actioncentre.RecentsActivity}
 
 # 3. the activity lists real tasks and can remove them
 adb shell am start -n org.ztmetro.actioncentre/.RecentsActivity

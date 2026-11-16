@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
+import de.robv.android.xposed.XposedHelpers;
 
 /**
  * Two-state (switch) row value line — {@code ВКЛ} / {@code ВЫКЛ} at 22 sp white.
@@ -39,6 +40,9 @@ final class TwoStateRow {
 
     private static boolean sInstalled;
     private static boolean sUpdating;
+    /** Summary view -> its two-state switch, so a late summary update cannot undo the state. */
+    private static final java.util.WeakHashMap<TextView, CompoundButton> ROWS =
+            new java.util.WeakHashMap<>();
 
     private TwoStateRow() {
     }
@@ -61,6 +65,7 @@ final class TwoStateRow {
         if (RowType.styleValue(value)) {
             changed = true;
         }
+        ROWS.put(value, button);
         return changed;
     }
 
@@ -96,6 +101,41 @@ final class TwoStateRow {
             XposedBridge.log(TAG + ": hooked CompoundButton.setChecked (switch value line)");
         } catch (Throwable t) {
             XposedBridge.log(TAG + ": CompoundButton.setChecked hook failed");
+            XposedBridge.log(t);
+        }
+        // Settings sometimes rewrites a preference summary asynchronously (Wi-Fi state
+        // callbacks).  For a summary that belongs to a switch row the state text wins:
+        // one id check + one weak-map lookup per setText, no tree walk.
+        try {
+            XposedHelpers.findAndHookMethod(TextView.class, "setText", CharSequence.class,
+                    new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    if (sUpdating || !(param.thisObject instanceof TextView)) {
+                        return;
+                    }
+                    TextView value = (TextView) param.thisObject;
+                    if (value.getId() != android.R.id.summary) {
+                        return;
+                    }
+                    CompoundButton button = ROWS.get(value);
+                    if (button == null) {
+                        return;
+                    }
+                    String text = button.isChecked() ? ON : OFF;
+                    if (text.contentEquals(value.getText())) {
+                        return;
+                    }
+                    sUpdating = true;
+                    try {
+                        value.setText(text);
+                    } finally {
+                        sUpdating = false;
+                    }
+                }
+            });
+        } catch (Throwable t) {
+            XposedBridge.log(TAG + ": TextView.setText hook failed (summary may lag)");
             XposedBridge.log(t);
         }
     }

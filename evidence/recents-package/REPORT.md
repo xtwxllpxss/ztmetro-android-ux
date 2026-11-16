@@ -1,6 +1,6 @@
 # ztmetro-recents build report
 
-- built: 2026-11-16 14:15 UTC
+- built: 2026-11-16 14:19 UTC
 - host: Linux 7.0.0-38-generic x86_64
 - SDK: /home/denis/android-sdk
 - android.jar: /home/denis/android-sdk/platforms/android-36/android.jar
@@ -10,8 +10,8 @@
 ## Artifacts
 
 ```
-3c9be09c1176e913d438759357160be777a73b08b69c8df7ef0bf16bf448e802  ztmetro-recents.zip
-bf76db4c5d535a8d8d29954a690942ce341fe6aa331832865e721ac206be5d18  ztmetro-actioncentre.apk
+a1a31b209bde334bccae058bc57a58ef961a87124f9a94062e22910ce8df50cf  ztmetro-recents.zip
+a5bd0eaa11b0ec6a6beb6205fb3aabcdf753222ec188f0d2434504b0e6881030  ztmetro-actioncentre.apk
 e4c1009dea857c866619d78e7eb4eb992a7a2c85bf4f0e79cdb1e0b774c18620  ztmetro-recents-rro.apk
 175ecce8a2f5cf211071aa3053230c8af627aee85f75641c6db13474ba71ff81  privapp-permissions-ztmetro-recents.xml
 ```

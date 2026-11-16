@@ -38,6 +38,9 @@ final class BottomBar {
 
     private static final String TARGET_PACKAGE = "com.android.settings";
     private static final String SETTINGS_ACTION = "android.settings.SETTINGS";
+    /** SettingsIntelligence's exported search activity (the surface we restyle). */
+    private static final String APP_SEARCH_ACTION = "android.settings.APP_SEARCH_SETTINGS";
+    private static final String INTELLIGENCE_PACKAGE = "com.android.settings.intelligence";
 
     private BottomBar() {
     }
@@ -204,10 +207,21 @@ final class BottomBar {
 
     private static void openSearch(Activity activity) {
         try {
-            Intent intent = new Intent(SETTINGS_ACTION);
+            // Open the real search results surface (SettingsIntelligence SearchActivity);
+            // it is the screen the module restyles.  The old SETTINGS+search intent only
+            // opened the home page (which panel chrome is hidden on).
+            Intent intent = new Intent(APP_SEARCH_ACTION)
+                    .setPackage(INTELLIGENCE_PACKAGE);
+            if (intent.resolveActivity(activity.getPackageManager()) != null) {
+                activity.startActivity(intent);
+                Log.i(TAG, "settings search: SettingsIntelligence search surface");
+                return;
+            }
+            intent = new Intent(SETTINGS_ACTION);
             intent.putExtra("search", true);
             if (intent.resolveActivity(activity.getPackageManager()) == null) {
-                Log.i(TAG, "settings search: no activity for " + SETTINGS_ACTION + " (no-op)");
+                Log.i(TAG, "settings search: no activity for " + APP_SEARCH_ACTION
+                        + " / " + SETTINGS_ACTION + " (no-op)");
                 return;
             }
             activity.startActivity(intent);

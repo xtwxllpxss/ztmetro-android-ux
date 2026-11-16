@@ -67,7 +67,22 @@ public final class HeaderBinder {
     }
 
     /** Re-binds title + subtitle and re-applies the chrome; called from onResume/setTitle. */
+    /** Reentrancy guard: our own setTitle/onResume handling must never recurse. */
+    private static boolean sInRefresh;
+
     public static void refresh(Activity activity) {
+        if (sInRefresh) {
+            return;
+        }
+        sInRefresh = true;
+        try {
+            refreshInner(activity);
+        } finally {
+            sInRefresh = false;
+        }
+    }
+
+    private static void refreshInner(Activity activity) {
         try {
             boolean homepage = isHomepage(activity);
             View header = findHeader(activity);

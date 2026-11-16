@@ -538,11 +538,14 @@ public final class RecentsActivity extends Activity {
     private boolean removeTask(int taskId) {
         lastRemoveFailure = null;
 
-        // Android 10..16: android.app.ActivityTaskManager#removeTask(int).
+        // Android 10..16: android.app.ActivityTaskManager#removeTask(int) is the
+        // live entry point (ActivityManager#removeTask was removed from AOSP 16).
+        // The class is a hidden @TestApi class, so both its singleton accessor
+        // and the method are tried; each failure is logged with its real type
+        // instead of being collapsed into "denied".
         try {
             Class<?> cls = Class.forName("android.app.ActivityTaskManager");
-            Method getInstance = cls.getMethod("getInstance", Context.class);
-            Object instance = getInstance.invoke(null, this);
+            Object instance = cls.getMethod("getInstance").invoke(null);
             Method remove = cls.getMethod("removeTask", int.class);
             Object result = remove.invoke(instance, taskId);
             boolean removed = !(result instanceof Boolean) || (Boolean) result;
@@ -554,6 +557,26 @@ public final class RecentsActivity extends Activity {
         } catch (Throwable failed) {
             lastRemoveFailure = failed.getClass().getSimpleName();
             Log.w(TAG, "ActivityTaskManager.removeTask(" + taskId + ") failed", failed);
+        }
+
+        // Second chance: call the binder proxy directly, in case only the
+        // singleton accessor above is hidden-API restricted.
+        try {
+            Class<?> cls = Class.forName("android.app.ActivityTaskManager");
+            Object service = cls.getMethod("getService").invoke(null);
+            Method remove = service.getClass().getMethod("removeTask", int.class);
+            Object result = remove.invoke(service, taskId);
+            boolean removed = !(result instanceof Boolean) || (Boolean) result;
+            Log.i(TAG, "removeTask(" + taskId + ") via IActivityTaskManager -> " + removed);
+            if (removed) {
+                return true;
+            }
+            lastRemoveFailure = "IActivityTaskManager.removeTask returned false";
+        } catch (Throwable failed) {
+            if (lastRemoveFailure == null) {
+                lastRemoveFailure = failed.getClass().getSimpleName();
+            }
+            Log.w(TAG, "IActivityTaskManager.removeTask(" + taskId + ") failed", failed);
         }
 
         // Pre-Android-10 fallback: ActivityManager#removeTask(int).

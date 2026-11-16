@@ -244,7 +244,21 @@ final class ScreenPass {
     }
 
     /** The one row pass; also the sink for rows added by the hierarchy listener. */
+    private static boolean sInRowPass;
+
     private static void styleRecyclerRows() {
+        if (sInRowPass) {
+            return;
+        }
+        sInRowPass = true;
+        try {
+            styleRecyclerRowsInner();
+        } finally {
+            sInRowPass = false;
+        }
+    }
+
+    private static void styleRecyclerRowsInner() {
         int styled = 0;
         int live = 0;
         for (int i = 0; i < sRecyclers.size(); i++) {
@@ -332,9 +346,17 @@ final class ScreenPass {
                 RowIcons.hide(view);
             } else if (view instanceof ViewGroup) {
                 ViewGroup group = (ViewGroup) view;
-                if (sEntityRow && "entity_header_content".equals(Views.idName(group))
-                        && alignEntityContent(group)) {
-                    sApplies++;
+                if (sEntityRow) {
+                    if ("entity_header".equals(Views.idName(group))
+                            && (group.getPaddingLeft() != 0 || group.getPaddingRight() != 0
+                            || group.getPaddingTop() != 0 || group.getPaddingBottom() != 0)) {
+                        group.setPadding(0, 0, 0, 0);
+                        sApplies++;
+                    }
+                    if ("entity_header_content".equals(Views.idName(group))
+                            && alignEntityContent(group)) {
+                        sApplies++;
+                    }
                 }
                 flattenCard(group);
                 for (int i = 0; i < group.getChildCount() && i < 12; i++) {
@@ -670,9 +692,22 @@ final class ScreenPass {
             }
             if (view instanceof ViewGroup) {
                 ViewGroup group = (ViewGroup) view;
-                if (sEntityRow && "entity_header_content".equals(Views.idName(group))
-                        && alignEntityContent(group)) {
-                    sApplies++;
+                if (sEntityRow && group != row) {
+                    // The entity header may sit inside a stock preference wrapper: do not
+                    // add the wrapper padding + the header's own 16 dp on top of the 24 dp
+                    // page margin.
+                    if ("entity_header".equals(Views.idName(group))) {
+                        if (group.getPaddingLeft() != 0 || group.getPaddingRight() != 0
+                                || group.getPaddingTop() != 0
+                                || group.getPaddingBottom() != 0) {
+                            group.setPadding(0, 0, 0, 0);
+                            sApplies++;
+                        }
+                    }
+                    if ("entity_header_content".equals(Views.idName(group))
+                            && alignEntityContent(group)) {
+                        sApplies++;
+                    }
                 }
                 int count = group.getChildCount();
                 top = growRow(top + count);

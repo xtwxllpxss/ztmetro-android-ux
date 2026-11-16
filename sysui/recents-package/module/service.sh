@@ -37,6 +37,8 @@ fi
       || echo "MISSING: org.ztmetro.overlay.recents not registered"
     echo "-- apk path --"
     pm path org.ztmetro.actioncentre 2>/dev/null || echo "MISSING package"
+    echo "-- recents component (system_server) --"
+    dumpsys activity recents 2>/dev/null | head -n 3
     echo "-- package state --"
     dumpsys package org.ztmetro.actioncentre 2>/dev/null \
       | grep -E 'versionCode|versionName|REMOVE_TASKS|REAL_GET_TASKS|START_TASKS_FROM_RECENTS|MANAGE_ACTIVITY_TASKS' \
