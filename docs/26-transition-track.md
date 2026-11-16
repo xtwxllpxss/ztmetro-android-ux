@@ -25,7 +25,8 @@ Evidence bundle: [`evidence/transition-track/`](../evidence/transition-track/REP
   outgoing app's surface.
 - **B (Magisk/LSPosed): possible, with two different ceilings.** A preinstalled
   static RRO that replaces the framework anim XMLs (`task_*` for the opaque
-  Start, `wallpaper_open_*` for a wallpaper-showing home) is a real, cheap replacement **if WMShell's `DefaultTransitionHandler` owns the transition**. If
+  Start, `wallpaper_open_*` for a wallpaper-showing home) is a real, cheap
+  replacement **if WMShell's `DefaultTransitionHandler` owns the transition**. If
   Launcher3/Quickstep owns it, the RRO is dead code and only a LSPosed hook into
   Launcher3 (or the Shell remote-transition path) can retarget it. Both B routes
   are **2D only**: Android's window/surface animation is an affine 2D transform,

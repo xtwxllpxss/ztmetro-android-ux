@@ -739,11 +739,39 @@ verify_builtin() { # writes the same TOTAL line shape as ux-verify
   printf 'TOTAL  PASS %d  FAIL %d  SKIP 0  / %d checks\n' "$pass" "$fail" "$((pass + fail))"
 }
 
+capture_performance() { # baseline requested by the owner: PSS, gfx jank, pressure
+  local out="$EVID/perf" p pss
+  mkdir -p "$out"
+  : > "$out/meminfo.tsv"
+  for p in com.android.systemui com.android.settings org.ztmetro.actioncentre org.ztmetro.start; do
+    if devq "shell dumpsys meminfo $p" > "$out/meminfo-$p.txt" 2>/dev/null; then
+      pss=$(grep -m1 'TOTAL PSS' "$out/meminfo-$p.txt" | sed -E 's/.*TOTAL PSS: *([0-9]+).*/\1/')
+      [ -n "$pss" ] || pss=$(grep -m1 '^ *TOTAL' "$out/meminfo-$p.txt" | grep -oE '[0-9]+' | head -1)
+      printf '%s\t%s\n' "$p" "${pss:-?}" >> "$out/meminfo.tsv"
+    else
+      log "WARN could not read meminfo for $p"
+    fi
+  done
+  devq "shell dumpsys gfxinfo com.android.settings" > "$out/gfxinfo-settings.txt" 2>/dev/null \
+    || log "WARN could not read gfxinfo for com.android.settings"
+  grep -E 'Janky frames|percentile' "$out/gfxinfo-settings.txt" > "$out/gfxinfo-settings-summary.txt" 2>/dev/null || true
+  devq "shell cat /proc/pressure/memory" > "$out/pressure-memory.txt" 2>/dev/null \
+    || log "WARN could not read /proc/pressure/memory"
+  log "performance baseline:"
+  sed 's/^/  /' "$out/meminfo.tsv" | tee -a "$MAIN_LOG"
+  sed 's/^/  /' "$out/gfxinfo-settings-summary.txt" | tee -a "$MAIN_LOG" || true
+  sed 's/^/  /' "$out/pressure-memory.txt" | tee -a "$MAIN_LOG" || true
+  return 0
+}
+
 stage_verify() {
   local logf="$EVID/verify.log" rc=0 summary=""
   if [ "$DRY" = 1 ]; then
     log "DRY python3 scripts/ux-verify.py --quick --out $EVID/verify --timestamp run"
     log "DRY parse 'TOTAL  PASS n  FAIL n  SKIP n / n checks'"
+    log "DRY $ADB shell dumpsys meminfo <systemui|settings|actioncentre|start>  # PSS baseline"
+    log "DRY $ADB shell dumpsys gfxinfo com.android.settings  # Janky frames + percentiles"
+    log "DRY $ADB shell cat /proc/pressure/memory"
     return 0
   fi
   if [ -f "$REPO/scripts/ux-verify.py" ]; then
@@ -1036,6 +1064,44 @@ if factory:
         r += [""] * (5 - len(r))
         lines.append(f"| {r[0]} | `{r[1]}` | `{r[2]}` | {r[3]} |")
     lines.append("")
+perf_dir = os.path.join(evid, "perf")
+if os.path.isdir(perf_dir):
+    lines.append("## Performance appendix")
+    lines.append("")
+    lines.append("Captured after the verify stage on the same boot (owner request: lag baseline).")
+    lines.append("")
+    mem = []
+    mempath = os.path.join(perf_dir, "meminfo.tsv")
+    if os.path.isfile(mempath):
+        for line in open(mempath, encoding="utf-8"):
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) >= 2:
+                mem.append(parts)
+    if mem:
+        lines.append("| Process | TOTAL PSS (KB) | Raw dump |")
+        lines.append("|---|---:|---|")
+        for p, pss in mem:
+            lines.append(f"| `{p}` | {pss} | `perf/meminfo-{p}.txt` |")
+        lines.append("")
+    gfxp = os.path.join(perf_dir, "gfxinfo-settings-summary.txt")
+    if os.path.isfile(gfxp):
+        gfx = open(gfxp, encoding="utf-8").read().strip()
+        if gfx:
+            lines.append("**`dumpsys gfxinfo com.android.settings`**")
+            lines.append("")
+            lines.append("```")
+            lines.append(gfx)
+            lines.append("```")
+            lines.append("")
+    pp = os.path.join(perf_dir, "pressure-memory.txt")
+    if os.path.isfile(pp):
+        pressure = open(pp, encoding="utf-8").read().strip()
+        lines.append("**`/proc/pressure/memory`**")
+        lines.append("")
+        lines.append("```")
+        lines.append(pressure or "(empty)")
+        lines.append("```")
+        lines.append("")
 lines.append("## Reproduce from a clean LineageOS install")
 lines.append("")
 lines.append("```sh")

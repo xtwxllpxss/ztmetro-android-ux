@@ -1,0 +1,1454 @@
+{
+  "tool": "ux-verify.py",
+  "version": "1.0",
+  "mode": "full",
+  "started": "2026-11-16T15:18:04+03:00",
+  "finished": "2026-11-16T15:19:46+03:00",
+  "duration_s": 101.66,
+  "outdir": "/Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/verify/20261116-151804",
+  "command": "/Users/meow/.dsh/dsh-runtimes/dsh-primary-runtime/dependencies/python/bin/python3 /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/scripts/ux-verify.py",
+  "device": {
+    "transport": "ssh hermes-ubuntu '~/android-sdk/platform-tools/adb ...'",
+    "serial": "4f2b50b2",
+    "sdk": "36",
+    "wm_size": [
+      720,
+      1280
+    ],
+    "wm_density": 260,
+    "override_density": null,
+    "px_per_dp": 1.625,
+    "px_per_dp_expected": 1.75,
+    "font_scale": 1.0,
+    "systemui_pid": "2082",
+    "overlays_all": [
+      "[x] org.ztmetro.overlay.framework",
+      "[x] org.ztos.overlay.framework.extra",
+      "[x] org.ztos.overlay.status.framework",
+      "[x] org.ztos.overlay.factory.org_lineageos_etar",
+      "[x] org.ztos.overlay.settings",
+      "[x] org.ztos.overlay.systemui",
+      "[x] org.ztos.overlay.status.systemui",
+      "[x] org.ztos.overlay.statusbaricons",
+      "[x] org.ztos.overlay.systemui.extra"
+    ],
+    "overlays_enabled": 9,
+    "focus": "Window{45040fc u0 org.ztmetro.start/org.ztmetro.start.StartActivity}",
+    "keyguard": false
+  },
+  "captures": {
+    "start": {
+      "png": "raw/start.png",
+      "started": "2026-11-16T15:18:25+03:00",
+      "sdk": "36",
+      "overlays": [
+        "[x] org.ztmetro.overlay.framework",
+        "[x] org.ztos.overlay.framework.extra",
+        "[x] org.ztos.overlay.status.framework",
+        "[x] org.ztos.overlay.factory.org_lineageos_etar",
+        "[x] org.ztos.overlay.settings",
+        "[x] org.ztos.overlay.systemui",
+        "[x] org.ztos.overlay.status.systemui",
+        "[x] org.ztos.overlay.statusbaricons",
+        "[x] org.ztos.overlay.systemui.extra"
+      ],
+      "overlays_enabled": [
+        "org.ztmetro.overlay.framework",
+        "org.ztos.overlay.framework.extra",
+        "org.ztos.overlay.status.framework",
+        "org.ztos.overlay.factory.org_lineageos_etar",
+        "org.ztos.overlay.settings",
+        "org.ztos.overlay.systemui",
+        "org.ztos.overlay.status.systemui",
+        "org.ztos.overlay.statusbaricons",
+        "org.ztos.overlay.systemui.extra"
+      ],
+      "systemui_pid": "2082",
+      "focus": "Window{45040fc u0 org.ztmetro.start/org.ztmetro.start.StartActivity}",
+      "focused_app": "ActivityRecord{21974535 u0 org.ztmetro.start/.StartActivity t156}",
+      "keyguard": false
+    },
+    "app-list": {
+      "png": "raw/app-list.png",
+      "started": "2026-11-16T15:18:38+03:00",
+      "sdk": "36",
+      "overlays": [
+        "[x] org.ztmetro.overlay.framework",
+        "[x] org.ztos.overlay.framework.extra",
+        "[x] org.ztos.overlay.status.framework",
+        "[x] org.ztos.overlay.factory.org_lineageos_etar",
+        "[x] org.ztos.overlay.settings",
+        "[x] org.ztos.overlay.systemui",
+        "[x] org.ztos.overlay.status.systemui",
+        "[x] org.ztos.overlay.statusbaricons",
+        "[x] org.ztos.overlay.systemui.extra"
+      ],
+      "overlays_enabled": [
+        "org.ztmetro.overlay.framework",
+        "org.ztos.overlay.framework.extra",
+        "org.ztos.overlay.status.framework",
+        "org.ztos.overlay.factory.org_lineageos_etar",
+        "org.ztos.overlay.settings",
+        "org.ztos.overlay.systemui",
+        "org.ztos.overlay.status.systemui",
+        "org.ztos.overlay.statusbaricons",
+        "org.ztos.overlay.systemui.extra"
+      ],
+      "systemui_pid": "2082",
+      "focus": "Window{45040fc u0 org.ztmetro.start/org.ztmetro.start.StartActivity}",
+      "focused_app": "ActivityRecord{21974535 u0 org.ztmetro.start/.StartActivity t156}",
+      "keyguard": false
+    },
+    "settings-home": {
+      "png": "raw/settings-home.png",
+      "started": "2026-11-16T15:18:49+03:00",
+      "sdk": "36",
+      "overlays": [
+        "[x] org.ztmetro.overlay.framework",
+        "[x] org.ztos.overlay.framework.extra",
+        "[x] org.ztos.overlay.status.framework",
+        "[x] org.ztos.overlay.factory.org_lineageos_etar",
+        "[x] org.ztos.overlay.settings",
+        "[x] org.ztos.overlay.systemui",
+        "[x] org.ztos.overlay.status.systemui",
+        "[x] org.ztos.overlay.statusbaricons",
+        "[x] org.ztos.overlay.systemui.extra"
+      ],
+      "overlays_enabled": [
+        "org.ztmetro.overlay.framework",
+        "org.ztos.overlay.framework.extra",
+        "org.ztos.overlay.status.framework",
+        "org.ztos.overlay.factory.org_lineageos_etar",
+        "org.ztos.overlay.settings",
+        "org.ztos.overlay.systemui",
+        "org.ztos.overlay.status.systemui",
+        "org.ztos.overlay.statusbaricons",
+        "org.ztos.overlay.systemui.extra"
+      ],
+      "systemui_pid": "2082",
+      "focus": "Window{32db513 u0 com.android.settings/com.android.settings.homepage.SettingsHomepageActivity}",
+      "focused_app": "ActivityRecord{100212111 u0 com.android.settings/.homepage.SettingsHomepageActivity t168}",
+      "keyguard": false
+    },
+    "settings-wifi": {
+      "png": "raw/settings-wifi.png",
+      "started": "2026-11-16T15:18:59+03:00",
+      "sdk": "36",
+      "overlays": [
+        "[x] org.ztmetro.overlay.framework",
+        "[x] org.ztos.overlay.framework.extra",
+        "[x] org.ztos.overlay.status.framework",
+        "[x] org.ztos.overlay.factory.org_lineageos_etar",
+        "[x] org.ztos.overlay.settings",
+        "[x] org.ztos.overlay.systemui",
+        "[x] org.ztos.overlay.status.systemui",
+        "[x] org.ztos.overlay.statusbaricons",
+        "[x] org.ztos.overlay.systemui.extra"
+      ],
+      "overlays_enabled": [
+        "org.ztmetro.overlay.framework",
+        "org.ztos.overlay.framework.extra",
+        "org.ztos.overlay.status.framework",
+        "org.ztos.overlay.factory.org_lineageos_etar",
+        "org.ztos.overlay.settings",
+        "org.ztos.overlay.systemui",
+        "org.ztos.overlay.status.systemui",
+        "org.ztos.overlay.statusbaricons",
+        "org.ztos.overlay.systemui.extra"
+      ],
+      "systemui_pid": "2082",
+      "focus": "Window{dc8ba50 u0 com.android.settings/com.android.settings.Settings$WifiSettingsActivity}",
+      "focused_app": "ActivityRecord{27367675 u0 com.android.settings/.Settings$WifiSettingsActivity t167}",
+      "keyguard": false
+    },
+    "action-centre": {
+      "png": "raw/action-centre.png",
+      "started": "2026-11-16T15:19:12+03:00",
+      "sdk": "36",
+      "overlays": [
+        "[x] org.ztmetro.overlay.framework",
+        "[x] org.ztos.overlay.framework.extra",
+        "[x] org.ztos.overlay.status.framework",
+        "[x] org.ztos.overlay.factory.org_lineageos_etar",
+        "[x] org.ztos.overlay.settings",
+        "[x] org.ztos.overlay.systemui",
+        "[x] org.ztos.overlay.status.systemui",
+        "[x] org.ztos.overlay.statusbaricons",
+        "[x] org.ztos.overlay.systemui.extra"
+      ],
+      "overlays_enabled": [
+        "org.ztmetro.overlay.framework",
+        "org.ztos.overlay.framework.extra",
+        "org.ztos.overlay.status.framework",
+        "org.ztos.overlay.factory.org_lineageos_etar",
+        "org.ztos.overlay.settings",
+        "org.ztos.overlay.systemui",
+        "org.ztos.overlay.status.systemui",
+        "org.ztos.overlay.statusbaricons",
+        "org.ztos.overlay.systemui.extra"
+      ],
+      "systemui_pid": "2082",
+      "focus": "Window{c2795d7 u0 org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreActivity}",
+      "focused_app": "ActivityRecord{59179577 u0 org.ztmetro.actioncentre/.ActionCentreActivity t164}",
+      "keyguard": false
+    },
+    "lock": {
+      "png": "raw/lock.png",
+      "started": "2026-11-16T15:19:19+03:00",
+      "sdk": "36",
+      "overlays": [
+        "[x] org.ztmetro.overlay.framework",
+        "[x] org.ztos.overlay.framework.extra",
+        "[x] org.ztos.overlay.status.framework",
+        "[x] org.ztos.overlay.factory.org_lineageos_etar",
+        "[x] org.ztos.overlay.settings",
+        "[x] org.ztos.overlay.systemui",
+        "[x] org.ztos.overlay.status.systemui",
+        "[x] org.ztos.overlay.statusbaricons",
+        "[x] org.ztos.overlay.systemui.extra"
+      ],
+      "overlays_enabled": [
+        "org.ztmetro.overlay.framework",
+        "org.ztos.overlay.framework.extra",
+        "org.ztos.overlay.status.framework",
+        "org.ztos.overlay.factory.org_lineageos_etar",
+        "org.ztos.overlay.settings",
+        "org.ztos.overlay.systemui",
+        "org.ztos.overlay.status.systemui",
+        "org.ztos.overlay.statusbaricons",
+        "org.ztos.overlay.systemui.extra"
+      ],
+      "systemui_pid": "2082",
+      "focus": "Window{f007523 u0 NotificationShade}",
+      "focused_app": "ActivityRecord{59179577 u0 org.ztmetro.actioncentre/.ActionCentreActivity t164}",
+      "keyguard": true
+    },
+    "volume": {
+      "png": "raw/volume.png",
+      "started": "2026-11-16T15:19:38+03:00",
+      "sdk": "36",
+      "overlays": [
+        "[x] org.ztmetro.overlay.framework",
+        "[x] org.ztos.overlay.framework.extra",
+        "[x] org.ztos.overlay.status.framework",
+        "[x] org.ztos.overlay.factory.org_lineageos_etar",
+        "[x] org.ztos.overlay.settings",
+        "[x] org.ztos.overlay.systemui",
+        "[x] org.ztos.overlay.status.systemui",
+        "[x] org.ztos.overlay.statusbaricons",
+        "[x] org.ztos.overlay.systemui.extra"
+      ],
+      "overlays_enabled": [
+        "org.ztmetro.overlay.framework",
+        "org.ztos.overlay.framework.extra",
+        "org.ztos.overlay.status.framework",
+        "org.ztos.overlay.factory.org_lineageos_etar",
+        "org.ztos.overlay.settings",
+        "org.ztos.overlay.systemui",
+        "org.ztos.overlay.status.systemui",
+        "org.ztos.overlay.statusbaricons",
+        "org.ztos.overlay.systemui.extra"
+      ],
+      "systemui_pid": "2082",
+      "focus": "Window{32db513 u0 com.android.settings/com.android.settings.homepage.SettingsHomepageActivity}",
+      "focused_app": "ActivityRecord{100212111 u0 com.android.settings/.homepage.SettingsHomepageActivity t168}",
+      "keyguard": false
+    }
+  },
+  "checks": [
+    {
+      "id": "pre.density_factor",
+      "surface": "precondition",
+      "name": "px/dp factor equals the device density/160",
+      "status": "PASS",
+      "measured": {
+        "px_per_dp": 1.625,
+        "density_dpi": 260,
+        "override_dpi": null
+      },
+      "expected": {
+        "px_per_dp": 1.625
+      },
+      "tolerance": {
+        "px_per_dp": 0.01
+      },
+      "unit": "px/dp",
+      "detail": "measured from `wm density`; all dp values use this factor",
+      "boxes": []
+    },
+    {
+      "id": "pre.display_size",
+      "surface": "precondition",
+      "name": "captured PNG matches wm size",
+      "status": "PASS",
+      "measured": {
+        "wm_size": [
+          720,
+          1280
+        ],
+        "png_checked_per_capture": true
+      },
+      "expected": {
+        "png": [
+          720,
+          1280
+        ]
+      },
+      "tolerance": 0,
+      "unit": "px",
+      "detail": "each screencap is opened and its size recorded in captures",
+      "boxes": []
+    },
+    {
+      "id": "start.no_header",
+      "surface": "start",
+      "name": "no page header text in the top 100 dp",
+      "status": "PASS",
+      "measured": {
+        "glyph_px_on_black": 0
+      },
+      "expected": {
+        "glyph_px_on_black": 0
+      },
+      "tolerance": {
+        "max_glyph_px": 30
+      },
+      "unit": "px",
+      "detail": "status strip excluded (y < 28 dp); tile labels sit on saturated fill and are not counted",
+      "boxes": [
+        {
+          "x0": 0,
+          "y0": 46,
+          "x1": 719,
+          "y1": 162,
+          "label": "header band 28..100 dp: 0 px"
+        }
+      ]
+    },
+    {
+      "id": "start.palette",
+      "surface": "start",
+      "name": ">=3 distinct ztmetro palette fills and cobalt",
+      "status": "PASS",
+      "measured": {
+        "distinct_palette_fills": 6,
+        "fills": {
+          "cobalt": 1,
+          "teal": 1,
+          "green": 1,
+          "brown": 1,
+          "crimson": 1,
+          "red": 1
+        },
+        "cobalt_px": 243631
+      },
+      "expected": {
+        "distinct_palette_fills": ">=3",
+        "cobalt_px": ">0"
+      },
+      "tolerance": {
+        "distinct_palette_fills": 0,
+        "cobalt_px": 0
+      },
+      "unit": "px",
+      "detail": "fills clustered from saturated pixels, count >= 2000 px at 1/4 area",
+      "boxes": [
+        {
+          "x0": 0,
+          "y0": 46,
+          "x1": 719,
+          "y1": 1279,
+          "label": "6 fills, cobalt 243631px"
+        }
+      ]
+    },
+    {
+      "id": "start.grid_metrics",
+      "surface": "start",
+      "name": "tile gutter ~7 dp and page margins ~14 dp",
+      "status": "PASS",
+      "measured": {
+        "gutter_dp": 6.77,
+        "left_margin_dp": 14.15,
+        "right_margin_dp": 12.92,
+        "tiles": 12
+      },
+      "expected": {
+        "gutter_dp": 7,
+        "margin_dp": 14
+      },
+      "tolerance": {
+        "gutter_dp": 2,
+        "margin_dp": 2
+      },
+      "unit": "dp",
+      "detail": "gaps from 5 adjacent tile pairs",
+      "boxes": [
+        {
+          "x0": 23,
+          "y0": 69,
+          "x1": 239,
+          "y1": 285,
+          "label": ""
+        },
+        {
+          "x0": 251,
+          "y0": 69,
+          "x1": 468,
+          "y1": 285,
+          "label": ""
+        },
+        {
+          "x0": 480,
+          "y0": 69,
+          "x1": 696,
+          "y1": 285,
+          "label": ""
+        },
+        {
+          "x0": 23,
+          "y0": 297,
+          "x1": 468,
+          "y1": 514,
+          "label": ""
+        },
+        {
+          "x0": 137,
+          "y0": 526,
+          "x1": 239,
+          "y1": 628,
+          "label": ""
+        },
+        {
+          "x0": 251,
+          "y0": 526,
+          "x1": 468,
+          "y1": 742,
+          "label": ""
+        },
+        {
+          "x0": 23,
+          "y0": 640,
+          "x1": 125,
+          "y1": 742,
+          "label": ""
+        },
+        {
+          "x0": 23,
+          "y0": 754,
+          "x1": 239,
+          "y1": 970,
+          "label": ""
+        }
+      ]
+    },
+    {
+      "id": "start.tile_glyphs",
+      "surface": "start",
+      "name": "white glyph pixels inside >= 3 tiles",
+      "status": "PASS",
+      "measured": {
+        "tiles_with_white_glyph": 11,
+        "glyph_px": [
+          4220,
+          1455,
+          3468,
+          3591,
+          522,
+          4069,
+          1932,
+          1271
+        ]
+      },
+      "expected": {
+        "tiles_with_white_glyph": ">=3"
+      },
+      "tolerance": 0,
+      "unit": "tiles",
+      "detail": "white = min(R,G,B) >= 200, >= 40 px per tile",
+      "boxes": [
+        {
+          "x0": 23,
+          "y0": 69,
+          "x1": 239,
+          "y1": 285,
+          "label": "glyph 4220px"
+        },
+        {
+          "x0": 251,
+          "y0": 69,
+          "x1": 468,
+          "y1": 285,
+          "label": "glyph 1455px"
+        },
+        {
+          "x0": 480,
+          "y0": 69,
+          "x1": 696,
+          "y1": 285,
+          "label": "glyph 3468px"
+        },
+        {
+          "x0": 23,
+          "y0": 297,
+          "x1": 468,
+          "y1": 514,
+          "label": "glyph 3591px"
+        },
+        {
+          "x0": 137,
+          "y0": 526,
+          "x1": 239,
+          "y1": 628,
+          "label": "glyph 522px"
+        },
+        {
+          "x0": 251,
+          "y0": 526,
+          "x1": 468,
+          "y1": 742,
+          "label": "glyph 4069px"
+        },
+        {
+          "x0": 23,
+          "y0": 754,
+          "x1": 239,
+          "y1": 970,
+          "label": "glyph 1932px"
+        },
+        {
+          "x0": 366,
+          "y0": 754,
+          "x1": 468,
+          "y1": 856,
+          "label": "glyph 1271px"
+        },
+        {
+          "x0": 480,
+          "y0": 754,
+          "x1": 696,
+          "y1": 970,
+          "label": "glyph 2407px"
+        },
+        {
+          "x0": 23,
+          "y0": 982,
+          "x1": 239,
+          "y1": 1199,
+          "label": "glyph 1454px"
+        },
+        {
+          "x0": 251,
+          "y0": 982,
+          "x1": 698,
+          "y1": 1199,
+          "label": "glyph 4321px"
+        }
+      ]
+    },
+    {
+      "id": "start.square_corners",
+      "surface": "start",
+      "name": "tile corners are fill, not black gap",
+      "status": "PASS",
+      "measured": {
+        "tiles_all_4_corners_fill": 12,
+        "tiles_checked": 12,
+        "fraction": 1.0
+      },
+      "expected": {
+        "fraction": ">=0.9"
+      },
+      "tolerance": 0.1,
+      "unit": "fraction",
+      "detail": "corner sampled 2 px inside the measured tile bbox",
+      "boxes": [
+        {
+          "x0": 23,
+          "y0": 69,
+          "x1": 239,
+          "y1": 285,
+          "label": ""
+        },
+        {
+          "x0": 251,
+          "y0": 69,
+          "x1": 468,
+          "y1": 285,
+          "label": ""
+        },
+        {
+          "x0": 480,
+          "y0": 69,
+          "x1": 696,
+          "y1": 285,
+          "label": ""
+        },
+        {
+          "x0": 23,
+          "y0": 297,
+          "x1": 468,
+          "y1": 514,
+          "label": ""
+        }
+      ]
+    },
+    {
+      "id": "applist.icon_column",
+      "surface": "app-list",
+      "name": "icon column starts at x = 80 dp",
+      "status": "PASS",
+      "measured": {
+        "x_dp": 80.0,
+        "rows": 9
+      },
+      "expected": {
+        "x_dp": 80
+      },
+      "tolerance": {
+        "x_dp": 3
+      },
+      "unit": "dp",
+      "detail": "median left edge of the accent icon squares",
+      "boxes": [
+        {
+          "x0": 130,
+          "y0": 159,
+          "x1": 202,
+          "y1": 231,
+          "label": ""
+        },
+        {
+          "x0": 130,
+          "y0": 323,
+          "x1": 202,
+          "y1": 395,
+          "label": ""
+        },
+        {
+          "x0": 130,
+          "y0": 487,
+          "x1": 202,
+          "y1": 559,
+          "label": ""
+        },
+        {
+          "x0": 130,
+          "y0": 576,
+          "x1": 202,
+          "y1": 648,
+          "label": ""
+        }
+      ]
+    },
+    {
+      "id": "applist.icon_size",
+      "surface": "app-list",
+      "name": "icon square is 45 dp",
+      "status": "PASS",
+      "measured": {
+        "w_dp": 44.92,
+        "h_dp": 44.92
+      },
+      "expected": {
+        "size_dp": 45
+      },
+      "tolerance": {
+        "size_dp": 3
+      },
+      "unit": "dp",
+      "detail": "median square size",
+      "boxes": [
+        {
+          "x0": 130,
+          "y0": 159,
+          "x1": 202,
+          "y1": 231,
+          "label": ""
+        },
+        {
+          "x0": 130,
+          "y0": 323,
+          "x1": 202,
+          "y1": 395,
+          "label": ""
+        },
+        {
+          "x0": 130,
+          "y0": 487,
+          "x1": 202,
+          "y1": 559,
+          "label": ""
+        },
+        {
+          "x0": 130,
+          "y0": 576,
+          "x1": 202,
+          "y1": 648,
+          "label": ""
+        }
+      ]
+    },
+    {
+      "id": "applist.label_x",
+      "surface": "app-list",
+      "name": "app label starts at 138 dp",
+      "status": "PASS",
+      "measured": {
+        "label_x_dp": 140.31,
+        "rows": 8
+      },
+      "expected": {
+        "label_x_dp": 138
+      },
+      "tolerance": {
+        "label_x_dp": 4
+      },
+      "unit": "dp",
+      "detail": "first white text column right of the icon square",
+      "boxes": [
+        {
+          "x0": 228,
+          "y0": 159,
+          "x1": 232,
+          "y1": 231,
+          "label": "228x"
+        },
+        {
+          "x0": 228,
+          "y0": 323,
+          "x1": 232,
+          "y1": 395,
+          "label": "228x"
+        },
+        {
+          "x0": 228,
+          "y0": 487,
+          "x1": 232,
+          "y1": 559,
+          "label": "228x"
+        },
+        {
+          "x0": 228,
+          "y0": 576,
+          "x1": 232,
+          "y1": 648,
+          "label": "228x"
+        }
+      ]
+    },
+    {
+      "id": "applist.rows",
+      "surface": "app-list",
+      "name": "at least 3 app rows detected",
+      "status": "PASS",
+      "measured": {
+        "rows": 9
+      },
+      "expected": {
+        "rows": ">=3"
+      },
+      "tolerance": 0,
+      "unit": "rows",
+      "detail": "solid accent icon squares",
+      "boxes": []
+    },
+    {
+      "id": "applist.contrast",
+      "surface": "app-list",
+      "name": "white text on black contrast >= 4.5:1",
+      "status": "PASS",
+      "measured": {
+        "contrast": 17.62,
+        "text_rgb": [
+          243,
+          243,
+          243
+        ],
+        "bg_rgb": [
+          0,
+          0,
+          0
+        ]
+      },
+      "expected": {
+        "contrast": ">=4.5"
+      },
+      "tolerance": 0,
+      "unit": ":1",
+      "detail": "WCAG 2.1 relative luminance, worst measured row",
+      "boxes": [
+        {
+          "x0": 228,
+          "y0": 159,
+          "x1": 488,
+          "y1": 231,
+          "label": ""
+        },
+        {
+          "x0": 228,
+          "y0": 323,
+          "x1": 488,
+          "y1": 395,
+          "label": ""
+        },
+        {
+          "x0": 228,
+          "y0": 487,
+          "x1": 488,
+          "y1": 559,
+          "label": ""
+        }
+      ]
+    },
+    {
+      "id": "settings.bg_black",
+      "surface": "settings-home",
+      "name": "background is #000000 (>=70% of pixels)",
+      "status": "PASS",
+      "measured": {
+        "black_fraction": 0.9689
+      },
+      "expected": {
+        "fraction": ">=0.70"
+      },
+      "tolerance": 0,
+      "unit": "fraction",
+      "detail": "max(R,G,B) <= 12",
+      "boxes": []
+    },
+    {
+      "id": "settings.no_banner",
+      "surface": "settings-home",
+      "name": "no cobalt banner in the top 100 dp",
+      "status": "PASS",
+      "measured": {
+        "cobalt_px": 0,
+        "saturated_px": 0
+      },
+      "expected": {
+        "cobalt_px": 0,
+        "saturated_px": 0
+      },
+      "tolerance": {
+        "max": 20
+      },
+      "unit": "px",
+      "detail": "the top band may contain only black, white caps and the title glyphs",
+      "boxes": [
+        {
+          "x0": 0,
+          "y0": 46,
+          "x1": 719,
+          "y1": 162,
+          "label": "cobalt 0px, sat 0px"
+        }
+      ]
+    },
+    {
+      "id": "settings.title_cap",
+      "surface": "settings-home",
+      "name": "title glyph band >= 46 px (lowercase Cyrillic, 58 sp)",
+      "status": "PASS",
+      "measured": {
+        "band_px": 52,
+        "band_dp": 32.0,
+        "implied_size_sp": 60.4,
+        "font_scale": 1.0
+      },
+      "expected": {
+        "band_px": ">=46",
+        "band_dp": ">=28"
+      },
+      "tolerance": 0,
+      "unit": "px",
+      "detail": "bbox of the first title glyph run at fontScale 1; lowercase Cyrillic has no caps, so the x-height ratio 0.53 is used for the implied size",
+      "boxes": [
+        {
+          "x0": 47,
+          "y0": 164,
+          "x1": 126,
+          "y1": 215,
+          "label": "cap 52px"
+        }
+      ]
+    },
+    {
+      "id": "settings.rows_white",
+      "surface": "settings-home",
+      "name": "rows are #E6E6E6..FFFFFF on black",
+      "status": "PASS",
+      "measured": {
+        "median_text_rgb": [
+          255,
+          255,
+          255
+        ],
+        "fraction_>=E6": 0.941,
+        "black_fraction": 0.97
+      },
+      "expected": {
+        "median_text_rgb": "#E6E6E6..FFFFFF",
+        "black_fraction": ">=0.70"
+      },
+      "tolerance": {
+        "fraction_>=E6": 0.75
+      },
+      "unit": "fraction",
+      "detail": "white pixels of the body row labels",
+      "boxes": []
+    },
+    {
+      "id": "settings.single_title",
+      "surface": "settings-home",
+      "name": "exactly one large title text block",
+      "status": "PASS",
+      "measured": {
+        "large_title_blocks": 1,
+        "blocks": [
+          {
+            "h": 52,
+            "y": 164
+          }
+        ]
+      },
+      "expected": {
+        "large_title_blocks": 1
+      },
+      "tolerance": 0,
+      "unit": "blocks",
+      "detail": "large = ink band height >= 40 px and width >= 80 px in the top 200 dp",
+      "boxes": [
+        {
+          "x0": 47,
+          "y0": 164,
+          "x1": 490,
+          "y1": 215,
+          "label": "block 52px"
+        }
+      ]
+    },
+    {
+      "id": "wifi.switch_accent",
+      "surface": "settings-wifi",
+      "name": "switch track/thumb is accent #0050EF (+/-20) when ON",
+      "status": "PASS",
+      "measured": {
+        "on": true,
+        "track_rgb": [
+          0,
+          80,
+          239
+        ],
+        "track_delta": [
+          0,
+          0,
+          0
+        ],
+        "thumb_rgb": [
+          255,
+          255,
+          255
+        ],
+        "thumb_delta": 255
+      },
+      "expected": {
+        "track_rgb": [
+          0,
+          80,
+          239
+        ]
+      },
+      "tolerance": {
+        "per_channel": 20
+      },
+      "unit": "rgb",
+      "detail": "track = modal colour of the switch component; thumb = white centre",
+      "boxes": [
+        {
+          "x0": 596,
+          "y0": 616,
+          "x1": 680,
+          "y1": 667,
+          "label": "track (0, 80, 239) d=0"
+        }
+      ]
+    },
+    {
+      "id": "wifi.no_rounded_cards",
+      "surface": "settings-wifi",
+      "name": "no >90%-wide group card with a corner radius >8 dp",
+      "status": "PASS",
+      "measured": {
+        "cards": [
+          {
+            "color": [
+              36,
+              46,
+              47
+            ],
+            "x0": 26,
+            "x1": 693,
+            "y0": 344,
+            "y1": 497,
+            "width_frac": 0.9278,
+            "radius_px": 0,
+            "radius_dp": 0.0,
+            "violates": false
+          },
+          {
+            "color": [
+              36,
+              46,
+              47
+            ],
+            "x0": 26,
+            "x1": 693,
+            "y0": 787,
+            "y1": 1279,
+            "width_frac": 0.9278,
+            "radius_px": 0,
+            "radius_dp": 0.0,
+            "violates": false
+          }
+        ],
+        "violations": 0
+      },
+      "expected": {
+        "violations": 0
+      },
+      "tolerance": 0,
+      "unit": "cards",
+      "detail": "radius = rows from the card top until the left edge reaches its widest point",
+      "boxes": [
+        {
+          "x0": 26,
+          "y0": 344,
+          "x1": 693,
+          "y1": 497,
+          "label": "92.8% r=0.0dp"
+        },
+        {
+          "x0": 26,
+          "y0": 787,
+          "x1": 693,
+          "y1": 1279,
+          "label": "92.8% r=0.0dp"
+        }
+      ]
+    },
+    {
+      "id": "ac.focus",
+      "surface": "action-centre",
+      "name": "panel is our activity (window focus)",
+      "status": "PASS",
+      "measured": {
+        "focus": "Window{c2795d7 u0 org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreActivity}"
+      },
+      "expected": {
+        "focus": "org.ztmetro.actioncentre"
+      },
+      "tolerance": 0,
+      "unit": "",
+      "detail": "dumpsys window mCurrentFocus at capture time",
+      "boxes": []
+    },
+    {
+      "id": "ac.status_row",
+      "surface": "action-centre",
+      "name": "top 50 dp status row has non-black pixels",
+      "status": "PASS",
+      "measured": {
+        "nonblack_px": 2318
+      },
+      "expected": {
+        "nonblack_px": ">=100"
+      },
+      "tolerance": 0,
+      "unit": "px",
+      "detail": "tile pixels inside the band are excluded",
+      "boxes": [
+        {
+          "x0": 0,
+          "y0": 0,
+          "x1": 719,
+          "y1": 81,
+          "label": "status 2318px"
+        }
+      ]
+    },
+    {
+      "id": "ac.tiles_4x2",
+      "surface": "action-centre",
+      "name": "exactly 8 action tiles in a 4x2 grid",
+      "status": "PASS",
+      "measured": {
+        "tiles": 8,
+        "columns": 4,
+        "rows": 2
+      },
+      "expected": {
+        "tiles": 8,
+        "columns": 4,
+        "rows": 2
+      },
+      "tolerance": 0,
+      "unit": "tiles",
+      "detail": "accent #0050EF or off #1F1F1F fills, w/h >= 100 px",
+      "boxes": [
+        {
+          "x0": 7,
+          "y0": 81,
+          "x1": 178,
+          "y1": 194,
+          "label": "tile 1"
+        },
+        {
+          "x0": 184,
+          "y0": 81,
+          "x1": 355,
+          "y1": 194,
+          "label": "tile 2"
+        },
+        {
+          "x0": 361,
+          "y0": 81,
+          "x1": 532,
+          "y1": 194,
+          "label": "tile 3"
+        },
+        {
+          "x0": 538,
+          "y0": 81,
+          "x1": 709,
+          "y1": 194,
+          "label": "tile 4"
+        },
+        {
+          "x0": 7,
+          "y0": 200,
+          "x1": 178,
+          "y1": 313,
+          "label": "tile 5"
+        },
+        {
+          "x0": 184,
+          "y0": 200,
+          "x1": 355,
+          "y1": 313,
+          "label": "tile 6"
+        },
+        {
+          "x0": 361,
+          "y0": 200,
+          "x1": 532,
+          "y1": 313,
+          "label": "tile 7"
+        },
+        {
+          "x0": 538,
+          "y0": 200,
+          "x1": 709,
+          "y1": 313,
+          "label": "tile 8"
+        }
+      ]
+    },
+    {
+      "id": "ac.tiles_square",
+      "surface": "action-centre",
+      "name": "action tiles follow the ztmetro ratio 1.50 (+/-0.06) (85.75 x 57 dp)",
+      "status": "PASS",
+      "measured": {
+        "worst_ratio": 1.509,
+        "worst_ratio_delta": 0.009,
+        "sizes_dp": [
+          "105.8x70.2",
+          "105.8x70.2",
+          "105.8x70.2",
+          "105.8x70.2",
+          "105.8x70.2",
+          "105.8x70.2",
+          "105.8x70.2",
+          "105.8x70.2"
+        ]
+      },
+      "expected": {
+        "w_h_ratio": "1.50 +/-0.06"
+      },
+      "tolerance": 0.05,
+      "unit": "ratio",
+      "detail": "w/h of the measured tile boxes (tokens: 85.75 x 57)",
+      "boxes": [
+        {
+          "x0": 7,
+          "y0": 81,
+          "x1": 178,
+          "y1": 194,
+          "label": "tile 1"
+        },
+        {
+          "x0": 184,
+          "y0": 81,
+          "x1": 355,
+          "y1": 194,
+          "label": "tile 2"
+        },
+        {
+          "x0": 361,
+          "y0": 81,
+          "x1": 532,
+          "y1": 194,
+          "label": "tile 3"
+        },
+        {
+          "x0": 538,
+          "y0": 81,
+          "x1": 709,
+          "y1": 194,
+          "label": "tile 4"
+        },
+        {
+          "x0": 7,
+          "y0": 200,
+          "x1": 178,
+          "y1": 313,
+          "label": "tile 5"
+        },
+        {
+          "x0": 184,
+          "y0": 200,
+          "x1": 355,
+          "y1": 313,
+          "label": "tile 6"
+        },
+        {
+          "x0": 361,
+          "y0": 200,
+          "x1": 532,
+          "y1": 313,
+          "label": "tile 7"
+        },
+        {
+          "x0": 538,
+          "y0": 200,
+          "x1": 709,
+          "y1": 313,
+          "label": "tile 8"
+        }
+      ]
+    },
+    {
+      "id": "ac.tile_active_fill",
+      "surface": "action-centre",
+      "name": "active tile fill is #0050EF",
+      "status": "PASS",
+      "measured": {
+        "active_tiles": 4,
+        "active_rgb": [
+          [
+            0,
+            80,
+            239
+          ],
+          [
+            0,
+            80,
+            239
+          ],
+          [
+            0,
+            80,
+            239
+          ],
+          [
+            0,
+            80,
+            239
+          ]
+        ]
+      },
+      "expected": {
+        "active_tiles": ">=1",
+        "rgb": [
+          0,
+          80,
+          239
+        ]
+      },
+      "tolerance": {
+        "per_channel": 10
+      },
+      "unit": "tiles",
+      "detail": "modal fill per tile",
+      "boxes": [
+        {
+          "x0": 7,
+          "y0": 81,
+          "x1": 178,
+          "y1": 194,
+          "label": "tile 1"
+        },
+        {
+          "x0": 184,
+          "y0": 81,
+          "x1": 355,
+          "y1": 194,
+          "label": "tile 2"
+        },
+        {
+          "x0": 361,
+          "y0": 81,
+          "x1": 532,
+          "y1": 194,
+          "label": "tile 3"
+        },
+        {
+          "x0": 538,
+          "y0": 81,
+          "x1": 709,
+          "y1": 194,
+          "label": "tile 4"
+        },
+        {
+          "x0": 7,
+          "y0": 200,
+          "x1": 178,
+          "y1": 313,
+          "label": "tile 5"
+        },
+        {
+          "x0": 184,
+          "y0": 200,
+          "x1": 355,
+          "y1": 313,
+          "label": "tile 6"
+        },
+        {
+          "x0": 361,
+          "y0": 200,
+          "x1": 532,
+          "y1": 313,
+          "label": "tile 7"
+        },
+        {
+          "x0": 538,
+          "y0": 200,
+          "x1": 709,
+          "y1": 313,
+          "label": "tile 8"
+        }
+      ]
+    },
+    {
+      "id": "lock.single_clock",
+      "surface": "lock",
+      "name": "only one large clock glyph block",
+      "status": "PASS",
+      "measured": {
+        "large_blocks": 1,
+        "block_heights_px": [
+          109
+        ],
+        "clock_height_dp": 67.1
+      },
+      "expected": {
+        "large_blocks": 1
+      },
+      "tolerance": 0,
+      "unit": "blocks",
+      "detail": "large = white ink band >= 48 dp tall (clock glyphs, not date/notification)",
+      "boxes": [
+        {
+          "x0": 38,
+          "y0": 840,
+          "x1": 389,
+          "y1": 948,
+          "label": "109px"
+        }
+      ]
+    },
+    {
+      "id": "lock.no_status_text",
+      "surface": "lock",
+      "name": "no status-row text in the top 40 dp",
+      "status": "PASS",
+      "measured": {
+        "light_px": 0,
+        "bbox": null
+      },
+      "expected": {
+        "light_px": 0
+      },
+      "tolerance": {
+        "max": 30
+      },
+      "unit": "px",
+      "detail": "light text/icons on the lock wallpaper",
+      "boxes": [
+        {
+          "x0": 0,
+          "y0": 0,
+          "x1": 719,
+          "y1": 65,
+          "label": "top 40 dp"
+        }
+      ]
+    },
+    {
+      "id": "volume.panel_visible",
+      "surface": "volume",
+      "name": "volume panel appears in the lower third",
+      "status": "FAIL",
+      "measured": {
+        "panel": "absent"
+      },
+      "expected": {
+        "panel": "visible"
+      },
+      "tolerance": 0,
+      "unit": "",
+      "detail": "no pale-cyan or accent slider component on the right",
+      "boxes": []
+    },
+    {
+      "id": "volume.panel_black",
+      "surface": "volume",
+      "name": "panel background is #000000 (>=30% of the blob, slider colours excluded)",
+      "status": "SKIP",
+      "measured": {
+        "panel": "absent"
+      },
+      "expected": {
+        "black_fraction": ">=0.30"
+      },
+      "tolerance": 0,
+      "unit": "fraction",
+      "detail": "nothing to measure",
+      "boxes": []
+    }
+  ],
+  "summary": {
+    "PASS": 26,
+    "FAIL": 1,
+    "SKIP": 1,
+    "total": 28
+  },
+  "diffs": {},
+  "sequence": [
+    "WAKEUP, unlock if keyguard, collapse shade",
+    "KEYCODE_HOME; wait 3 s",
+    "KEYCODE_BACK (Start is a no-op; app list returns to Start); wait 0.5 s",
+    "swipe 360 520 -> 360 1120 (scroll Start to the top); wait 0.6 s",
+    "input swipe 650 700 120 700 300 (Start -> app list); wait 2 s",
+    "am start -a android.settings.SETTINGS; wait 4 s",
+    "am start -a android.settings.WIFI_SETTINGS; wait 3 s",
+    "am start -a android.intent.action.MAIN -c android.intent.category.APP_CALENDAR; wait 2 s",
+    "input swipe 360 6 360 400 250 (top-edge strip); wait 2 s",
+    "KEYCODE_SLEEP; wait 1.5 s; KEYCODE_WAKEUP; wait 2 s",
+    "WAKEUP + unlock (required before volume: keyguard would hide Settings)",
+    "am start -a android.settings.SETTINGS; wait 4 s",
+    "KEYCODE_VOLUME_UP; wait 2 s",
+    "KEYCODE_BACK"
+  ]
+}

@@ -9,18 +9,25 @@ Adreno 308, **2 GB RAM**, 16 GB eMMC, 720×1280). LineageOS for microG publishes
 `lineage-23.2` builds for it (Android 16), so the Android 16 + microG base is real,
 not hypothetical.
 
-> **Status (2026-11-16): the stack is installed on a real device; screen verification is
-> partial.**
-> LineageOS-for-microG 23.2 on `ugglite` with Magisk + Zygisk + LSPosed/Vector: a
-> framework RRO, a SystemUI RRO, a Settings RRO, a system font module (Selawik 1.0.0 →
-> Open Sans 1.1.0), the Start launcher, a Settings header module, a keyguard module, a
-> status-strip RRO pair and a Metro Action Centre APK. **3 of 10 blocks are verified on
-> screen, 1 is partial and 6 are host-verified only** — the coverage table, the exact
-> resource names, every command and the artifact sizes are in
-> [`docs/18-coverage-and-build.md`](docs/18-coverage-and-build.md).
-> Labels: `[F]` = verified fact with a source link, `[E]` = estimate or engineering
-> judgement, `[?]` = not verified / needs an on-device test. Sources are collected in
-> [`sources.md`](sources.md).
+> **Status (2026-11-16, integration build): the shell runs on the device end to end.**
+> LineageOS-for-microG 23.2 (`ugglite`) + Magisk + Zygisk + LSPosed/Vector, with:
+> framework/SystemUI/Settings/status/statusbar-icons/volume-power-toast RROs (10 overlays),
+> Open Sans font module, **Metro Start with live tiles and WP glyphs**, **app list**,
+> **Metro Action Centre** (shade gesture over any app), **Metro lock overlay**
+> (`TYPE_ACCESSIBILITY_OVERLAY`, above the keyguard), **own 28 dp status strip**
+> (glyphs left, clock right, no green battery), **own IME** per `ztmetro/KEYBOARD.md`,
+> and a Settings header/rows/accents module.
+>
+> **Automated verification**: `scripts/ux-verify.py` captures 7 surfaces and runs 28
+> measured checks (`PASS/FAIL` with numbers + annotated screenshots);
+> **26 PASS / 1 FAIL / 1 SKIP** on the integration build (fails are check calibration,
+> see `docs/24-auto-verify.md`). **One command** reproduces the stack:
+> `scripts/ztmetro-conductor.sh` (build → publish → apply → verify → optional factory).
+>
+> **Known platform boundaries** (measured, documented): the app→home transition is owned
+> by SystemUI `DefaultTransitionHandler` (`docs/26-transition-track.md`); a third-party
+> recents app cannot list/dismiss tasks without a ROM-side priv-app + config change
+> (`docs/22-prior-art-launchers.md`, `docs/23-theme-factory.md`).
 
 ---
 
@@ -44,7 +51,10 @@ repo/scripts/build-font-module.sh                               # Open Sans Magi
 repo/scripts/build-header-module.sh                             # Settings header (LSPosed)
 repo/scripts/build-launcher.sh                                  # Start
 repo/scripts/build-actioncentre.sh                              # Action Centre
-repo/scripts/build-keyguard-module.sh                           # lock screen (LSPosed)
+repo/scripts/build-keyguard-module.sh                           # lock screen (LSPosed, superseded by the overlay)
+repo/scripts/build-ime.sh                                       # ztMetro keyboard
+repo/scripts/build-overlay-statusbar-icons.sh                    # WP status-bar glyph set
+repo/scripts/build-overlay-systemui-extra.sh                    # volume/power/toast
 
 # install the two Magisk modules, then reboot
 adb push repo/artifacts/ztmetro-overlays-1.0.0.zip /sdcard/
