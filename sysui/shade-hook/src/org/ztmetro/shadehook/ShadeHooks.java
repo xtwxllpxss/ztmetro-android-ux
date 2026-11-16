@@ -71,23 +71,36 @@ final class ShadeHooks {
     private static void hookPanelStateChanged(final ClassLoader cl) {
         try {
             Class<?> panel = XposedHelpers.findClass(NPCV, cl);
-            Method method = panel.getDeclaredMethod("onPanelStateChanged", int.class);
-            method.setAccessible(true);
-            XposedBridge.hookMethod(method, new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) {
-                    try {
-                        int state = (Integer) param.args[0];
-                        if (state != STATE_OPENING) {
-                            return;
-                        }
-                        ShadeRouter.onShadeOpening(param.thisObject);
-                    } catch (Throwable t) {
-                        SLog.once(TAG, "hook:onPanelStateChanged", t);
-                    }
+            int hooked = 0;
+            for (final java.lang.reflect.Method m : panel.getDeclaredMethods()) {
+                if (!"onPanelStateChanged".equals(m.getName())) {
+                    continue;
                 }
-            });
-            SLog.info(TAG, "hooked " + NPCV + "#onPanelStateChanged(int)");
+                Class<?>[] types = m.getParameterTypes();
+                if (types.length < 1 || types[0] != int.class) {
+                    continue;
+                }
+                m.setAccessible(true);
+                XposedBridge.hookMethod(m, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            int state = (Integer) param.args[0];
+                            if (state != STATE_OPENING) {
+                                return;
+                            }
+                            ShadeRouter.onShadeOpening(param.thisObject);
+                        } catch (Throwable t) {
+                            SLog.once(TAG, "hook:onPanelStateChanged", t);
+                        }
+                    }
+                });
+                hooked++;
+            }
+            if (hooked == 0) {
+                throw new NoSuchMethodException(NPCV + "#onPanelStateChanged(int...) none found");
+            }
+            SLog.info(TAG, "hooked " + NPCV + "#onPanelStateChanged x" + hooked);
         } catch (Throwable t) {
             SLog.once(TAG, "hook:" + NPCV + "#onPanelStateChanged", t);
         }
