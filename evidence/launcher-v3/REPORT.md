@@ -19,7 +19,7 @@ those tokens unchanged.
 |---|---|
 | APK | [`ztmetro-start.apk`](ztmetro-start.apk) |
 | size | **53 526 bytes** (52.3 KiB) < 3 MiB |
-| sha256 | `411df5abc7a71aa80ac43de4ec4f6ea73f711fc70304a4710eab81794f90aee9` |
+| sha256 | `1fb9104bd3696076e0bbb2cdeba993b0d022ecadba15e0f422a7d9ab6db033ab` |
 | package | `org.ztmetro.start` (versionCode 3, versionName 3.0) |
 | min / target | 29 / **36** |
 | signing | v3, cert SHA-256 `5f05e8e4…6457831` — the v1/v2 key, so `-r` updates in place |
@@ -43,7 +43,9 @@ Static proof: [`aapt2-badging.txt`](aapt2-badging.txt),
   even cells; small tiles fill the four corners of one 2×2 block before the next block
   (so they never trail along a row). The seed is 15 tiles plus a 4×2 appearance tile;
   at 360×640 that packs to 10 rows / 558 dp, which fits the 576 dp area under the
-  status strip and above the nav bar (simulated from the real packer).
+  status strip and above the nav bar (simulated from the real packer). The packer
+  reserves the right-centre 2×2 cell for the circled arrow, so the arrow floats in
+  a black pocket instead of covering an app glyph (as in the reference frame).
 - **Tiles are flat WP rectangles**: no corner radius, no elevation, no ripple, no
   Material surface. Tile colour is a deterministic package pick from the ztmetro
   palette (cobalt default and weighted, plus lime/green/emerald/teal/cyan/magenta/
@@ -129,7 +131,7 @@ No token number is hand-duplicated in Java; the v3 launcher extras are generated
 | build | `scripts/build-launcher.sh` exit 0 on hermes-ubuntu, JDK 17, SDK 36 |
 | badging | `org.ztmetro.start`, versionCode **3**, versionName **3.0**, label `ztmetro start`, HOME, notification-listener |
 | manifest | HOME/DEFAULT activity; listener service + `BIND_NOTIFICATION_LISTENER_SERVICE`; **0 `uses-permission`** |
-| dex | `classes.dex` 73 728 B; StartActivity, MetroTileView, MetroGridView, MetroPager, MetroCircleGlyphView, MetroSectionHeaderView, MetroListRowView, TileArt, TileStore, listener all present; **0 androidx** |
+| dex | `classes.dex` 73 844 B; StartActivity, MetroTileView, MetroGridView, MetroPager, MetroCircleGlyphView, MetroSectionHeaderView, MetroListRowView, TileArt, TileStore, listener all present; **0 androidx** |
 | resources | `metro_tile_gap` 7 dp, `metro_start_margin` 14 dp, `metro_v3_arrow` 48 dp, `metro_v3_icon_fraction` 44%, palette colours and `TextAppearance.Metro.SectionHeader` compiled |
 | size | **53 526 B** < 3 MiB |
 | signature | `apksigner verify` passes; cert `5f05e8e4…6457831`, same as v1/v2 |
@@ -221,8 +223,9 @@ adb exec-out screencap -p > tile-menu.png
    crimson likely (2/26 each) but the screenshots depend on the actual packages.
 4. **Small tiles have no label** (ztmetro reference); this is a deliberate deviation
    from the literal "label on every tile" sentence in the brief.
-5. **The circled arrow overlays a tile** because the seeded Start is dense; it is a
-   white outline on the tile colour, not a floating button with a background.
+5. **The arrow pocket is fixed at rows 4–5.** On a much taller/scrollable grid the
+   reserved black 2×2 cell scrolls with the content while the arrow is fixed; on the
+   720×1280 target the seeded 10 rows fit without scrolling, so they align.
 6. **No live text.** The optional listener only drives the upper-right count; zero live
    content remains when notification access is not granted. Granting it still does not
    add WP live titles.

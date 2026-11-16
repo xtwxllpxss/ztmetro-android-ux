@@ -162,6 +162,13 @@ Use rules, stated as facts from the code: **Light** = the one huge number on a s
 content (tile labels, captions, notification bodies); **Semibold** = the ALL-CAPS application name,
 section headings and quick-action labels. Font stacks: `zrnmetrocore.h:45-48`.
 
+> **Applied to the port (2026-11-16):** the Settings page header module now renders the WP proportions
+> instead of the C shell's: title **58 sp** (16.1 %W), caps **15 sp** with 0.08 em tracking, caps→title
+> ink gap **29 dp**, block min-height 128 dp, no subtitle line. Tokens `type.header.*`
+> (`design/tokens/ztmetro.tokens.json`) and `settings/header-module` carry it; APK
+> `709f754b1b31143f32cc35aec025dc275c37a19a11547f101166d3953b863958`. The ramp above stays the C
+> shell's baseline — only the Android page header deviates, and only toward the WP measurements.
+
 ## 7. Colour rules
 
 - Accent is one user-chosen colour, default **cobalt `#0050EF`** (`ztmetro.c:2983`); the 20-name palette at `ztmetro.c:2415-2422` is the WP8 accent set verbatim (lime `#A4C400`, green `#60A917`, emerald `#008A00`, teal `#00ABA9`, cyan `#1BA1E2`, cobalt `#0050EF`, indigo `#6A00FF`, violet `#AA00FF`, pink `#F472D0`, magenta `#D80073`, crimson `#A20025`, red `#E51400`, orange `#FA6800`, amber `#F0A30A`, yellow `#E3C800`, brown `#825A2C`, olive `#6D8764`, steel `#647687`, mauve `#76608A`, taupe `#87794E`) [F].
@@ -241,9 +248,9 @@ fade) is [E] here — no frame, no guidebook read.
 
 ## 11. The eight numbers that are off
 
-1. Page-title type: **13.3 %W vs WP 16.3 %W — 18 % small** (§2, §6).
-2. Caps app-name: **3.19 %W vs WP ≈5.4 %W — 41 % small**; the caps:title ratio is right, both terms are small (§2).
-3. Header gap caps→title: **10.75 dp vs 39 dp @480 (29 dp @360)** — the two header lines are too close (§2).
+1. Page-title type: **13.3 %W vs WP 16.3 %W — 18 % small** (§2, §6). *Applied 2026-11-16: 58 sp in the Settings header module (APK 709f754b); device frame still owed.*
+2. Caps app-name: **3.19 %W vs WP ≈5.4 %W — 41 % small**; the caps:title ratio is right, both terms are small (§2). *Applied 2026-11-16: 15 sp + 0.08 em tracking.*
+3. Header gap caps→title: **10.75 dp vs 39 dp @480 (29 dp @360)** — the two header lines are too close (§2). *Applied 2026-11-16: 14 dp margin + font leading ≈ 29 dp ink gap.*
 4. Start side margin: **3.89 %W vs 4.40 %W** (−12 %); gutter **1.94 %W vs 1.60 %W** (+21 %) — margins tight, gutters wide (§1).
 5. Accent renders `#0049CB` and on-tile ink `#FFE8D9`, tokens say `#0050EF` / `#FFFFFF` (§7).
 6. No 72 dp app bar: bottom chrome is a 40 dp nav bar, actions live in a top bar (§4).

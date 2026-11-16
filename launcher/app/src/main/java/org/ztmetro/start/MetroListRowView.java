@@ -1,10 +1,10 @@
 package org.ztmetro.start;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.text.TextPaint;
 import android.text.TextUtils;
@@ -22,8 +22,12 @@ final class MetroListRowView extends View {
     private final Paint squarePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint glyphPaint = new Paint(Paint.ANTI_ALIAS_FLAG
             | Paint.FILTER_BITMAP_FLAG);
+    private final Paint colorPaint = new Paint(Paint.ANTI_ALIAS_FLAG
+            | Paint.FILTER_BITMAP_FLAG);
     private final Paint pressPaint = new Paint();
     private final TextPaint labelPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+    private final TextPaint letterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+    private final RectF glyphBox = new RectF();
 
     private final int sidePad;
     private final int iconPx;
@@ -34,7 +38,7 @@ final class MetroListRowView extends View {
     private final int rightReserve;
 
     private TileStore.App app;
-    private Bitmap glyph;
+    private TileArt.Art glyph;
     private CharSequence label = "";
     private float labelX;
     private int squareTop;
@@ -59,12 +63,16 @@ final class MetroListRowView extends View {
         labelPaint.setColor(title.color);
         squarePaint.setColor(accent);
         glyphPaint.setColor(Color.WHITE);
+        letterPaint.setTextSize(Math.max(1f, iconPx * 0.48f));
+        letterPaint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
+        letterPaint.setColor(Color.WHITE);
+        letterPaint.setTextAlign(Paint.Align.CENTER);
         setWillNotDraw(false);
     }
 
     void setApp(TileStore.App app) {
         this.app = app;
-        glyph = app == null ? null : art.glyph(app.component, glyphPx);
+        glyph = app == null ? null : art.art(app.component, glyphPx);
         if (getWidth() > 0) {
             rebuildLabel();
         }
@@ -76,6 +84,9 @@ final class MetroListRowView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         labelX = sidePad + iconPx + labelGap;
         squareTop = Math.max(0, (h - iconPx) / 2);
+        float glyphLeft = sidePad + (iconPx - glyphPx) / 2f;
+        float glyphTop = squareTop + (iconPx - glyphPx) / 2f;
+        glyphBox.set(glyphLeft, glyphTop, glyphLeft + glyphPx, glyphTop + glyphPx);
         Paint.FontMetrics metrics = labelPaint.getFontMetrics();
         baseline = (h - metrics.bottom - metrics.top) / 2f;
         rebuildLabel();
@@ -118,10 +129,18 @@ final class MetroListRowView extends View {
         }
         canvas.drawRect(sidePad, squareTop, sidePad + iconPx, squareTop + iconPx,
                 squarePaint);
-        if (glyph != null) {
-            float left = sidePad + (iconPx - glyphPx) / 2f;
-            float top = squareTop + (iconPx - glyphPx) / 2f;
-            canvas.drawBitmap(glyph, left, top, glyphPaint);
+        if (glyph != null && glyph.type == TileArt.TYPE_WHITE) {
+            canvas.drawBitmap(glyph.bitmap, null, glyphBox, glyphPaint);
+        } else if (glyph != null && glyph.type == TileArt.TYPE_COLOR) {
+            canvas.drawBitmap(glyph.bitmap, null, glyphBox, colorPaint);
+        } else if (glyph != null && glyph.type == TileArt.TYPE_SYSTEM) {
+            SystemGlyphs.draw(canvas, glyph.systemKind, glyphBox);
+        } else if (app != null) {
+            Paint.FontMetrics metrics = letterPaint.getFontMetrics();
+            float centerY = squareTop + iconPx / 2f;
+            float baseline = centerY - (metrics.ascent + metrics.descent) / 2f;
+            canvas.drawText(TileArt.firstLetter(app.label),
+                    sidePad + iconPx / 2f, baseline, letterPaint);
         }
         canvas.drawText(label, 0, label.length(), labelX, baseline, labelPaint);
     }

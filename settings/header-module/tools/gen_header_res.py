@@ -58,11 +58,20 @@ def module_spec(tokens):
 
     return {
         "header_height_dp": (
-            tokens["metrics"]["header_height_dp"],
-            "metrics.header_height_dp (%s; ZMC_HEADER_H 104) — the ztmeteo page "
-            "block: caps label + 48 sp title + subtitle, status bar excluded (the "
-            "status-bar inset is added on the homepage only, see HeaderBinder)"
-            % tokens["metrics"]["header_height_dp"],
+            128,
+            "module spec: 128 dp holds the WP-proportioned block — 8 dp top pad + "
+            "15 sp caps line (~20 dp) + the 29 dp caps-to-title ink gap + 58 sp title "
+            "line (~70 dp) + 8 dp bottom pad.  metrics.header_height_dp (104, ZMC_HEADER_H) "
+            "is the C shell's block at its own 48 pt title and stays the token of record; "
+            "the Android page header is taller because its type is WP-sized "
+            "(docs/17-wp-design-reference.md §2)",
+        ),
+        "label_to_title_dp": (
+            14,
+            "module spec: layout margin between the caps line and the title line.  The "
+            "ink gap is margin + the caps line's descent (~4 dp) + the title's "
+            "ascent-above-cap (~11 dp at 58 sp) = 29 dp, the WP value measured on F3 "
+            "(docs/17 §2: 17 px = 39 dp at 480 = 29 dp at 360)",
         ),
         "header_title_sp": (
             header["title_size_sp"],
@@ -179,6 +188,8 @@ def build(tokens):
         "  <!-- %s -->\n"
         '  <dimen name="metro_header_title_size">%ssp</dimen>\n'
         "  <!-- %s -->\n"
+        '  <dimen name="metro_header_label_to_title">%sdp</dimen>\n'
+        "  <!-- %s -->\n"
         '  <dimen name="metro_header_subtitle_size">%ssp</dimen>\n'
         "  <!-- %s -->\n"
         '  <dimen name="metro_header_padding_h">%sdp</dimen>\n'
@@ -192,6 +203,7 @@ def build(tokens):
     ) % (spec["header_height_dp"][1], num(spec["header_height_dp"][0]),
          spec["header_label_sp"][1], num(spec["header_label_sp"][0]),
          spec["header_title_sp"][1], num(spec["header_title_sp"][0]),
+         spec["label_to_title_dp"][1], num(spec["label_to_title_dp"][0]),
          spec["subtitle_sp"][1], num(spec["subtitle_sp"][0]),
          spec["padding_h_dp"][1], num(spec["padding_h_dp"][0]),
          spec["bottom_bar_height_dp"][1], num(spec["bottom_bar_height_dp"][0]),

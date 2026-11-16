@@ -19,5 +19,13 @@ LOG=/data/local/tmp/ztmetro-overlays.log
   for pkg in org.ztmetro.overlay.framework org.ztos.overlay.systemui org.ztos.overlay.settings org.ztos.overlay.status.systemui; do
     cmd overlay enable --user 0 "$pkg" 2>&1 || echo "enable failed: $pkg"
   done
+  # Keep one accent: SystemUI re-applies its Monet overlays at boot. They target the
+  # android package, so push our framework overlay above them AND disable them (belt and
+  # braces: priority wins while SystemUI re-adds them, disabling removes the tint source).
+  cmd overlay set-priority org.ztmetro.overlay.framework highest 2>&1 || true
+  for pkg in com.android.systemui:accent com.android.systemui:dynamic; do
+    cmd overlay disable "$pkg" 2>/dev/null && echo "disabled monet: $pkg"
+  done
+  cmd overlay set-priority org.ztmetro.overlay.framework highest 2>&1 || true
   cmd overlay list 2>/dev/null | grep -E "ztmetro|ztos" || true
 } >> "$LOG" 2>&1

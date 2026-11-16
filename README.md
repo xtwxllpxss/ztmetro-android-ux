@@ -38,6 +38,7 @@ the fastboot checks and the `super_empty.img` warning, is
 repo/scripts/build-overlay-framework.sh --out /tmp/ztmetro-fw   # android RRO
 repo/scripts/build-overlay-settings.sh                          # Settings RRO
 repo/scripts/build-overlay-sysui.sh                             # SystemUI RRO
+repo/scripts/build-overlay-status.sh                            # status-strip RRO pair
 repo/scripts/build-overlay-module.sh                            # all 5 overlay APKs in one zip
 repo/scripts/build-font-module.sh                               # Open Sans Magisk module
 repo/scripts/build-header-module.sh                             # Settings header (LSPosed)
@@ -68,7 +69,8 @@ adb shell su -c 'killall com.android.systemui'
 
 Verify each step with the table in [`docs/18`](docs/18-coverage-and-build.md) §3.5, and
 read §6 before trusting any status claim: several hand-off reports predate the device
-pass, and the SystemUI RRO is currently **not** visible on screen.
+pass, and the SystemUI RRO's **square-tile** pass is not visible on screen (the 2025
+Compose shade ignores the tile-radius resources; only the 4 dp gaps took effect).
 
 **What each piece is, and what it does not reach:** framework accent/typography and
 control styles are inherited by stock apps; Settings and SystemUI override their own

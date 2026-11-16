@@ -1,0 +1,33 @@
+Square QS tiles in the 2025 shade — the only real fix (SystemUI code, not an RRO).
+
+The shade tiles are drawn by Compose with compile-time Dp radii; no resource feeds
+them. Change these three constants and rebuild SystemUI:
+
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/CommonTile.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/CommonTile.kt
+@@ -422,7 +422,7 @@ object CommonTileDefaults {
+     val TileEndPadding = 12.dp
+     val TileDualTargetEndPadding = 8.dp
+     val TileArrangementPadding = 6.dp
+-    val InactiveCornerRadius = 50.dp
++    val InactiveCornerRadius = 0.dp
+     val TileLabelBlurWidth = 32.dp
+     const val TILE_MARQUEE_ITERATIONS = 1
+     const val TILE_INITIAL_DELAY_MILLIS = 2000
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt
+@@ -479,8 +479,8 @@ private object TileDefaults {
+     val ActiveIconCornerRadius = 16.dp
+-    val ActiveTileCornerRadius = 24.dp
++    val ActiveIconCornerRadius = 0.dp
++    val ActiveTileCornerRadius = 0.dp
+
+(optional, edit mode) EditTile.kt:340 uses RoundedCornerShape(26.dp); EditTile.kt:695/828/833
+use EditModeTileDefaults.GridBackgroundCornerRadius.
+
+Verification after flashing the rebuilt SystemUI: the same measurement script
+(evidence/qs-square/forensics/measure-shade.py) must report r ~= 0 for both the
+inactive and the active tile; today it reports 35.5 dp and 23.7 dp.
+
+Risk: rebuilding and replacing SystemUI is a much heavier and riskier change than an
+RRO (platform signature / privapp permissions); it is not attempted here.

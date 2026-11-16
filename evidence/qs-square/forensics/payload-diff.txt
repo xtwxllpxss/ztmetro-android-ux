@@ -1,0 +1,5 @@
+old payload 9151c7f6f137296b187183c9fff5dad22241a1c9d22ac12774af0eb50ce01c2e
+new payload 5ab8c73aef25bcfe67d28df7e620086d932fcdb1dc0924ad6c2d52efcf49f390
+
+aapt2 dump resources old vs new:
+IDENTICAL-RESOURCE-TABLE

@@ -32,6 +32,9 @@ final class MetroGridView extends ViewGroup implements MetroTileView.Listener {
         int bottom;
     }
 
+    private static final int ARROW_RESERVE_ROW = 4;
+    private static final int ARROW_RESERVE_COL = 4;
+
     private final ArrayList<TileStore.Tile> tiles = new ArrayList<>();
     private final ArrayList<Placement> placements = new ArrayList<>();
     private final int columns;
@@ -136,6 +139,13 @@ final class MetroGridView extends ViewGroup implements MetroTileView.Listener {
         placements.clear();
         rows = 0;
         ArrayList<boolean[]> occupied = new ArrayList<>();
+        // Keep the right-centre 2x2 cell free for the circled Start arrow. In
+        // the seeded layout this is the black pocket the arrow floats in, not
+        // a white outline on top of an app glyph.
+        if (!tiles.isEmpty()) {
+            ensureRows(occupied, ARROW_RESERVE_ROW + 2);
+            occupy(occupied, ARROW_RESERVE_ROW, ARROW_RESERVE_COL, 2, 2);
+        }
         for (TileStore.Tile tile : tiles) {
             int spanCols = tile.size == TileStore.SIZE_WIDE ? 4
                     : (tile.size == TileStore.SIZE_MEDIUM ? 2 : 1);

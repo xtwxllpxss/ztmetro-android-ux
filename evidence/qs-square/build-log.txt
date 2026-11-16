@@ -48,7 +48,7 @@ entries:      6817                     6 files
     resource 0x7f040004 style/TextAppearance.QS.TileLabel.Secondary
     resource 0x7f040005 style/TextAppearance.StatusBar.Expanded.Clock
     resource 0x7f040006 style/TextAppearance.StatusBar.Expanded.Date
-9151c7f6f137296b187183c9fff5dad22241a1c9d22ac12774af0eb50ce01c2e  ztmetro-systemui-rro.apk
+5ab8c73aef25bcfe67d28df7e620086d932fcdb1dc0924ad6c2d52efcf49f390  ztmetro-systemui-rro.apk
 /home/denis/ztux/qs2/build/out/ztmetro-systemui-rro.apk
 ** WARNING: connection is not using a post-quantum key exchange algorithm.
 ** This session may be vulnerable to "store now, decrypt later" attacks.

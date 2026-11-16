@@ -2,12 +2,14 @@
      from design/tokens/ztmetro.tokens.json and the module spec in that script.
      Do not edit by hand: run the generator instead. -->
 <resources>
-  <!-- metrics.header_height_dp (104; ZMC_HEADER_H 104) — the ztmeteo page block: caps label + 48 sp title + subtitle, status bar excluded (the status-bar inset is added on the homepage only, see HeaderBinder) -->
-  <dimen name="metro_header_height">104dp</dimen>
-  <!-- type.header.subtitle_size_sp (11.5) = type.ramp[caption_caps] (the caps app/page label above the title) -->
-  <dimen name="metro_header_label_size">11.5sp</dimen>
-  <!-- type.header.title_size_sp (48) = type.ramp[page_title] -->
-  <dimen name="metro_header_title_size">48sp</dimen>
+  <!-- module spec: 128 dp holds the WP-proportioned block — 8 dp top pad + 15 sp caps line (~20 dp) + the 29 dp caps-to-title ink gap + 58 sp title line (~70 dp) + 8 dp bottom pad.  metrics.header_height_dp (104, ZMC_HEADER_H) is the C shell's block at its own 48 pt title and stays the token of record; the Android page header is taller because its type is WP-sized (docs/17-wp-design-reference.md §2) -->
+  <dimen name="metro_header_height">128dp</dimen>
+  <!-- type.header.subtitle_size_sp (15) = type.ramp[caption_caps] (the caps app/page label above the title) -->
+  <dimen name="metro_header_label_size">15sp</dimen>
+  <!-- type.header.title_size_sp (58) = type.ramp[page_title] -->
+  <dimen name="metro_header_title_size">58sp</dimen>
+  <!-- module spec: layout margin between the caps line and the title line.  The ink gap is margin + the caps line's descent (~4 dp) + the title's ascent-above-cap (~11 dp at 58 sp) = 29 dp, the WP value measured on F3 (docs/17 §2: 17 px = 39 dp at 480 = 29 dp at 360) -->
+  <dimen name="metro_header_label_to_title">14dp</dimen>
   <!-- type.ramp[caption].size_sp_at_density_1x (12) -->
   <dimen name="metro_header_subtitle_size">12sp</dimen>
   <!-- module spec: 24 dp page margin for the header block and the flat preference rows (deliverable; note tokens.metrics.page_margin_dp is 16 dp for the C shell at 360 dp — the Settings page uses the wider Android margin so the 48 sp title is not edge-to-edge) -->

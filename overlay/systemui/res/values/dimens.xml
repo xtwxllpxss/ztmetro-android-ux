@@ -9,8 +9,16 @@
 -->
 <resources>
 
-    <!-- QS tiles: square, tighter Metro grid. Consumers in QSTileViewImpl.kt,
-         TileLayout.java, qs panels Compose. -->
+    <!-- QS tiles: square, tighter Metro grid.
+         Consumers (lineage-23.2 @ 797e4324):
+           qs_corner_radius  -> QSTileViewImpl.kt:1038,1056,1069 (View path) and
+                                res/drawable/qs_tile_background_shape.xml:19 — NOT read
+                                by the 2025 Compose tile (infinitegrid/Tile.kt).
+           qs_tile_margin_*  -> qs/panels/ui/compose/infinitegrid/InfiniteGridLayout.kt:106,
+                                129,130 (Compose, live) and TileLayout.java (View).
+           qs_tile_height/padding/text_size -> View path only; the Compose tile hard-codes
+                                TileHeight = 72.dp (CommonTile.kt:420) and MaterialTheme
+                                typography. See evidence/qs-square/REPORT.md. -->
     <dimen name="qs_corner_radius">0dp</dimen>
     <dimen name="qs_tile_height">68dp</dimen>
     <dimen name="qs_tile_padding">10dp</dimen>

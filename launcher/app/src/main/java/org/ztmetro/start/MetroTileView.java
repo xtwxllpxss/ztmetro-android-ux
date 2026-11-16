@@ -1,7 +1,6 @@
 package org.ztmetro.start;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
@@ -46,10 +45,11 @@ final class MetroTileView extends View {
     private final Paint fillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint glyphPaint = new Paint(Paint.ANTI_ALIAS_FLAG
             | Paint.FILTER_BITMAP_FLAG);
+    private final Paint colorPaint = new Paint(Paint.ANTI_ALIAS_FLAG
+            | Paint.FILTER_BITMAP_FLAG);
     private final TextPaint labelPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private final TextPaint letterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private final TextPaint countPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint gearPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF glyphRect = new RectF();
 
     private final int padPx;
@@ -64,7 +64,7 @@ final class MetroTileView extends View {
 
     private TileStore.Tile tile;
     private Listener listener;
-    private Bitmap glyph;
+    private TileArt.Art glyphArt;
     private StaticLayout labelLayout;
     private String letter = "?";
     private int baseColor;
@@ -170,7 +170,7 @@ final class MetroTileView extends View {
             pressedColor = TileArt.blend(baseColor, onAccent, 0.12f);
             setContentDescription(null);
         }
-        glyph = null;
+        glyphArt = null;
         labelLayout = null;
         if (getWidth() > 0) {
             buildArt();
@@ -199,7 +199,7 @@ final class MetroTileView extends View {
                 ? Math.min(padPx, Math.max(3, Math.round(height * 0.09f)))
                 : padPx;
         iconPx = Math.max(1, Math.round(Math.min(width, height) * iconFraction));
-        glyph = art.glyph(tile.component, iconPx);
+        glyphArt = art.art(tile.component, iconPx);
         // ztmetro centres the glyph horizontally in the upper part of the tile
         // and keeps the label bottom-left; small tiles carry the glyph only.
         int glyphLeft = (width - iconPx) / 2;
@@ -242,25 +242,13 @@ final class MetroTileView extends View {
     }
 
 
-    /** A white WP gear for the appearance/settings tile; no Android icon asset. */
-    private void drawAppearanceGlyph(Canvas canvas) {
-        float cx = glyphRect.centerX();
-        float cy = glyphRect.centerY();
-        float radius = glyphRect.width() * 0.26f;
-        gearPaint.setStyle(Paint.Style.STROKE);
-        gearPaint.setStrokeWidth(2f * getResources().getDisplayMetrics().density);
-        gearPaint.setStrokeCap(Paint.Cap.ROUND);
-        gearPaint.setColor(onAccent);
-        canvas.drawCircle(cx, cy, radius, gearPaint);
-        for (int i = 0; i < 8; i++) {
-            double angle = Math.PI * 2.0 * i / 8.0;
-            float inner = radius * 1.18f;
-            float outer = radius * 1.55f;
-            canvas.drawLine(cx + (float) Math.cos(angle) * inner,
-                    cy + (float) Math.sin(angle) * inner,
-                    cx + (float) Math.cos(angle) * outer,
-                    cy + (float) Math.sin(angle) * outer, gearPaint);
-        }
+    private void drawLetter(Canvas canvas) {
+        letterPaint.setTextSize(Math.max(1f, getHeight() * 0.40f));
+        Paint.FontMetrics metrics = letterPaint.getFontMetrics();
+        float textWidth = letterPaint.measureText(letter);
+        float left = glyphRect.centerX() - textWidth / 2f;
+        float baseline = glyphRect.top - metrics.ascent;
+        canvas.drawText(letter, left, baseline, letterPaint);
     }
 
     @Override
@@ -273,16 +261,15 @@ final class MetroTileView extends View {
         canvas.drawRect(0f, 0f, getWidth(), getHeight(), fillPaint);
 
         if (tile.appearance) {
-            drawAppearanceGlyph(canvas);
-        } else if (glyph != null) {
-            canvas.drawBitmap(glyph, null, glyphRect, glyphPaint);
+            SystemGlyphs.draw(canvas, SystemGlyphs.GEAR, glyphRect);
+        } else if (glyphArt != null && glyphArt.type == TileArt.TYPE_WHITE) {
+            canvas.drawBitmap(glyphArt.bitmap, null, glyphRect, glyphPaint);
+        } else if (glyphArt != null && glyphArt.type == TileArt.TYPE_COLOR) {
+            canvas.drawBitmap(glyphArt.bitmap, null, glyphRect, colorPaint);
+        } else if (glyphArt != null && glyphArt.type == TileArt.TYPE_SYSTEM) {
+            SystemGlyphs.draw(canvas, glyphArt.systemKind, glyphRect);
         } else {
-            letterPaint.setTextSize(Math.max(1f, getHeight() * 0.40f));
-            Paint.FontMetrics metrics = letterPaint.getFontMetrics();
-            float textWidth = letterPaint.measureText(letter);
-            float left = glyphRect.centerX() - textWidth / 2f;
-            float baseline = glyphRect.top - metrics.ascent;
-            canvas.drawText(letter, left, baseline, letterPaint);
+            drawLetter(canvas);
         }
 
         if (labelLayout != null) {

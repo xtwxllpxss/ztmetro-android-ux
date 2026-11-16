@@ -133,7 +133,7 @@ def main(argv=None):
     source.add_argument("--overlay-dir", help="overlay source tree (contains res/)")
     source.add_argument("--overlay-apk", help="built overlay APK")
     source.add_argument("--expected", help="TSV: overlay<TAB>type<TAB>name")
-    target = parser.add_mutually_exclusive_group(required=True)
+    target = parser.add_mutually_exclusive_group(required=False)
     target.add_argument("--target-apk", help="target APK to dump with aapt2")
     target.add_argument("--target-dump", help="saved `aapt2 dump resources` output")
     parser.add_argument("--aapt2", default=os.environ.get("AAPT2", "aapt2"))
@@ -160,6 +160,9 @@ def main(argv=None):
     if args.write_expected:
         write_expected(args.write_expected, args.overlay, expected)
         return 0
+
+    if not args.target_apk and not args.target_dump:
+        die("one of --target-apk / --target-dump is required (unless --write-expected)")
 
     if args.target_dump:
         with open(args.target_dump, encoding="utf-8", errors="replace") as handle:

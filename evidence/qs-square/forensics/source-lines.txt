@@ -1,0 +1,294 @@
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+===== src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt:159-160 (lineage-23.2 @ 797e4324)
+   159	fun ContentScope.Tile(
+   160	    tile: TileViewModel,
+
+===== src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt:198-232 (lineage-23.2 @ 797e4324)
+   198	
+   199	        // TODO(b/361789146): Draw the shapes instead of clipping
+   200	        val tileShape by TileDefaults.animateTileShapeAsState(uiState.state)
+   201	        val animatedColor by animateColorAsState(colors.background, label = "QSTileBackgroundColor")
+   202	        val isDualTarget = uiState.handlesSecondaryClick
+   203	
+   204	        val surfaceRevealModifier: Modifier
+   205	        val contentRevealModifier: Modifier
+   206	        if (enableRevealEffect) {
+   207	            val marginBottom =
+   208	                with(LocalDensity.current) { QuickSettingsShade.Dimensions.Padding.toPx() }
+   209	            surfaceRevealModifier =
+   210	                Modifier.verticalTactileSurfaceReveal(deltaY = marginBottom, label = tile.traceName)
+   211	            contentRevealModifier =
+   212	                Modifier.verticalFadeContentReveal(deltaY = marginBottom, label = tile.traceName)
+   213	        } else {
+   214	            surfaceRevealModifier = Modifier
+   215	            contentRevealModifier = Modifier
+   216	        }
+   217	
+   218	        TileExpandable(
+   219	            color = { animatedColor },
+   220	            shape = tileShape,
+   221	            squishiness = squishiness,
+   222	            hapticsViewModel = hapticsViewModel,
+   223	            modifier =
+   224	                modifier
+   225	                    .then(surfaceRevealModifier)
+   226	                    .borderOnFocus(color = MaterialTheme.colorScheme.secondary, tileShape.topEnd)
+   227	                    .fillMaxWidth()
+   228	                    .thenIf(currentBounceableInfo != null) {
+   229	                        Modifier.bounceable(
+   230	                            currentBounceableInfo!!.bounceable,
+   231	                            currentBounceableInfo!!.previousTile,
+   232	                            currentBounceableInfo!!.nextTile,
+
+===== src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt:350-362 (lineage-23.2 @ 797e4324)
+   350	private fun TileExpandable(
+   351	    color: () -> Color,
+   352	    shape: Shape,
+   353	    squishiness: () -> Float,
+   354	    hapticsViewModel: TileHapticsViewModel?,
+   355	    modifier: Modifier = Modifier,
+   356	    content: @Composable (Expandable) -> Unit,
+   357	) {
+   358	    Expandable(
+   359	        controller = rememberExpandableController(color = color, shape = shape),
+   360	        modifier = modifier.clip(shape).verticalSquish(squishiness),
+   361	        useModifierBasedImplementation = true,
+   362	    ) {
+
+===== src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt:480-485 (lineage-23.2 @ 797e4324)
+   480	
+   481	private object TileDefaults {
+   482	    val ActiveIconCornerRadius = 16.dp
+   483	    val ActiveTileCornerRadius = 24.dp
+   484	
+   485	    /** An active tile uses the active color as background */
+
+===== src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt:578-616 (lineage-23.2 @ 797e4324)
+   578	    @Composable
+   579	    fun animateTileShapeAsState(state: Int): State<RoundedCornerShape> {
+   580	        return animateShapeAsState(
+   581	            state = state,
+   582	            activeCornerRadius = ActiveTileCornerRadius,
+   583	            label = "QSTileIconCornerRadius",
+   584	        )
+   585	    }
+   586	
+   587	    @Composable
+   588	    fun animateShapeAsState(
+   589	        state: Int,
+   590	        activeCornerRadius: Dp,
+   591	        label: String,
+   592	    ): State<RoundedCornerShape> {
+   593	        val animatedCornerRadius by
+   594	            animateDpAsState(
+   595	                targetValue =
+   596	                    if (state == STATE_ACTIVE) {
+   597	                        activeCornerRadius
+   598	                    } else {
+   599	                        InactiveCornerRadius
+   600	                    },
+   601	                label = label,
+   602	            )
+   603	
+   604	        return remember {
+   605	            val corner =
+   606	                object : CornerSize {
+   607	                    override fun toPx(shapeSize: Size, density: Density): Float {
+   608	                        return with(density) { animatedCornerRadius.toPx() }
+   609	                    }
+   610	                }
+   611	            mutableStateOf(RoundedCornerShape(corner))
+   612	        }
+   613	    }
+   614	}
+   615	
+   616	/**
+
+===== src/com/android/systemui/qs/panels/ui/compose/infinitegrid/CommonTile.kt:418-426 (lineage-23.2 @ 797e4324)
+   418	    val ChevronSize = 14.dp
+   419	    val ToggleTargetSize = 56.dp
+   420	    val TileHeight = 72.dp
+   421	    val TileStartPadding = 8.dp
+   422	    val TileEndPadding = 12.dp
+   423	    val TileDualTargetEndPadding = 8.dp
+   424	    val TileArrangementPadding = 6.dp
+   425	    val InactiveCornerRadius = 50.dp
+   426	    val TileLabelBlurWidth = 32.dp
+
+===== src/com/android/systemui/qs/panels/ui/compose/infinitegrid/CommonTile.kt:210-230 (lineage-23.2 @ 797e4324)
+   210	    val animatedLabelColor by animateColorAsState(colors.label, label = "QSTileLabelColor")
+   211	    val animatedSecondaryLabelColor by
+   212	        animateColorAsState(colors.secondaryLabel, label = "QSTileSecondaryLabelColor")
+   213	    Column(verticalArrangement = Arrangement.Center, modifier = modifier.fillMaxHeight()) {
+   214	        TileLabel(
+   215	            text = label,
+   216	            style = MaterialTheme.typography.titleSmallEmphasized,
+   217	            color = { animatedLabelColor },
+   218	            isVisible = isVisible,
+   219	        )
+   220	        if (!TextUtils.isEmpty(secondaryLabel)) {
+   221	            TileLabel(
+   222	                secondaryLabel ?: "",
+   223	                color = { animatedSecondaryLabelColor },
+   224	                style = MaterialTheme.typography.labelMedium,
+   225	                isVisible = isVisible,
+   226	                modifier =
+   227	                    Modifier.thenIf(
+   228	                        accessibilityUiState?.stateDescription?.contains(secondaryLabel ?: "") ==
+   229	                            true
+   230	                    ) {
+
+===== src/com/android/systemui/qs/panels/ui/compose/infinitegrid/InfiniteGridLayout.kt:100-145 (lineage-23.2 @ 797e4324)
+   100	        if (QSMaterialExpressiveTiles.isEnabled) {
+   101	            ButtonGroupGrid(
+   102	                sizedTiles = sizedTiles,
+   103	                columns = columns,
+   104	                keys = { it.spec },
+   105	                elementKey = { it.spec.toElementKey() },
+   106	                horizontalPadding = dimensionResource(R.dimen.qs_tile_margin_horizontal),
+   107	                modifier = modifier,
+   108	            ) { sizedTile, interactionSource ->
+   109	                Tile(
+   110	                    tile = sizedTile.tile,
+   111	                    iconOnly = iconTilesViewModel.isIconTile(sizedTile.tile.spec),
+   112	                    squishiness = { squishiness },
+   113	                    tileHapticsViewModelFactoryProvider = tileHapticsViewModelFactoryProvider,
+   114	                    coroutineScope = scope,
+   115	                    detailsViewModel = detailsViewModel,
+   116	                    isVisible = listening,
+   117	                    requestToggleTextFeedback = textFeedbackViewModel::requestShowFeedback,
+   118	                    enableRevealEffect = enableRevealEffect,
+   119	                    bounceableInfo = null,
+   120	                    interactionSource = interactionSource,
+   121	                )
+   122	            }
+   123	        } else {
+   124	            val bounceables =
+   125	                remember(sizedTiles) { List(sizedTiles.size) { BounceableTileViewModel() } }
+   126	            val spans by remember(sizedTiles) { derivedStateOf { sizedTiles.fastMap { it.width } } }
+   127	            VerticalSpannedGrid(
+   128	                columns = columns,
+   129	                columnSpacing = dimensionResource(R.dimen.qs_tile_margin_horizontal),
+   130	                rowSpacing = dimensionResource(R.dimen.qs_tile_margin_vertical),
+   131	                spans = spans,
+   132	                keys = { sizedTiles[it].tile.spec },
+   133	                modifier = modifier,
+   134	            ) { spanIndex, column, isFirstInColumn, isLastInColumn ->
+   135	                val it = sizedTiles[spanIndex]
+   136	
+   137	                Element(it.tile.spec.toElementKey(), Modifier) {
+   138	                    Tile(
+   139	                        tile = it.tile,
+   140	                        iconOnly = iconTilesViewModel.isIconTile(it.tile.spec),
+   141	                        squishiness = { squishiness },
+   142	                        tileHapticsViewModelFactoryProvider = tileHapticsViewModelFactoryProvider,
+   143	                        coroutineScope = scope,
+   144	                        bounceableInfo =
+   145	                            bounceables.bounceableInfo(
+
+===== src/com/android/systemui/qs/tileimpl/QSTileViewImpl.kt:330-350 (lineage-23.2 @ 797e4324)
+   330	        addView(sideView)
+   331	    }
+   332	
+   333	    private fun createTileBackground(): Drawable {
+   334	        qsTileBackground =
+   335	            if (Flags.qsTileFocusState()) {
+   336	                mContext.getDrawable(R.drawable.qs_tile_background_flagged) as RippleDrawable
+   337	            } else {
+   338	                mContext.getDrawable(R.drawable.qs_tile_background) as RippleDrawable
+   339	            }
+   340	        qsTileFocusBackground = mContext.getDrawable(R.drawable.qs_tile_focused_background)!!
+   341	        backgroundDrawable =
+   342	            qsTileBackground.findDrawableByLayerId(R.id.background) as LayerDrawable
+   343	        backgroundBaseDrawable =
+   344	            backgroundDrawable.findDrawableByLayerId(R.id.qs_tile_background_base)
+   345	        backgroundOverlayDrawable =
+   346	            backgroundDrawable.findDrawableByLayerId(R.id.qs_tile_background_overlay)
+   347	        backgroundOverlayDrawable.mutate().setTintMode(PorterDuff.Mode.SRC)
+   348	        return qsTileBackground
+   349	    }
+   350	
+
+===== src/com/android/systemui/qs/tileimpl/QSTileViewImpl.kt:1030-1072 (lineage-23.2 @ 797e4324)
+  1030	
+  1031	    fun resetLongPressEffectProperties() {
+  1032	        background.updateBounds(
+  1033	            left = 0,
+  1034	            top = 0,
+  1035	            right = initialLongPressProperties?.width?.toInt() ?: measuredWidth,
+  1036	            bottom = initialLongPressProperties?.height?.toInt() ?: measuredHeight,
+  1037	        )
+  1038	        changeCornerRadius(resources.getDimensionPixelSize(R.dimen.qs_corner_radius).toFloat())
+  1039	        setAllColors(
+  1040	            getBackgroundColorForState(lastState, lastDisabledByPolicy),
+  1041	            getLabelColorForState(lastState, lastDisabledByPolicy),
+  1042	            getSecondaryLabelColorForState(lastState, lastDisabledByPolicy),
+  1043	            getChevronColorForState(lastState, lastDisabledByPolicy),
+  1044	            getOverlayColorForState(lastState),
+  1045	        )
+  1046	        icon.setTint(icon.mIcon as ImageView, lastIconTint)
+  1047	        haveLongPressPropertiesBeenReset = true
+  1048	    }
+  1049	
+  1050	    @VisibleForTesting
+  1051	    fun initializeLongPressProperties(startingHeight: Int, startingWidth: Int) {
+  1052	        initialLongPressProperties =
+  1053	            QSLongPressProperties(
+  1054	                height = startingHeight.toFloat(),
+  1055	                width = startingWidth.toFloat(),
+  1056	                resources.getDimensionPixelSize(R.dimen.qs_corner_radius).toFloat(),
+  1057	                getBackgroundColorForState(lastState),
+  1058	                getLabelColorForState(lastState),
+  1059	                getSecondaryLabelColorForState(lastState),
+  1060	                getChevronColorForState(lastState),
+  1061	                getOverlayColorForState(lastState),
+  1062	                lastIconTint,
+  1063	            )
+  1064	
+  1065	        finalLongPressProperties =
+  1066	            QSLongPressProperties(
+  1067	                height = LONG_PRESS_EFFECT_HEIGHT_SCALE * startingHeight,
+  1068	                width = LONG_PRESS_EFFECT_WIDTH_SCALE * startingWidth,
+  1069	                resources.getDimensionPixelSize(R.dimen.qs_corner_radius).toFloat() - 20,
+  1070	                getBackgroundColorForState(Tile.STATE_ACTIVE),
+  1071	                getLabelColorForState(Tile.STATE_ACTIVE),
+  1072	                getSecondaryLabelColorForState(Tile.STATE_ACTIVE),
+
+===== res/drawable/qs_tile_background_shape.xml:16-21 (lineage-23.2 @ 797e4324)
+    16	  -->
+    17	
+    18	<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    19	    <corners android:radius="@dimen/qs_corner_radius" />
+    20	    <solid android:color="#FFFFFF" />
+    21	</shape>
+
+===== res/drawable/qs_tile_background_flagged.xml:16-30 (lineage-23.2 @ 797e4324)
+    16	<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    17	    android:color="@color/qs_tile_ripple_color">
+    18	    <item
+    19	        android:id="@android:id/mask"
+    20	        android:drawable="@drawable/qs_tile_background_shape" />
+    21	    <item android:id="@id/background">
+    22	        <layer-list>
+    23	            <item
+    24	                android:id="@+id/qs_tile_background_base"
+    25	                android:drawable="@drawable/qs_tile_background_shape" />
+    26	            <item android:id="@+id/qs_tile_background_overlay">
+    27	                <selector>
+    28	                    <item
+    29	                        android:drawable="@drawable/qs_tile_background_shape"
+    30	                        android:state_hovered="true" />
+
+===== res/values/dimens.xml:722-730 (lineage-23.2 @ 797e4324)
+   722	
+   723	    <!-- The size of the gesture span needed to activate the "pull" notification expansion -->
+   724	    <dimen name="pull_span_min">25dp</dimen>
+   725	
+   726	    <dimen name="qs_corner_radius">28dp</dimen>
+   727	    <dimen name="qs_tile_height">80dp</dimen>
+   728	    <dimen name="qs_tile_margin_horizontal">8dp</dimen>
+   729	    <dimen name="qs_tile_margin_vertical">@dimen/qs_tile_margin_horizontal</dimen>
+   730	    <dimen name="qs_tile_margin_top_bottom">4dp</dimen>
+

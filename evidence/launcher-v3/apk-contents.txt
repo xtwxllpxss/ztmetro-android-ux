@@ -4,6 +4,6 @@ Archive:  /home/denis/ztux/launcher-v3/launcher/build/out/ztmetro-start.apk
     3632  Defl:N     1203  67% 1980-01-01 00:00 26ef38c1  AndroidManifest.xml
      724  Defl:N      361  50% 1980-01-01 00:00 8cfa906b  res/drawable/ic_launcher.xml
    10676  Stored    10676   0% 1980-01-01 00:00 f9ee426c  resources.arsc
-   73728  Defl:N    35570  52% 1980-01-01 03:00 3e4f852b  classes.dex
+   73844  Defl:N    35642  52% 1980-01-01 03:00 9fe4e4cc  classes.dex
 --------          -------  ---                            -------
-   88760            47810  46%                            4 files
+   88876            47882  46%                            4 files

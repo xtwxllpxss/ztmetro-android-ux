@@ -8,14 +8,14 @@ Verified using v4 scheme (APK Signature Scheme v4): false
 Verified for SourceStamp: false
 Number of signers: 1
 Signer #1 certificate DN: CN=ztMetro Settings header dev, OU=ztOS, O=ztOS, C=RU
-Signer #1 certificate SHA-256 digest: ea6dbb774abfe9c7ade0327127775c76e18e89d7209b5affda26447fdcf44f03
-Signer #1 certificate SHA-1 digest: f217bcc4bf2374d3d28027f3a60edcaf7054a68e
-Signer #1 certificate MD5 digest: 351542d76162759f6e075acaad711020
+Signer #1 certificate SHA-256 digest: 8f785eb89421c7f5a831e82401391faef556b1d8063351d94e216ea727ce6009
+Signer #1 certificate SHA-1 digest: bf6ffba46e310adb0f695381bb7c8ff80c510b3e
+Signer #1 certificate MD5 digest: da4690a1fc36b8e50b6c6d2f3502c695
 Signer #1 key algorithm: RSA
 Signer #1 key size (bits): 2048
-Signer #1 public key SHA-256 digest: 11583c6fb99bce788e94daf5823a74ea73fb102ba70e61ff77d8c5601267f51e
-Signer #1 public key SHA-1 digest: aaedb9b5494e6b3efd6c4a02e12f1fd77b50f985
-Signer #1 public key MD5 digest: c49928dcf0f7cded1fcc420017fd6cf5
+Signer #1 public key SHA-256 digest: 2bec897e598b0fe677ed2b84a530ccc92ebda052c630f1188b62a2d0aeab5320
+Signer #1 public key SHA-1 digest: 893073c974ee6ff52fc3ea4fc993021488840bf1
+Signer #1 public key MD5 digest: f77601461fedff48693358ab6b6aae55
 
 ## aapt2 dump badging
 package: name='org.ztmetro.settingsheader' versionCode='2' versionName='1.1' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
@@ -51,15 +51,15 @@ densities: '160'
     resource 0x7f020007 color/metro_header_title
     resource 0x7f030003 dimen/metro_header_height
     resource 0x7f030004 dimen/metro_header_label_size
-    resource 0x7f030005 dimen/metro_header_padding_h
-    resource 0x7f030006 dimen/metro_header_subtitle_size
-    resource 0x7f030007 dimen/metro_header_title_size
+    resource 0x7f030005 dimen/metro_header_label_to_title
+    resource 0x7f030006 dimen/metro_header_padding_h
+    resource 0x7f030007 dimen/metro_header_subtitle_size
+    resource 0x7f030008 dimen/metro_header_title_size
     resource 0x7f040004 drawable/metro_header_bg
       () (file) res/drawable/metro_header_bg.xml type=XML
     resource 0x7f050004 id/metro_header
     resource 0x7f050005 id/metro_header_label
-    resource 0x7f050006 id/metro_header_subtitle
-    resource 0x7f050007 id/metro_header_title
+    resource 0x7f050006 id/metro_header_title
     resource 0x7f060001 layout/metro_header
       () (file) res/layout/metro_header.xml type=XML
     resource 0x7f070004 string/metro_header_label
@@ -85,15 +85,15 @@ Archive:  /home/denis/ztux/settings-metro/settings/header-module/build/dist/ztme
       784  1980-01-01 00:00   res/drawable/metro_bottom_button_bg.xml
       372  1980-01-01 00:00   res/drawable/metro_header_bg.xml
      1516  1980-01-01 00:00   res/layout/metro_bottom_bar.xml
-     1412  1980-01-01 00:00   res/layout/metro_header.xml
-     4260  1980-01-01 00:00   resources.arsc
+     1224  1980-01-01 00:00   res/layout/metro_header.xml
+     4296  1980-01-01 00:00   resources.arsc
        39  1980-01-01 00:00   assets/xposed_init
-    37204  2026-11-16 12:17   classes.dex
-     1225  2026-11-16 12:17   META-INF/ZTMETRO-.SF
-     1301  2026-11-16 12:17   META-INF/ZTMETRO-.RSA
-     1098  2026-11-16 12:17   META-INF/MANIFEST.MF
+    40476  2026-11-16 12:24   classes.dex
+     1225  2026-11-16 12:24   META-INF/ZTMETRO-.SF
+     1301  2026-11-16 12:24   META-INF/ZTMETRO-.RSA
+     1098  2026-11-16 12:24   META-INF/MANIFEST.MF
 ---------                     -------
-    53575                     14 files
+    56695                     14 files
 ## hook target names referenced by classes.dex
 com.android.settings
 com.android.settings.core.SettingsBaseActivity
@@ -106,26 +106,26 @@ Processing '/home/denis/ztux/settings-metro/settings/header-module/build/classes
 Opened '/home/denis/ztux/settings-metro/settings/header-module/build/classes.dex', DEX version '039'
 DEX file header:
 magic               : 'dex\n039\0'
-checksum            : 26175e5c
-signature           : 8d46...e4cc
-file_size           : 37204
+checksum            : 43c011e7
+signature           : 3def...fefb
+file_size           : 40476
 header_size         : 112
 link_size           : 0
 link_off            : 0 (0x000000)
-string_ids_size     : 598
+string_ids_size     : 638
 string_ids_off      : 112 (0x000070)
-type_ids_size       : 110
-type_ids_off        : 2504 (0x0009c8)
-proto_ids_size      : 134
-proto_ids_off       : 2944 (0x000b80)
-field_ids_size      : 111
-field_ids_off       : 4552 (0x0011c8)
-method_ids_size     : 281
-method_ids_off      : 5440 (0x001540)
-class_defs_size     : 32
-class_defs_off      : 7688 (0x001e08)
-data_size           : 28492
-data_off            : 8712 (0x002208)
+type_ids_size       : 113
+type_ids_off        : 2664 (0x000a68)
+proto_ids_size      : 143
+proto_ids_off       : 3116 (0x000c2c)
+field_ids_size      : 115
+field_ids_off       : 4832 (0x0012e0)
+method_ids_size     : 304
+method_ids_off      : 5752 (0x001678)
+class_defs_size     : 33
+class_defs_off      : 8184 (0x001ff8)
+data_size           : 31236
+data_off            : 9240 (0x002418)
 
 Class #0            -
   Class descriptor  : 'Lorg/ztmetro/settingsheader/BottomBar$1;'
@@ -156,6 +156,7 @@ Class #0            -
   Class descriptor  : 'Lorg/ztmetro/settingsheader/R$style;'
   Class descriptor  : 'Lorg/ztmetro/settingsheader/R;'
   Class descriptor  : 'Lorg/ztmetro/settingsheader/RowIcons;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/RowType;'
   Class descriptor  : 'Lorg/ztmetro/settingsheader/ScreenStyler$Passes$1;'
   Class descriptor  : 'Lorg/ztmetro/settingsheader/ScreenStyler$Passes;'
   Class descriptor  : 'Lorg/ztmetro/settingsheader/ScreenStyler;'

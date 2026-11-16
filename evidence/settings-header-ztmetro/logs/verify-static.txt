@@ -1,0 +1,103 @@
+# Static verification of the final APK (hermes-ubuntu, build-tools 36.0.0)
+
+## aapt2 dump badging
+package: name='org.ztmetro.settingsheader' versionCode='2' versionName='1.1' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+minSdkVersion:'29'
+targetSdkVersion:'36'
+application-label:'ztMetro Settings'
+application-icon-160:'res/drawable/ic_launcher.xml'
+application: label='ztMetro Settings' icon='res/drawable/ic_launcher.xml'
+
+## compiled module resources (values)
+    resource 0x7f020000 color/metro_accent
+      () #ff0050ef
+    resource 0x7f020001 color/metro_accent_pressed
+      () #3d0050ef
+    resource 0x7f020002 color/metro_bottom_bar_bg
+      () #ff000000
+    resource 0x7f020003 color/metro_bottom_bar_text
+      () #ffffffff
+    resource 0x7f020004 color/metro_header_bg
+      () #ff000000
+    resource 0x7f020005 color/metro_header_label
+      () #b3ffffff
+    resource 0x7f020006 color/metro_header_subtitle
+      () #b3ffffff
+    resource 0x7f020007 color/metro_header_title
+      () #ffffffff
+--
+    resource 0x7f030000 dimen/metro_bottom_bar_glyph
+      () 24.000000dp
+    resource 0x7f030001 dimen/metro_bottom_bar_height
+      () 40.000000dp
+    resource 0x7f030002 dimen/metro_bottom_bar_label_size
+      () 11.000000sp
+    resource 0x7f030003 dimen/metro_header_height
+      () 128.000000dp
+    resource 0x7f030004 dimen/metro_header_label_size
+      () 11.500000sp
+    resource 0x7f030005 dimen/metro_header_label_to_title
+      () 14.000000dp
+    resource 0x7f030006 dimen/metro_header_padding_h
+      () 24.000000dp
+    resource 0x7f030007 dimen/metro_header_subtitle_size
+      () 12.000000sp
+    resource 0x7f030008 dimen/metro_header_title_size
+      () 48.000000sp
+--
+        0x01010095=@dimen/metro_bottom_bar_label_size
+        0x01010098=@color/metro_bottom_bar_text
+        0x010100af=0x00000011
+--
+        0x01010095=@dimen/metro_header_label_size
+        0x01010098=@color/metro_header_label
+        0x010100ab=3
+--
+        0x01010095=@dimen/metro_header_subtitle_size
+        0x01010098=@color/metro_header_subtitle
+        0x010100ab=3
+--
+        0x01010095=@dimen/metro_header_title_size
+        0x01010098=@color/metro_header_title
+        0x010100ab=3
+
+## classes.dex: module classes
+Lorg/ztmetro/settingsheader/BottomBar;
+Lorg/ztmetro/settingsheader/FlatRows;
+Lorg/ztmetro/settingsheader/HeaderBinder;
+Lorg/ztmetro/settingsheader/HeaderResources;
+Lorg/ztmetro/settingsheader/HeaderTitles;
+Lorg/ztmetro/settingsheader/HeaderViewFactory;
+Lorg/ztmetro/settingsheader/MetroTinter;
+Lorg/ztmetro/settingsheader/ModuleContext;
+Lorg/ztmetro/settingsheader/ModuleEntry;
+Lorg/ztmetro/settingsheader/R;
+Lorg/ztmetro/settingsheader/R$array;
+Lorg/ztmetro/settingsheader/R$color;
+Lorg/ztmetro/settingsheader/R$dimen;
+Lorg/ztmetro/settingsheader/R$drawable;
+Lorg/ztmetro/settingsheader/R$id;
+Lorg/ztmetro/settingsheader/R$layout;
+Lorg/ztmetro/settingsheader/R$string;
+Lorg/ztmetro/settingsheader/R$style;
+Lorg/ztmetro/settingsheader/RowIcons;
+Lorg/ztmetro/settingsheader/RowType;
+Lorg/ztmetro/settingsheader/ScreenStyler;
+Lorg/ztmetro/settingsheader/ScreenStyler$Passes;
+Lorg/ztmetro/settingsheader/SettingsHeaderHooks;
+Lorg/ztmetro/settingsheader/Views;
+
+## classes.dex: hook targets / ids referenced
+      2 android.settings.SETTINGS
+      3 content_frame
+      3 homepage_container
+      2 main_content
+      2 onCreate
+      1 onResume
+      2 setContentView
+      1 SettingsBaseActivity
+      1 SettingsHomepageActivity
+      1 setTitle
+      1 ztmetro_bottom_back
+      1 ztmetro_bottom_bar
+      1 ztmetro_bottom_search

@@ -30,13 +30,6 @@
         android:tag="ztmetro_header_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="@dimen/metro_header_label_to_title"
         style="@style/MetroHeaderTitle" />
-
-    <TextView
-        android:id="@+id/metro_header_subtitle"
-        android:tag="ztmetro_header_subtitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        style="@style/MetroHeaderSubtitle" />
 </LinearLayout>

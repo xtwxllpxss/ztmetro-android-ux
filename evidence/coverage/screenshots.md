@@ -22,7 +22,7 @@ is visible in the frame — it is the basis for the `verified` column of
 | `device-bringup/80-settings.png` (11:42) | header at the top of the scrolling home content, no search bar in frame | homepage insertion geometry works |
 | `ux-compare/current/90-settings.png` (11:52) | full-bleed rows, smaller typography, cobalt tiles, header | Settings RRO typography/dimens + header together |
 | `ux-compare/current/91-wifi.png` (11:53) | full-bleed Wi-Fi rows, 12 sp grey secondary line, header **and** toolbar title, teal switch | Settings rows/typography verified; switch accent still absent |
-| `ux-compare/current/93-shade.png` (11:53) | rounded teal QS tiles, black panel, large white clock | SystemUI RRO square geometry/labels **not** visible |
+| `ux-compare/current/93-shade.png` (11:53) | rounded teal QS tiles, black panel, large white clock | SystemUI RRO square geometry/labels **not** visible; measured gaps 4.31 dp vs stock 8 dp show the overlay is partly live (`qs-square/forensics/measure-shade.txt`) |
 | `ux-compare/current/96-wifi.png` (11:58) | caps section labels (`МОБИЛЬНЫЙ ИНТЕРНЕТ`), full-bleed rows, toolbar + header, teal switch | later Settings typography pass; switch still teal |
 | `ux-compare/current/97-wifi.png` (12:01) | toolbar title gone, header at top, **cobalt switch with white thumb** | header module `MetroTinter` (or Settings switchbar tint) now applied |
 | `ux-compare/current/a0-settings.png` (12:03) | header only, cobalt tiles, full-bleed list | final Settings home look |

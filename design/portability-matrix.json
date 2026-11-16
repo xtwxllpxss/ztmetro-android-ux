@@ -1,0 +1,513 @@
+{
+  "schema_version": 1,
+  "generated": "2026-11-16T12:25:00+03:00",
+  "repo_commit": "69ea5891850518af4dc588db9d9e34a4e4ae2db4",
+  "document": "repo/docs/19-portability.md",
+  "labels": {
+    "F": "verified in the cited file/commit or by the named command",
+    "E": "engineering inference from that evidence",
+    "?": "needs the target device or an APK that is not in this repo"
+  },
+  "primary_target": {
+    "device": "Xiaomi Redmi Note 5A (ugglite, Mi8917)",
+    "soc": "Qualcomm MSM8917",
+    "rom": "LineageOS-for-microG 23.2 (Android 16, API 36)",
+    "panel": "720x1280",
+    "density_dpi": 280,
+    "references": [
+      "https://github.com/LineageOS/android_frameworks_base/tree/lineage-23.2",
+      "https://github.com/LineageOS/android_packages_apps_Settings/tree/lineage-23.2"
+    ]
+  },
+  "second_target": {
+    "device": "Xiaomi Redmi Note 10 Pro (sweet)",
+    "soc": "Qualcomm SM7150 (Snapdragon 732G; device inherits sm6150-common)",
+    "rom": "LineageOS 23.2 (same branch, device tree commit 894ae0bb9465ed070f4a11e9d3ad7c3e91e7e14b)",
+    "panel": "1080x2400",
+    "density_dpi": 440,
+    "status_bar_height": "100px portrait = 36.36dp at 440dpi; landscape 30dp",
+    "display_cutout": "punch-hole: path M -24.5 51.75 ..., 93px bounding rect, config_fillMainBuiltInDisplayCutout=true",
+    "device_overlay_collisions": "none with the overlay resource names; the device overlay does override status_bar_height* (which the status framework RRO also overrides), rounded corners and status_bar_padding_*",
+    "missing_overlay_resources": {
+      "framework": 0,
+      "systemui": 0,
+      "status_framework": 0,
+      "status_systemui": 0,
+      "settings": "4 framework-named primary_material_* absent from Settings/SettingsLib source on every tree; all other names present"
+    },
+    "checks": [
+      "evidence/portability/check-lineage23.2-framework.txt",
+      "evidence/portability/check-lineage23.2-systemui.txt",
+      "evidence/portability/check-lineage23.2-status-framework.txt",
+      "evidence/portability/check-lineage23.2-status-systemui.txt",
+      "evidence/portability/check-lineage23.2-settings.txt"
+    ],
+    "sources": [
+      "https://github.com/LineageOS/android_device_xiaomi_sweet/tree/lineage-23.2",
+      "https://github.com/LineageOS/android_device_xiaomi_sweet/blob/lineage-23.2/BoardConfig.mk",
+      "https://github.com/LineageOS/android_device_xiaomi_sweet/blob/lineage-23.2/lineage_sweet.mk",
+      "https://github.com/LineageOS/android_device_xiaomi_sweet/blob/lineage-23.2/overlay/frameworks/base/core/res/res/values/dimens.xml",
+      "https://github.com/LineageOS/android_device_xiaomi_sweet/blob/lineage-23.2/overlay/frameworks/base/core/res/res/values/config.xml",
+      "https://github.com/LineageOS/android_device_xiaomi_sweet/blob/lineage-23.2/overlay/frameworks/base/packages/SystemUI/res/values/dimens.xml"
+    ]
+  },
+  "other_rom_baseline": {
+    "aosp": "aosp-mirror/platform_frameworks_base @ android-16.0.0_r3 = 33b96ce8a122757002e5040ac59824bd7a262e00; platform_packages_apps_Settings @ android-16.0.0_r3 = 2a0899aaaa50e486d973f445bbb0530156f89a19",
+    "lineage": "android_frameworks_base @ lineage-23.2 = 797e43244b96c6a0dff5c81b21c4d4be665b082e; android_packages_apps_Settings @ lineage-23.2 = e1b8cd2dde2edd8c513362efc55a770270dce899",
+    "checks": [
+      "evidence/portability/check-aosp16-framework.txt",
+      "evidence/portability/check-aosp16-systemui.txt",
+      "evidence/portability/check-aosp16-settings.txt",
+      "evidence/portability/check-aosp16-status-framework.txt",
+      "evidence/portability/check-aosp16-status-systemui.txt"
+    ],
+    "deltas": [
+      "framework-res: all 92 overlay names exist in AOSP 16 (F)",
+      "SystemUI: all 25 overlay names exist in AOSP 16 (F); shade_header_text_color is absent from packages/SystemUI/res on lineage-22.2, so the header style color has no target mapping on that base (F)",
+      "Settings: settingslib_entry_bg_radius is Lineage-only (Lineage SettingsLib MainSwitchPreference/res/values-v31/dimens.xml:39; absent in AOSP 16) (F)",
+      "Settings: primary_material_dark/light and primary_dark_material_* are framework resources, not declared by Settings or SettingsLib on either tree; they are dropped unless the built Settings APK carries the names from an AAR (F source absence, ? APK presence)",
+      "Settings: cardview_default_radius and TextAppearance.M3.Sys.Typescale.* come from AndroidX/Material AARs; they can disappear with a library/R8 change and must be checked in the APK (E)",
+      "SystemUI shade colors: shade_panel_fallback / notification_scrim_fallback are used only in the blur-unsupported branch; on a blur-capable device ShadeColors.kt uses notification_scrim_base at 50% alpha and framework shade_panel_fg/bg (F source; ? target hardware)"
+    ]
+  },
+  "coupling_counts": {
+    "a": 6,
+    "b": 6,
+    "c": 5,
+    "d": 2
+  },
+  "row_count": 19,
+  "risks": [
+    {
+      "rank": 1,
+      "class": "d",
+      "artifact": "status-strip-framework-rro",
+      "why": "Binary ships status_bar_height* = 28dp, a device decision. sweet's device overlay sets 100px (36.36dp) and has a 93px punch-hole cutout; the static RRO wins and shortens the bar below the cutout (F source; E consequence).",
+      "fix": "Delete the three height entries from the portable overlay or split them into a per-device overlay; keep status_bar_system_icon_size and the SystemUI paddings common."
+    },
+    {
+      "rank": 2,
+      "class": "c",
+      "artifact": "settings-header-module + keyguard-module",
+      "why": "Hooks hard-code AOSP class/method names (SettingsBaseActivity/SettingsHomepageActivity; six SystemUI keyguard classes). A ROM rebase can move them; every hook is guarded, so the failure mode is a silently missing header/clock (F class list; ? target dex).",
+      "fix": "Dex-dump the target APKs and verify every class and method before enabling the LSPosed scope (docs/19 section 5.4)."
+    },
+    {
+      "rank": 3,
+      "class": "b",
+      "artifact": "settings-rro",
+      "why": "Settings/SettingsLib is the least stable resource surface: settingslib_entry_bg_radius is Lineage-only, four primary_material_* names are framework resources not in the Settings package, and three type styles plus cardview_default_radius come from AARs. Missing names are silently dropped by idmap2 (F source checks; ? target APK).",
+      "fix": "Run check-target-resources.py against the pulled Settings.apk; delete or re-point entries that are absent; re-run after every ROM or AndroidX bump."
+    }
+  ],
+  "known_no_ops": [
+    {
+      "resource": "overlay_shade_panel_shape_radius / aux_spacing_overlay_panel_shape_radius",
+      "target": "com.android.systemui @ lineage-23.2",
+      "status": "0 consumers in packages/SystemUI at 797e4324; inert even on ugglite (F evidence/sysui-rro/REPORT.md)"
+    },
+    {
+      "resource": "settingslib_entry_bg_radius",
+      "target": "com.android.settings @ lineage-23.2 / AOSP 16",
+      "status": "no consumer in Settings or SettingsLib at either commit; Lineage-only definition, absent in AOSP 16 (F source grep)"
+    },
+    {
+      "resource": "primary_material_dark / primary_material_light / primary_dark_material_dark / primary_dark_material_light",
+      "target": "com.android.settings",
+      "status": "framework-res names, not declared by Settings/SettingsLib; they no-op unless the built Settings APK carries same-named resources from an AAR (F source absence; ? APK)"
+    },
+    {
+      "resource": "evidence/settings-rro/ztmetro-settings-rro.apk",
+      "target": "build artifact",
+      "status": "stale dump: aapt2-dump-resources.txt has 56 entries from 11:22 while the APK was rebuilt at 12:13 (21,196 B); refresh the dump, do not assume the APK is stale (F file mtimes/size)"
+    }
+  ],
+  "rows": [
+    {
+      "id": "start-launcher",
+      "artifact": "Start launcher APK (org.ztmetro.start), default HOME",
+      "paths": [
+        "launcher/app/src/main/AndroidManifest.xml",
+        "launcher/app/src/main/java/org/ztmetro/start/",
+        "launcher/app/src/main/res/",
+        "scripts/build-launcher.sh",
+        "evidence/launcher-v3/"
+      ],
+      "class": "a",
+      "coupling": "device-independent",
+      "coupling_secondary": [],
+      "what_breaks": "HOME role and notification-listener access are per-ROM user grants; live tiles stay static until the listener is allowed. The first-fit grid recomputes from the real width, but the design reference is 360-411dp, so a >=600dp window gets a different (not broken) layout. No target resource names, no ROM APIs.",
+      "check": "aapt2 dump badging evidence/launcher-v3/ztmetro-start.apk | grep -E 'package:|launchable-activity:'; adb shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME; adb shell cmd notification allow_listener org.ztmetro.start/.StartNotificationListener",
+      "evidence": "F",
+      "upstream": []
+    },
+    {
+      "id": "action-centre",
+      "artifact": "Action Centre APK (org.ztmetro.actioncentre)",
+      "paths": [
+        "actioncentre/app/src/main/AndroidManifest.xml",
+        "actioncentre/app/src/main/java/org/ztmetro/actioncentre/",
+        "scripts/build-actioncentre.sh",
+        "evidence/actioncentre/"
+      ],
+      "class": "a",
+      "coupling": "device-independent",
+      "coupling_secondary": [],
+      "what_breaks": "Torch needs CAMERA permission plus a flash unit (optional feature in the manifest); brightness/rotation need the WRITE_SETTINGS appop; the notification listener must be enabled by the user. A ROM with a different torch HAL or no flash makes only the torch tile inert.",
+      "check": "adb shell dumpsys package org.ztmetro.actioncentre | grep -E 'versionName|android.permission.CAMERA'; adb shell appops get org.ztmetro.actioncentre WRITE_SETTINGS; adb shell cmd notification allow_listener org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreListener; adb shell am start -n org.ztmetro.actioncentre/.ActionCentreActivity",
+      "evidence": "F",
+      "upstream": []
+    },
+    {
+      "id": "design-tokens",
+      "artifact": "Design tokens and generated Android resources",
+      "paths": [
+        "design/tokens/ztmetro.tokens.json",
+        "design/tokens/gen_android.py",
+        "design/tokens/README.md",
+        "overlay/framework/gen_overlay.py",
+        "evidence/launcher-v3/metro_tokens.generated.xml"
+      ],
+      "class": "a",
+      "coupling": "device-independent",
+      "coupling_secondary": [
+        "d"
+      ],
+      "what_breaks": "Values are dp/sp (density-independent), but README pins the reference at 720x1280 @ 320dpi = 360x640dp; ugglite runs 280dpi = 411x731dp and sweet 440dpi = 393x873dp. The launcher recomputes its grid from width, so the look survives; any layout that hardcodes the 360dp reference will not.",
+      "check": "adb shell wm size; adb shell wm density; python3 design/tokens/gen_android.py --out /tmp/ztmetro-tokens; diff -u evidence/launcher-v3/metro_tokens.generated.xml /tmp/ztmetro-tokens/res/values/metro_tokens.xml",
+      "evidence": "F",
+      "upstream": []
+    },
+    {
+      "id": "build-tooling",
+      "artifact": "Build scripts for every artifact",
+      "paths": [
+        "scripts/build-overlay-framework.sh",
+        "scripts/build-overlay-sysui.sh",
+        "scripts/build-overlay-settings.sh",
+        "scripts/build-overlay-status.sh",
+        "scripts/build-overlay-module.sh",
+        "scripts/build-launcher.sh",
+        "scripts/build-actioncentre.sh",
+        "scripts/build-header-module.sh",
+        "scripts/build-keyguard-module.sh",
+        "scripts/build-font-module.sh"
+      ],
+      "class": "a",
+      "coupling": "device-independent",
+      "coupling_secondary": [],
+      "what_breaks": "Needs SDK platform 36 + build-tools 36.0.0 + JDK 17; when the SDK is absent the scripts drive ssh hermes-ubuntu. build-overlay-module.sh requires the three evidence APKs to exist first, so a stale APK becomes a stale zip.",
+      "check": "bash -n scripts/*.sh; ANDROID_HOME=\"$HOME/android-sdk\" JAVA_HOME=\"$HOME/android-jdk\" bash scripts/build-overlay-framework.sh --out /tmp/fw-check",
+      "evidence": "F",
+      "upstream": []
+    },
+    {
+      "id": "framework-rro",
+      "artifact": "framework-res RRO (ZtMetroFramework.apk, target android, isStatic=true, priority 2)",
+      "paths": [
+        "overlay/framework/AndroidManifest.xml",
+        "overlay/framework/res/values/",
+        "overlay/framework/gen_overlay.py",
+        "overlay/framework/tools/check_names.py",
+        "evidence/framework-rro/"
+      ],
+      "class": "b",
+      "coupling": "android-version",
+      "coupling_secondary": [
+        "c"
+      ],
+      "what_breaks": "92 AOSP-16 names (accent_*, system_accent1/2/3_*, TextAppearance.Material.*, config_*CornerRadius, dialog_corner_radius, action_bar_default_height_material). They are AOSP-stable at API 36; an Android 15 base lacks the M3 names and a ROM's own static android overlay can out-rank priority 2. isStatic=true means it cannot be toggled at runtime.",
+      "check": "python3 evidence/portability/check-target-resources.py --overlay-dir overlay/framework --target-apk /tmp/target/framework-res.apk; adb shell su -c 'cmd overlay list | grep ztmetro'; adb shell su -c 'cmd overlay dump org.ztmetro.overlay.framework'",
+      "evidence": "F",
+      "upstream": [
+        "https://github.com/LineageOS/android_frameworks_base/tree/lineage-23.2",
+        "https://github.com/aosp-mirror/platform_frameworks_base/tree/android-16.0.0_r3"
+      ]
+    },
+    {
+      "id": "systemui-rro",
+      "artifact": "SystemUI RRO (org.ztos.overlay.systemui, priority 10)",
+      "paths": [
+        "overlay/systemui/AndroidManifest.xml",
+        "overlay/systemui/res/values/",
+        "overlay/systemui/res/values-night/",
+        "overlay/systemui/res/drawable/qs_tile_background_shape.xml",
+        "evidence/sysui-rro/"
+      ],
+      "class": "b",
+      "coupling": "android-version",
+      "coupling_secondary": [
+        "d"
+      ],
+      "what_breaks": "25 names tied to the 2025 shade: qs_*, notification_corner_radius*, shade_header_text_color, TextAppearance.QS.Status*, shade_panel_fallback. All 25 exist in AOSP 16 and Lineage 23.2; lineage-22.2 has no shade_header_text_color anywhere in SystemUI res, and older bases use a different shade. overlay_shade_panel_shape_radius is inert at 23.2 (0 consumers) and proves nothing. On a blur-capable device the *_fallback colors are not used.",
+      "check": "python3 evidence/portability/check-target-resources.py --overlay-dir overlay/systemui --target-apk /tmp/target/SystemUI.apk; aapt2 dump resources /tmp/target/SystemUI.apk | grep -E 'resource .* (style/TextAppearance.QS.Status|dimen/qs_corner_radius|color/shade_header_text_color)'",
+      "evidence": "F",
+      "upstream": [
+        "https://github.com/LineageOS/android_frameworks_base/tree/lineage-23.2",
+        "https://github.com/aosp-mirror/platform_frameworks_base/tree/android-16.0.0_r3"
+      ]
+    },
+    {
+      "id": "settings-rro",
+      "artifact": "Settings RRO (org.ztos.overlay.settings, priority 10)",
+      "paths": [
+        "overlay/settings/AndroidManifest.xml",
+        "overlay/settings/res/values/",
+        "overlay/settings/res/values-night/",
+        "overlay/settings/res/drawable/",
+        "overlay/settings/tools/check_names.py",
+        "evidence/settings-rro/"
+      ],
+      "class": "b",
+      "coupling": "android-version",
+      "coupling_secondary": [
+        "c"
+      ],
+      "what_breaks": "93 source names: AOSP Settings names (homepage_*, TextAppearance.*, wifi_item*, radii, SearchBarStyle_v2) plus SettingsLib names and three Material-Components styles. A ROM that rewrites its dashboard (crDroid/PE) can drop homepage_*; pre-16 SettingsLib lacks the expressive radii. The checked-in aapt2 dump is stale (56 entries, 11:22) while the APK was rebuilt at 12:13 (21,196 B); refresh the dump before comparing.",
+      "check": "python3 evidence/portability/check-target-resources.py --overlay-dir overlay/settings --target-apk /tmp/target/Settings.apk; aapt2 dump resources /tmp/target/Settings.apk | grep -cE 'resource .* (color/homepage_|dimen/min_tap_target_size|style/TextAppearance.SuggestionTitle)'",
+      "evidence": "F",
+      "upstream": [
+        "https://github.com/LineageOS/android_packages_apps_Settings/tree/lineage-23.2",
+        "https://github.com/aosp-mirror/platform_packages_apps_Settings/tree/android-16.0.0_r3"
+      ]
+    },
+    {
+      "id": "settings-library-entries",
+      "artifact": "Settings entries that target framework/AAR resources",
+      "paths": [
+        "overlay/settings/res/values/ztmetro_accent_and_shapes.xml",
+        "overlay/settings/res/values-night/ztmetro_accent_and_shapes.xml",
+        "overlay/settings/res/values/ztmetro_surface_and_type.xml",
+        "overlay/settings/res/values-night/ztmetro_surface_and_type.xml",
+        "overlay/settings/res/values/attrs.xml"
+      ],
+      "class": "b",
+      "coupling": "android-version",
+      "coupling_secondary": [
+        "c"
+      ],
+      "what_breaks": "primary_material_dark/light and primary_dark_material_* are framework-res names, not declared by Settings/SettingsLib at Lineage 23.2 or AOSP 16; they no-op unless the Settings APK carries them from an AAR. cardview_default_radius and TextAppearance.M3.Sys.Typescale.* come from AndroidX/Material AARs and can disappear with a library or R8 change. settingslib_entry_bg_radius is Lineage-only (MainSwitchPreference/res/values-v31/dimens.xml:39) and absent in AOSP 16; it has no consumer in either tree at this commit.",
+      "check": "aapt2 dump resources /tmp/target/Settings.apk | grep -E 'primary_material_dark|primary_material_light|cardview_default_radius|M3.Sys.Typescale|settingslib_entry_bg_radius'; python3 evidence/portability/check-source-names.py --overlay settings --framework-tree /src/frameworks/base --settings-tree /src/packages/apps/Settings --allow attr/cardCornerRadius --allow attr/cardElevation --allow dimen/cardview_default_radius",
+      "evidence": "F",
+      "upstream": []
+    },
+    {
+      "id": "status-framework-rro",
+      "artifact": "Status-strip framework RRO (target android, isStatic=true, priority 20)",
+      "paths": [
+        "overlay/status/framework/AndroidManifest.xml",
+        "overlay/status/framework/res/values/dimens.xml",
+        "scripts/build-overlay-status.sh",
+        "evidence/status-strip/"
+      ],
+      "class": "d",
+      "coupling": "device",
+      "coupling_secondary": [
+        "b"
+      ],
+      "what_breaks": "Ships status_bar_height / _portrait / _default = 28dp. That is a device decision: sweet's device overlay sets 100px (36.36dp) and has a 93px punch-hole cutout; this static RRO wins and shortens the bar below the cutout (F source; E visual). status_bar_system_icon_size 13dp is portable.",
+      "check": "adb shell dumpsys window | grep -iE 'status.?bar|cutout'; adb shell wm density; grep -n 'status_bar_height' /src/device/*/overlay/frameworks/base/core/res/res/values/dimens.xml; compare with overlay/status/framework/res/values/dimens.xml",
+      "evidence": "F",
+      "upstream": [
+        "https://github.com/LineageOS/android_device_xiaomi_sweet/blob/lineage-23.2/overlay/frameworks/base/core/res/res/values/dimens.xml"
+      ]
+    },
+    {
+      "id": "status-systemui-rro",
+      "artifact": "Status-strip SystemUI RRO (target com.android.systemui, priority 20)",
+      "paths": [
+        "overlay/status/systemui/AndroidManifest.xml",
+        "overlay/status/systemui/res/values/dimens.xml",
+        "overlay/status/systemui/res/values/colors.xml",
+        "overlay/status/systemui/res/values/styles.xml"
+      ],
+      "class": "d",
+      "coupling": "device",
+      "coupling_secondary": [
+        "b"
+      ],
+      "what_breaks": "Six entries: status_bar_padding_start/top, icon drawing size/alpha, TextAppearance.StatusBar.Default, system_bar_background_opaque. Padding is device-tuned (8dp on ugglite; sweet's device overlay itself uses 10dp/5dp and would be overridden). Clock position is a LineageSettings runtime value, not a resource.",
+      "check": "python3 evidence/portability/check-target-resources.py --overlay-dir overlay/status/systemui --target-apk /tmp/target/SystemUI.apk; adb shell su -c 'cmd overlay dump org.ztos.overlay.status.systemui'; screenshot status bar",
+      "evidence": "F",
+      "upstream": []
+    },
+    {
+      "id": "overlays-magisk-module",
+      "artifact": "Magisk overlays module (preinstalled RRO APKs + boot-time enable)",
+      "paths": [
+        "modules/ztmetro-overlays/module.prop",
+        "modules/ztmetro-overlays/service.sh",
+        "modules/ztmetro-overlays/system/product/overlay/",
+        "scripts/build-overlay-module.sh",
+        "artifacts/ztmetro-overlays-1.0.0.zip"
+      ],
+      "class": "c",
+      "coupling": "rom",
+      "coupling_secondary": [
+        "d"
+      ],
+      "what_breaks": "Requires Magisk (magic mount + root cmd overlay), the /system/product/overlay scan path, and a device-specific boot-image patch. A Lineage user build does not grant CHANGE_OVERLAY_PACKAGES to shell; service.sh enables the runtime overlays as uid 0 at late_start. A ROM without Magisk needs adb root + push or a ROM build.",
+      "check": "adb shell su -c 'magisk -v'; adb shell su -c 'cmd overlay list | grep -E \"ztos|ztmetro\"'; adb shell su -c 'cat /data/local/tmp/ztmetro-overlays.log'",
+      "evidence": "F",
+      "upstream": []
+    },
+    {
+      "id": "font-module",
+      "artifact": "Font Magisk module (Open Sans as sans-serif)",
+      "paths": [
+        "modules/ztmetro-font/",
+        "fonts/opensans/",
+        "scripts/build-font-module.sh",
+        "artifacts/ztmetro-font-1.1.0.zip",
+        "evidence/font-module-opensans/"
+      ],
+      "class": "b",
+      "coupling": "android-version",
+      "coupling_secondary": [
+        "c"
+      ],
+      "what_breaks": "Installer rewrites the live sans-serif family in system/etc/font_fallback.xml (Android 15+ primary) and system/etc/fonts.xml (legacy). A different file layout, a vendor fonts_customization.xml, or a changed family set makes it abort by design (exit 3-7) rather than half-apply. Highest OTA/update risk in the stack.",
+      "check": "adb shell getprop ro.build.version.sdk; adb shell su -c 'head -20 /system/etc/font_fallback.xml'; adb shell su -c 'test -f /product/etc/fonts_customization.xml && cat /product/etc/fonts_customization.xml'; bash scripts/build-font-module.sh",
+      "evidence": "F",
+      "upstream": []
+    },
+    {
+      "id": "settings-header-module",
+      "artifact": "Settings header LSPosed module (org.ztmetro.settingsheader)",
+      "paths": [
+        "settings/header-module/",
+        "scripts/build-header-module.sh",
+        "evidence/settings-header/"
+      ],
+      "class": "c",
+      "coupling": "rom",
+      "coupling_secondary": [
+        "b"
+      ],
+      "what_breaks": "Depends on LSPosed/Vector + Zygisk and four Settings methods: SettingsBaseActivity.setContentView(int), .setTitle(CharSequence), .onResume(), SettingsHomepageActivity.onCreate(Bundle). Renamed/removed classes make the guarded hook log an error and leave Settings untouched; the header is gone.",
+      "check": "unzip -o /tmp/target/Settings.apk 'classes*.dex' -d /tmp/target/settings-dex; for d in /tmp/target/settings-dex/classes*.dex; do $ANDROID_HOME/build-tools/36.0.0/dexdump -d \"$d\"; done > /tmp/target/settings.dexdump; grep -n 'Lcom/android/settings/core/SettingsBaseActivity;' /tmp/target/settings.dexdump; grep -n -A2 \"name *: 'setContentView'\" /tmp/target/settings.dexdump; adb logcat -s ztmetro-header",
+      "evidence": "F",
+      "upstream": [
+        "https://github.com/LineageOS/android_packages_apps_Settings/tree/lineage-23.2"
+      ]
+    },
+    {
+      "id": "keyguard-module",
+      "artifact": "Keyguard LSPosed module (org.ztmetro.keyguard)",
+      "paths": [
+        "sysui/keyguard-module/",
+        "scripts/build-keyguard-module.sh",
+        "evidence/keyguard-module/"
+      ],
+      "class": "c",
+      "coupling": "rom",
+      "coupling_secondary": [
+        "b"
+      ],
+      "what_breaks": "Six SystemUI classes, seven methods: NotificationShadeWindowView#onAttachedToWindow, KeyguardRootView (anchor), KeyguardClockViewBinder#bind, KeyguardIndicationTextView#setNextIndication, com.android.keyguard.KeyguardSliceView#showSlice, AnimatableClockView#refreshTime/onMeasure/setColors. Compose keyguard refactors move these; a missing class is guarded and logged, not fatal.",
+      "check": "unzip -o /tmp/target/SystemUI.apk 'classes*.dex' -d /tmp/target/sysui-dex; for d in /tmp/target/sysui-dex/classes*.dex; do $ANDROID_HOME/build-tools/36.0.0/dexdump -d \"$d\"; done > /tmp/target/sysui.dexdump; grep -E 'KeyguardClockViewBinder|NotificationShadeWindowView|KeyguardRootView|KeyguardIndicationTextView|KeyguardSliceView|AnimatableClockView' /tmp/target/sysui.dexdump; adb logcat -s ztmetro-keyguard",
+      "evidence": "F",
+      "upstream": [
+        "https://github.com/LineageOS/android_frameworks_base/tree/lineage-23.2"
+      ]
+    },
+    {
+      "id": "portability-tooling",
+      "artifact": "Target/source resource-name checkers and expected lists",
+      "paths": [
+        "evidence/portability/check-target-resources.py",
+        "evidence/portability/check-source-names.py",
+        "evidence/portability/expected-resources-framework.tsv",
+        "evidence/portability/expected-resources-systemui.tsv",
+        "evidence/portability/expected-resources-settings.tsv",
+        "evidence/portability/expected-resources-status-framework.tsv",
+        "evidence/portability/expected-resources-status-systemui.tsv"
+      ],
+      "class": "a",
+      "coupling": "device-independent",
+      "coupling_secondary": [],
+      "what_breaks": "The TSVs are a snapshot of the overlay source and go stale as soon as an overlay is edited. Regenerate them with --write-expected before comparing; never trust a TSV older than the APK it is checked against.",
+      "check": "python3 evidence/portability/check-target-resources.py --overlay settings --overlay-dir overlay/settings --write-expected /tmp/settings.tsv; diff -u evidence/portability/expected-resources-settings.tsv /tmp/settings.tsv",
+      "evidence": "F",
+      "upstream": []
+    },
+    {
+      "id": "built-evidence",
+      "artifact": "Built evidence APKs (framework, SystemUI, Settings, status, launcher, Action Centre)",
+      "paths": [
+        "evidence/framework-rro/ZtMetroFramework.apk",
+        "evidence/sysui-rro/ztmetro-systemui-rro.apk",
+        "evidence/settings-rro/ztmetro-settings-rro.apk",
+        "evidence/status-strip/ztmetro-status-framework-rro.apk",
+        "evidence/status-strip/ztmetro-status-systemui-rro.apk",
+        "evidence/launcher-v3/ztmetro-start.apk",
+        "evidence/actioncentre/ztmetro-actioncentre.apk"
+      ],
+      "class": "b",
+      "coupling": "android-version",
+      "coupling_secondary": [
+        "d"
+      ],
+      "what_breaks": "Build outputs, not sources. The checked-in Settings aapt2 dump predates the 12:13 rebuild (56 entries vs 93 in source), so a dump-based check can report false missing entries. Refresh the dump from the rebuilt APK before comparing; never port an evidence APK whose entry count differs from its source.",
+      "check": "aapt2 dump resources evidence/settings-rro/ztmetro-settings-rro.apk > /tmp/settings-current.txt; python3 evidence/portability/check-target-resources.py --overlay-dir overlay/settings --target-dump /tmp/settings-current.txt; sha256sum evidence/settings-rro/ztmetro-settings-rro.apk",
+      "evidence": "F",
+      "upstream": []
+    },
+    {
+      "id": "release-zips",
+      "artifact": "Release zips (overlays, font 1.0.0 Selawik, font 1.1.0 Open Sans)",
+      "paths": [
+        "artifacts/ztmetro-overlays-1.0.0.zip",
+        "artifacts/ztmetro-font-1.0.0.zip",
+        "artifacts/ztmetro-font-1.1.0.zip"
+      ],
+      "class": "c",
+      "coupling": "rom",
+      "coupling_secondary": [
+        "b"
+      ],
+      "what_breaks": "Zips embed the APKs of the moment they were built; build-overlay-module.sh copies from evidence/, so a stale evidence APK becomes a stale zip. font-1.0.0 is Selawik (no Cyrillic) and must not ship on a Russian UI.",
+      "check": "unzip -l artifacts/ztmetro-overlays-1.0.0.zip; unzip -p artifacts/ztmetro-overlays-1.0.0.zip system/product/overlay/ztmetro-settings-rro.apk | sha256sum; sha256sum artifacts/ztmetro-font-1.1.0.zip",
+      "evidence": "F",
+      "upstream": []
+    },
+    {
+      "id": "root-injection-stack",
+      "artifact": "Magisk/Zygisk/LSPosed (Vector) injection stack and boot patching",
+      "paths": [
+        "docs/13-root-and-injection-setup.md",
+        "docs/15-boot-recovery.md",
+        "docs/10a-systemless-injection.md"
+      ],
+      "class": "c",
+      "coupling": "rom",
+      "coupling_secondary": [
+        "d"
+      ],
+      "what_breaks": "Magisk boot-image patching is per device and per ROM build; Zygisk and LSPosed/Vector versions are Android-16 specific; an OTA replaces the boot image and removes root. The overlays module survives a Magisk update but not a ROM reflash.",
+      "check": "adb shell su -c 'magisk -v'; adb shell getprop ro.build.version.release; adb shell su -c 'ls /data/adb/modules'; after OTA re-check cmd overlay list",
+      "evidence": "F",
+      "upstream": []
+    },
+    {
+      "id": "source-pins-reference",
+      "artifact": "Pinned source facts and resource maps",
+      "paths": [
+        "design/systemui-resource-map.json",
+        "design/settings-container-map.md",
+        "sources.md",
+        "docs/10b-overlay-and-hook-facts.md"
+      ],
+      "class": "a",
+      "coupling": "device-independent",
+      "coupling_secondary": [],
+      "what_breaks": "All name/line facts are pinned to lineage-23.2 commits 797e4324 (frameworks_base) and e1b8cd2d (Settings). A branch move invalidates line numbers, not necessarily names; re-run the checkers instead of trusting quoted line numbers.",
+      "check": "git -C /src/frameworks/base rev-parse HEAD; git -C /src/packages/apps/Settings rev-parse HEAD; python3 evidence/portability/check-source-names.py --overlay framework --framework-tree /src/frameworks/base",
+      "evidence": "F",
+      "upstream": [
+        "https://github.com/LineageOS/android_frameworks_base/commit/797e43244b96c6a0dff5c81b21c4d4be665b082e",
+        "https://github.com/LineageOS/android_packages_apps_Settings/commit/e1b8cd2dde2edd8c513362efc55a770270dce899"
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 apk=/home/denis/ztux/settings-metro/settings/header-module/build/dist/ztmetro-settings-header.apk
 size_bytes=37872
-sha256=d554f4a688aa9bafbdc18c82c0ca4770de2d19a22522b8c48b42361c4d2c483b
+sha256=231355e73f3460cc2649b9064ef084702aa9e2aaf66a608694712b1a583f0bf4
 min_sdk=29
 target_sdk=36
 xposed_api_jar=/home/denis/ztux/settings-metro/settings/header-module/build/deps/xposed-api-82.jar

@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 
+import java.lang.ref.WeakReference;
 import java.util.WeakHashMap;
 
 /**
@@ -55,13 +56,15 @@ final class ScreenStyler {
     }
 
     private static final class Passes {
-        private final Activity activity;
+        // Weak on purpose: PASSES is a WeakHashMap keyed by the Activity, so the value
+        // must not keep the key alive (otherwise the entry can never be collected).
+        private final WeakReference<Activity> activity;
         private final boolean homepage;
         private final Handler handler = new Handler(Looper.getMainLooper());
         private int generation;
 
         Passes(Activity activity, boolean homepage) {
-            this.activity = activity;
+            this.activity = new WeakReference<>(activity);
             this.homepage = homepage;
         }
 
@@ -83,7 +86,10 @@ final class ScreenStyler {
         }
 
         private void runPass() {
-            ScreenStyler.pass(activity, homepage);
+            Activity target = activity.get();
+            if (target != null) {
+                ScreenStyler.pass(target, homepage);
+            }
         }
     }
 
@@ -104,6 +110,13 @@ final class ScreenStyler {
             FlatRows.apply(activity);
         } catch (Throwable t) {
             Log.w(TAG, "flat-row pass failed (cards kept)", t);
+        }
+        try {
+            // Title/white + summary/grey, and on the dashboard a 20 sp title with no
+            // summary line (docs/17 §6; ztmetro.c:6393).  Runs after the rows exist.
+            RowType.apply(activity, homepage);
+        } catch (Throwable t) {
+            Log.w(TAG, "row-type pass failed (stock type kept)", t);
         }
         try {
             // Re-apply after Settings' own inset handling: the bar must never cover a row.

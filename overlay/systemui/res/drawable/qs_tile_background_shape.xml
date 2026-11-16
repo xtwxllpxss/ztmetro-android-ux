@@ -10,11 +10,16 @@
 
   The literal 0dp radius is intentional (no cross-package reference): idmap2 maps
   this file to the target entry by name/type, and QSTileViewImpl tints the compiled
-  GradientDrawable at runtime (QSTileViewImpl.kt:819-837, base id qs_tile_background_base).
+  GradientDrawable at runtime (QSTileViewImpl.kt:336-347, base id qs_tile_background_base).
   #FFFFFF is kept because the colour is applied by that runtime tint, not from here.
 
-  qs_tile_background (ripple -> layer-list -> this shape) is NOT overridden, so the
-  ripple/ripple mask, hover and focus behaviour stay stock.
+  qs_tile_background_flagged (ripple -> layer-list -> this shape) is NOT overridden, so
+  the ripple/ripple mask, hover and focus behaviour stay stock.
+
+  SCOPE (verified on the live APK, evidence/qs-square/REPORT.md): this drawable is only
+  reachable from the View-based QSTileViewImpl path. The 2025 shade draws its QS tiles in
+  Compose (qs/panels/ui/compose/infinitegrid/Tile.kt) with hard-coded Dp radii, so this
+  entry does NOT change the shade tiles. It is kept square for the legacy View path.
 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <corners android:radius="0dp" />

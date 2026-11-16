@@ -253,13 +253,13 @@
       }
     ],
     "header": {
-      "title_size_sp": 48,
-      "subtitle_size_sp": 11.5,
-      "gap": 10,
+      "title_size_sp": 58,
+      "subtitle_size_sp": 15,
+      "gap": 29,
       "origin": {
-        "title_size_sp": "core/zrnmetrocore.c:510 (48 pt Semilight at y=24)",
-        "subtitle_size_sp": "core/zrnmetrocore.c:509 (11.5 pt Semibold caps at y=14)",
-        "gap": "derived [E] — 24 - 14, the vertical offset between the caps line and the title line (core/zrnmetrocore.c:509-510)"
+        "title_size_sp": "measured [F] WP page title = 16.27 % of screen width (docs/17-wp-design-reference.md §2: caps 8 px / title x-height 17 px on the 209 px frame F3, cross-checked by the 540 px frame F5 at 11.48 %W ink band) => 16.27 % x 360 dp = 58.6 sp; the C shell's 48 pt (core/zrnmetrocore.c:510) is 13.3 %W at 360, i.e. 18 % small",
+        "subtitle_size_sp": "measured [F] WP caps cap-height 3.83 %W (docs/17 §2) => 13.8 dp cap-height; with Open Sans cap-height 0.714 that is 19.3 sp at the raw upper bound and 14.8 sp after the -1 px antialias correction on the 8 px band, so 15 sp (the conservative end of the band; letterSpacing 0.08 em, core/zrnmetrocore.c:509 for the C value of 11.5)",
+        "gap": "measured [F] WP caps-bottom to title-top = 17 px on F3 = 7.9 %W => 39 dp at 480 = 29 dp at 360 (C shell: 24 - 14 = 10, core/zrnmetrocore.c:509-510)"
       }
     }
   },

@@ -25,7 +25,7 @@ this document summarises them and does not replace them.
 | 1 | **framework accent / typography** | preinstalled RRO on **`android`** (`ZtMetroFramework.apk`, `isStatic=true`, targetSdk 36) | 92 entries — 63 colour, 7 dimen, 2 bool, 20 style: `accent_device_default*`, `accent_material_*`, `ripple_material_*`, `system_accent1_*`, the M3 roles `system_primary_*`/`system_on_primary_*`/`system_accent2/3_*`, `TextAppearance.Material.*` (13/17/20/22/25.5/48/56/92 sp), `config_*CornerRadius=0dp`, `action_bar_default_height_material=48dp`, `config_buttonTextAllCaps=false` | **no** — no frame shows a framework-tinted control changing; active QS tiles are still teal in `93-shade.png`, which `customColorShadeActive` would have changed | [`evidence/framework-rro/REPORT.md`](../evidence/framework-rro/REPORT.md), `aapt2-dump-resources.txt`, `verified-resources.csv` (92/92 names); counter-evidence [`ux-compare/current/93-shade.png`](../evidence/ux-compare/current/93-shade.png) |
 | 2 | **control styles** (buttons, dialogs, ripples) | same framework RRO (values only) | `config_buttonCornerRadius`, `config_dialogCornerRadius`, `config_bottomDialogCornerRadius`, `config_progressBarCornerRadius`, `control_corner_material`, `dialog_corner_radius` → `0dp`; framework button label `TextAppearance.Material.Button` 13 sp sentence case; ripple accent | **no** — Settings' square controls come from the *Settings* RRO, not from this one; no stock-app dialog/button was captured | [`evidence/framework-rro/REPORT.md`](../evidence/framework-rro/REPORT.md) §3/§6; [`settings-rro/REPORT.md`](../evidence/settings-rro/REPORT.md) §3 |
 | 3 | **Settings chrome** (home, lists, dialogs) | preinstalled RRO on **`com.android.settings`** (`org.ztos.overlay.settings`, priority 10, **not** static) | 56 verified entries at the last recorded build (2 attr, 22 colour, 15 dimen, 2 drawable, 15 style): homepage tile palette → `#0050EF`/white, radii → `0dp`, `TextAppearance.*` ramp, `preference_background`, `search_bar_selected_background`, Wi-Fi rows full-bleed. The 12:13 build adds the Settings-local accent/geometry block (`primary_material_*`, `settingslib_expressive_radius_*`, switchbar tints) — see §6 for the evidence lag | **yes** — cobalt tiles at 11:29 (`60-settings.png`), full-bleed rows + smaller type at 11:52–12:03 (`90-settings.png`, `a0-settings.png`), caps section labels at 11:58 (`96-wifi.png`) | [`evidence/settings-rro/REPORT.md`](../evidence/settings-rro/REPORT.md), `verified-resources.csv`; frames [`a0-settings.png`](../evidence/ux-compare/current/a0-settings.png), [`a1-wifi.png`](../evidence/ux-compare/current/a1-wifi.png) |
-| 4 | **SystemUI shade / Quick Settings** | preinstalled RRO on **`com.android.systemui`** (`org.ztos.overlay.systemui`, priority 10, not static) | 25 entries: `qs_corner_radius` 28→0 dp, `qs_tile_height` 80→68 dp, paddings/margins 4 dp, `qs_tile_text_size` 14→13 sp, `notification_corner_radius*` →0, `shade_panel_fallback`/`notification_scrim_*` →`#000`, `shade_header_text_color` →white, `TextAppearance.QS.*` 20 sp light, square `qs_tile_background_shape` | **partial / not effective** — the 11:53 shade still shows 28 dp rounded teal tiles and stock label sizes; the black panel is also what a stock dark-theme shade looks like, so it proves nothing | [`evidence/sysui-rro/REPORT.md`](../evidence/sysui-rro/REPORT.md); counter-evidence [`93-shade.png`](../evidence/ux-compare/current/93-shade.png); gap acknowledged in [`docs/16`](16-ux-gap-analysis.md) §2 |
+| 4 | **SystemUI shade / Quick Settings** | preinstalled RRO on **`com.android.systemui`** (`org.ztos.overlay.systemui`, priority 10, not static) | 25 entries: `qs_corner_radius` 28→0 dp, `qs_tile_height` 80→68 dp, paddings/margins 4 dp, `qs_tile_text_size` 14→13 sp, `notification_corner_radius*` →0, `shade_panel_fallback`/`notification_scrim_*` →`#000`, `shade_header_text_color` →white, `TextAppearance.QS.*` 20 sp light, square `qs_tile_background_shape` | **partial, and the square pass is blocked by Compose** — measured on `93-shade.png`: the tile gap is 7 px = **4.31 dp**, so `qs_tile_margin_horizontal` *is* applied; but the 2025 Compose tiles are **72 dp tall** with **~24 dp (active) / ~36 dp (inactive)** corners computed in `CommonTileDefaults`, so `qs_corner_radius`/`qs_tile_height`/`qs_tile_background_shape` never reach them. The black panel is stock-like and proves nothing | [`evidence/sysui-rro/REPORT.md`](../evidence/sysui-rro/REPORT.md); measurement [`qs-square/forensics/measure-shade.txt`](../evidence/qs-square/forensics/measure-shade.txt); frame [`93-shade.png`](../evidence/ux-compare/current/93-shade.png); gap in [`docs/16`](16-ux-gap-analysis.md) §2 |
 | 5 | **system font** | Magisk module **`ztmetro-font` 1.1.0** (no APK, no overlay) | rewrites the live `system/etc/font_fallback.xml` **and** `system/etc/fonts.xml`: only the `<family name="sans-serif">` block → 20 static Open Sans 3.003 entries (8 faces: Light/Regular/SemiBold/Bold + italics); aliases, emoji, CJK, mono, serif untouched | **no** — no `grep`/`ls` readback and no before/after screenshot pair with identical layout; the `a0`/`a1` frames follow a typography overlay, so glyphs cannot be attributed | [`evidence/font-module-opensans/REPORT.md`](../evidence/font-module-opensans/REPORT.md) §5–§7; zip [`artifacts/ztmetro-font-1.1.0.zip`](../artifacts/ztmetro-font-1.1.0.zip) |
 | 6 | **Settings header** | **LSPosed** module `org.ztmetro.settingsheader` (Zygisk) | four hooks (`SettingsBaseActivity.setContentView(int)`, `setTitle`, `onResume`, `SettingsHomepageActivity.onCreate`) insert a 56 dp cobalt header at index 0, clear the stock toolbar title, and `MetroTinter` walks the view tree to tint `CompoundButton`s cobalt | **yes** — header on home at 11:31 (`70-settings.png`), on a sub-screen at 11:35 (`71-wifi.png`), final header-only layout at 12:03–12:04 (`a0`/`a1`); cobalt switch with white thumb at 12:01+ (`97-wifi.png`, `a1-wifi.png`) | [`evidence/settings-header/REPORT.md`](../evidence/settings-header/REPORT.md); APK [`evidence/settings-header/ztmetro-settings-header.apk`](../evidence/settings-header/ztmetro-settings-header.apk) |
 | 7 | **Start** | **own APK** `org.ztmetro.start`, default HOME | Metro tile grid, app list with A–Z semantic zoom, two-line caps/title header on the app list, live tiles via `NotificationListenerService` (opt-in), no `uses-permission` in the manifest; v3 redraw built | **yes, v1 look** — `23-start.png` (11:12), `40-home.png` (11:25), `92-start.png` (11:53) show `ZTMETRO`/`start`/pivot and cobalt tiles as HOME. v2/v3 were built later and are **not** in any frame | [`evidence/launcher/REPORT.md`](../evidence/launcher/REPORT.md), [`launcher-v2/REPORT.md`](../evidence/launcher-v2/REPORT.md), [`launcher-v3/REPORT.md`](../evidence/launcher-v3/REPORT.md) |
@@ -152,7 +152,7 @@ adb shell getprop ro.build.version.sdk        # 36
 Do **not** flash `super_empty.img`: `super` is retrofit over p24 `system` (3 GiB) + p47
 `cust` (512 MiB), and the recovery/sideload path creates the metadata itself [F:
 PLAN §4]. The microG recovery will ask to install an unsigned/other-key zip — accept;
-do not mix it with an official LineageOS zip [F: PLAN §9.5].
+do not mix it with an official LineageOS zip [F: PLAN §9, risk 5].
 
 **Evidence status:** the command list is [F] from PLAN; the actual flash has **no log**
 in this repo — the proof it happened is the on-device LineageOS screenshots, not a
@@ -164,7 +164,7 @@ transcript. See §6.1.
    (`Install → Select and Patch a File`), then flash the patched image [F: `docs/13` §1]:
    ```sh
    $FB flash boot magisk_patched-*.img
-   adb reboot
+   $FB reboot
    adb shell su -c 'magisk -v'        # v31.1 era; Android 16 + Zygisk since v30.3
    ```
 2. Magisk app → **Settings → Zygisk** → enable → reboot [F: `docs/13` §2, `docs/10a` §6].
@@ -181,8 +181,8 @@ transcript. See §6.1.
 
 ### 3.3 Build each artifact
 
-Every script is idempotent and fails closed on a bad overlay/APK. Sizes and hashes as
-of this snapshot are in §4.3; each artifact's own evidence file is authoritative.
+Every script is idempotent and fails closed on a bad overlay/APK. Sizes (and the
+per-file hash pointers) are in §4.3; each artifact's own evidence file is authoritative.
 
 ```sh
 # framework-res RRO (target android; values-only; static)
@@ -202,7 +202,13 @@ repo/scripts/build-overlay-settings.sh
 repo/scripts/build-overlay-sysui.sh
 #   same env/flag family as the Settings script; -> evidence/sysui-rro/...
 
-# Magisk module that carries all three overlays + the boot-time enable service
+# status-strip RRO pair (framework + SystemUI)
+repo/scripts/build-overlay-status.sh
+#   env: BUILD_LOCAL, BUILD_HOST, ANDROID_SDK, ANDROID_JDK, BUILD_TOOLS_VERSION,
+#        OUT_DIR, REMOTE_WORK, KEYSTORE
+#   -> evidence/status-strip/ztmetro-status-{framework,systemui}-rro.apk
+
+# Magisk module that carries all five overlay APKs + the boot-time enable service
 repo/scripts/build-overlay-module.sh
 #   flag: --out DIR (default repo/artifacts)
 #   -> artifacts/ztmetro-overlays-1.0.0.zip
@@ -243,7 +249,7 @@ keys [F: scripts, reports].
 ### 3.4 Install / apply each artifact
 
 ```sh
-# --- overlays: one Magisk module maps three APKs into system/product/overlay/ ---
+# --- overlays: one Magisk module maps five APKs into system/product/overlay/ ---
 adb push repo/artifacts/ztmetro-overlays-1.0.0.zip /sdcard/
 adb shell su -c 'magisk --install-module /sdcard/ztmetro-overlays-1.0.0.zip'
 adb reboot
@@ -293,9 +299,9 @@ the same module installer handles the overlay zip. `su -c` assumes Magisk's `su`
 
 | # | Block | Command | Expected |
 |---|---|---|---|
-| 1 | overlays registered | `adb shell su -c 'cmd overlay list \| grep -E "ztmetro\|ztos"'` | `org.ztmetro.overlay.framework`, `org.ztos.overlay.systemui`, `org.ztos.overlay.settings` present |
+| 1 | overlays registered | `adb shell su -c 'cmd overlay list \| grep -E "ztmetro\|ztos"'` | `org.ztmetro.overlay.framework`, `org.ztos.overlay.systemui`, `org.ztos.overlay.settings`, `org.ztos.overlay.status.*` present |
 | 2 | overlay state + idmap | `adb shell su -c 'cmd overlay dump org.ztos.overlay.settings'` | state `enabled`, no `idmap2 … not allowed` in `adb logcat` |
-| 3 | boot-time enable log | `adb shell su -c 'cat /data/local/tmp/ztmetro-overlays.log'` | `enable` lines for the two runtime overlays |
+| 3 | boot-time enable log | `adb shell su -c 'cat /data/local/tmp/ztmetro-overlays.log'` | `enable` lines for the four enable-time packages |
 | 4 | Settings chrome | open Settings, Wi-Fi | full-bleed rows, caps section labels, `0dp` panels, cobalt dashboard tiles (compare [`a0-settings.png`](../evidence/ux-compare/current/a0-settings.png)) |
 | 5 | Settings header | open Settings, then Wi-Fi | 56 dp cobalt block above content, `Настройки`/`Интернет` + `ztMetro`, no duplicate toolbar title |
 | 6 | header hook loaded | `adb logcat -s ztmetro-header` | `loading in Settings (xposed API 93)` + `module resources via …` |
@@ -335,7 +341,7 @@ are labelled as such:
 | Flash window (recovery, format, sideload, first boot, checks) | **30–45 min** | PLAN §3 [E] |
 | First boot after sideload | **5–15 min** | PLAN §3 [E] |
 | ROM zip / boot / recovery size | 1 205 136 779 / 20 967 424 / 32 790 528 B | PLAN §2 [F] |
-| Settings RRO iteration observed from mtimes: source edit 12:01 → screenshot 12:03 | **≈2 min** for rebuild + push + restart | file mtimes [E] |
+| Settings/header iteration observed from mtimes: source or APK 12:01–12:02 → screenshot 12:03–12:04 | **≈2 min** for push + restart | file mtimes [E] |
 | Header iteration observed: 11:29 (Settings RRO visible) → 11:31 (header visible) | **≈2 min** | screenshot clocks [E] |
 | Build durations of the scripts | **not recorded** — no timings in any build log | absence [F] |
 
@@ -378,7 +384,7 @@ storage/RAM cost on this 2 GB device
 |---|---|
 | `design/tokens/ztmetro.tokens.json` + `gen_android.py` / `gen_overlay.py` | pure design data and code generation; no device constants |
 | `scripts/*.sh` | parameterised by `ANDROID_SDK*`, `JAVA_HOME`, output dirs; no device paths |
-| `evidence/*/tools/check_names.py` (framework/Settings) | reads a target tree + a dump; the check is reusable for any ROM |
+| `overlay/framework/tools/check_names.py`, `overlay/settings/tools/check_names.py` | read a target tree + an APK dump; the check is reusable for any ROM |
 | **framework** overlay values | AOSP resource names (`accent_device_default_*`, `TextAppearance.Material.*`, `config_*CornerRadius`, `system_accent1_*`) are stable across Android 16 devices |
 | Start launcher APK | plain SDK app, minSdk 29, no ROM API, feature-detects notification access |
 | Action Centre APK | plain SDK app, minSdk 29, standard `Settings.Panel`/`TorchMode` APIs |
@@ -403,10 +409,9 @@ storage/RAM cost on this 2 GB device
 1. Confirm the target is **Android 16 / API 36** (`ro.build.version.sdk=36`) and
    LineageOS-for-microG 23.2; if the API differs, do not install the framework overlay
    (minSdk 36) — rebuild it against that `android.jar`.
-2. Fetch the matching target trees at the ROM's branch:
-   `android_frameworks_base` (framework values + SystemUI), `android_packages_apps_Settings`
-   (and SettingsLib, which lives in the same tree), `android_packages_apps_Settings`'s
-   `themes.xml`/`styles.xml`.
+2. Fetch the matching target trees at the ROM's branch: `android_frameworks_base`
+   (framework values + SystemUI) and `android_packages_apps_Settings` (Settings +
+   SettingsLib, including `res/values/themes.xml` and `styles.xml`).
 3. Run the name checks before building:
    ```sh
    python3 repo/overlay/settings/tools/check_names.py --tree <settings-src> \
@@ -415,7 +420,8 @@ storage/RAM cost on this 2 GB device
        --aosp-values <aosp>/values --aosp-color <aosp>/color
    ```
    Do not proceed with a name the target does not define; idmap2 will drop it silently.
-4. Rebuild all three overlays and diff `aapt2 dump resources` against the target tree.
+4. Rebuild every overlay (framework, Settings, SystemUI, status pair) and diff
+   `aapt2 dump resources` against the target tree.
    Anything that disappeared is a ROM change, not a build failure.
 5. Font module: confirm `/system/etc/font_fallback.xml` exists and the `sans-serif`
    family has the shape the rewrite expects; run the installer dry run first
@@ -489,13 +495,19 @@ Both cannot be the complete truth. The device shows the switch turned cobalt onl
 the Settings pass, which is consistent with *some* Settings-local resource and/or the
 LSPosed tint, but the exact resource chain is **[?]**.
 
-### 6.6 The SystemUI RRO is documented as effective, the screen says otherwise
+### 6.6 The SystemUI RRO is documented as effective for tiles; the Compose shade ignores the tile resources
 
-`sysui-rro/REPORT.md` predicts square 0 dp tiles and 13 sp labels; `93-shade.png`
-(11:53) still shows 28 dp rounded teal tiles. Either the overlay was never enabled, or
-it is enabled but the 2025/Compose shade does not consume the overridden resources.
-`docs/16` §2 already lists "tiles still rounded (open item)". Treat row 4 of §1 as
-**not delivered**, not as "expected but unseen".
+`sysui-rro/REPORT.md` predicts square 0 dp tiles and 13 sp labels. A pixel measurement of
+`93-shade.png` ([`qs-square/forensics/measure-shade.txt`](../evidence/qs-square/forensics/measure-shade.txt))
+shows that the overlay **is at least partly live**: the horizontal gap between tiles is
+7 px = **4.31 dp**, matching the overlay's `qs_tile_margin_horizontal` 4 dp, not the
+stock 8 dp. But the tiles are **72 dp tall** (Compose `CommonTileDefaults.TileHeight`)
+with ~24 dp active / ~36 dp inactive corners computed in Compose code, so
+`qs_corner_radius`, `qs_tile_height`, `qs_tile_padding` and
+`qs_tile_background_shape` cannot change them. The 12:20 rebuild in
+[`evidence/qs-square/`](../evidence/qs-square/) is an attempt to find a reachable
+resource; it is not device-verified. Treat the **square** QS pass as **not delivered**,
+and the margins/notification radii as delivered-but-unmeasured on screen.
 
 ### 6.7 The framework RRO has no on-screen confirmation at all
 
@@ -528,5 +540,5 @@ font has no readback and the QS pass has no square tiles on screen. The roadmap
 | Start launcher | `scripts/build-launcher.sh` | `evidence/launcher/`, `-v2/`, `-v3/` |
 | Action Centre | `scripts/build-actioncentre.sh` | `evidence/actioncentre/` |
 | keyguard | `scripts/build-keyguard-module.sh` | `evidence/keyguard-module/` |
-| status strip | (status-strip build) | `evidence/status-strip/` |
+| status strip | `scripts/build-overlay-status.sh` | `evidence/status-strip/` |
 | verification index | — | `evidence/coverage/` |
