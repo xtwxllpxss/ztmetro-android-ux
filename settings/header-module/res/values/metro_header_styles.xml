@@ -2,6 +2,15 @@
      from design/tokens/ztmetro.tokens.json and the module spec in that script.
      Do not edit by hand: run the generator instead. -->
 <resources>
+  <style name="MetroHeaderLabel">
+    <item name="android:textSize">@dimen/metro_header_label_size</item>
+    <item name="android:textColor">@color/metro_header_label</item>
+    <item name="android:fontFamily">sans-serif-medium</item>
+    <item name="android:letterSpacing">0.08</item>
+    <item name="android:includeFontPadding">false</item>
+    <item name="android:maxLines">1</item>
+    <item name="android:ellipsize">end</item>
+  </style>
   <style name="MetroHeaderTitle">
     <item name="android:textSize">@dimen/metro_header_title_size</item>
     <item name="android:textColor">@color/metro_header_title</item>
@@ -17,6 +26,14 @@
     <item name="android:includeFontPadding">false</item>
     <item name="android:maxLines">1</item>
     <item name="android:ellipsize">end</item>
+  </style>
+  <style name="MetroBottomBarLabel">
+    <item name="android:textSize">@dimen/metro_bottom_bar_label_size</item>
+    <item name="android:textColor">@color/metro_bottom_bar_text</item>
+    <item name="android:fontFamily">sans-serif</item>
+    <item name="android:letterSpacing">0.08</item>
+    <item name="android:includeFontPadding">false</item>
+    <item name="android:gravity">center</item>
   </style>
   <!-- sans-serif / sans-serif-light / sans-serif-medium (Roboto), derived [E]: no font files are shipped, see README -->
 </resources>

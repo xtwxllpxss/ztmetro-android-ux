@@ -80,8 +80,10 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        hideSystemBars();
         setContentView(buildUi());
+        // The decor view does not exist before setContentView; hiding the bars earlier
+        // throws NPE on this build (observed on LineageOS 23.2).
+        hideSystemBars();
         applyOpenTransition();
         findFlash();
         registerTorchCallback();
@@ -135,6 +137,7 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
     }
 
     private void hideSystemBars() {
+        if (getWindow() == null || getWindow().peekDecorView() == null) return;
         Window window = getWindow();
         window.setStatusBarColor(Color.TRANSPARENT);
         window.setNavigationBarColor(Color.BLACK);

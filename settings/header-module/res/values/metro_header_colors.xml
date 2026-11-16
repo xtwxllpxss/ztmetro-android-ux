@@ -2,10 +2,20 @@
      from design/tokens/ztmetro.tokens.json and the module spec in that script.
      Do not edit by hand: run the generator instead. -->
 <resources>
-  <!-- color.accent.base -->
-  <color name="metro_header_bg">#0050EF</color>
-  <!-- color.accent.foreground_on_accent -->
+  <!-- color.neutrals.black -->
+  <color name="metro_header_bg">#000000</color>
+  <!-- color.neutrals.text_primary -->
   <color name="metro_header_title">#FFFFFF</color>
-  <!-- color.accent.foreground_on_accent at 0.7 alpha (module spec: subtitle at 70% opacity (Windows-Phone page subhead contrast); applied to color.accent.foreground_on_accent) -->
+  <!-- color.neutrals.text_primary at 0.7 alpha (module spec: label and subtitle at 70% opacity (secondary text on black; the reference labels measure 0.70 white)) -->
+  <color name="metro_header_label">#B3FFFFFF</color>
+  <!-- color.neutrals.text_primary at 0.7 alpha (module spec: label and subtitle at 70% opacity (secondary text on black; the reference labels measure 0.70 white)) -->
   <color name="metro_header_subtitle">#B3FFFFFF</color>
+  <!-- color.accent.base — kept for the pressed state of the bar buttons; never used as a fill -->
+  <color name="metro_accent">#0050EF</color>
+  <!-- color.accent.base at 0.24 alpha (module spec: pressed fill of the bottom-bar glyph buttons — 24% of color.accent.base (subtle Metro press state on black)) -->
+  <color name="metro_accent_pressed">#3D0050EF</color>
+  <!-- color.neutrals.black -->
+  <color name="metro_bottom_bar_bg">#000000</color>
+  <!-- color.neutrals.text_primary -->
+  <color name="metro_bottom_bar_text">#FFFFFF</color>
 </resources>

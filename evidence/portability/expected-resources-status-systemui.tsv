@@ -1,0 +1,7 @@
+overlay	type	name
+status-systemui	color	system_bar_background_opaque
+status-systemui	dimen	status_bar_icon_drawing_alpha
+status-systemui	dimen	status_bar_icon_drawing_size
+status-systemui	dimen	status_bar_padding_start
+status-systemui	dimen	status_bar_padding_top
+status-systemui	style	TextAppearance.StatusBar.Default

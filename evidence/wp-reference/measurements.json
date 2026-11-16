@@ -1,0 +1,171 @@
+{
+  "what": "Raw pixels behind docs/17-wp-design-reference.md, one entry per frame, with the scale used and the runs found. Reproduce with evidence/wp-reference/measure.py.",
+  "date": "2026-11-16",
+  "environment": "macOS, python3.11, PIL + numpy only (no adb, no device)",
+  "frames": [
+    {
+      "id": "F1",
+      "path": "/Users/meow/Projects/redmi-note-5a-ztos/build/wp-ux-refs-2026-11-15/img/wp81-start.png",
+      "size": [250, 444],
+      "format": "PNG RGB",
+      "dp_scale": 1.92,
+      "dp_scale_basis": "480 dp / 250 px; validated by the app-bar frame (36 px = 72 dp at 240 px)",
+      "black_column_runs_tile_band": [[0, 10], [84, 87], [239, 249]],
+      "second_row_band": [[0, 10], [84, 87], [123, 126], [162, 164], [239, 249]],
+      "derived": { "small_unit_px": 35, "medium_px": 73, "wide_px": 150, "gutter_px": 4, "margin_px": 11, "first_row_top_px": 22 },
+      "note": "3 medium / 6 small columns; the label inside a tile is sub-pixel at this scale, so the WP label inset is [E]"
+    },
+    {
+      "id": "F2",
+      "path": "/Users/meow/Projects/redmi-note-5a-ztos/build/wp-ux-refs-2026-11-15/img/wiki-Internet-Explorer-Mobile-7-png.png",
+      "size": [240, 400],
+      "format": "JPEG data in a .png name (PIL: image/jpeg)",
+      "dp_scale": 2.0,
+      "bar_band": { "content_ends_y": 363, "bar_y": [364, 399], "bar_px": 36, "icons_y": [370, 393], "icon_px": 24, "inset_px": 6 },
+      "icon_x_runs": [[66, 89], [108, 131], [150, 173]],
+      "ellipsis_x_runs": [[215, 217], [220, 222], [225, 227]],
+      "derived": { "bar_dp": 72, "icon_dp": 48, "icon_pitch_px": 42, "icon_pitch_dp": 84, "ellipsis_dp": 26 },
+      "validation": "bar 36 px at 240 px width = 72 dp, matching the MSDN sentence quoted in the doc"
+    },
+    {
+      "id": "F3",
+      "path": "/Users/meow/Projects/redmi-note-5a-ztos/build/wp-ux-refs-2026-11-15/img/pdf-p13-settings-maps.png",
+      "same_pixels_as": "repo/evidence/ux-compare/refs/wp7-settings-header.png",
+      "size": [209, 350],
+      "format": "PNG RGB",
+      "dp_scale": 2.297,
+      "ink_bands": [
+        { "y": [2, 9], "h": 8, "what": "status icons, right side x 165..204" },
+        { "y": [23, 30], "h": 8, "x": [10, 53], "what": "SETTINGS caps: cap-height" },
+        { "y": [47, 70], "h": 24, "x": [10, 79], "what": "title 'maps': x-height 47..63, descender to 70" },
+        { "y": [103, 145], "h": 43, "x": [3, 103], "what": "first bordered row" },
+        { "y": [150, 157], "h": 8, "x": [10, 184], "what": "description line 1" }
+      ],
+      "derived": { "title_x_height_px": 17, "title_font_px": 34, "title_font_dp": 78, "caps_font_px": 11.4, "caps_font_dp": 26, "left_inset_px": 10, "left_inset_dp": 23 },
+      "full_width_check": "clock at the right edge (x 195..204) and status icons reach x=204 of 209 -> not a horizontal crop"
+    },
+    {
+      "id": "F4",
+      "path": "/Users/meow/Projects/redmi-note-5a-ztos/build/wp-ux-refs-2026-11-15/raw/pdfimg/p27_0_613x395.png",
+      "size": [613, 395],
+      "format": "PNG RGB",
+      "dp_scale": null,
+      "dp_scale_basis": "cropped (the annotation callouts sit at x 256..370), so only scale-free ratios are used",
+      "right_list_ink_bands": [
+        { "y": [27, 34], "h": 8, "what": "SETTINGS caps" },
+        { "y": [49, 79], "h": 31, "what": "page title 'system applica...'" },
+        { "y": [102, 117], "h": 16, "what": "row 'airplane mode'" },
+        { "y": [149, 163], "h": 15, "what": "row 'Wi-Fi'" },
+        { "y": [196, 210], "h": 15, "what": "row 'Bluetooth'" },
+        { "y": [243, 257], "h": 15, "what": "row 'email+accounts'" },
+        { "y": [290, 309], "h": 20, "what": "row 'lock+wallpaper'" },
+        { "y": [337, 352], "h": 16, "what": "row 'location'" },
+        { "y": [384, 394], "h": 11, "what": "row 'cellular' (clipped)" }
+      ],
+      "derived": { "row_pitch_px": 47, "title_over_caps": 3.9, "hub_pitch_over_caps": 5.9 }
+    },
+    {
+      "id": "F5",
+      "path": "/Users/meow/Projects/redmi-note-5a-ztos/build/wp-ux-refs-2026-11-15/img/wiki-Song-list-on-Mix-Radio-app-png.png",
+      "size": [540, 960],
+      "format": "PNG RGBA",
+      "dp_scale": 0.889,
+      "strip_colours": { "y0_39": "#2F2F2F", "y40_109": "#212121", "y110_plus": "#000000" },
+      "ink_bands": [
+        { "y": [8, 20], "h": 13, "what": "clock" },
+        { "y": [138, 199], "h": 62, "what": "pivot title 'songs' (x-height 138..183, descender to 199)" },
+        { "y": [233, 286], "h": 54, "what": "'shuffle all' row" },
+        { "y": [327, 403], "h": 77, "what": "letter square A (77x77)" },
+        { "y": [920, 940], "h": 21, "what": "bottom nav icons" }
+      ],
+      "derived": { "status_strip_px": 40, "status_strip_dp": 35.6, "title_band_pct_w": 11.48, "nav_bar_px": 60, "nav_bar_dp": 53.3 }
+    },
+    {
+      "id": "F6",
+      "path": "/Users/meow/Projects/redmi-note-5a-ztos/build/wp-ux-refs-2026-11-15/img/msdn-appbar-{default,expanded,mini}.png",
+      "sizes": [[325, 56], [325, 75], [325, 28]],
+      "lit_rows": { "default": [[12, 43]], "expanded": [[12, 43], [51, 59]], "mini": [[11, 14]] },
+      "lit_cols": { "icons": [[63, 94], [118, 149], [174, 205], [229, 261]], "ellipsis": [[288, 291], [295, 298], [301, 304]] },
+      "derived": { "icon_px": 32, "illustration_scale": 0.667, "expanded_extra_label_px": 9, "mini_bar_px": 28 },
+      "note": "illustration: icons 32 px for a 48 dp icon -> 0.667 px/dp; the mini image is 28 px tall = ~42 dp [E]"
+    },
+    {
+      "id": "F7",
+      "path": "repo/evidence/ux-compare/refs/ztos-start.png",
+      "size": [1440, 2960],
+      "format": "JPEG data in a .png name (PIL: image/jpeg) -> colours carry capture error",
+      "dp_scale": 4.0,
+      "cobalt_column_runs": [[56, 479], [508, 931], [960, 1383]],
+      "cobalt_row_runs": [[168, 591], [620, 1043], [1072, 1495], [1524, 1947]],
+      "derived": { "medium_px": 424, "gutter_px": 28, "margin_px": 56, "first_row_top_px": 168 },
+      "label": { "rows": [513, 551], "x": [93, 229], "tile_bottom": 591, "ink_mode": "#FFE8D9" },
+      "colour_probes": { "tile_fill": "#0049CB", "on_tile_ink": "#FFE8D9", "steel_tile": "#646B73", "crimson_small": "#A30221" }
+    },
+    {
+      "id": "F7b",
+      "path": "repo/evidence/ux-compare/refs/ztos-about.png",
+      "size": [1440, 2960],
+      "dp_scale": 4.0,
+      "ink_bands": [
+        { "y": [26, 79], "h": 54, "what": "status strip glyphs" },
+        { "y": [181, 213], "h": 33, "x": [66, 270], "what": "caps line (ABOUT)" },
+        { "y": [256, 401], "h": 146, "x": [61, 531], "what": "page title" },
+        { "y": [557, 595], "h": 39, "what": "first hub entry title" }
+      ],
+      "derived": { "caps_cap_height_dp": 8.25, "title_band_dp": 36.5, "caps_to_title_gap_px": 43, "left_inset_dp": 16 }
+    },
+    {
+      "id": "F7c",
+      "path": "repo/evidence/ux-compare/refs/ztos-app-list.png",
+      "size": [1440, 2960],
+      "dp_scale": 4.0,
+      "icon_rows": [[400, 579], [620, 799], [840, 1019]],
+      "derived": { "icon_px": 180, "pitch_px": 220, "left_px": 320, "nav_icons_y": [2852, 2907] }
+    },
+    {
+      "id": "F8",
+      "path": "repo/evidence/ux-compare/refs/ztmetro-shade.png",
+      "size": [720, 1480],
+      "dp_scale": 2.0,
+      "quick_tile_gaps": [[0, 7], [180, 185], [357, 362], [535, 540], [712, 719]],
+      "row_bands": { "row1": [104, 217], "row2": [220, 333] },
+      "colour_probes": { "on_tile": "#0050EF", "off_tile": "#1F1F1F", "handle": "#0050EF" },
+      "derived": { "tile_px": 172, "gap_px": 6, "side_margin_px": 8, "row_pitch_px": 116, "grid_top_px": 104 }
+    },
+    {
+      "id": "X1",
+      "path": "/Users/meow/Projects/redmi-note-5a-ztos/build/wp-ux-refs-2026-11-15/img/wp81-notification-center.png",
+      "result": "HTML, 420 bytes (Commons 404)",
+      "used": false
+    },
+    {
+      "id": "X2",
+      "path": "repo/evidence/ux-compare/refs/ztmetro-lock.png",
+      "result": "720x160, 545 bytes, uniform black",
+      "used": false
+    },
+    {
+      "id": "X3",
+      "url": "https://download.microsoft.com/download/D869941E-455D-4882-A6B8-0DBCAA6AF2D4/UI Design and Interaction Guide for Windows Phone 7 Series.pdf",
+      "result": "HTTP 404 (1213-byte HTML) on 2026-11-16; the parent project's wp7-guide.pdf is that same 1213-byte stub",
+      "used": false
+    }
+  ],
+  "also_not_images": [
+    "img/wiki-Internet-Explorer-Mobile-9-png.png",
+    "img/wiki-Telegram-Windows-Phone-jpg.png",
+    "img/wiki-Wikipedia-zrzut-ekranu-Windows-Phone-png.png",
+    "img/wiki-Windows-Phone-7-mockup-png.png",
+    "img/wiki-Windows-Phone-8-1-Benachrichtigungszentr.png",
+    "img/wiki-Windows-Phone-8-1-Update-2-Einstellungen.png",
+    "img/wiki-WP8-1-Start-Screen-png.png",
+    "img/hw-htc-titan-buttons.jpg",
+    "img/wiki-wiki-landscape.img"
+  ],
+  "also_not_images_note": "all of these are HTML error pages saved with image names; `file` reports 'HTML document text'",
+  "fetch_checks": {
+    "G1_msdn_application_bar": "200, text quoted in the doc",
+    "G2_uisdc_wp8_guideline": "200, 167551 bytes, 12/24 px margin + 12 px spacing + 95 px bottom padding guidance quoted",
+    "X3_wp7_guide_pdf": "404"
+  }
+}

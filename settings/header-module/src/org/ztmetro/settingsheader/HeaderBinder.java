@@ -9,23 +9,27 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 /**
- * Attaches the header to the two container points documented in
+ * Attaches the ztmetro page header to the two container points documented in
  * {@code repo/design/settings-container-map.md}:
  *
  * <ul>
  *   <li><b>content_frame</b> (all {@code SettingsBaseActivity} screens, incl. SubSettings):
  *       index 0 of the FrameLayout that {@code SettingsBaseActivity.setContentView(int)}
- *       inflates into.  The screen layout is pushed down by the header height via its
- *       FrameLayout top margin; the header does <em>not</em> go into
+ *       inflates into.  The screen layout is pushed down by the header's measured height
+ *       via its FrameLayout top margin; the header does <em>not</em> go into
  *       {@code settings_main_prefs}, so {@code main_content}'s
  *       {@code layout_weight=1} and the fragment's own layout are untouched.</li>
  *   <li><b>homepage_container</b> ({@code SettingsHomepageActivity}): index 0 of the
  *       vertical LinearLayout inside the NestedScrollView, so the header scrolls with the
- *       dashboard exactly like the suggestion/card/content blocks.</li>
+ *       dashboard exactly like the suggestion/card/content blocks.  Only here is the
+ *       status-bar inset added (the home host starts at the top of the screen; base
+ *       screens already sit below the toolbar/status bar).</li>
  * </ul>
  *
  * <p>Idempotent: any existing child tagged {@code ztmetro_header} is removed before the new
  * one is inserted, so repeated {@code setContentView()} / recreation never stacks headers.
+ * The cobalt banner is gone: the header is flat black with the caps label, 48 sp title and
+ * 12 sp subtitle from the reference frames.
  */
 public final class HeaderBinder {
 
@@ -61,6 +65,244 @@ public final class HeaderBinder {
         attach(activity, container, true);
     }
 
+    /** Re-binds title + subtitle and re-applies the chrome; called from onResume/setTitle. */
+    public static void refresh(Activity activity) {
+        try {
+            boolean homepage = isHomepage(activity);
+            View header = findHeader(activity);
+            if (header == null) {
+                // Not one of the screens this module decorates (a dialog/helper
+                // FragmentActivity in the Settings process): leave it stock.
+                return;
+            }
+            Resources moduleResources = HeaderResources.get(activity);
+            CharSequence title = HeaderTitles.title(activity);
+            HeaderViewFactory.bind(header, title,
+                    HeaderTitles.subtitle(activity, moduleResources, title));
+            hideStockChrome(activity, homepage);
+            applyContentOffsets(activity);
+            MetroTinter.apply(activity);
+            ScreenStyler.apply(activity, homepage);
+        } catch (Throwable t) {
+            Log.w(TAG, "refresh failed (header left as-is)", t);
+        }
+    }
+
+    private static void attach(final Activity activity, ViewGroup parent, boolean homepage)
+            throws Exception {
+        Resources moduleResources = HeaderResources.get(activity);
+
+        View existing = parent.findViewWithTag(HeaderViewFactory.HEADER_TAG);
+        if (existing != null) {
+            parent.removeView(existing);
+        }
+
+        final View header = HeaderViewFactory.create(activity, moduleResources);
+        int statusBar = homepage ? statusBarHeightPx(activity) : 0;
+        if (statusBar > 0) {
+            // Black page block continues behind the status strip on the home page.
+            header.setPadding(header.getPaddingLeft(), header.getPaddingTop() + statusBar,
+                    header.getPaddingRight(), header.getPaddingBottom());
+        }
+
+        ViewGroup.LayoutParams params = HeaderViewFactory.paramsFor(parent);
+        if (homepage) {
+            compensateContainerTopMargin(parent, params);
+        }
+
+        parent.addView(header, 0, params);
+
+        if (!homepage) {
+            // Set the initial offset from the generated 104dp minimum, then correct it to
+            // the view's real measured height once layout has run (the 48sp title and
+            // fontScale decide the exact height; nothing is hard-coded twice).
+            applyContentOffsets(activity);
+            header.post(new Runnable() {
+                @Override
+                public void run() {
+                    applyContentOffsets(activity);
+                }
+            });
+        }
+
+        hideStockChrome(activity, homepage);
+        MetroTinter.apply(activity);
+
+        CharSequence title = HeaderTitles.title(activity);
+        HeaderViewFactory.bind(header, title,
+                HeaderTitles.subtitle(activity, moduleResources, title));
+        ScreenStyler.apply(activity, homepage);
+
+        Log.i(TAG, "header attached to " + parent.getClass().getSimpleName()
+                + " (" + (homepage ? "homepage" : "base") + "), title=\"" + title
+                + "\", statusBar=" + statusBar + "px");
+    }
+
+    /** True for the Settings home activity; false for SettingsActivity/SubSettings. */
+    static boolean isHomepage(Activity activity) {
+        return activity != null
+                && activity.getClass().getName().toLowerCase(java.util.Locale.ROOT)
+                .contains("homepage");
+    }
+
+    /**
+     * Pushes every sibling of the header down by its measured height.  Only applies to
+     * FrameLayout-style hosts (content_frame); the homepage header already sits in the
+     * LinearLayout flow.  Safe to call repeatedly.
+     */
+    private static void applyContentOffsets(Activity activity) {
+        try {
+            View header = findHeader(activity);
+            if (header == null || !(header.getParent() instanceof ViewGroup)) {
+                return;
+            }
+            ViewGroup parent = (ViewGroup) header.getParent();
+            if (parent instanceof LinearLayout) {
+                return;
+            }
+            int height = header.getHeight();
+            if (height <= 0) {
+                height = HeaderViewFactory.heightPx(activity, HeaderResources.get(activity));
+            }
+            for (int i = 0; i < parent.getChildCount(); i++) {
+                View child = parent.getChildAt(i);
+                if (child == header) {
+                    continue;
+                }
+                ViewGroup.LayoutParams params = child.getLayoutParams();
+                if (params instanceof ViewGroup.MarginLayoutParams) {
+                    ViewGroup.MarginLayoutParams margins = (ViewGroup.MarginLayoutParams) params;
+                    if (margins.topMargin != height) {
+                        margins.topMargin = height;
+                        child.setLayoutParams(margins);
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            Log.d(TAG, "header offset not applied: " + t);
+        }
+    }
+
+    /**
+     * homepage_container carries {@code layout_marginTop="-8dp"} in
+     * {@code settings_homepage_container.xml}; without this the top 8dp of the header would
+     * be clipped by the scroll view.
+     */
+    private static void compensateContainerTopMargin(ViewGroup container,
+                                                     ViewGroup.LayoutParams headerParams) {
+        ViewGroup.LayoutParams containerParams = container.getLayoutParams();
+        if (containerParams instanceof ViewGroup.MarginLayoutParams
+                && headerParams instanceof ViewGroup.MarginLayoutParams) {
+            int containerTop = ((ViewGroup.MarginLayoutParams) containerParams).topMargin;
+            if (containerTop < 0) {
+                ((ViewGroup.MarginLayoutParams) headerParams).topMargin = -containerTop;
+            }
+        }
+    }
+
+    /**
+     * The stock screen used to show its own toolbar title above the Metro header; the
+     * reference has no top bar at all, so the empty stock chrome is hidden (the back
+     * action lives in the bottom bar now).  Guard: if the toolbar currently carries an
+     * action button ({@code primary_button}/{@code secondary_button}/{@code action_button}
+     * — Save/Done flows), the bar is kept (black, title cleared) so that screen stays
+     * usable; the bottom bar still provides Back.  On the home page the search app bar is
+     * hidden as well.  Never hides a view that contains the fragment host.
+     */
+    private static void hideStockChrome(Activity activity, boolean homepage) {
+        Resources res = activity.getResources();
+        View content = activity.findViewById(android.R.id.content);
+        try {
+            if (homepage) {
+                for (String name : new String[]{"app_bar_container", "app_bar", "search_action_bar"}) {
+                    hideUnlessContains(activity, res, name, content);
+                }
+            } else {
+                View frame = findViewById(res, activity, CONTENT_FRAME_ID);
+                View actionBar = findViewById(res, activity, "action_bar");
+                boolean keepToolbar = toolbarHasVisibleActions(activity, res);
+                View appBar = findViewById(res, activity, "app_bar");
+                if (keepToolbar) {
+                    // Save/Done lives in the toolbar: keep it, paint it flat black and
+                    // drop only its title (the Metro header is the page title).
+                    showUnlessContains(activity, res, "app_bar", frame);
+                    showUnlessContains(activity, res, "action_bar", frame);
+                    if (actionBar != null) {
+                        actionBar.setBackgroundColor(android.graphics.Color.BLACK);
+                    }
+                } else {
+                    hideUnlessContains(activity, res, "app_bar", frame);
+                    hideUnlessContains(activity, res, "action_bar", frame);
+                }
+                if (keepToolbar) {
+                    Log.d(TAG, "toolbar kept: visible action button on "
+                            + activity.getClass().getSimpleName());
+                }
+                if (appBar != null && !keepToolbar && frame != null
+                        && Views.isAncestor(appBar, frame)) {
+                    Log.d(TAG, "not hiding app_bar: it contains content_frame");
+                }
+            }
+            clearStockToolbarTitle(activity);
+        } catch (Throwable t) {
+            Log.w(TAG, "stock chrome dedupe failed (stock title kept)", t);
+        }
+    }
+
+    /** True when Settings has shown a toolbar action (Save/Done/Edit) on this screen. */
+    private static boolean toolbarHasVisibleActions(Activity activity, Resources res) {
+        for (String name : new String[]{"primary_button", "secondary_button",
+                "action_button"}) {
+            int id = res.getIdentifier(name, "id", TARGET_PACKAGE);
+            if (id == 0) {
+                continue;
+            }
+            View view = activity.findViewById(id);
+            if (view != null && view.getVisibility() == View.VISIBLE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void showUnlessContains(Activity activity, Resources res, String name,
+                                           View mustNotContain) {
+        int id = res.getIdentifier(name, "id", TARGET_PACKAGE);
+        if (id == 0) {
+            return;
+        }
+        View view = activity.findViewById(id);
+        if (view == null) {
+            return;
+        }
+        if (mustNotContain != null && Views.isAncestor(view, mustNotContain)) {
+            return;
+        }
+        view.setVisibility(View.VISIBLE);
+    }
+
+    private static void hideUnlessContains(Activity activity, Resources res, String name,
+                                           View mustNotContain) {
+        int id = res.getIdentifier(name, "id", TARGET_PACKAGE);
+        if (id == 0) {
+            return;
+        }
+        View view = activity.findViewById(id);
+        if (view == null) {
+            return;
+        }
+        if (mustNotContain != null && Views.isAncestor(view, mustNotContain)) {
+            Log.d(TAG, "not hiding " + name + ": it contains the content host");
+            return;
+        }
+        view.setVisibility(View.GONE);
+    }
+
+    private static View findViewById(Resources res, Activity activity, String name) {
+        int id = res.getIdentifier(name, "id", TARGET_PACKAGE);
+        return id == 0 ? null : activity.findViewById(id);
+    }
+
     private static void clearStockToolbarTitle(Activity activity) {
         // Settings renders the screen title through a CollapsingToolbarLayout (id
         // collapsing_toolbar) AND a Toolbar (id action_bar); clearing only the Toolbar
@@ -88,134 +330,13 @@ public final class HeaderBinder {
         }
     }
 
-    /** Re-binds title + subtitle; also called from onResume and from setTitle(). */
-    public static void refresh(Activity activity) {
+    static View findHeader(Activity activity) {
         try {
-            View header = findHeader(activity);
-            if (header == null) {
-                return;
-            }
-            Resources moduleResources = HeaderResources.get(activity);
-            CharSequence title = HeaderTitles.title(activity);
-            HeaderViewFactory.bind(header, title,
-                    HeaderTitles.subtitle(activity, moduleResources, title));
-            // Settings re-applies its own title after setContentView (setTitleFromIntent /
-            // setTitleFromBackStack); clear the toolbar title again so the Metro header is
-            // the only title on screen.
-            clearStockToolbarTitle(activity);
-            MetroTinter.apply(activity);
+            View decor = activity.getWindow() == null
+                    ? null : activity.getWindow().getDecorView();
+            return decor == null ? null : decor.findViewWithTag(HeaderViewFactory.HEADER_TAG);
         } catch (Throwable t) {
-            Log.w(TAG, "refresh failed (header left as-is)", t);
-        }
-    }
-
-    private static void attach(Activity activity, ViewGroup parent, boolean homepage)
-            throws Exception {
-        Resources moduleResources = HeaderResources.get(activity);
-
-        View existing = parent.findViewWithTag(HeaderViewFactory.HEADER_TAG);
-        if (existing != null) {
-            parent.removeView(existing);
-        }
-
-        View header = HeaderViewFactory.create(activity, moduleResources);
-        int height = HeaderViewFactory.heightPx(activity, moduleResources);
-
-        // Keep the Metro header below the status bar: the activity is edge-to-edge, so the
-        // banner would otherwise be painted under the clock/battery icons.
-        // Only the homepage host starts at the top of the screen; SettingsBaseActivity
-        // screens sit below the toolbar, so adding the status-bar height there leaves a gap.
-        int statusBar = homepage ? statusBarHeightPx(activity) : 0;
-        if (statusBar > 0) {
-            height += statusBar;
-            header.setPadding(header.getPaddingLeft(), header.getPaddingTop() + statusBar,
-                    header.getPaddingRight(), header.getPaddingBottom());
-        }
-
-        ViewGroup.LayoutParams params = HeaderViewFactory.paramsFor(parent, height);
-
-        if (homepage) {
-            compensateContainerTopMargin(parent, params);
-        }
-
-        parent.addView(header, 0, params);
-
-        if (!homepage) {
-            // Push the screen layout below the header.  settings_main_prefs is a
-            // match_parent child of content_frame, so raising its top margin shortens it
-            // by exactly the header height; its inner main_content keeps layout_weight=1.
-            for (int i = 1; i < parent.getChildCount(); i++) {
-                View child = parent.getChildAt(i);
-                ViewGroup.LayoutParams childParams = child.getLayoutParams();
-                if (childParams instanceof ViewGroup.MarginLayoutParams) {
-                    ((ViewGroup.MarginLayoutParams) childParams).topMargin = height;
-                    child.setLayoutParams(childParams);
-                }
-            }
-        }
-
-        dedupeStockChrome(activity, homepage);
-        MetroTinter.apply(activity);
-
-        CharSequence title = HeaderTitles.title(activity);
-        HeaderViewFactory.bind(header, title,
-                HeaderTitles.subtitle(activity, moduleResources, title));
-        Log.i(TAG, "header attached to " + parent.getClass().getSimpleName()
-                + " (" + (homepage ? "homepage" : "base") + "), title=\"" + title + "\"");
-    }
-
-    /**
-     * homepage_container carries {@code layout_marginTop="-8dp"} in
-     * {@code settings_homepage_container.xml}; without this the top 8dp of the header would
-     * be clipped by the scroll view.
-     */
-    private static void compensateContainerTopMargin(ViewGroup container,
-                                                     ViewGroup.LayoutParams headerParams) {
-        ViewGroup.LayoutParams containerParams = container.getLayoutParams();
-        if (containerParams instanceof ViewGroup.MarginLayoutParams
-                && headerParams instanceof ViewGroup.MarginLayoutParams) {
-            int containerTop = ((ViewGroup.MarginLayoutParams) containerParams).topMargin;
-            if (containerTop < 0) {
-                ((ViewGroup.MarginLayoutParams) headerParams).topMargin = -containerTop;
-            }
-        }
-    }
-
-    /**
-     * The stock screen already carries a title (toolbar) and the homepage carries a search
-     * app bar; together with the Metro header that is three stacked titles. Keep exactly one:
-     * on sub-screens clear the toolbar title (the back arrow stays usable), on the homepage
-     * hide the search app bar (WP Start has no search bar; search lives in the app list).
-     */
-    private static void dedupeStockChrome(Activity activity, boolean homepage) {
-        Resources res = activity.getResources();
-        try {
-            if (homepage) {
-                for (String name : new String[]{"app_bar_container", "app_bar", "search_action_bar"}) {
-                    int id = res.getIdentifier(name, "id", TARGET_PACKAGE);
-                    if (id == 0) continue;
-                    View v = activity.findViewById(id);
-                    if (v != null) v.setVisibility(View.GONE);
-                }
-            } else {
-                int id = res.getIdentifier("action_bar", "id", TARGET_PACKAGE);
-                if (id != 0) {
-                    View v = activity.findViewById(id);
-                    if (v != null) {
-                        // Toolbar may be android.widget.Toolbar or the appcompat one; both
-                        // expose setTitle/setSubtitle, so call them reflectively and never
-                        // compile against either class.
-                        try {
-                            v.getClass().getMethod("setTitle", CharSequence.class).invoke(v, (Object) null);
-                            v.getClass().getMethod("setSubtitle", CharSequence.class).invoke(v, (Object) null);
-                        } catch (Throwable ignored) {
-                            // not a toolbar: leave it alone
-                        }
-                    }
-                }
-            }
-        } catch (Throwable t) {
-            Log.w(TAG, "dedupe of stock chrome failed (stock title kept)", t);
+            return null;
         }
     }
 
@@ -245,16 +366,6 @@ public final class HeaderBinder {
                     HOMEPAGE_CONTAINER_ID, "id", TARGET_PACKAGE);
         }
         return sHomepageContainerId;
-    }
-
-    static View findHeader(Activity activity) {
-        try {
-            View decor = activity.getWindow() == null
-                    ? null : activity.getWindow().getDecorView();
-            return decor == null ? null : decor.findViewWithTag(HeaderViewFactory.HEADER_TAG);
-        } catch (Throwable t) {
-            return null;
-        }
     }
 
     /** Used by the optional host-side harness: attach to a plain FrameLayout. */

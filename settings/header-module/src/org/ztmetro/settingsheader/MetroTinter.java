@@ -24,8 +24,21 @@ final class MetroTinter {
     private MetroTinter() {
     }
 
+    /** Forces the window (and the content root) to pure black, like the ztmetro Settings. */
+    static void applyWindowBackground(Activity activity) {
+        try {
+            activity.getWindow().setBackgroundDrawable(
+                    new android.graphics.drawable.ColorDrawable(0xFF000000));
+            View content = activity.findViewById(android.R.id.content);
+            if (content != null) content.setBackgroundColor(0xFF000000);
+        } catch (Throwable ignored) {
+            // cosmetic only
+        }
+    }
+
     static void apply(Activity activity) {
         try {
+            applyWindowBackground(activity);
             final View root = activity.findViewById(android.R.id.content);
             if (root == null) return;
             // Settings inflates its preference views after setContentView, so walk now and

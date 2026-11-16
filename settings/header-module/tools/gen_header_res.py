@@ -86,7 +86,7 @@ def module_spec(tokens):
         ),
         "subtitle_alpha": (
             0.70,
-            "module spec: label and subtitle at 70%% opacity (secondary text on "
+            "module spec: label and subtitle at 70% opacity (secondary text on "
             "black; the reference labels measure 0.70 white)",
         ),
         "padding_h_dp": (
@@ -106,6 +106,11 @@ def module_spec(tokens):
             "module spec: 11 sp ALL-CAPS 'ZRN' in the 40 dp bar (README requirement; "
             "one step below type.ramp[caption_caps] 11.5 so it optically centres in "
             "40 dp)",
+        ),
+        "button_pressed_alpha": (
+            0.24,
+            "module spec: pressed fill of the bottom-bar glyph buttons — "
+            "24% of color.accent.base (subtle Metro press state on black)",
         ),
         "bottom_bar_glyph_dp": (
             24,
@@ -154,6 +159,8 @@ def build(tokens):
         "  <!-- color.accent.base — kept for the pressed state of the bar buttons; "
         "never used as a fill -->\n"
         '  <color name="metro_accent">%s</color>\n'
+        "  <!-- color.accent.base at %s alpha (%s) -->\n"
+        '  <color name="metro_accent_pressed">%s</color>\n'
         "  <!-- color.neutrals.black -->\n"
         '  <color name="metro_bottom_bar_bg">%s</color>\n'
         "  <!-- color.neutrals.text_primary -->\n"
@@ -161,7 +168,8 @@ def build(tokens):
         "</resources>\n"
     ) % (black, white, num(spec["subtitle_alpha"][0]), spec["subtitle_alpha"][1],
          faded, num(spec["subtitle_alpha"][0]), spec["subtitle_alpha"][1], faded,
-         base, black, white)
+         base, num(spec["button_pressed_alpha"][0]), spec["button_pressed_alpha"][1],
+         with_alpha(base, spec["button_pressed_alpha"][0]), black, white)
 
     dimens = MODULE_SECTION + (
         "  <!-- %s -->\n"

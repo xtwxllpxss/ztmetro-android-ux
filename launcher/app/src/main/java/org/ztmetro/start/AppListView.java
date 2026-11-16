@@ -60,6 +60,7 @@ public final class AppListView extends ListView
         setBackgroundColor(Color.BLACK);
         setVerticalScrollBarEnabled(false);
         setClipToPadding(false);
+        setOverScrollMode(View.OVER_SCROLL_NEVER);
         setPadding(0, 0, 0, 0);
     }
 

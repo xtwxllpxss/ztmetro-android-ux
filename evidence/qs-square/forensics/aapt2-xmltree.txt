@@ -1,0 +1,87 @@
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+### APK: /tmp/sysui.apk sha256:
+67e2f10c99a515a44d817cc805eb5cac1a38f7c6611867e25d07b97d61ece947  /tmp/sysui.apk
+
+### res/drawable/qs_tile_background_flagged.xml
+N: android=http://schemas.android.com/apk/res/android (line=16)
+  E: ripple (line=16)
+    A: http://schemas.android.com/apk/res/android:color(0x010101a5)=@0x7f060504
+      E: item (line=18)
+        A: http://schemas.android.com/apk/res/android:id(0x010100d0)=@0x0102002e
+        A: http://schemas.android.com/apk/res/android:drawable(0x01010199)=@0x7f080b9a
+      E: item (line=21)
+        A: http://schemas.android.com/apk/res/android:id(0x010100d0)=@0x7f0a010e
+          E: layer-list (line=22)
+              E: item (line=23)
+                A: http://schemas.android.com/apk/res/android:id(0x010100d0)=@0x7f0a06c2
+                A: http://schemas.android.com/apk/res/android:drawable(0x01010199)=@0x7f080b9a
+              E: item (line=26)
+                A: http://schemas.android.com/apk/res/android:id(0x010100d0)=@0x7f0a06c3
+                  E: selector (line=27)
+                      E: item (line=28)
+                        A: http://schemas.android.com/apk/res/android:drawable(0x01010199)=@0x7f080b9a
+                        A: http://schemas.android.com/apk/res/android:state_hovered(0x01010367)=true
+
+### res/drawable/qs_tile_background_shape.xml
+N: android=http://schemas.android.com/apk/res/android (line=18)
+  E: shape (line=18)
+      E: corners (line=19)
+        A: http://schemas.android.com/apk/res/android:radius(0x010101a8)=@0x7f070a68
+      E: solid (line=20)
+        A: http://schemas.android.com/apk/res/android:color(0x010101a5)=#ffffffff
+
+### res/drawable/qs_tile_focused_background.xml
+N: android=http://schemas.android.com/apk/res/android (line=17)
+  E: inset (line=17)
+    A: http://schemas.android.com/apk/res/android:inset(0x010104b5)=16777211.000000dp
+      N: androidprv=http://schemas.android.com/apk/prv/res/android (line=19)
+        E: shape (line=19)
+          A: http://schemas.android.com/apk/res/android:shape(0x0101019a)=0
+            E: corners (line=21)
+              A: http://schemas.android.com/apk/res/android:radius(0x010101a8)=30.000000dp
+            E: stroke (line=22)
+              A: http://schemas.android.com/apk/res/android:width(0x01010159)=3.000000dp
+              A: http://schemas.android.com/apk/res/android:color(0x010101a5)=@0x010602cf
+
+### res/layout/qs_tile_label.xml (first 40 lines)
+N: android=http://schemas.android.com/apk/res/android (line=17)
+  E: com.android.systemui.qs.tileimpl.IgnorableChildLinearLayout (line=17)
+    A: http://schemas.android.com/apk/res/android:layout_gravity(0x010100b3)=0x00800013
+    A: http://schemas.android.com/apk/res/android:orientation(0x010100c4)=1
+    A: http://schemas.android.com/apk/res/android:focusable(0x010100da)=false
+    A: http://schemas.android.com/apk/res/android:clipChildren(0x010100ea)=false
+    A: http://schemas.android.com/apk/res/android:clipToPadding(0x010100eb)=false
+    A: http://schemas.android.com/apk/res/android:layout_width(0x010100f4)=0.000000dp
+    A: http://schemas.android.com/apk/res/android:layout_height(0x010100f5)=-2
+    A: http://schemas.android.com/apk/res/android:layout_weight(0x01010181)=1
+    A: http://schemas.android.com/apk/res/android:importantForAccessibility(0x010103aa)=2
+    A: http://schemas.android.com/apk/res/android:layout_marginStart(0x010103b5)=@0x7f070a87
+    A: http://schemas.android.com/apk/res/android:layout_marginEnd(0x010103b6)=0.000000dp
+      E: com.android.systemui.util.DelayableMarqueeTextView (line=31)
+        A: http://schemas.android.com/apk/res/android:textAppearance(0x01010034)=@0x7f140564
+        A: http://schemas.android.com/apk/res/android:ellipsize(0x010100ab)=4
+        A: http://schemas.android.com/apk/res/android:gravity(0x010100af)=0x00800003
+        A: http://schemas.android.com/apk/res/android:id(0x010100d0)=@0x7f0a08c2
+        A: http://schemas.android.com/apk/res/android:focusable(0x010100da)=false
+        A: http://schemas.android.com/apk/res/android:layout_width(0x010100f4)=-1
+        A: http://schemas.android.com/apk/res/android:layout_height(0x010100f5)=-2
+        A: http://schemas.android.com/apk/res/android:singleLine(0x0101015d)=true
+        A: http://schemas.android.com/apk/res/android:marqueeRepeatLimit(0x0101021d)=1
+        A: http://schemas.android.com/apk/res/android:importantForAccessibility(0x010103aa)=2
+        A: http://schemas.android.com/apk/res/android:textDirection(0x010103b0)=5
+      E: com.android.systemui.util.DelayableMarqueeTextView (line=44)
+        A: http://schemas.android.com/apk/res/android:textAppearance(0x01010034)=@0x7f140565
+        A: http://schemas.android.com/apk/res/android:textColor(0x01010098)=?0x7f040532
+        A: http://schemas.android.com/apk/res/android:ellipsize(0x010100ab)=4
+        A: http://schemas.android.com/apk/res/android:gravity(0x010100af)=0x00800003
+        A: http://schemas.android.com/apk/res/android:id(0x010100d0)=@0x7f0a00dc
+        A: http://schemas.android.com/apk/res/android:focusable(0x010100da)=false
+        A: http://schemas.android.com/apk/res/android:visibility(0x010100dc)=2
+        A: http://schemas.android.com/apk/res/android:layout_width(0x010100f4)=-1
+        A: http://schemas.android.com/apk/res/android:layout_height(0x010100f5)=-2
+        A: http://schemas.android.com/apk/res/android:singleLine(0x0101015d)=true
+        A: http://schemas.android.com/apk/res/android:marqueeRepeatLimit(0x0101021d)=1
+        A: http://schemas.android.com/apk/res/android:importantForAccessibility(0x010103aa)=2
+        A: http://schemas.android.com/apk/res/android:textDirection(0x010103b0)=5

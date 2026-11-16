@@ -2,12 +2,20 @@
      from design/tokens/ztmetro.tokens.json and the module spec in that script.
      Do not edit by hand: run the generator instead. -->
 <resources>
-  <!-- module spec: Metro page header = 56 dp (2 x metrics.status_strip_height_dp 28; the C page block metrics.header_height_dp 104 covers the full WP page title + pivot bar and is too tall for a Settings sub-screen) -->
-  <dimen name="metro_header_height">56dp</dimen>
-  <!-- derived [E]: type.header.title_size_sp 48 / 2 = 24.0; the C page title is a full-screen 48 pt display line, Android Settings already carries a 20 sp toolbar title, so the header block uses half of it -->
-  <dimen name="metro_header_title_size">24sp</dimen>
+  <!-- metrics.header_height_dp (104; ZMC_HEADER_H 104) — the ztmeteo page block: caps label + 48 sp title + subtitle, status bar excluded (the status-bar inset is added on the homepage only, see HeaderBinder) -->
+  <dimen name="metro_header_height">104dp</dimen>
+  <!-- type.header.subtitle_size_sp (11.5) = type.ramp[caption_caps] (the caps app/page label above the title) -->
+  <dimen name="metro_header_label_size">11.5sp</dimen>
+  <!-- type.header.title_size_sp (48) = type.ramp[page_title] -->
+  <dimen name="metro_header_title_size">48sp</dimen>
   <!-- type.ramp[caption].size_sp_at_density_1x (12) -->
   <dimen name="metro_header_subtitle_size">12sp</dimen>
-  <!-- metrics.page_margin_dp (16) -->
-  <dimen name="metro_header_padding_h">16dp</dimen>
+  <!-- module spec: 24 dp page margin for the header block and the flat preference rows (deliverable; note tokens.metrics.page_margin_dp is 16 dp for the C shell at 360 dp — the Settings page uses the wider Android margin so the 48 sp title is not edge-to-edge) -->
+  <dimen name="metro_header_padding_h">24dp</dimen>
+  <!-- metrics.nav_bar_height_dp (40; ztmetro.c:130 NAV_BAR_H 40) -->
+  <dimen name="metro_bottom_bar_height">40dp</dimen>
+  <!-- module spec: 11 sp ALL-CAPS 'ZRN' in the 40 dp bar (README requirement; one step below type.ramp[caption_caps] 11.5 so it optically centres in 40 dp) -->
+  <dimen name="metro_bottom_bar_label_size">11sp</dimen>
+  <!-- module spec: 24 dp back/search glyphs inside the 40 dp bar (Android minimum icon size; the whole 40x40 dp cell is the touch target) -->
+  <dimen name="metro_bottom_bar_glyph">24dp</dimen>
 </resources>

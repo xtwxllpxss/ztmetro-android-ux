@@ -10,7 +10,14 @@ import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 /**
- * Installs the three Settings hooks on Android 16 (API 36).
+ * Installs the four Settings hooks on Android 16 (API 36):
+ *
+ * <ul>
+ *   <li>{@code SettingsBaseActivity.setContentView(int)} → header + bottom bar + flat rows,</li>
+ *   <li>{@code setTitle(CharSequence)} → re-bind the page title/subtitle,</li>
+ *   <li>{@code onResume()} → re-apply the chrome (rows are inflated late),</li>
+ *   <li>{@code SettingsHomepageActivity.onCreate(Bundle)} → the scrolling home header.</li>
+ * </ul>
  *
  * <p>Every callback is an {@link XC_MethodHook} with an {@code afterHookedMethod} body that
  * is wrapped in try/catch(Throwable): a failure logs and returns, so Settings keeps its

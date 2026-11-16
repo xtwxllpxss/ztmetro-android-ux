@@ -1,0 +1,5 @@
+overlay	type	name
+status-framework	dimen	status_bar_height
+status-framework	dimen	status_bar_height_default
+status-framework	dimen	status_bar_height_portrait
+status-framework	dimen	status_bar_system_icon_size

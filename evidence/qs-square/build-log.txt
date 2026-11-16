@@ -1,0 +1,56 @@
+== no local aapt2: building on hermes-ubuntu (~/ztux/qs2/build) ==
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+== compile ==
+== link ==
+== align ==
+== sign (throwaway key: /home/denis/.ztmetro-overlay-debug.keystore) ==
+== verify ==
+package: name='org.ztos.overlay.systemui' versionCode='1' versionName='1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+application-label:'ztmetro SystemUI overlay'
+application: label='ztmetro SystemUI overlay' icon=''
+overlay: targetPackage='com.android.systemui' priority='10' isStatic='false'
+entries:      6817                     6 files
+== overlay resource table (what idmap2 can map) ==
+  type color id=01 entryCount=6
+    resource 0x7f010000 color/notification_legacy_background_color
+    resource 0x7f010001 color/notification_scrim_base
+    resource 0x7f010002 color/notification_scrim_fallback
+    resource 0x7f010003 color/shade_header_text_color
+    resource 0x7f010004 color/shade_header_text_color_bg
+    resource 0x7f010005 color/shade_panel_fallback
+  type dimen id=02 entryCount=11
+    resource 0x7f020000 dimen/aux_spacing_overlay_panel_shape_radius
+    resource 0x7f020001 dimen/notification_corner_radius
+    resource 0x7f020002 dimen/notification_corner_radius_small
+    resource 0x7f020003 dimen/overlay_shade_panel_shape_radius
+    resource 0x7f020004 dimen/qs_corner_radius
+    resource 0x7f020005 dimen/qs_tile_height
+    resource 0x7f020006 dimen/qs_tile_margin_horizontal
+    resource 0x7f020007 dimen/qs_tile_margin_vertical
+    resource 0x7f020008 dimen/qs_tile_padding
+    resource 0x7f020009 dimen/qs_tile_start_padding
+    resource 0x7f02000a dimen/qs_tile_text_size
+  type drawable id=03 entryCount=1
+    resource 0x7f030000 drawable/qs_tile_background_shape
+  type style id=04 entryCount=7
+    resource 0x7f040000 style/TextAppearance.QS.Status
+    resource 0x7f040001 style/TextAppearance.QS.Status.Build
+    resource 0x7f040002 style/TextAppearance.QS.Status.Clock
+    resource 0x7f040003 style/TextAppearance.QS.TileLabel
+    resource 0x7f040004 style/TextAppearance.QS.TileLabel.Secondary
+    resource 0x7f040005 style/TextAppearance.StatusBar.Expanded.Clock
+    resource 0x7f040006 style/TextAppearance.StatusBar.Expanded.Date
+9151c7f6f137296b187183c9fff5dad22241a1c9d22ac12774af0eb50ce01c2e  ztmetro-systemui-rro.apk
+/home/denis/ztux/qs2/build/out/ztmetro-systemui-rro.apk
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+/Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/qs-square/ztmetro-systemui-rro.apk

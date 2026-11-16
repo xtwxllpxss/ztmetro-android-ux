@@ -3,8 +3,10 @@ package org.ztmetro.settingsheader;
 import android.app.Activity;
 import android.content.res.Resources;
 import android.util.Log;
+import android.view.View;
 
 import java.lang.reflect.Method;
+import java.util.Locale;
 
 /**
  * Resolves what the Metro header shows.
@@ -12,6 +14,9 @@ import java.lang.reflect.Method;
  * <p>Title: {@code Activity.getTitle()} — Settings has already run
  * {@code setTitleFromIntent()} / {@code setTitleFromBackStack()}
  * ({@code SettingsActivity.java:556-624}), so this is the correct per-screen breadcrumb.
+ * The reference pages are lowercase ({@code about}, {@code cellular + SIM}) while stock
+ * Settings strings are title-case, so the title is lowercased with ALL-CAPS acronym tokens
+ * preserved ({@code SIM}, {@code USB}, {@code VPN}); the module never invents a title.
  *
  * <p>Subtitle: for a sub-screen the last <em>different</em> breadcrumb on the support
  * fragment back stack; otherwise the module's static "ztMetro" string.  "different"
@@ -28,8 +33,7 @@ public final class HeaderTitles {
     }
 
     public static CharSequence title(Activity activity) {
-        CharSequence title = activity.getTitle();
-        return title == null ? "" : title;
+        return lowercase(activity.getTitle());
     }
 
     public static CharSequence subtitle(Activity activity, Resources moduleResources,
@@ -45,6 +49,53 @@ public final class HeaderTitles {
         }
         Log.w(TAG, "static subtitle string missing from module resources");
         return "";
+    }
+
+    /**
+     * Lowercases the page title for the Metro page block, keeping already-ALL-CAPS tokens
+     * ("SIM", "USB") as the Settings string provides them.  Returns "" for null.
+     */
+    static CharSequence lowercase(CharSequence raw) {
+        if (raw == null) {
+            return "";
+        }
+        String source = raw.toString();
+        if (source.length() == 0) {
+            return source;
+        }
+        StringBuilder out = new StringBuilder(source.length());
+        int index = 0;
+        while (index < source.length()) {
+            int start = index;
+            while (index < source.length() && !Character.isWhitespace(source.charAt(index))) {
+                index++;
+            }
+            String token = source.substring(start, index);
+            out.append(isAcronym(token) ? token : token.toLowerCase(Locale.getDefault()));
+            while (index < source.length() && Character.isWhitespace(source.charAt(index))) {
+                out.append(source.charAt(index));
+                index++;
+            }
+        }
+        return out.toString();
+    }
+
+    private static boolean isAcronym(String token) {
+        if (token.length() < 2) {
+            return false;
+        }
+        boolean hasLetter = false;
+        for (int i = 0; i < token.length(); i++) {
+            char c = token.charAt(i);
+            if (!Character.isLetter(c)) {
+                continue;
+            }
+            hasLetter = true;
+            if (!Character.isUpperCase(c)) {
+                return false;
+            }
+        }
+        return hasLetter;
     }
 
     private static CharSequence lastDifferentBreadcrumb(Activity activity, CharSequence title) {
@@ -79,7 +130,7 @@ public final class HeaderTitles {
                 Object value = crumbMethod.invoke(entry);
                 CharSequence crumb = value instanceof CharSequence ? (CharSequence) value : null;
                 if (crumb != null && crumb.length() > 0
-                        && !crumb.toString().equals(titleText)) {
+                        && !crumb.toString().equalsIgnoreCase(titleText)) {
                     return crumb;
                 }
             }

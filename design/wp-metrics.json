@@ -1,0 +1,152 @@
+{
+  "schema": "ztmetro/wp-metrics@1",
+  "generated": "2026-11-16",
+  "doc": "docs/17-wp-design-reference.md",
+  "comment": "Every number is traceable: 'wp' entries carry the frame id and the measured pixels, 'port' entries carry the file:line or the token, and every entry has a confidence letter (F = measured/literal, E = derived). Percentages are of screen width (%W) because WP is 480 dp wide and the port is 360 dp wide.",
+  "units": {
+    "primary": "pct_screen_width",
+    "wp_theory": { "width_dp": 480, "height_dp": 800, "densities": "WVGA 1x, 720p 1.5x, WXGA 1.6x" },
+    "port_viewport": { "width_dp": 360, "height_dp": 740, "source": "design/tokens/ztmetro.tokens.json meta.reference + frames (1440 px = 360 dp => 4 px/dp)" },
+    "conversions": [
+      { "frames": "repo/evidence/ux-compare/refs/ztos-*.png 1440x2960", "dp": "px/4", "proof": "medium tile 424 px = 106 dp token; status 28 + pad 14 = 42 dp = 168 px" },
+      { "frames": "repo/evidence/ux-compare/refs/ztmetro-*.png", "dp": "px/2", "proof": "status strip 56 px = STATUS_H 28 (ztmetro.c:128)" },
+      { "frames": "WP frames", "dp": "px * 480 / frame_width_px", "proof": "app bar 36 px at 240 px width = 72 dp, the MSDN value (G1)" }
+    ]
+  },
+  "sources": [
+    { "id": "F1", "kind": "frame", "path": "/Users/meow/Projects/redmi-note-5a-ztos/build/wp-ux-refs-2026-11-15/img/wp81-start.png", "size": [250, 444], "content": "WP8.1 Start, 3 medium / 6 small columns", "read": true },
+    { "id": "F2", "kind": "frame", "path": "/Users/meow/Projects/redmi-note-5a-ztos/build/wp-ux-refs-2026-11-15/img/wiki-Internet-Explorer-Mobile-7-png.png", "size": [240, 400], "content": "WP7 IE with a 3-icon + ellipsis app bar", "read": true },
+    { "id": "F3", "kind": "frame", "path": "/Users/meow/Projects/redmi-note-5a-ztos/build/wp-ux-refs-2026-11-15/img/pdf-p13-settings-maps.png", "size": [209, 350], "content": "WP7 SETTINGS + maps, page header, full width (clock at the right edge)", "read": true, "dup": "repo/evidence/ux-compare/refs/wp7-settings-header.png (same pixels, yellow accent)" },
+    { "id": "F4", "kind": "frame", "path": "/Users/meow/Projects/redmi-note-5a-ztos/build/wp-ux-refs-2026-11-15/raw/pdfimg/p27_0_613x395.png", "size": [613, 395], "content": "WP7 SETTINGS + date+time with the guide's own annotation callouts (ALL CAPS; APPLICATION TITLE / Title Caps)", "read": true },
+    { "id": "F5", "kind": "frame", "path": "/Users/meow/Projects/redmi-note-5a-ztos/build/wp-ux-refs-2026-11-15/img/wiki-Song-list-on-Mix-Radio-app-png.png", "size": [540, 960], "content": "WP8 pivot title + list + bottom nav bar", "read": true },
+    { "id": "F6", "kind": "frame", "path": "/Users/meow/Projects/redmi-note-5a-ztos/build/wp-ux-refs-2026-11-15/img/msdn-appbar-{default,expanded,mini}.png", "size": [[325, 56], [325, 75], [325, 28]], "content": "MSDN app-bar illustrations (icons 32 px => scale 0.667 of dp)", "read": true },
+    { "id": "F7", "kind": "frame", "path": "repo/evidence/ux-compare/refs/ztos-{start,app-list,about}.png", "size": [1440, 2960], "content": "our Android port", "read": true },
+    { "id": "F8", "kind": "frame", "path": "repo/evidence/ux-compare/refs/ztmetro-shade.png", "size": [720, 1480], "content": "ztMETRO action centre reference render", "read": true },
+    { "id": "C1", "kind": "source", "path": "/Users/meow/Projects/redmi-note-5a-ztos/upstream/ztOS/ztmetro/ztmetro.c", "read": true },
+    { "id": "C2", "kind": "source", "path": "/Users/meow/Projects/redmi-note-5a-ztos/upstream/ztOS/ztmetro/core/zrnmetrocore.h", "read": true },
+    { "id": "C3", "kind": "source", "path": "/Users/meow/Projects/redmi-note-5a-ztos/upstream/ztOS/ztmetro/core/zrnmetrocore.c", "read": true },
+    { "id": "G1", "kind": "guide", "url": "https://learn.microsoft.com/en-us/previous-versions/windows/apps/ff431813(v=vs.105)", "read": true, "quote": "The App Bar height in portrait mode and width in landscape mode is fixed at 72 pixels and can't be modified." },
+    { "id": "G2", "kind": "guide", "url": "https://www.uisdc.com/windows-phone-8-guideline", "read": true, "quote": "所有的页面都应遵循左边距12px或24px (all pages use a 12 px or 24 px left margin); content spacing in 12 px steps; 95 px bottom padding for scrollable content" },
+    { "id": "X1", "kind": "unreadable", "url": "download.microsoft.com/download/D869941E-455D-4882-A6B8-0DBCAA6AF2D4/UI Design and Interaction Guide for Windows Phone 7 Series.pdf", "reason": "HTTP 404 on re-check 2026-11-16 (1213-byte HTML); Wayback copy is a 1-page stub" },
+    { "id": "X2", "kind": "unreadable", "path": "/Users/meow/Projects/redmi-note-5a-ztos/build/wp-ux-refs-2026-11-15/img/wp81-notification-center.png", "reason": "420 bytes of HTML (Commons 404), not an image" },
+    { "id": "X3", "kind": "unreadable", "path": "repo/evidence/ux-compare/refs/ztmetro-lock.png", "reason": "blank 720x160 strip, 545 bytes, uniform black" }
+  ],
+  "metrics": [
+    { "id": "start.small_unit", "group": "start_grid", "name": "small tile edge", "wp": { "px": 35, "frame": "F1", "frame_width_px": 250, "pct_w": 14.0, "dp_at_480": 67.2, "confidence": "F" }, "port": { "dp": 49.5, "pct_w": 13.75, "source": "token metrics.tile_size_dp; F7 198 px" }, "delta_pct": -1.8 },
+    { "id": "start.medium_tile", "group": "start_grid", "name": "medium tile edge", "wp": { "px": 73, "frame": "F1", "frame_width_px": 250, "pct_w": 29.2, "dp_at_480": 140.2, "confidence": "F" }, "port": { "dp": 106, "pct_w": 29.44, "source": "token metrics.medium_tile_size_dp; F7 424 px" }, "delta_pct": 0.8 },
+    { "id": "start.wide_tile", "group": "start_grid", "name": "wide tile width", "wp": { "px": 150, "frame": "F1", "frame_width_px": 250, "pct_w": 60.0, "dp_at_480": 288.0, "confidence": "F" }, "port": { "dp": 219, "pct_w": 60.83, "source": "token metrics.wide_tile_width_dp" }, "delta_pct": 1.4 },
+    { "id": "start.gutter", "group": "start_grid", "name": "gutter between tiles", "wp": { "px": 4, "frame": "F1", "frame_width_px": 250, "pct_w": 1.6, "dp_at_480": 7.7, "confidence": "F" }, "port": { "dp": 7, "pct_w": 1.94, "source": "token metrics.tile_gap_dp; F7 28 px" }, "delta_pct": 21 },
+    { "id": "start.margin", "group": "start_grid", "name": "side margin", "wp": { "px": 11, "frame": "F1", "frame_width_px": 250, "pct_w": 4.4, "dp_at_480": 21.1, "confidence": "F" }, "port": { "dp": 14, "pct_w": 3.89, "source": "token metrics.start_margin_dp; F7 56 px" }, "delta_pct": -12 },
+    { "id": "start.first_row_top", "group": "start_grid", "name": "first tile row top", "wp": { "px": 22, "frame": "F1", "frame_width_px": 250, "dp_at_480": 42.2, "confidence": "F", "note": "= STATUS_H 28 + TOP_PAD 14 (ztmetro.c:128,140)" }, "port": { "dp": 42, "source": "ztmetro.c:128+140; F7 168 px = 42 dp" }, "delta_dp": 0 },
+    { "id": "start.columns", "group": "start_grid", "name": "columns", "wp": { "value": "3 medium / 6 small", "frame": "F1", "confidence": "F" }, "port": { "value": "6 units (3 medium)", "source": "token metrics.start_columns; ztmetro.c:2996" }, "delta_pct": 0 },
+    { "id": "header.caps_cap_height", "group": "page_header", "name": "caps line cap-height", "wp": { "px": 8, "frame": "F3", "frame_width_px": 209, "pct_w": 3.83, "dp_at_480": 18.4, "confidence": "F" }, "port": { "dp": 8.25, "pct_w": 2.29, "source": "token type.header.subtitle_size_sp 11.5; F7 33 px" }, "delta_pct": -40 },
+    { "id": "header.caps_font", "group": "page_header", "name": "caps font size", "wp": { "px": 11.4, "derivation": "8 px cap-height / 0.70", "pct_w": 5.45, "dp_at_480": 26.2, "confidence": "E" }, "port": { "dp": 11.5, "pct_w": 3.19, "source": "zrnmetrocore.c:509" }, "delta_pct": -41 },
+    { "id": "header.title_band", "group": "page_header", "name": "title ink band (lowercase + descender)", "wp": { "px": 24, "frame": "F3", "frame_width_px": 209, "pct_w": 11.48, "dp_at_480": 55.1, "confidence": "F", "cross_check": "F5 62/540 = 11.48 %W" }, "port": { "dp": 36.5, "pct_w": 10.14, "source": "F7 ztos-about 146 px" }, "delta_pct": -12 },
+    { "id": "header.title_font", "group": "page_header", "name": "title font size", "wp": { "px": 34, "derivation": "x-height 17 px / 0.50", "pct_w": 16.27, "dp_at_480": 78.1, "confidence": "E" }, "port": { "dp": 48, "pct_w": 13.33, "source": "zrnmetrocore.c:510" }, "delta_pct": -18 },
+    { "id": "header.caps_to_title_gap", "group": "page_header", "name": "caps bottom to title top", "wp": { "px": 17, "frame": "F3", "frame_width_px": 209, "dp_at_480": 39.0, "confidence": "F" }, "port": { "dp": 10.75, "source": "F7 43 px" }, "delta_dp": -28.3 },
+    { "id": "header.left_inset", "group": "page_header", "name": "left inset of caps and title", "wp": { "px": 10, "frame": "F3", "frame_width_px": 209, "pct_w": 4.78, "dp_at_480": 23.0, "confidence": "F", "note": "matches the 24 px margin rule (G2)" }, "port": { "dp": 16, "pct_w": 4.44, "source": "token metrics.page_margin_dp" }, "delta_pct": -7 },
+    { "id": "header.content_top", "group": "page_header", "name": "first content baseline below header", "wp": { "px": 103, "frame": "F3", "frame_width_px": 209, "dp_at_480": 236.6, "confidence": "F" }, "port": { "dp": 139, "source": "F7 ztos-about first entry 557 px" }, "delta_dp": -97.6 },
+    { "id": "applist.icon", "group": "app_list", "name": "icon square", "wp": { "px": 45, "unit": "pt@360", "source": "ztmetro.c:162 LIST_ICON (Lumia capture, ztmetro.c:160-167)", "pct_w": 12.5, "confidence": "F" }, "port": { "dp": 45, "pct_w": 12.5, "source": "F7 180 px" }, "delta_pct": 0 },
+    { "id": "applist.row_pitch", "group": "app_list", "name": "row pitch", "wp": { "px": 55, "unit": "pt@360", "source": "ztmetro.c:163 LIST_ROW_H", "pct_w": 15.28, "confidence": "F" }, "port": { "dp": 55, "pct_w": 15.28, "source": "F7 220 px" }, "delta_pct": 0 },
+    { "id": "applist.left", "group": "app_list", "name": "text column left", "wp": { "px": 80, "unit": "pt@360", "source": "ztmetro.c:164 LIST_LEFT", "pct_w": 22.22, "confidence": "F" }, "port": { "dp": 80, "pct_w": 22.22, "source": "F7 320 px" }, "delta_pct": 0 },
+    { "id": "applist.top", "group": "app_list", "name": "first icon below status strip", "wp": { "px": 17, "unit": "pt@360", "source": "ztmetro.c:165 LIST_TOP", "pct_w": 4.72, "confidence": "F" }, "port": { "dp": 24, "pct_w": 6.67, "source": "F7 96 px" }, "delta_pct": 41 },
+    { "id": "appbar.height", "group": "app_bar", "name": "app bar height", "wp": { "px": 36, "frame": "F2", "frame_width_px": 240, "dp": 72, "pct_w": 15.0, "confidence": "F", "guide": "G1: fixed at 72 pixels and can't be modified" }, "port": { "value": null, "note": "no app bar: 40 dp nav bar + actions in a top bar" }, "delta": "missing" },
+    { "id": "appbar.icon", "group": "app_bar", "name": "icon size", "wp": { "px": 24, "frame": "F2", "frame_width_px": 240, "dp": 48, "pct_w": 10.0, "confidence": "F" }, "port": { "value": null }, "delta": "n/a" },
+    { "id": "appbar.icon_top", "group": "app_bar", "name": "icon top inset in the bar", "wp": { "px": 6, "frame": "F2", "frame_width_px": 240, "dp": 12, "pct_w": 2.5, "confidence": "F" }, "port": { "value": null }, "delta": "n/a" },
+    { "id": "appbar.icon_pitch", "group": "app_bar", "name": "icon pitch", "wp": { "px": 42, "frame": "F2", "frame_width_px": 240, "dp": 84, "pct_w": 17.5, "confidence": "F" }, "port": { "value": null }, "delta": "n/a" },
+    { "id": "appbar.ellipsis", "group": "app_bar", "name": "ellipsis width / right inset", "wp": { "px": 13, "frame": "F2", "frame_width_px": 240, "dp": 26, "pct_w": 5.42, "confidence": "F", "detail": "3 dots, dot 3 px, pitch 5 px, right edge 240-227" }, "port": { "value": null }, "delta": "n/a" },
+    { "id": "appbar.expanded", "group": "app_bar", "name": "expanded bar with labels", "wp": { "px": 75, "frame": "F6", "scale": 0.667, "dp": 106, "confidence": "E" }, "port": { "value": null }, "delta": "n/a" },
+    { "id": "appbar.mini", "group": "app_bar", "name": "mini bar (ellipsis only)", "wp": { "px": 28, "frame": "F6", "scale": 0.667, "dp": 42, "confidence": "E" }, "port": { "value": null }, "delta": "n/a" },
+    { "id": "chrome.status_strip", "group": "chrome", "name": "status strip height", "wp": { "px": 40, "frame": "F5", "frame_width_px": 540, "pct_w": 7.41, "dp_at_480": 35.6, "confidence": "F" }, "port": { "dp": 28, "pct_w": 7.78, "source": "ztmetro.c:128 STATUS_H; F8 56 px" }, "delta_pct": 5 },
+    { "id": "chrome.nav_bar", "group": "chrome", "name": "bottom nav bar", "wp": { "px": 60, "frame": "F5", "frame_width_px": 540, "pct_w": 11.11, "dp_at_480": 53.3, "confidence": "F" }, "port": { "dp": 40, "pct_w": 11.11, "source": "token metrics.nav_bar_height_dp; F7 bar 160 px" }, "delta_pct": 0 },
+    { "id": "chrome.nav_icons", "group": "chrome", "name": "nav icon height", "wp": { "px": 21, "frame": "F5", "frame_width_px": 540, "dp_at_480": 18.7, "pct_w": 3.89, "confidence": "F" }, "port": { "dp": 14, "pct_w": 3.89, "source": "F7 56 px" }, "delta_pct": 0 },
+    { "id": "ac.tile_width", "group": "action_centre", "name": "quick-action tile width (4 columns)", "wp": { "value": null, "confidence": "E", "note": "no readable genuine WP frame (X2)" }, "port": { "dp": 85.75, "pct_w": 23.82, "source": "token metrics.action_centre_tile_width_dp; F8 172 px" }, "delta": "unverified" },
+    { "id": "ac.gap", "group": "action_centre", "name": "quick-action gap", "wp": { "value": null, "confidence": "E" }, "port": { "dp": 3, "pct_w": 0.83, "source": "F8 6 px" }, "delta": "unverified" },
+    { "id": "ac.side_margin", "group": "action_centre", "name": "quick-action side margin", "wp": { "value": null, "confidence": "E" }, "port": { "dp": 4, "pct_w": 1.11, "source": "F8 8 px" }, "delta": "unverified" },
+    { "id": "ac.row_pitch", "group": "action_centre", "name": "quick-action row pitch", "wp": { "value": null, "confidence": "E" }, "port": { "dp": 58, "pct_w": 16.11, "source": "F8 rows 104-217, 220-333" }, "delta": "unverified" },
+    { "id": "ac.grid_top", "group": "action_centre", "name": "grid top", "wp": { "value": null, "confidence": "E" }, "port": { "dp": 52, "source": "F8 black->#1F1F1F at y=104" }, "delta": "unverified" },
+    { "id": "ac.label", "group": "action_centre", "name": "quick-action label", "wp": { "value": null, "confidence": "E" }, "port": { "dp": 7.6, "pct_w": 2.11, "source": "ztmetro.c:6350" }, "delta": "unverified" },
+    { "id": "ac.handle", "group": "action_centre", "name": "push-up handle", "wp": { "value": null, "confidence": "E" }, "port": { "dp": 16, "pct_w": 4.44, "source": "design/components/action-centre.md" }, "delta": "unverified" },
+    { "id": "lock.clock", "group": "lock_screen", "name": "clock", "wp": { "value": null, "confidence": "E", "note": "no frame: X3 is blank" }, "port": { "dp": 92, "pct_w": 25.6, "source": "ztmetro.c:5942 (Light, 16 dp inset, 268 dp above bottom)" }, "delta": "unverified" },
+    { "id": "lock.date", "group": "lock_screen", "name": "weekday / date", "wp": { "value": null, "confidence": "E" }, "port": { "dp": 30, "pct_w": 8.3, "source": "ztmetro.c:5944-5946 (Semilight, 20 dp inset)" }, "delta": "unverified" }
+  ],
+  "type_ramp": [
+    { "role": "page_title", "family": "Segoe UI Semilight", "weight": 350, "size": 48, "pct_w": 13.33, "origin": "zrnmetrocore.c:510", "wp_pct_w": 16.27, "delta_pct": -18, "confidence": "F/E" },
+    { "role": "caption_caps", "family": "Segoe UI Semibold", "weight": 600, "size": 11.5, "pct_w": 3.19, "origin": "zrnmetrocore.c:509", "wp_pct_w": 5.45, "delta_pct": -41, "confidence": "F/E" },
+    { "role": "list_title", "family": "Segoe UI Semilight", "weight": 350, "size": 25.5, "pct_w": 7.08, "origin": "zrnmetrocore.c:548", "wp_pct_w": 6.5, "delta_pct": 9, "confidence": "F/E" },
+    { "role": "caption", "family": "Segoe UI", "weight": 400, "size": 12, "pct_w": 3.33, "origin": "zrnmetrocore.c:550" },
+    { "role": "body", "family": "Segoe UI", "weight": 400, "size": 13, "pct_w": 3.61, "origin": "ztmetro.c:3678" },
+    { "role": "subtitle", "family": "Segoe UI Semilight", "weight": 350, "size": 20, "pct_w": 5.56, "origin": "zrnmetrocore.c:4433" },
+    { "role": "app_list_title", "family": "Segoe UI Semilight", "weight": 350, "size": 22, "pct_w": 6.11, "origin": "ztmetro.c:4525" },
+    { "role": "app_list_letter", "family": "Segoe UI Semilight", "weight": 350, "size": 27, "pct_w": 7.5, "origin": "ztmetro.c:4517" },
+    { "role": "display", "family": "Segoe UI Light", "weight": 300, "size": 56, "pct_w": 15.56, "origin": "ztmetro.c:6720" },
+    { "role": "display_large", "family": "Segoe UI Light", "weight": 300, "size": 92, "pct_w": 25.56, "origin": "ztmetro.c:5942" },
+    { "role": "ac_label", "family": "Segoe UI Semibold", "weight": 600, "size": 7.6, "pct_w": 2.11, "origin": "ztmetro.c:6350" },
+    { "role": "ac_link", "family": "Segoe UI Semibold", "weight": 600, "size": 10, "pct_w": 2.78, "origin": "C1 quick-action links" }
+  ],
+  "colors": {
+    "accent_default": { "hex": "#0050EF", "name": "cobalt", "source": "ztmetro.c:2983" },
+    "on_accent": { "hex": "#FFFFFF", "source": "ztmetro.c:3672; zrnmetrocore.c:547" },
+    "palette_20": {
+      "lime": "#A4C400", "green": "#60A917", "emerald": "#008A00", "teal": "#00ABA9", "cyan": "#1BA1E2",
+      "cobalt": "#0050EF", "indigo": "#6A00FF", "violet": "#AA00FF", "pink": "#F472D0", "magenta": "#D80073",
+      "crimson": "#A20025", "red": "#E51400", "orange": "#FA6800", "amber": "#F0A30A", "yellow": "#E3C800",
+      "brown": "#825A2C", "olive": "#6D8764", "steel": "#647687", "mauve": "#76608A", "taupe": "#87794E",
+      "source": "ztmetro.c:2415-2422 (the WP8 accent set verbatim)"
+    },
+    "alphas": { "detail_0.60": "zrnmetrocore.c:549", "pivot_next_0.38": "zrnmetrocore.c:513", "notif_body_0.62": "ztmetro.c:6395", "disabled_0.30": "ztmetro.c:6321", "off_surface_0.122": "ztmetro.c:6316", "empty_0.07": "ztmetro.c:6299" },
+    "frame_samples": {
+      "F1_wp81_start_tile_fills": ["#EB3B00", "#00AFF0", "#2952A2", "#5034AB", "#2A5B83"],
+      "F7_ztos_start": { "tile_fill": "#0049CB", "on_tile_ink": "#FFE8D9", "steel_tile": "#646B73" },
+      "F7_note": "tile fill and ink differ from the tokens #0050EF / #FFFFFF by more than the capture's JPEG error (ink is 1088 px of exactly #FFE8D9)"
+    }
+  },
+  "motion": {
+    "confidence": "F for every C constant; [E] where the C comment attributes a value to a Lumia capture",
+    "tilt": { "deg": 14, "lift": 40, "sink_fraction": 0.045, "in_ms": 90, "out_ms": 200, "press_delay_ms": 80, "source": "zrnmetrocore.h:32-36; ztmetro.c:147" },
+    "long_press_ms": { "value": 450, "source": "ztmetro.c:145" },
+    "turnstile": { "row_out_ms": 128, "row_in_ms": 180, "stagger_ms": 33, "page_gap_ms": 120, "source": "zrnmetrocore.c:50-60", "provenance": "comment: UIXMobile TurnstileForwardOut 0.128 s; Lumia Settings ~150 ms / 33 ms" },
+    "tiles": { "in_ms": 186, "in_deg": 69.8, "in_depth": 0.182, "row_stagger_ms": 50, "left_after_right_ms": 51, "out_ms": 85, "out_deg": 45, "tapped_wait_ms": 80, "tapped_life_ms": 55, "jitter_ms": 6, "source": "ztmetro.c:224-241" },
+    "page_ms": { "value": 300, "source": "ztmetro.c PAGE_MS" },
+    "shade_ms": { "value": 260, "source": "ztmetro.c:139" },
+    "switch_ms": { "value": 260, "source": "ztmetro.c SWITCH_MS" },
+    "wp81_named_transitions": [
+      { "name": "turnstile-in", "ms": 350, "from_deg": -80, "to_deg": 0, "curve": "log" },
+      { "name": "turnstile-out", "ms": 128, "from_deg": 0, "to_deg": 50, "curve": "exp" },
+      { "name": "slide-up-fade-in", "ms": 240, "dy": 24 },
+      { "name": "fade-in", "ms": 350 },
+      { "name": "fade-out", "ms": 150 },
+      { "name": "continuum-show", "ms": 350 },
+      { "name": "rotate-90", "ms": 167 },
+      { "name": "tile-flip-notify", "ms": 520, "curve": "overshoot" }
+    ],
+    "wp81_named_source": "zrnmetrocore.c:3762-3776, read out of a Lumia 530's compiled Iris markup"
+  },
+  "verification": {
+    "captures": ["start (small+medium+wide visible)", "app list", "a hub page (about)", "action centre pulled down", "lock", "a page with the bottom row"],
+    "frame": { "device_px": [720, 1480], "px_per_dp": 2, "note": "at 1440-wide captures double every expected value" },
+    "checks": [
+      { "id": "tile_edge", "method": "black gutter left of the first tile", "expected_px_720": 212, "tol_px": 2 },
+      { "id": "tile_gutter", "method": "black run between two tiles", "expected_px_720": 14, "tol_px": 1 },
+      { "id": "side_margin", "method": "x of the first tile's left edge", "expected_px_720": 28, "tol_px": 2 },
+      { "id": "first_row_top", "method": "y of the first tile's top edge", "expected_px_720": 84, "tol_px": 2 },
+      { "id": "caps_cap_height", "method": "ink rows of the caps line", "expected_px_720": 16, "tol_px": 2 },
+      { "id": "title_band", "method": "ink rows of the lowercase title", "expected_px_720": 73, "tol_px": 4 },
+      { "id": "left_inset", "method": "x of the caps line's first ink pixel", "expected_px_720": 32, "tol_px": 2 },
+      { "id": "caps_to_title_gap", "method": "title top minus caps bottom", "expected_px_720": 21.5, "tol_px": 2, "wp_target_px_720": 58 },
+      { "id": "applist_icon", "method": "side of the accent square", "expected_px_720": 90, "tol_px": 2 },
+      { "id": "applist_pitch", "method": "y of consecutive icon tops", "expected_px_720": 110, "tol_px": 2 },
+      { "id": "status_strip", "method": "bottom of the status area", "expected_px_720": 56, "tol_px": 2 },
+      { "id": "bottom_bar", "method": "top edge of the nav bar", "expected_px_720": 80, "tol_px": 2 },
+      { "id": "ac_tile", "method": "black runs across a quick-action row", "expected_px_720": [171.5, 6, 8], "tol_px": 2 },
+      { "id": "colour_accent", "method": "pixel in the middle of a flat accent tile", "expected": "#0050EF", "tol": "exact" },
+      { "id": "colour_ink", "method": "pixel on a glyph stroke", "expected": "#FFFFFF", "tol": "exact" }
+    ],
+    "pass_rule": "all edges within tolerance and both colour probes exact; glyph bands are the only ±4 px items"
+  },
+  "status": {
+    "matching": ["start.medium_tile 29.4 %W", "start.first_row_top 42 dp", "applist 45/55/80", "chrome.nav_bar 11.1 %W", "square corners", "tilt 90/200 ms", "turnstile 128/180/33 ms"],
+    "off": ["header.title_font -18 %", "header.caps_font -41 %", "header.caps_to_title_gap -28 dp", "start.margin -12 % / start.gutter +21 %", "accent+ink colour remap", "no 72 dp app bar", "status strip dp"],
+    "unverified": ["4-column action centre", "lock screen composition", "hardware buttons", "WP7 UI Design & Interaction Guide (PDF 404)"]
+  }
+}

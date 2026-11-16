@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The accent fill comes from color.accent.base (#0050EF) via the generated
-     res/values/metro_header_colors.xml.  A plain <shape> keeps the header flat:
-     the token file records that ztmetro tiles and rows have no corners and no
-     dividers (metrics.corner_radius_dp = 0). -->
+<!-- Flat black page block: the reference has no coloured banner.  The colour is
+     generated from color.neutrals.black; corners stay square (corner_radius_dp=0). -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <solid android:color="@color/metro_header_bg" />

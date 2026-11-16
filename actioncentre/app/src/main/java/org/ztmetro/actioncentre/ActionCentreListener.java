@@ -49,6 +49,9 @@ public class ActionCentreListener extends NotificationListenerService {
 
     @Override
     public void onListenerDisconnected() {
+        // Do not leave the panel showing a stale list after the system drops
+        // the listener; the empty state is the honest answer.
+        NotificationRepository.setAll(new ArrayList<Notif>());
         NotificationRepository.setConnected(false);
     }
 

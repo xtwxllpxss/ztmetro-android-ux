@@ -12,6 +12,8 @@
 #
 # Env overrides: ANDROID_SDK, ANDROID_JDK, OUT_DIR, KEYSTORE, BUILD_HOST,
 #                REMOTE_WORK (remote build dir), BUILD_TOOLS_VERSION.
+#                DUMP=1 additionally prints the signed overlay's resource table
+#                (every entry idmap2 can map) next to its sha256.
 #
 # Usage: repo/scripts/build-overlay-sysui.sh
 set -euo pipefail
@@ -93,6 +95,10 @@ build_local() {
   "$apksigner" verify --min-sdk-version 34 "$OUT_DIR/$APK_NAME"
   "$aapt2" dump badging "$OUT_DIR/$APK_NAME" | grep -E '^(package|overlay|application)' || true
   echo "entries: $(unzip -l "$OUT_DIR/$APK_NAME" | tail -1)"
+  if [ "${DUMP:-0}" = 1 ]; then
+    echo "== overlay resource table (what idmap2 can map) =="
+    "$aapt2" dump resources "$OUT_DIR/$APK_NAME" | grep -E '^  type |^    resource '
+  fi
   rm -rf "$work"
   ( cd "$OUT_DIR" && shasum -a 256 "$APK_NAME" 2>/dev/null || sha256sum "$APK_NAME" )
   echo "$OUT_DIR/$APK_NAME"
@@ -108,7 +114,7 @@ if [ ! -x "$ANDROID_SDK/build-tools/$BUILD_TOOLS_VERSION/aapt2" ] && \
   # The remote half uses its own HOME defaults (SDK/JDK/keystore live on hermes).
   ssh "$BUILD_HOST" \
     "SRC_DIR=~/$REMOTE_WORK/src OUT_DIR=~/$REMOTE_WORK/out APK_NAME='$APK_NAME' \
-     BUILD_TOOLS_VERSION='$BUILD_TOOLS_VERSION' bash -s" < "${BASH_SOURCE[0]}" \
+     BUILD_TOOLS_VERSION='$BUILD_TOOLS_VERSION' ${DUMP:+DUMP=$DUMP} bash -s" < "${BASH_SOURCE[0]}" \
     | sed "s|~/$REMOTE_WORK|$REMOTE_WORK|g"
   mkdir -p "$OUT_DIR"
   scp -q "$BUILD_HOST:$REMOTE_WORK/out/$APK_NAME" "$OUT_DIR/$APK_NAME"

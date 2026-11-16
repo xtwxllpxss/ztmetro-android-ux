@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ztMetro Settings header — LSPosed module for stock Settings on LineageOS 23.2
+  ztMetro Settings — LSPosed module for stock Settings on LineageOS 23.2
   (Android 16 / API 36).
 
   This APK is a *module container*: it has no Activity, no Service, no BroadcastReceiver
@@ -15,8 +15,8 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.ztmetro.settingsheader"
-    android:versionCode="1"
-    android:versionName="1.0">
+    android:versionCode="2"
+    android:versionName="1.1">
 
     <application
         android:allowBackup="false"

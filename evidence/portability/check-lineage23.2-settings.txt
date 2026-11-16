@@ -1,0 +1,11 @@
+settings: 93 entries, 10 not in source (6 allowed)
+ALLOWED attr/cardCornerRadius
+ALLOWED attr/cardElevation
+MISSING color/primary_dark_material_dark
+MISSING color/primary_dark_material_light
+MISSING color/primary_material_dark
+MISSING color/primary_material_light
+ALLOWED dimen/cardview_default_radius
+ALLOWED style/TextAppearance.M3.Sys.Typescale.BodyLarge
+ALLOWED style/TextAppearance.M3.Sys.Typescale.BodyMedium
+ALLOWED style/TextAppearance.M3.Sys.Typescale.BodySmall

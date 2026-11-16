@@ -24,8 +24,8 @@ import java.util.Map;
  * requires: an AdaptiveIconDrawable is rendered from its foreground layer (or
  * the whole drawable when the foreground is null), everything else is rendered
  * whole. The alpha mask is then painted white with SRC_IN, so any artwork
- * colour is discarded and only the shape survives. When the mask has no
- * visible ink the caller falls back to the app's first letter.
+ * colour is discarded and only the shape survives. An empty mask, or a
+ * near-solid one (an opaque legacy icon), falls back to the app's first letter.
  *
  * Also owns the deterministic per-app tile colour: a weighted pick from the
  * ztmetro C palette with cobalt as the default. The colour is a pure function
@@ -35,6 +35,7 @@ final class TileArt {
 
     private static final int CACHE_LIMIT = 96;
     private static final float INK_MIN_FRACTION = 0.008f;
+    private static final float INK_MAX_FRACTION = 0.85f;
 
     private final PackageManager pm;
     private final Paint alphaPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -162,7 +163,13 @@ final class TileArt {
                 visible++;
             }
         }
-        return visible >= 2 && visible >= pixels.length * INK_MIN_FRACTION;
+        int sampled = (pixels.length + 1) / 2;
+        // An empty mask needs the letter fallback. So does a near-solid mask:
+        // an opaque legacy icon would otherwise become a blank white square,
+        // which is the same "backing shape" the WP redraw is removing.
+        return visible >= 2
+                && visible >= sampled * INK_MIN_FRACTION
+                && visible <= sampled * INK_MAX_FRACTION;
     }
 
     /** First visible character of a label, upper-cased; "?" when there is none. */

@@ -1,0 +1,16 @@
+image ../../ux-compare/current/93-shade.png 720x1280
+tile bands (y0,y1,height): [(np.int64(222), np.int64(286), np.int64(65)), (np.int64(314), np.int64(430), np.int64(117)), (np.int64(438), np.int64(554), np.int64(117)), (np.int64(562), np.int64(678), np.int64(117))]
+mid-row runs: [(26, 356), (364, 693)]
+gap between tiles: 7 px
+internet (inactive): x=26..356 height=117px  fitted corner r=57.75px  r/height=0.494  profile(dy,dx)=[(1, np.int64(46)), (2, np.int64(42)), (3, np.int64(39)), (4, np.int64(36))]
+bluetooth (active): x=364..693 height=117px  fitted corner r=38.50px  r/height=0.329  profile(dy,dx)=[(1, np.int64(29)), (2, np.int64(26)), (3, np.int64(23)), (4, np.int64(21))]
+
+density implied by tile height 72dp: 1.6250 (px/dp); screen = 443.1dp wide
+tile height 117px = 72.00dp (Compose CommonTileDefaults.TileHeight = 72dp)
+side margin 26px = 16.00dp (stock qs_tiles_page_horizontal_margin 16dp)
+tile gap 7px = 4.31dp (overlay qs_tile_margin_horizontal 4dp; stock 8dp = 13.0px)
+internet r = 35.54dp
+bluetooth r = 23.69dp
+
+expected if Compose: inactive = min(50dp, h/2) = 36dp stadium; active = 24dp
+expected if a single dimen were used: qs_corner_radius 28dp (stock) or 0dp (RRO) on BOTH tiles

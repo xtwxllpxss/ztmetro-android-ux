@@ -10,7 +10,7 @@ Android 16, 720x1280 @ 320 dpi (360x640 dp) · Package: `org.ztmetro.actioncentr
 |---|---|
 | APK | `repo/evidence/actioncentre/ztmetro-actioncentre.apk` (build output: `repo/actioncentre/build/out/ztmetro-actioncentre.apk`) |
 | size | **296 359 bytes (289.4 KiB)** — limit 2 MiB |
-| sha256 | `f0776901678a771fd10f9ff1da02f97fc1ee4fa06dcfb8319a697c040892190f` |
+| sha256 | `2466ddbe8601528432b3353725069f5c126b385dac8ff4b9dcb6d3b5a54dd673` |
 | package / version | `org.ztmetro.actioncentre`, versionCode 1 / versionName 1.0 |
 | SDK | minSdk 29, targetSdk 36, compileSdk 36 |
 | signer | v3 signature, throwaway RSA-2048 key generated under `actioncentre/build/keystore/` (gitignored) |
@@ -67,7 +67,7 @@ implementation at 360 dp panel width (720 px @ 320 dpi).
 | dismiss | per-row close / swipe | per-row `×` 20 sp; horizontal swipe reveals and cancels past 64 dp; both call `cancelNotification(key)` | `NotificationRowView.onTouchEvent()` |
 | empty state | `No notifications` in light type | **`Нет уведомлений`**, 17 sp Open Sans Light, 70 % white, 16 dp left, 22 dp top; second 11 sp line only when access is missing/connecting | `addEmptyState()` |
 | bottom handle | 16 dp accent bar, 28×3 white grip | 16 dp `#0050EF`, grip 28×3 dp white; tap closes | `HandleView.java` |
-| motion | shade slide 260 ms | window `translate 100%→0` 260 ms on open, `0→100%` 220 ms on close, plus `overrideActivityTransition` on API 34+ | `res/anim/ac_*.xml`, `finish()` |
+| motion | shade slide 260 ms | window `translate 100%→0` 260 ms on open, `0→100%` 220 ms on close, plus `overrideActivityTransition` on API 34+; predictive back is opted out so Back uses the same close slide | `res/anim/ac_*.xml`, `finish()` |
 
 Font: the panel is not dependent on the system font module — Open Sans Light /
 Regular / SemiBold (OFL, licence bundled) are in `assets/fonts/`. That gives the
@@ -102,9 +102,10 @@ adb install -r repo/evidence/actioncentre/ztmetro-actioncentre.apk
 adb shell cmd notification allow_listener \
   org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreListener
 
-# 2b. fallback if the cmd is unavailable — do not clobber other listeners:
+# 2b. fallback if the cmd is unavailable — never clobber other listeners:
 adb shell settings get secure enabled_notification_listeners
-# append after the existing colon-separated value if non-empty:
+# if the value above is empty, use this; otherwise prefix the existing value
+# with "<existing>:" so other listeners stay enabled:
 adb shell settings put secure enabled_notification_listeners \
   "org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreListener"
 

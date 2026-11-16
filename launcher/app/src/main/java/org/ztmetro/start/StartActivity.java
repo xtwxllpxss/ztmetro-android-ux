@@ -140,6 +140,7 @@ public final class StartActivity extends Activity
         startScroll.setFillViewport(true);
         startScroll.setVerticalScrollBarEnabled(false);
         startScroll.setClipToPadding(false);
+        startScroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
         grid = new MetroGridView(this, art);
         grid.setListener(this);
         startScroll.addView(grid, new FrameLayout.LayoutParams(

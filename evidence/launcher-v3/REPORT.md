@@ -19,7 +19,7 @@ those tokens unchanged.
 |---|---|
 | APK | [`ztmetro-start.apk`](ztmetro-start.apk) |
 | size | **53 526 bytes** (52.3 KiB) < 3 MiB |
-| sha256 | `2bc8540c1678434711251796df2e369403334f27f0d357ebdc38efe573b2e9a4` |
+| sha256 | `411df5abc7a71aa80ac43de4ec4f6ea73f711fc70304a4710eab81794f90aee9` |
 | package | `org.ztmetro.start` (versionCode 3, versionName 3.0) |
 | min / target | 29 / **36** |
 | signing | v3, cert SHA-256 `5f05e8e4…6457831` — the v1/v2 key, so `-r` updates in place |
@@ -53,8 +53,9 @@ Static proof: [`aapt2-badging.txt`](aapt2-badging.txt),
   `AdaptiveIconDrawable.getForeground()` (or the whole drawable when foreground is
   null), converts alpha to a white mask with `SRC_IN`, and draws it at **44 % of the
   tile's short side**, horizontally centred in the upper part. No white circle, no
-  adaptive-icon colour. If the mask is empty the app's first letter is drawn white at
-  40 % of the tile height. Small tiles are glyph-only, matching the ztmetro frame.
+  adaptive-icon colour. An empty mask, or a near-solid one (an opaque legacy icon),
+  falls back to the app's first letter at 40 % of the tile height instead of a blank
+  white square. Small tiles are glyph-only, matching the ztmetro frame.
 - **Label**: 13 sp white (`type.ramp.body`, system sans-serif → Selawik when the font
   module is on) at the lower-left, 8 dp in. No label on 1×1 tiles (the reference does
   not have one; 49 dp cannot fit readable text).
@@ -128,7 +129,7 @@ No token number is hand-duplicated in Java; the v3 launcher extras are generated
 | build | `scripts/build-launcher.sh` exit 0 on hermes-ubuntu, JDK 17, SDK 36 |
 | badging | `org.ztmetro.start`, versionCode **3**, versionName **3.0**, label `ztmetro start`, HOME, notification-listener |
 | manifest | HOME/DEFAULT activity; listener service + `BIND_NOTIFICATION_LISTENER_SERVICE`; **0 `uses-permission`** |
-| dex | `classes.dex` 73 600 B; StartActivity, MetroTileView, MetroGridView, MetroPager, MetroCircleGlyphView, MetroSectionHeaderView, MetroListRowView, TileArt, TileStore, listener all present; **0 androidx** |
+| dex | `classes.dex` 73 728 B; StartActivity, MetroTileView, MetroGridView, MetroPager, MetroCircleGlyphView, MetroSectionHeaderView, MetroListRowView, TileArt, TileStore, listener all present; **0 androidx** |
 | resources | `metro_tile_gap` 7 dp, `metro_start_margin` 14 dp, `metro_v3_arrow` 48 dp, `metro_v3_icon_fraction` 44%, palette colours and `TextAppearance.Metro.SectionHeader` compiled |
 | size | **53 526 B** < 3 MiB |
 | signature | `apksigner verify` passes; cert `5f05e8e4…6457831`, same as v1/v2 |
@@ -176,8 +177,8 @@ first.
 1. **Start** (`start.png`). After Home: no page title, no pivot, no white icon circles;
    tiles start directly under the status strip at the 14 dp outer margin with 7 dp
    gutters; first row should be three 2×2 tiles; second row a 4×2 + 2×2; small 1×1
-   block below; cobalt dominant with at least one steel `#647687` and one crimson
-   `#A20025` tile on a normal app set; white monochrome silhouettes, 13 sp labels
+   block below; cobalt dominant, with steel `#647687` and crimson `#A20025`
+   samples likely on a normal app set; white monochrome silhouettes, 13 sp labels
    bottom-left, right-edge circled arrow vertically centred.
 2. **Pressed tile** (`pressed.png`). Press and hold a tile ~250 ms (before the 450 ms
    menu): it leans 14°, scales to 0.97, shifts its fill slightly, with no ripple and no
@@ -211,11 +212,10 @@ adb exec-out screencap -p > tile-menu.png
 
 1. **No device run yet.** Everything above is static/source-level; tile silhouettes,
    swipe vs. system back gesture, and the 2 GB frame budget are unmeasured.
-2. **Silhouette quality.** Adaptive foregrounds with full-bleed art become solid white
-   blobs; legacy icons with an opaque square background also become a square. The
-   brief only asks for a letter fallback when the mask is empty, so that is what is
-   implemented. If the lead sees blobs, the cheap fix is a coverage >90% letter
-   fallback in `TileArt`.
+2. **Silhouette quality.** The mask falls back to the first letter when it is empty
+   **or more than 85 % solid**, so an opaque legacy icon or a full-bleed adaptive
+   foreground becomes a letter rather than a white square. A genuine logo that fills
+   most of its box will therefore be a letter; that is the deliberate trade.
 3. **Palette is deterministic, not guaranteed.** A given installed app set can hash to
    cobalt/other colours without a steel or crimson tile. The weighting makes steel and
    crimson likely (2/26 each) but the screenshots depend on the actual packages.

@@ -1,0 +1,15 @@
+<!-- Pressed state of the two bottom-bar glyphs: the module accent at 24% behind
+     the white icon.  This is the only place the accent is used in this design;
+     the header/bottom bar themselves are flat black (see ztos-about.png). -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/metro_accent_pressed" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+</selector>

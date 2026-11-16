@@ -1,0 +1,57 @@
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+16811:    resource 0x7f070a60 dimen/qqs_expand_clock_scale
+16813:    resource 0x7f070a61 dimen/qqs_layout_margin_top
+16816:    resource 0x7f070a62 dimen/qqs_layout_padding_bottom
+16820:    resource 0x7f070a63 dimen/qs_brightness_margin_bottom
+16824:    resource 0x7f070a64 dimen/qs_brightness_margin_top
+16827:    resource 0x7f070a65 dimen/qs_carrier_margin_width
+16829:    resource 0x7f070a66 dimen/qs_center_guideline_padding
+16831:    resource 0x7f070a67 dimen/qs_content_horizontal_padding
+16835:    resource 0x7f070a68 dimen/qs_corner_radius
+16837:    resource 0x7f070a69 dimen/qs_customize_internal_side_paddings
+16839:    resource 0x7f070a6c dimen/qs_drawable_end_margin
+16841:    resource 0x7f070a6e dimen/qs_edit_mode_app_icon
+16957:    resource 0x7f070aaa dimen/qs_tile_height
+16959:    resource 0x7f070aab dimen/qs_tile_margin_horizontal
+16961:    resource 0x7f070aac dimen/qs_tile_margin_top_bottom
+16963:    resource 0x7f070aad dimen/qs_tile_margin_vertical
+16965:    resource 0x7f070aae dimen/qs_tile_padding
+21541:    resource 0x7f080b90 drawable/qs_mic_access_on
+21543:    resource 0x7f080b91 drawable/qs_nightlight_icon_off
+21545:    resource 0x7f080b92 drawable/qs_nightlight_icon_on
+21547:    resource 0x7f080b93 drawable/qs_record_issue_icon_off
+21549:    resource 0x7f080b94 drawable/qs_record_issue_icon_on
+21551:    resource 0x7f080b96 drawable/qs_screen_record_icon_off
+21553:    resource 0x7f080b97 drawable/qs_screen_record_icon_on
+21555:    resource 0x7f080b99 drawable/qs_tile_background_flagged
+21557:    resource 0x7f080b9a drawable/qs_tile_background_shape
+21559:    resource 0x7f080b9b drawable/qs_tile_focused_background
+21561:    resource 0x7f080b9c drawable/qs_work_mode_icon_off
+21563:    resource 0x7f080b9d drawable/qs_work_mode_icon_on
+21565:    resource 0x7f080b9e drawable/reachability_education_ic_left_hand
+21568:    resource 0x7f080b9f drawable/reachability_education_ic_right_hand
+25452:    resource 0x7f0a06c2 id/qs_tile_background_base
+25454:    resource 0x7f0a06c3 id/qs_tile_background_overlay
+    resource 0x7f070a68 dimen/qs_corner_radius
+      () 28.000000dp
+    resource 0x7f070a69 dimen/qs_customize_internal_side_paddings
+    resource 0x7f070aaa dimen/qs_tile_height
+      () 80.000000dp
+    resource 0x7f070aab dimen/qs_tile_margin_horizontal
+      () 8.000000dp
+    resource 0x7f070aac dimen/qs_tile_margin_top_bottom
+      () 4.000000dp
+    resource 0x7f070aad dimen/qs_tile_margin_vertical
+      () @dimen/qs_tile_margin_horizontal
+    resource 0x7f070aae dimen/qs_tile_padding
+      () 12.000000dp
+===
+    resource 0x7f080b99 drawable/qs_tile_background_flagged
+      () (file) res/drawable/qs_tile_background_flagged.xml type=XML
+    resource 0x7f080b9a drawable/qs_tile_background_shape
+      () (file) res/drawable/qs_tile_background_shape.xml type=XML
+    resource 0x7f080b9b drawable/qs_tile_focused_background
+      () (file) res/drawable/qs_tile_focused_background.xml type=XML
+    resource 0x7f080b9c drawable/qs_work_mode_icon_off
