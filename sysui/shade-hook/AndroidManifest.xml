@@ -12,15 +12,20 @@
   module docs require; the code only uses API-82 calls (same convention as the
   working settings-header and keyguard modules).
 
-  xposedscope: com.android.systemui only.  Enabling the scope is what allows
-  the hook to run; unchecking it (or uninstalling the APK) is the complete
-  rollback.  The stock shade is never modified in place: the hook only asks
-  SystemUI to close it and starts org.ztmetro.actioncentre.
+  xposedscope: android (system_server) + com.android.systemui.
+  * android            -> FrameworkHooks: block WindowState#transferTouch() for the
+                          status bar window, i.e. stop DisplayPolicy from rerouting
+                          a top-edge gesture to SystemUI.  This is what keeps the
+                          stock shade from opening at all.
+  * com.android.systemui -> ShadeHooks/ShadeRouter: safety net; if a stock shade
+                          opened anyway, close it and start the Action Centre.
+  Without the "android" scope the APK still works, but only as the late safety
+  net (the old v1 behaviour).  The stock shade is never modified in place.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.ztmetro.shadehook"
-    android:versionCode="1"
-    android:versionName="1.0">
+    android:versionCode="2"
+    android:versionName="2.0">
 
     <application
         android:allowBackup="false"

@@ -31,10 +31,21 @@ import java.util.Locale;
  *       right, right-aligned at the 14 dp margin.</li>
  * </ul>
  *
- * <p>v3 shipped one 30 dp line with operator/date/clock/percent/battery, so the
- * grid started 37 dp from the top instead of the mockup's 50. The two rows here
- * are the C's {@code status_row(details=true)} and give the 50 dp the quick
- * grid and notification list are measured against.
+ * <p><b>Pass 2 (perf).</b> This view used to tick every 15 s and invalidate
+ * unconditionally, and {@code onDraw} formatted the clock and the date on every
+ * frame (up to four {@code SimpleDateFormat.format} allocations per frame plus
+ * two {@code measureText} calls on a freshly built string). Now:
+ *
+ * <ul>
+ *   <li>the tick lands on the next minute boundary, because the clock is the only
+ *       thing that changes on a minute;</li>
+ *   <li>a tick reads the radio (operator, Wi-Fi, signal) but invalidates only when
+ *       a <em>drawn</em> value changed;</li>
+ *   <li>the clock and date strings are cached and re-used by {@code onDraw}; a
+ *       frame allocates nothing;</li>
+ *   <li>the ticker stops when the view is not visible ({@code onStop} of the
+ *       panel, screen off, page switch), so a hidden panel costs no wakeups.</li>
+ * </ul>
  */
 final class StatusStripView extends View {
     static final int HEIGHT_DP = 50;
@@ -47,13 +58,21 @@ final class StatusStripView extends View {
             new SimpleDateFormat("HH:mm", Locale.getDefault());
     private final SimpleDateFormat dateFormat =
             new SimpleDateFormat("dd.MM", Locale.getDefault());
+    /** Minute-aligned tick: the only thing that changes on a minute is the clock. */
     private final Runnable tick = new Runnable() {
         @Override
         public void run() {
-            refreshOperator();
-            refreshRadio();
-            invalidate();
-            handler.postDelayed(this, 15000);
+            if (!isShown()) {
+                return;   // hidden panel: no wakeups, no binder reads
+            }
+            boolean changed = refreshClockText();
+            changed |= refreshOperator();
+            changed |= refreshRadio();
+            changed |= refreshBattery();
+            if (changed) {
+                invalidate();
+            }
+            scheduleNextTick();
         }
     };
     private BroadcastReceiver batteryReceiver;
@@ -63,23 +82,33 @@ final class StatusStripView extends View {
     private boolean wifiOn;
     private int signalLevel = -1;
     private boolean radioRead;
+    /** Cached draw strings: a frame must not format a date. */
+    private String clockText;
+    private String dateText;
+    /** Width of {@link #dateText}, measured once per minute instead of per frame. */
+    private String dateWidthFor;
+    private float dateWidth;
 
     StatusStripView(Context context) {
         super(context);
         setWillNotDraw(false);
+        refreshClockText();
     }
 
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        refreshClockText();
         refreshOperator();
         refreshRadio();
-        readBattery(getContext().registerReceiver(null,
+        refreshBattery(getContext().registerReceiver(null,
                 new IntentFilter(Intent.ACTION_BATTERY_CHANGED)));
         batteryReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                readBattery(intent);
+                if (refreshBattery(intent)) {
+                    invalidate();
+                }
             }
         };
         IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -88,7 +117,7 @@ final class StatusStripView extends View {
         } else {
             getContext().registerReceiver(batteryReceiver, filter);
         }
-        handler.postDelayed(tick, 15000);
+        scheduleNextTick();
     }
 
     @Override
@@ -104,50 +133,114 @@ final class StatusStripView extends View {
         super.onDetachedFromWindow();
     }
 
-    private void readBattery(Intent intent) {
-        if (intent == null) {
+    /**
+     * The panel is paused/covered: stop the minute tick (and with it the radio
+     * reads) until it is visible again. {@code onWindowVisibilityChanged} fires for
+     * a stopped activity and for a covered window.
+     */
+    @Override
+    protected void onWindowVisibilityChanged(int visibility) {
+        super.onWindowVisibilityChanged(visibility);
+        handler.removeCallbacks(tick);
+        if (visibility == View.VISIBLE && isAttachedToWindow()) {
+            scheduleNextTick();
+        }
+    }
+
+    private void scheduleNextTick() {
+        handler.removeCallbacks(tick);
+        if (!isAttachedToWindow()) {
             return;
+        }
+        long now = System.currentTimeMillis();
+        long delay = 60000L - (now % 60000L) + 50L;
+        handler.postDelayed(tick, delay);
+    }
+
+    /** @return true when the drawn minute changed. */
+    private boolean refreshClockText() {
+        String clock = clockFormat.format(new Date());
+        String date = dateFormat.format(new Date());
+        boolean changed = !clock.equals(clockText) || !date.equals(dateText);
+        clockText = clock;
+        dateText = date;
+        return changed;
+    }
+
+    private boolean refreshBattery() {
+        return refreshBattery(getContext().registerReceiver(null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED)));
+    }
+
+    /** @return true when the drawn battery state changed. */
+    private boolean refreshBattery(Intent intent) {
+        if (intent == null) {
+            return false;
         }
         int level = intent.getIntExtra("level", -1);
         int scale = intent.getIntExtra("scale", 100);
         int status = intent.getIntExtra("status", 0);
+        int percent = battery;
         if (level >= 0 && scale > 0) {
-            battery = Math.min(100, level * 100 / scale);
+            percent = Math.min(100, level * 100 / scale);
         }
-        charging = status == android.os.BatteryManager.BATTERY_STATUS_CHARGING
+        boolean nowCharging = status == android.os.BatteryManager.BATTERY_STATUS_CHARGING
                 || status == android.os.BatteryManager.BATTERY_STATUS_FULL;
-        invalidate();
+        if (percent == battery && nowCharging == charging) {
+            return false;
+        }
+        battery = percent;
+        charging = nowCharging;
+        return true;
     }
 
-    private void refreshOperator() {
+    /** @return true when the drawn operator changed. */
+    private boolean refreshOperator() {
         try {
             TelephonyManager tm =
                     (TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE);
             String name = tm == null ? "" : tm.getNetworkOperatorName();
             if (name != null && name.trim().length() > 0) {
-                operator = name.trim();
+                String trimmed = name.trim();
+                if (!trimmed.equals(operator)) {
+                    operator = trimmed;
+                    return true;
+                }
             }
         } catch (Throwable ignored) {
         }
+        return false;
     }
 
-    /** Wi-Fi and signal are read once per tick; no permission means dim bars. */
-    private void refreshRadio() {
+    /** Wi-Fi and signal are read once per minute tick; no permission means dim bars. */
+    private boolean refreshRadio() {
         radioRead = true;
+        boolean changed = false;
+        boolean nowWifi = false;
         try {
             WifiManager wm = (WifiManager) getContext().getSystemService(Context.WIFI_SERVICE);
-            wifiOn = wm != null && wm.isWifiEnabled();
+            nowWifi = wm != null && wm.isWifiEnabled();
         } catch (Throwable ignored) {
-            wifiOn = false;
+            nowWifi = false;
         }
+        if (nowWifi != wifiOn) {
+            wifiOn = nowWifi;
+            changed = true;
+        }
+        int nowSignal;
         try {
             TelephonyManager tm =
                     (TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE);
             SignalStrength strength = tm == null ? null : tm.getSignalStrength();
-            signalLevel = strength == null ? -1 : strength.getLevel();
+            nowSignal = strength == null ? -1 : strength.getLevel();
         } catch (Throwable ignored) {
-            signalLevel = -1;
+            nowSignal = -1;
         }
+        if (nowSignal != signalLevel) {
+            signalLevel = nowSignal;
+            changed = true;
+        }
+        return changed;
     }
 
     @Override
@@ -193,7 +286,7 @@ final class StatusStripView extends View {
         paint.setTextSize(U.sp(getContext(), 15));
         paint.setColor(U.WHITE);
         paint.setTextAlign(Paint.Align.RIGHT);
-        drawCentred(canvas, clockFormat.format(new Date()),
+        drawCentred(canvas, clockText == null ? "" : clockText,
                 bx - U.dp(getContext(), 8), mid);
 
         // ---- second line: operator left, charge + date right, 24.75 dp ----
@@ -207,8 +300,15 @@ final class StatusStripView extends View {
         canvas.drawText(operator, left, baseline, paint);
         paint.setTextAlign(Paint.Align.RIGHT);
         paint.setColor(U.WHITE_70);
-        canvas.drawText(dateFormat.format(new Date()), right, baseline, paint);
-        float dateLeft = right - paint.measureText(dateFormat.format(new Date()));
+        if (dateText != null) {
+            canvas.drawText(dateText, right, baseline, paint);
+            if (!dateText.equals(dateWidthFor)) {
+                // Measured once per minute, not once per frame.
+                dateWidth = paint.measureText(dateText);
+                dateWidthFor = dateText;
+            }
+        }
+        float dateLeft = right - dateWidth;
         String percent = battery >= 0 ? battery + "%" : "--";
         canvas.drawText(percent, dateLeft - U.dp(getContext(), 12), baseline, paint);
     }
@@ -216,11 +316,7 @@ final class StatusStripView extends View {
     private void drawCentred(Canvas canvas, String text, float x, float mid) {
         Paint.FontMetrics fm = paint.getFontMetrics();
         float baseline = mid - (fm.ascent + fm.descent) / 2f;
-        if (paint.getTextAlign() == Paint.Align.RIGHT) {
-            canvas.drawText(text, x, baseline, paint);
-        } else {
-            canvas.drawText(text, x, baseline, paint);
-        }
+        canvas.drawText(text, x, baseline, paint);
     }
 
     private void drawSignal(Canvas canvas, float x, float mid) {

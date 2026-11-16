@@ -1,0 +1,57 @@
+# What logcat must show on the device (exact strings emitted by this build)
+#
+# These lines are constructed from the format strings in this build's
+# ShadeBridgeService.java; they were NOT captured from a phone (no adb in this
+# task). The device gate is: swipe down from the very top of an unlocked screen
+# once, then compare.
+#
+#   adb logcat -c
+#   adb logcat -v time -s ShadeTouch ShadeBridge
+#
+# Numbers are the ones this panel produces (720x1280 px, density 2.0):
+# 32 dp = 64 px, 40 % of 1280 = 512 px.
+
+## 0. Service enabled: the window is created at the 32 dp rest height
+I/ShadeTouch: strip overlay added: rest height=32dp (64 px) gesture height=512 px (40% of 1280 px display) type=TYPE_ACCESSIBILITY_OVERLAY(2032) alpha=0 content, flags=0x... (NOT_FOCUSABLE=true,NOT_TOUCH_MODAL=true,LAYOUT_IN_SCREEN=true,LAYOUT_NO_LIMITS=true,NOT_TOUCHABLE=false) touchable=true keyguardLocked=false
+I/ShadeTouch: strip input constraint: the touchable region of a window is its bounds (API 36 public SDK has no per-region touchable area for an app window); rest=64 px, gesture=512 px
+
+## 1. DOWN in the top 32 dp -> grow, then open (one dispatch, in this order)
+I/ShadeTouch: DOWN x=360 y=12 rawX=360 rawY=12 touchable=true tall=false window=64 px keyguardLocked=false
+I/ShadeTouch: strip window grown: 64 px -> 512 px (40% of 1280 px) reason=DOWN in the top 32 dp (rawY=12 px) touchable=true
+I/ShadeTouch: strip open down -> ActionCentreActivity (NEW_TASK, extra_instant=true); gesture swallowed by the strip (window tall 512 px); SystemUI receives no DOWN/MOVE/UP and this path sends no GLOBAL_ACTION_BACK
+I/ShadeBridge: panel start at 0 ms (strip down); strip=present, instant=true, NEW_TASK
+
+## 2. MOVEs stay inside the 512 px window (no bounds exit, so no CANCEL)
+I/ShadeTouch: MOVE x=360 y=64 rawX=360 rawY=64 touchable=true tall=true window=512 px keyguardLocked=false
+I/ShadeTouch: MOVE x=360 y=148 rawX=360 rawY=148 touchable=true tall=true window=512 px keyguardLocked=false
+I/ShadeTouch: MOVE x=360 y=214 rawX=360 rawY=214 touchable=true tall=true window=512 px keyguardLocked=false
+
+## 3. Panel visible, no BACK on this path
+I/ShadeBridge: panel visible N ms after strip trigger (start +M ms, BACK none, wall-clock delta W ms)
+
+## 4. UP: gesture ends inside the strip, window back at 64 px
+I/ShadeTouch: UP x=360 y=230 rawX=360 rawY=230 touchable=true tall=true window=512 px keyguardLocked=false
+I/ShadeTouch: UP after 190 ms, 3 MOVE(s), max dy=218 px -> gesture ends inside the strip; strip back at rest
+I/ShadeTouch: strip window back at rest: 512 px -> 64 px (32 dp) reason=UP touchable=true
+
+## ACCEPTANCE (all four must hold on the same capture)
+#   1. the DOWN / grown / strip open / panel start order above, with "BACK none"
+#   2. grep -c "GLOBAL_ACTION_BACK"        -> 0   (no BACK anywhere on the strip path)
+#   3. grep -c "shade detected:"           -> 0   (the stock shade never opened)
+#   4. grep -c "CANCEL"                    -> 0   (the strip kept the whole gesture)
+#
+# A tap on the top edge gives DOWN -> grown -> strip open down -> panel start,
+# then UP with max dy 0-4 px; the same acceptance holds.
+
+## RESIDUAL CASE - named, not hidden
+# If the ROM reroutes the gesture to SystemUI (framework-facts.txt section C),
+# the strip cannot win by geometry. The cancel is then logged as:
+I/ShadeTouch: CANCEL after 96 ms at rawY=52 px, 2 MOVE(s), max dy=40 px, opened=true; reason=framework cancelled the touch while the window was attached, touchable and 512 px tall (not a bounds exit: the pointer was inside); strip back at rest; panel already open, no GLOBAL_ACTION_BACK
+# That line is the measurement that decides the next step: the panel is already
+# open, so the stock shade is only a visual overlay; closing it without a flash
+# needs the SystemUI-side hook (repo/sysui/shade-hook), not a taller window.
+
+## Also unchanged: the one-BACK fallback for a shade opened by other means
+# (adb, a gesture that started below the strip, the lock screen):
+I/ShadeBridge: shade detected: type=... bounds=[0,0][720,1280] 100% of display 720x1280 last=<pkg>; strip present -> panel first, BACK only if still visible at 120 ms
+I/ShadeBridge: shade still visible at 12x ms; GLOBAL_ACTION_BACK #1 at 12x ms returned true (cap 1)

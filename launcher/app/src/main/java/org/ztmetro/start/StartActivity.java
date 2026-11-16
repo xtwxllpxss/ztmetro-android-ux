@@ -100,6 +100,20 @@ public final class StartActivity extends Activity
 
     private Object backCallback;
 
+    /**
+     * Pass 2: {@link #refreshData()} used to run on every resume, which re-queried
+     * the package manager and rebuilt every tile view (and its art) even when the
+     * tile field had not changed. The package set now marks itself dirty through
+     * {@link #packageReceiver}, and the two lists are only pushed to the views when
+     * their signature changed.
+     */
+    private boolean appsDirty;
+    /** True between onResume and onPause; a package change folds in only then. */
+    private boolean resumed;
+    private String lastTileSignature = "";
+    private String lastAppSignature = "";
+    private BroadcastReceiver packageReceiver;
+
     /** Keyguard-return detection: the entrance must never run on a plain resume. */
     private KeyguardManager keyguardManager;
     private BroadcastReceiver keyguardReceiver;
@@ -120,6 +134,7 @@ public final class StartActivity extends Activity
 
         store = new TileStore(this);
         refreshData();
+        registerPackageReceiver();
 
         if (Build.VERSION.SDK_INT >= 33) {
             backCallback = Back33.register(this, new Runnable() {
@@ -473,10 +488,18 @@ public final class StartActivity extends Activity
         store.seedIfNeeded(apps);
         tiles = store.loadTiles(apps);
         tiles.add(TileStore.appearanceTile(getString(R.string.appearance)));
-        grid.setTiles(tiles);
+        String tileSignature = tileSignature(tiles);
+        if (!tileSignature.equals(lastTileSignature)) {
+            lastTileSignature = tileSignature;
+            grid.setTiles(tiles);
+        }
         grid.refreshLive();
         if (appList != null) {
-            appList.setApps(apps);
+            String appSignature = appSignature(apps);
+            if (!appSignature.equals(lastAppSignature)) {
+                lastAppSignature = appSignature;
+                appList.setApps(apps);
+            }
         }
     }
 
@@ -486,8 +509,58 @@ public final class StartActivity extends Activity
         }
         tiles = store.loadTiles(apps);
         tiles.add(TileStore.appearanceTile(getString(R.string.appearance)));
-        grid.setTiles(tiles);
+        String signature = tileSignature(tiles);
+        if (!signature.equals(lastTileSignature)) {
+            lastTileSignature = signature;
+            grid.setTiles(tiles);
+        }
         grid.refreshLive();
+    }
+
+    /**
+     * What the tile field shows, in order: appearance flag, size and component.
+     * A label change is included because it changes the drawn glyph letter.
+     */
+    private static String tileSignature(List<TileStore.Tile> list) {
+        if (list == null) {
+            return "";
+        }
+        StringBuilder builder = new StringBuilder(list.size() * 32);
+        for (TileStore.Tile tile : list) {
+            if (tile == null) {
+                continue;
+            }
+            builder.append(tile.appearance ? '1' : '0').append(tile.size);
+            if (tile.component != null) {
+                builder.append(tile.component.flattenToString());
+            }
+            builder.append(tile.label == null ? "" : tile.label).append('|');
+        }
+        return builder.toString();
+    }
+
+    /** The app list only depends on the package set and the labels it draws. */
+    private static String appSignature(List<TileStore.App> list) {
+        if (list == null) {
+            return "";
+        }
+        StringBuilder builder = new StringBuilder(list.size() * 24);
+        for (TileStore.App app : list) {
+            if (app == null || app.component == null) {
+                continue;
+            }
+            builder.append(app.component.flattenToString())
+                    .append(app.label == null ? "" : app.label).append('|');
+        }
+        return builder.toString();
+    }
+
+    /** Reload from the package manager only when it can have changed. */
+    private void refreshIfNeeded() {
+        if (store != null && appsDirty) {
+            appsDirty = false;
+            refreshData();
+        }
     }
 
     private View pageView(int which) {
@@ -674,18 +747,20 @@ public final class StartActivity extends Activity
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        if (store != null) {
-            refreshData();
-        }
+        // HOME pressed while already resumed: the package set can only have
+        // changed if a package broadcast arrived while we were paused.
+        refreshIfNeeded();
         selectPage(PAGE_START, true);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (store != null) {
-            refreshData();
-        }
+        resumed = true;
+        // Pass 2: re-bind the notification listener if it was released while Start
+        // was hidden, and do NOT reload the package manager on an ordinary resume.
+        ListenerWindow.onVisible(this);
+        refreshIfNeeded();
         LiveTiles.register(this);
         grid.refreshLive();
         if (pager != null) {
@@ -696,6 +771,10 @@ public final class StartActivity extends Activity
 
     @Override
     protected void onPause() {
+        resumed = false;
+        // Pass 2: two minutes of grace, then the listener binding is released so
+        // the system stops keeping this process alive behind another app.
+        ListenerWindow.onHidden(this);
         LiveTiles.unregister(this);
         // Fallback for the "previous state was keyguard" flag; the reliable
         // signals are USER_PRESENT and screen-on-with-keyguard in the receiver.
@@ -803,6 +882,55 @@ public final class StartActivity extends Activity
         }
     }
 
+    /**
+     * Pass 2: the only thing that invalidates the app/tile lists is the package
+     * set itself. Without this, every resume re-queried PackageManager (a few
+     * hundred ms on this phone) and rebuilt every tile view.
+     */
+    private void registerPackageReceiver() {
+        if (packageReceiver != null) {
+            return;
+        }
+        packageReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent == null ? "" : String.valueOf(intent.getAction());
+                if (Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE.equals(action)
+                        || Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE.equals(action)
+                        || Intent.ACTION_PACKAGE_ADDED.equals(action)
+                        || Intent.ACTION_PACKAGE_REMOVED.equals(action)
+                        || Intent.ACTION_PACKAGE_REPLACED.equals(action)
+                        || Intent.ACTION_PACKAGE_CHANGED.equals(action)) {
+                    appsDirty = true;
+                    if (resumed) {
+                        // Visible: fold the change into this frame instead of
+                        // waiting for the next resume.
+                        refreshIfNeeded();
+                    }
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_PACKAGE_ADDED);
+        filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
+        filter.addAction(Intent.ACTION_PACKAGE_REPLACED);
+        filter.addAction(Intent.ACTION_PACKAGE_CHANGED);
+        filter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE);
+        filter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE);
+        filter.addDataScheme("package");
+        try {
+            if (Build.VERSION.SDK_INT >= 33) {
+                registerReceiver(packageReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(packageReceiver, filter);
+            }
+            Log.i(ListenerWindow.TAG, "package receiver registered (resume no longer reloads)");
+        } catch (Throwable t) {
+            packageReceiver = null;
+            Log.w(ListenerWindow.TAG, "package receiver registration failed", t);
+        }
+    }
+
     private boolean isKeyguardLocked() {
         try {
             return keyguardManager != null && keyguardManager.isKeyguardLocked();
@@ -819,6 +947,13 @@ public final class StartActivity extends Activity
             } catch (Throwable ignored) {
             }
             keyguardReceiver = null;
+        }
+        if (packageReceiver != null) {
+            try {
+                unregisterReceiver(packageReceiver);
+            } catch (Throwable ignored) {
+            }
+            packageReceiver = null;
         }
         if (turnstile != null) {
             turnstile.settleNow();

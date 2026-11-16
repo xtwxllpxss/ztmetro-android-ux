@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- LSPosed reads this array to pre-select the module scope.  The shade lives
-     in the SystemUI process; no other package is touched. -->
+<!-- LSPosed reads this array to pre-select the module scope.
+     android            = system_server; the guard that stops the status-bar
+                          transferTouch (DisplayPolicy.java:2435) from stealing the
+                          top-edge gesture.  Required for the defect fix.
+     com.android.systemui = safety net (collapse a stock shade that opened anyway and
+                          start the Action Centre).  Also the old v1 behaviour when the
+                          android scope is not enabled. -->
 <resources>
     <string-array name="xposed_scope">
+        <item>android</item>
         <item>com.android.systemui</item>
     </string-array>
 </resources>

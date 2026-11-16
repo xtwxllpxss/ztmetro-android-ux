@@ -63,19 +63,37 @@ final class StatusStripOverlayView extends View {
         stroke.setStrokeJoin(Paint.Join.ROUND);
     }
 
+    /*
+     * Every setter is a no-op when the value it would draw is already on screen.
+     * ACTION_BATTERY_CHANGED and NetworkCallback.onCapabilitiesChanged arrive far
+     * more often than the glyphs actually change (temperature/voltage on battery,
+     * bandwidth/strength on network); before pass 2 each of those posted a frame.
+     * Guarding here means "no change -> no invalidate", whatever the caller does.
+     */
+
     void setBattery(int levelPercent, boolean charging) {
+        if (batteryLevel == levelPercent && this.charging == charging) {
+            return;
+        }
         batteryLevel = levelPercent;
         this.charging = charging;
         postInvalidateOnAnimation();
     }
 
     void setWifi(boolean enabled, boolean connected) {
+        if (wifiEnabled == enabled && wifiConnected == connected) {
+            return;
+        }
         wifiEnabled = enabled;
         wifiConnected = connected;
         postInvalidateOnAnimation();
     }
 
     void setSignal(boolean simReady, int level, boolean cellularActive) {
+        if (this.simReady == simReady && signalLevel == level
+                && this.cellularActive == cellularActive) {
+            return;
+        }
         this.simReady = simReady;
         signalLevel = level;
         this.cellularActive = cellularActive;
@@ -83,6 +101,9 @@ final class StatusStripOverlayView extends View {
     }
 
     void setAirplane(boolean on) {
+        if (airplane == on) {
+            return;
+        }
         airplane = on;
         postInvalidateOnAnimation();
     }

@@ -1,0 +1,69 @@
+# Strip geometry on the actual panel, and the variant comparison
+# device: Redmi Note 5A ugglite, LineageOS 23.2 / Android 16, 720x1280 px, 320 dpi
+# density = 320/160 = 2.0  =>  1 dp = 2 px
+#
+# All values below are DERIVED BY THE CODE at run time (display height from
+# WindowManager.getMaximumWindowMetrics(), dp from the display density); the
+# numbers in the right column are what this panel produces and what the strip
+# logs at creation.
+
+display                     720 x 1280 px
+density                     2.0
+rest height (start region)  32 dp             = 64 px     (top 5.0 % of the screen)
+gesture height              40 % of 1280 px   = 512 px    (top 40.0 % of the screen)
+swipe travel that stays
+  inside the tall window    512 - 64 px       = 448 px    (224 dp)
+framework SWIPE_FROM_TOP
+  start region              24 dp (dimens)    = 48 px
+framework SWIPE_FROM_TOP
+  travel threshold          24 dp (dimens)    = 48 px
+
+rest touchable area         720 x 64   = 46 080 px^2   (5.0 % of the screen)
+tall touchable area         720 x 512  = 368 640 px^2  (40.0 % of the screen),
+                            only while a gesture that started in the top 32 dp
+                            is in flight (normally < 300 ms), never at rest.
+
+## Variant comparison (the two options the task named, plus the one shipped)
+
+(a) permanent 40 %-tall touchable window whose View ignores events below 32 dp
+    + contains the whole swipe, no bounds-exit cancel possible
+    - every touch over the top 40 % of EVERY app is delivered to this window and
+      then dropped (a single overlay cannot forward it): 368 640 px^2 of dead
+      app content at all times, including the panel's own top half
+    - cannot prevent the one framework path that cancels a live top-edge touch
+      and reroutes it to SystemUI (DisplayPolicy -> mStatusBar.transferTouch()),
+      see framework-facts.txt section C
+    = rejected
+
+(b) keep the 32 dp window, open the panel on ACTION_DOWN, add a second
+    full-height transparent window while the shade is already opening
+    + no permanent dead zone
+    - a gesture that has already been transferred to the status bar window
+      cannot be taken back: InputDispatcher.transferTouch() moves the pointer
+      state to the target window and cancels the previous one
+      (ind.cpp: cancelPointersForWindowsExcept), so a new window only ever sees
+      a NEW DOWN; the second surface adds a window that can swallow touches
+      SystemUI already owns, and adds a second full-screen accessibility window
+    = rejected
+
+(a') SHIPPED: one window, (a)'s geometry, armed per gesture
+    * rest = 64 px (top 32 dp)   -> a touch that starts in app content is never
+      routed to the strip (the touchable region is the frame), so the top 40 %
+      is NOT a dead zone at rest
+    * on ACTION_DOWN in the top 32 dp: updateViewLayout to 512 px in the same
+      dispatch, then open the panel; the pointer is now inside the window for
+      448 px of travel, so there is no bounds exit to cancel on
+    * on ACTION_UP / ACTION_CANCEL / 1500 ms safety timeout: back to 64 px
+    * the panel is started on DOWN, so even a framework-side cancel (section C)
+      leaves an already-drawn panel, and that path sends no GLOBAL_ACTION_BACK
+    * every transition is logged with pixel sizes and the reason
+    = chosen: same cancel protection as (a) for the bounds-exit class, zero
+      permanent dead zone, no second window
+
+## What this cannot fix, stated plainly
+A framework-level SWIPE_FROM_TOP reroute (framework-facts.txt section C) cancels
+the touched window by design, whatever its height. The strip now logs such a
+cancel as "framework cancelled the touch while the window was attached,
+touchable and 512 px tall (not a bounds exit: the pointer was inside)" instead
+of silently falling back; if the device still shows that line, the zero-flash
+path has to be the SystemUI-side hook (repo/sysui/shade-hook), not the overlay.

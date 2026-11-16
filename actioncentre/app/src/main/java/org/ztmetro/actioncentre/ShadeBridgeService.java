@@ -55,6 +55,21 @@ import java.util.List;
  * <p>Neither path ever sends a second BACK; a late BACK could dismiss our own
  * panel once it has focus.
  *
+ * <p><b>Top-edge strip geometry.</b> The strip window is created at the top
+ * {@value #STRIP_HEIGHT_DP} dp (the only place a gesture may start) and grows
+ * to {@link #STRIP_GESTURE_SCREEN_FRACTION} of the display height (512 px on
+ * this 720x1280 / 320 dpi panel) for the duration of a gesture that started
+ * there, then shrinks back on UP/CANCEL. The reason is a device-observed
+ * sequence: <code>DOWN</code>, a few <code>MOVE</code>, then
+ * <code>CANCEL</code>, after which SystemUI saw the rest of the swipe and the
+ * stock shade flashed. A window whose bounds contain the whole swipe cannot be
+ * cancelled for leaving them. The tall state is gesture-scoped because a
+ * permanently 40 %-tall touchable window would consume every touch over the top
+ * 40 % of every app; a touch that starts below the strip is never routed to
+ * this window at all, because a window's touchable region is exactly its
+ * bounds (API 36 has no public per-region touchable area, see
+ * {@code evidence/strip-rework}).
+ *
  * <p>Fail-safe: with the service disabled the app has no running code path that
  * touches the shade, so the stock shade behaves exactly as before. Every
  * callback is wrapped so a bad event can never crash the process.
@@ -128,8 +143,14 @@ public class ShadeBridgeService extends AccessibilityService {
      * Safety net for the touchable flag: even if a ROM drops both the
      * keyguard listener and the USER_PRESENT broadcast, re-read the keyguard
      * state on accessibility events, at most this often. Logs only changes.
+     *
+     * <p>Pass 2: 500 ms -> 5000 ms, and never while the screen is off. The
+     * gesture strip delivers a window-content-changed event stream from every
+     * app, so the old value meant a keyguard binder read every half second for
+     * as long as any app was scrolling; the listener and USER_PRESENT are the
+     * primary signals, and this is only the fallback for a ROM that drops both.
      */
-    private static final long STRIP_KEYGUARD_SYNC_MS = 500L;
+    private static final long STRIP_KEYGUARD_SYNC_MS = 5000L;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private long lastTriggerUptime;
@@ -160,6 +181,11 @@ public class ShadeBridgeService extends AccessibilityService {
      * allowed to re-lock the strip on its own.
      */
     private boolean stripKeyguardLocked;
+    /**
+     * Screen state from the strip receiver. The keyguard safety net must not run
+     * (and must not read the keyguard through a binder) while the screen is off.
+     */
+    private boolean stripScreenOn = true;
     /** Applied window flag state: true when FLAG_NOT_TOUCHABLE is absent. */
     private boolean stripTouchable;
     private long lastStripKeyguardSyncUptime;
@@ -320,10 +346,36 @@ public class ShadeBridgeService extends AccessibilityService {
             }
             params.setTitle("ztMetro Action Centre strip");
             view.setOnTouchListener(stripTouchListener);
+            view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+                @Override
+                public void onViewAttachedToWindow(View v) {
+                    stripViewAttached = true;
+                }
+
+                @Override
+                public void onViewDetachedFromWindow(View v) {
+                    // A detach during a gesture is the one framework-side reason a
+                    // touch can be cancelled while the pointer is still inside the
+                    // window; log it so logcat names the cause instead of guessing.
+                    stripViewAttached = false;
+                    if (stripGestureActive) {
+                        Log.w(TOUCH_TAG, "strip window detached mid-gesture"
+                                + " (window removal is a framework ACTION_CANCEL reason)");
+                    }
+                    stripGestureActive = false;
+                    stripOpened = false;
+                    stripTall = false;
+                    handler.removeCallbacks(stripShrink);
+                }
+            });
             stripWindowManager.addView(view, params);
             stripView = view;
             stripParams = params;
             stripTouchable = true;
+            stripViewAttached = view.isAttachedToWindow();
+            stripTall = false;
+            stripGestureActive = false;
+            stripOpened = false;
             // Sources of the locked state, in order of trust: USER_PRESENT /
             // SCREEN_OFF / SCREEN_ON broadcast, the keyguard listener (API 33+),
             // then a throttled getter read on accessibility events.
@@ -331,12 +383,19 @@ public class ShadeBridgeService extends AccessibilityService {
             watchStripKeyguard();
             lastStripKeyguardSyncUptime = SystemClock.uptimeMillis();
             stripKeyguardLocked = isKeyguardLocked();
-            Log.i(TOUCH_TAG, "strip overlay added: height=" + STRIP_HEIGHT_DP
-                    + "dp type=TYPE_ACCESSIBILITY_OVERLAY("
+            Log.i(TOUCH_TAG, "strip overlay added: rest height=" + STRIP_HEIGHT_DP
+                    + "dp (" + stripRestHeightPx + " px) gesture height="
+                    + stripGestureHeightPx + " px ("
+                    + Math.round(STRIP_GESTURE_SCREEN_FRACTION * 100) + "% of "
+                    + stripDisplayHeightPx + " px display) type=TYPE_ACCESSIBILITY_OVERLAY("
                     + WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY + ")"
                     + " alpha=0 content, flags=" + stripFlags(params)
                     + " touchable=" + stripTouchable
                     + " keyguardLocked=" + stripKeyguardLocked);
+            Log.i(TOUCH_TAG, "strip input constraint: the touchable region of a window is its"
+                    + " bounds (API " + Build.VERSION.SDK_INT + " public SDK has no per-region"
+                    + " touchable area for an app window); rest=" + stripRestHeightPx
+                    + " px, gesture=" + stripGestureHeightPx + " px");
             applyStripTouchable(!stripKeyguardLocked,
                     "strip added; keyguard "
                             + (stripKeyguardLocked ? "locked" : "unlocked"));
@@ -347,6 +406,10 @@ public class ShadeBridgeService extends AccessibilityService {
             stripParams = null;
             stripTouchable = false;
             stripActive = false;
+            stripTall = false;
+            stripViewAttached = false;
+            stripGestureActive = false;
+            stripOpened = false;
         }
     }
 
@@ -371,7 +434,99 @@ public class ShadeBridgeService extends AccessibilityService {
         stripParams = null;
         stripTouchable = false;
         stripActive = false;
+        stripTall = false;
+        stripViewAttached = false;
+        stripGestureActive = false;
+        stripOpened = false;
+        handler.removeCallbacks(stripShrink);
     }
+
+    /**
+     * Height of the display in pixels, from the same source the shade detector
+     * uses: the gesture height must match the real panel, not a hardcoded 512.
+     */
+    private int displayHeightPx() {
+        Rect bounds = displayBounds();
+        if (bounds != null && bounds.height() > 0) {
+            return bounds.height();
+        }
+        try {
+            WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+            if (wm != null) {
+                DisplayMetrics metrics = new DisplayMetrics();
+                wm.getDefaultDisplay().getRealMetrics(metrics);
+                if (metrics.heightPixels > 0) {
+                    return metrics.heightPixels;
+                }
+            }
+        } catch (Throwable t) {
+            Log.w(TOUCH_TAG, "reading display height failed", t);
+        }
+        // Last resort: 40 % of 1280 px is 512 px; never leave the strip at 0.
+        return 1280;
+    }
+
+    /**
+     * The one owner of the strip's height. At rest the window is exactly the top
+     * 32 dp start region; while a gesture that started there is in flight it is
+     * {@link #STRIP_GESTURE_SCREEN_FRACTION} of the display (512 px on this
+     * panel), so a whole downward swipe happens inside the window and the
+     * framework has no bounds exit to cancel on. Both transitions are logged
+     * under {@code ShadeTouch} with the reason and the pixel sizes.
+     */
+    private void setStripGestureHeight(boolean tall, String reason) {
+        try {
+            if (stripView == null || stripParams == null || stripWindowManager == null) {
+                return;
+            }
+            handler.removeCallbacks(stripShrink);
+            int target = tall ? stripGestureHeightPx : stripRestHeightPx;
+            if (target <= 0) {
+                return;
+            }
+            if (stripTall == tall && stripParams.height == target) {
+                if (tall) {
+                    handler.postDelayed(stripShrink, STRIP_GESTURE_HOLD_MAX_MS);
+                }
+                return;
+            }
+            int from = stripParams.height;
+            stripParams.height = target;
+            stripWindowManager.updateViewLayout(stripView, stripParams);
+            stripTall = tall;
+            Log.i(TOUCH_TAG, "strip window " + (tall ? "grown" : "back at rest")
+                    + ": " + from + " px -> " + target + " px "
+                    + (tall
+                            ? "(" + Math.round(STRIP_GESTURE_SCREEN_FRACTION * 100)
+                                    + "% of " + stripDisplayHeightPx + " px)"
+                            : "(" + STRIP_HEIGHT_DP + " dp)")
+                    + " reason=" + reason
+                    + " touchable=" + stripTouchable);
+            if (tall) {
+                handler.postDelayed(stripShrink, STRIP_GESTURE_HOLD_MAX_MS);
+            }
+        } catch (Throwable t) {
+            Log.w(TOUCH_TAG, "strip height change failed", t);
+        }
+    }
+
+    /**
+     * Safety net: a lost UP/CANCEL (a framework transfer or a dropped event) must
+     * never leave the tall window over the app for longer than one gesture.
+     */
+    private final Runnable stripShrink = new Runnable() {
+        @Override
+        public void run() {
+            if (!stripTall) {
+                return;
+            }
+            Log.w(TOUCH_TAG, "strip back at rest: no end of gesture within "
+                    + STRIP_GESTURE_HOLD_MAX_MS + " ms (UP/CANCEL lost)");
+            stripGestureActive = false;
+            stripOpened = false;
+            setStripGestureHeight(false, "gesture hold timeout");
+        }
+    };
 
     /** USER_PRESENT / SCREEN_ON / SCREEN_OFF are the event half of the flag lifecycle. */
     private void registerStripReceiver() {
@@ -389,8 +544,10 @@ public class ShadeBridgeService extends AccessibilityService {
                         applyStripKeyguardState(false, "ACTION_USER_PRESENT");
                     } else if (Intent.ACTION_SCREEN_OFF.equals(action)) {
                         // Screen off -> the lock overlay owns the top edge.
+                        stripScreenOn = false;
                         applyStripKeyguardState(true, "ACTION_SCREEN_OFF");
                     } else if (Intent.ACTION_SCREEN_ON.equals(action)) {
+                        stripScreenOn = true;
                         applyStripKeyguardState(isKeyguardLocked(), "ACTION_SCREEN_ON");
                     }
                 } catch (Throwable t) {
@@ -470,6 +627,13 @@ public class ShadeBridgeService extends AccessibilityService {
             int flags = stripParams.flags;
             boolean currentlyTouchable =
                     (flags & WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE) == 0;
+            if (!touchable && stripTall) {
+                // Locked: the lock overlay owns the top edge, so a tall and armed
+                // strip must go back to the 32 dp rest height.
+                stripGestureActive = false;
+                stripOpened = false;
+                setStripGestureHeight(false, "strip not touchable");
+            }
             if (currentlyTouchable == touchable) {
                 return;
             }
@@ -501,7 +665,7 @@ public class ShadeBridgeService extends AccessibilityService {
      * this code works around.
      */
     private void reconcileStripKeyguard() {
-        if (stripView == null) {
+        if (stripView == null || !stripScreenOn) {
             return;
         }
         long now = SystemClock.uptimeMillis();
@@ -515,21 +679,22 @@ public class ShadeBridgeService extends AccessibilityService {
         }
     }
 
-    private void openFromStrip(String gesture) {
+    /** @return true when this gesture actually started the panel. */
+    private boolean openFromStrip(String gesture) {
         try {
             if (stripKeyguardLocked) {
                 Log.i(TOUCH_TAG, "strip " + gesture + " ignored: keyguard locked");
-                return;
+                return false;
             }
             long now = SystemClock.uptimeMillis();
             if (now - lastStripOpenUptime < STRIP_OPEN_THROTTLE_MS) {
                 Log.i(TOUCH_TAG, "strip " + gesture + " ignored: open already in flight");
-                return;
+                return false;
             }
             if (isOwnPanelFocused()) {
                 Log.i(TOUCH_TAG, "strip " + gesture
                         + " ignored: Action Centre already focused");
-                return;
+                return false;
             }
             lastStripOpenUptime = now;
             detectedAtUptime = now;
@@ -538,17 +703,21 @@ public class ShadeBridgeService extends AccessibilityService {
             triggerLabel = "strip trigger";
             Log.i(TOUCH_TAG, "strip open " + gesture
                     + " -> ActionCentreActivity (NEW_TASK, extra_instant=true);"
-                    + " gesture swallowed by the strip");
+                    + " gesture swallowed by the strip (window "
+                    + (stripTall && stripParams != null
+                            ? "tall " + stripParams.height + " px"
+                            : "rest " + stripRestHeightPx + " px")
+                    + "); SystemUI receives no DOWN/MOVE/UP and this path"
+                    + " sends no GLOBAL_ACTION_BACK");
             startPanel("strip " + gesture);
+            return true;
         } catch (Throwable t) {
             Log.w(TOUCH_TAG, "strip open failed", t);
+            return false;
         }
     }
 
     private final View.OnTouchListener stripTouchListener = new View.OnTouchListener() {
-        private float downY;
-        private boolean opened;
-
         @Override
         public boolean onTouch(View v, MotionEvent event) {
             try {
@@ -567,10 +736,12 @@ public class ShadeBridgeService extends AccessibilityService {
                             + " rawX=" + Math.round(event.getRawX())
                             + " rawY=" + Math.round(event.getRawY())
                             + " touchable=" + stripTouchable
-                            + " keyguardLocked=" + stripKeyguardLocked);
+                            + " tall=" + stripTall
+                            + " window=" + (stripParams == null ? 0 : stripParams.height)
+                            + " px keyguardLocked=" + stripKeyguardLocked);
                 }
                 switch (action) {
-                    case MotionEvent.ACTION_DOWN:
+                    case MotionEvent.ACTION_DOWN: {
                         if (stripKeyguardLocked && !isKeyguardLocked()) {
                             // A real unlock that no event reported yet.
                             applyStripKeyguardState(false,
@@ -585,35 +756,107 @@ public class ShadeBridgeService extends AccessibilityService {
                                     "strip DOWN ignored: Action Centre already focused");
                             return false;
                         }
-                        downY = event.getY();
-                        opened = false;
-                        // The strip window is only 32 dp tall, so a long drag would leave
-                        // its bounds and be cancelled by the system. Open on DOWN: a swipe
-                        // and a tap on the top edge both mean "show the panel" in WP.
-                        openFromStrip("down");
-                        return true;
-                    case MotionEvent.ACTION_MOVE:
-                        if (!opened) {
-                            float dy = event.getY() - downY;
-                            if (dy > dpToPx(STRIP_DRAG_DP)) {
-                                opened = true;
-                                openFromStrip("drag "
-                                        + Math.round(dy / getResources()
-                                                .getDisplayMetrics().density)
-                                        + " dp");
+                        int rawY = Math.round(event.getRawY());
+                        if (rawY < 0 || rawY >= stripRestHeightPx) {
+                            // Only a gesture that starts in the top 32 dp belongs
+                            // to this window. Reached only when a tall window is
+                            // still armed (lost UP or a second finger): drop the
+                            // event and put the window back at rest so the app's
+                            // content is not covered any longer than necessary.
+                            Log.i(TOUCH_TAG, "strip DOWN outside the top "
+                                    + STRIP_HEIGHT_DP + " dp start region (rawY=" + rawY
+                                    + " px, region=" + stripRestHeightPx
+                                    + " px): not swallowed, window back at rest");
+                            if (stripTall) {
+                                stripGestureActive = false;
+                                stripOpened = false;
+                                setStripGestureHeight(false,
+                                        "DOWN below the start region");
                             }
+                            return false;
+                        }
+                        stripGestureActive = true;
+                        stripOpened = false;
+                        stripDownUptime = SystemClock.uptimeMillis();
+                        stripDownRawY = rawY;
+                        stripMoveCount = 0;
+                        stripMaxDyPx = 0;
+                        // Grow the window *before* the finger can leave the 32 dp
+                        // start region. The whole swipe now happens inside the
+                        // window, so the system has no bounds exit to cancel on;
+                        // this is the fix for the old DOWN -> MOVE -> CANCEL ->
+                        // stock-shade-flash sequence.
+                        setStripGestureHeight(true, "DOWN in the top "
+                                + STRIP_HEIGHT_DP + " dp (rawY=" + rawY + " px)");
+                        // Open on DOWN as well: a swipe and a tap on the top edge
+                        // both mean "show the panel" in WP, and starting the panel
+                        // here means an already-drawn panel outlives any later
+                        // framework cancellation of this touch.
+                        stripOpened = openFromStrip("down");
+                        return true;
+                    }
+                    case MotionEvent.ACTION_MOVE: {
+                        if (!stripGestureActive) {
+                            return true;
+                        }
+                        int dy = Math.round(event.getRawY()) - stripDownRawY;
+                        stripMoveCount++;
+                        if (dy > stripMaxDyPx) {
+                            stripMaxDyPx = dy;
+                        }
+                        if (!stripOpened && dy > dpToPx(STRIP_DRAG_DP)) {
+                            // Only reachable when the DOWN open was throttled.
+                            stripOpened = openFromStrip("drag " + Math.round(dy
+                                    / getResources().getDisplayMetrics().density) + " dp");
                         }
                         return true;
-                    case MotionEvent.ACTION_UP:
-                        if (!opened) {
-                            openFromStrip("tap");
+                    }
+                    case MotionEvent.ACTION_UP: {
+                        long held = stripDownUptime == 0 ? 0
+                                : SystemClock.uptimeMillis() - stripDownUptime;
+                        if (!stripOpened) {
+                            stripOpened = openFromStrip("tap");
                         }
-                        opened = false;
+                        Log.i(TOUCH_TAG, "UP after " + held + " ms, " + stripMoveCount
+                                + " MOVE(s), max dy=" + stripMaxDyPx + " px -> gesture"
+                                + " ends inside the strip; strip back at rest");
+                        stripGestureActive = false;
+                        stripOpened = false;
+                        stripDownUptime = 0;
+                        setStripGestureHeight(false, "UP");
                         return true;
-                    case MotionEvent.ACTION_CANCEL:
-                        Log.i(TOUCH_TAG, "CANCEL (opened=" + opened + ")");
-                        opened = false;
+                    }
+                    case MotionEvent.ACTION_CANCEL: {
+                        long held = stripDownUptime == 0 ? 0
+                                : SystemClock.uptimeMillis() - stripDownUptime;
+                        String reason;
+                        if (!stripViewAttached) {
+                            reason = "strip window was removed mid-gesture";
+                        } else if (!stripTouchable) {
+                            reason = "strip became NOT_TOUCHABLE mid-gesture"
+                                    + " (keyguard lock)";
+                        } else if (!stripTall) {
+                            reason = "strip was already back at rest height";
+                        } else {
+                            reason = "framework cancelled the touch while the window was"
+                                    + " attached, touchable and "
+                                    + stripGestureHeightPx + " px tall"
+                                    + " (not a bounds exit: the pointer was inside)";
+                        }
+                        Log.i(TOUCH_TAG, "CANCEL after " + held + " ms at rawY="
+                                + Math.round(event.getRawY()) + " px, " + stripMoveCount
+                                + " MOVE(s), max dy=" + stripMaxDyPx + " px, opened="
+                                + stripOpened + "; reason=" + reason
+                                + "; strip back at rest"
+                                + (stripOpened
+                                        ? "; panel already open, no GLOBAL_ACTION_BACK"
+                                        : ""));
+                        stripGestureActive = false;
+                        stripOpened = false;
+                        stripDownUptime = 0;
+                        setStripGestureHeight(false, "CANCEL");
                         return true;
+                    }
                     default:
                         return true;
                 }

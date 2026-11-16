@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.os.Bundle;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
+import android.util.Log;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -52,9 +53,51 @@ public final class StartNotificationListener extends NotificationListenerService
     /** package -> newest displayed content. Holds at most MAX_PACKAGES. */
     private final HashMap<String, Latest> latest = new HashMap<>();
 
+    /**
+     * The live binding, or null. Pass 2 releases the listener when Start has been
+     * hidden for two minutes ({@link ListenerWindow}); this reference is the only
+     * way to call {@code requestUnbind()} without keeping a context alive.
+     */
+    private static volatile StartNotificationListener sInstance;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        sInstance = this;
+    }
+
+    @Override
+    public void onDestroy() {
+        if (sInstance == this) {
+            sInstance = null;
+        }
+        super.onDestroy();
+    }
+
+    /**
+     * Pass 2: release the system binding so the launcher process stops being kept
+     * alive by the listener. Returns false when the listener is not bound (no
+     * grant, or already released), which makes the caller's log line honest.
+     */
+    static boolean requestUnbindIfConnected() {
+        StartNotificationListener instance = sInstance;
+        if (instance == null) {
+            return false;
+        }
+        try {
+            instance.requestUnbind();
+            return true;
+        } catch (Throwable t) {
+            Log.w(ListenerWindow.TAG, "requestUnbind failed", t);
+            return false;
+        }
+    }
+
     @Override
     public void onListenerConnected() {
         rebuild();
+        Log.i(ListenerWindow.TAG, "notification listener connected: "
+                + latest.size() + " live package(s), " + active.size() + " active key set(s)");
     }
 
     @Override

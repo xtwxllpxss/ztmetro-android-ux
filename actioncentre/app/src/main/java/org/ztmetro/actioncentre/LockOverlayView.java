@@ -14,6 +14,7 @@ import android.os.Looper;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -42,9 +43,12 @@ import java.util.concurrent.ThreadFactory;
  * in the lower third, where Windows Phone puts it, instead of the Material top
  * centre.
  *
- * <p>The clock/date block lives in its own {@link LockClockPanel}. A future
- * custom PIN pad replaces that block through {@link #setAuthPanel(View)}; it is
- * the documented seam, not a design change to the black surface.
+ * <p>The clock/date block lives in its own {@link LockClockPanel}. A custom
+ * authentication panel (the reference {@link LockPinPad}) replaces that block
+ * through {@link #setAuthPanel(View)}; the view itself stays untouched and
+ * non-interactive, and the chip gains a separate touchable window in
+ * {@link LockOverlayController}. The panel is UI only: it never verifies the
+ * PIN, the system credential screen does.
  *
  * <p>The view is deliberately excluded from the accessibility tree
  * ({@code NO_HIDE_DESCENDANTS}) so TalkBack keeps seeing the stock keyguard
@@ -65,6 +69,9 @@ final class LockOverlayView extends FrameLayout {
     private final LinearLayout countsRow;
     private final TextView hintView;
     private final LinearLayout column;
+
+    /** Custom auth panel currently in the clock slot, or null for the clock. */
+    private View authPanel;
 
     private volatile int refreshGeneration;
 
@@ -170,31 +177,65 @@ final class LockOverlayView extends FrameLayout {
     }
 
     /**
-     * Future custom PIN pad hook: replace the clock/date block with [panel] in
-     * the same column slot. The overlay's main window is NOT_TOUCHABLE today, so
-     * a real PIN pad also needs the touchable-window change documented in
-     * {@code evidence/lock-overlay/README.md}; this method only guarantees the
-     * layout seam and keeps the notification row/hint below it intact.
+     * Auth panel hook: replace the clock/date block with {@code panel} in the
+     * same column slot, or restore the clock when {@code panel} is null.
+     *
+     * <p>The panel is the visual half only. The overlay's main window stays
+     * {@code NOT_TOUCHABLE}; {@link LockOverlayController} adds a second,
+     * touchable accessibility window sized exactly to this view's on-screen
+     * bounds and forwards the touches. The notification row and the swipe-up
+     * hint below the slot are untouched.
+     *
+     * <p>Fail-safe: a bad panel (not a view, detached, throwing layout) is
+     * rejected and the clock stays; nothing here can remove the swipe strip.
      */
     void setAuthPanel(View panel) {
-        if (panel == null) {
-            return;
-        }
         try {
-            int index = column.indexOfChild(clockPanel);
-            if (index < 0) {
+            if (panel == authPanel) {
                 return;
             }
-            column.removeViewAt(index);
-            column.addView(panel, index, new LinearLayout.LayoutParams(
-                    LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+            int index = authPanel != null ? column.indexOfChild(authPanel)
+                    : column.indexOfChild(clockPanel);
+            if (index < 0) {
+                index = 0;
+            }
+            if (authPanel != null) {
+                column.removeViewAt(index);
+                authPanel = null;
+            }
+            if (panel == null) {
+                if (clockPanel.getParent() == null) {
+                    column.addView(clockPanel, Math.min(index, column.getChildCount()),
+                            new LinearLayout.LayoutParams(
+                                    LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+                }
+                return;
+            }
+            // The panel must not already live in another window's hierarchy.
+            if (panel.getParent() instanceof ViewGroup) {
+                ((ViewGroup) panel.getParent()).removeView(panel);
+            }
+            if (clockPanel.getParent() != null) {
+                column.removeView(clockPanel);
+            }
+            column.addView(panel, Math.min(index, column.getChildCount()),
+                    new LinearLayout.LayoutParams(
+                            LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+            authPanel = panel;
         } catch (Throwable ignored) {
+            // Keep whatever the column still holds (the clock is the fallback).
+            authPanel = null;
         }
     }
 
-    /** The view a future PIN pad replaces; exposed for the seam test. */
+    /** The current auth panel, or null while the clock occupies the slot. */
+    View getAuthPanel() {
+        return authPanel;
+    }
+
+    /** The view in the clock slot: the clock panel or the installed auth panel. */
     View getClockArea() {
-        return clockPanel;
+        return authPanel != null ? authPanel : clockPanel;
     }
 
     /**

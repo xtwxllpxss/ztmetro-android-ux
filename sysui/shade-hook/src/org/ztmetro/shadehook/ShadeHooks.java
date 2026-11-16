@@ -55,7 +55,8 @@ final class ShadeHooks {
 
     static void install(ClassLoader systemUiClassLoader) {
         SLog.info(TAG, "loading in SystemUI (xposed API " + xposedVersion()
-                + "); stock shade is the fallback for every failure");
+                + "); safety net only — the primary guard is in system_server"
+                + " (WindowState#transferTouch), stock shade is the fallback for every failure");
 
         Class<?> controller = findClass(systemUiClassLoader, SHADE_CONTROLLER_IMPL);
         if (controller != null) {

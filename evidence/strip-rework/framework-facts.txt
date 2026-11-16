@@ -1,0 +1,168 @@
+# Android 16 framework facts behind the strip geometry (LineageOS 23.2 tree, device build)
+# device: Redmi Note 5A ugglite, LineageOS 23.2 / Android 16, 720x1280 @ 320 dpi (density 2.0)
+# pinned source tree: LineageOS/android_frameworks_base @ 797e43244b96c6a0dff5c81b21c4d4be665b082e
+#   (same pin as repo/docs/10b-overlay-and-hook-facts.md and the ztmetro shade hook report)
+# files fetched from raw.githubusercontent.com on hermes-ubuntu, hashes below are sha256 of the fetched files
+
+6c1d6d4c9d4a550d4fe6acc760cc103aa0c91bf1930b8adea499bb394c83e190  ind.cpp
+cc4803be99d99334bd4b51ba1d443b4e5230b49767df983a73ac9d0ebff21167  WindowState.java
+ef81b79a86326ea77ff5d8a3a67c3b21ce5ff7c79cefc448ca5e02eeea42d958  InputMonitor.java
+cf7b5539d668932205a37a1428d75de679a7e93356f52f03e7a3262a348ba848  DisplayPolicy.java
+f658169a23e7f5b5ddc54694ec14a3fb57b421dc87a08e1baf476a3ac100acf7  SGS.java
+4ad531ca9165703af650961379e905620ac26290e58ba5792f132647ce131085  dimens.xml
+
+==============================================================================
+A. A window's touchable region IS its frame; a smaller region needs the @hide
+   internal-insets path (not in android.jar, see api-verification.txt).
+   services/core/java/com/android/server/wm/WindowState.java:3540
+==============================================================================
+    /** Get the touchable region in global coordinates. */
+    void getTouchableRegion(Region outRegion) {
+        final Rect frame = mWindowFrames.mFrame;
+        switch (mTouchableInsets) {
+            default:
+            case TOUCHABLE_INSETS_FRAME:
+                outRegion.set(frame);
+                break;
+            case TOUCHABLE_INSETS_CONTENT:
+                applyInsets(outRegion, frame, mGivenContentInsets);
+                break;
+            case TOUCHABLE_INSETS_VISIBLE:
+                applyInsets(outRegion, frame, mGivenVisibleInsets);
+                break;
+            case TOUCHABLE_INSETS_REGION: {
+                outRegion.set(mGivenTouchableRegion);
+                if (frame.left != 0 || frame.top != 0) {
+                    outRegion.translate(frame.left, frame.top);
+                }
+                break;
+            }
+        }
+        cropRegionToRootTaskBoundsIfNeeded(outRegion);
+        subtractTouchExcludeRegionIfNeeded(outRegion);
+    }
+
+    /**
+
+==============================================================================
+B. PATHS: an in-progress touch is NOT cancelled when the pointer leaves the
+   window. InputDispatcher only cancels when the touched window is REMOVED
+   (eraseRemovedWindowsFromWindowInfo) or for hover state changes.
+   frameworks/native/services/inputflinger/dispatcher/InputDispatcher.cpp:5520-5618
+==============================================================================
+
+    CancelationOptions pointerCancellationOptions(CancelationOptions::Mode::CANCEL_POINTER_EVENTS,
+                                                  "touched window was removed",
+                                                  traceContext.getTracker());
+    CancelationOptions hoverCancellationOptions(CancelationOptions::Mode::CANCEL_HOVER_EVENTS,
+                                                "WindowInfo changed", traceContext.getTracker());
+    const std::list<DispatcherTouchState::CancellationArgs> cancellations =
+            mTouchStates.updateFromWindowInfo(displayId);
+    for (const auto& cancellationArgs : cancellations) {
+        switch (cancellationArgs.mode) {
+            case CancelationOptions::Mode::CANCEL_POINTER_EVENTS:
+                pointerCancellationOptions.deviceId = cancellationArgs.deviceId;
+                synthesizeCancelationEventsForWindowLocked(cancellationArgs.windowHandle,
+                                                           pointerCancellationOptions);
+                break;
+            case CancelationOptions::Mode::CANCEL_HOVER_EVENTS:
+                hoverCancellationOptions.deviceId = cancellationArgs.deviceId;
+                synthesizeCancelationEventsForWindowLocked(cancellationArgs.windowHandle,
+                                                           hoverCancellationOptions);
+                break;
+            default:
+                LOG_ALWAYS_FATAL("Unexpected cancellation Mode");
+        }
+    }
+
+    // If drag window is gone, it would receive a cancel event and broadcast the DRAG_END. We
+std::list<InputDispatcher::DispatcherTouchState::CancellationArgs>
+InputDispatcher::DispatcherTouchState::eraseRemovedWindowsFromWindowInfo(
+        TouchState& state, ui::LogicalDisplayId displayId) {
+    std::list<CancellationArgs> cancellations;
+    for (auto it = state.windows.begin(); it != state.windows.end();) {
+        TouchedWindow& touchedWindow = *it;
+        if (mWindowInfos.isWindowPresent(touchedWindow.windowHandle)) {
+            it++;
+            continue;
+        }
+        LOG(INFO) << "Touched window was removed: " << touchedWindow.windowHandle->getName()
+                  << " in display %" << displayId;
+        cancellations.emplace_back(touchedWindow.windowHandle,
+                                   CancelationOptions::Mode::CANCEL_POINTER_EVENTS);
+        // Since we are about to drop the touch, cancel the events for the wallpaper as well.
+        if (touchedWindow.targetFlags.test(InputTarget::Flags::FOREGROUND) &&
+            touchedWindow.windowHandle->getInfo()->inputConfig.test(
+                    gui::WindowInfo::InputConfig::DUPLICATE_TOUCH_TO_WALLPAPER)) {
+            for (const DeviceId deviceId : touchedWindow.getTouchingDeviceIds()) {
+                if (const auto& ww = state.getWallpaperWindow(deviceId); ww != nullptr) {
+                    cancellations.emplace_back(ww, CancelationOptions::Mode::CANCEL_POINTER_EVENTS,
+
+==============================================================================
+C. The one framework path that CAN cancel a live top-edge touch and hand it
+   to SystemUI: DisplayPolicy.requestTransientBars() -> mStatusBar.transferTouch()
+   after the global system-gesture monitor recognised SWIPE_FROM_TOP.
+   services/core/java/com/android/server/wm/DisplayPolicy.java:2390-2440
+==============================================================================
+            return;
+        }
+        final InsetsSourceProvider provider = swipeTarget.getControllableInsetProvider();
+        final InsetsControlTarget controlTarget = provider != null
+                ? provider.getControlTarget() : null;
+
+        if (controlTarget == null || controlTarget == getNotificationShade()) {
+            // No transient mode on lockscreen (in notification shade window).
+            return;
+        }
+
+                    isGestureOnSystemBar);
+            controlTarget.showInsets(restorePositionTypes, null /* statsToken */);
+        } else {
+            // Restore visibilities and positions of system bars.
+            controlTarget.showInsets(Type.statusBars() | Type.navigationBars(),
+                    null /* statsToken */);
+            // To further allow the pull-down-from-the-top gesture to pull down the notification
+            // shade as a consistent motion, we reroute the touch events here from the currently
+            // touched window to the status bar after making it visible.
+            if (swipeTarget == mStatusBar) {
+                final boolean transferred = mStatusBar.transferTouch();
+                if (!transferred) {
+                    Slog.i(TAG, "Could not transfer touch to the status bar");
+                }
+            }
+        }
+
+   The monitor that recognises the swipe runs on the GLOBAL MONITOR channels:
+   InputDispatcher adds monitors to every motion dispatch (line 2166), so it
+   sees the gesture even when a window owns it.
+
+   services/core/java/com/android/server/wm/SystemGesturesPointerEventListener.java
+   thresholds: core/res/res/values/dimens.xml:74,77 -> start 24dp, distance 24dp;
+   SWIPE_TIMEOUT_MS = 500 (line 53). detectSwipe (line 387):
+==============================================================================
+        final long elapsed = time - mDownTime[i];
+        if (DEBUG) Slog.d(TAG, "pointer " + mDownPointerId[i]
+                + " moved (" + fromX + "->" + x + "," + fromY + "->" + y + ") in " + elapsed);
+        if (fromY <= mSwipeStartThreshold.top
+                && y > fromY + mSwipeDistanceThreshold
+                && elapsed < SWIPE_TIMEOUT_MS) {
+            return SWIPE_FROM_TOP;
+        }
+        if (fromY >= screenHeight - mSwipeStartThreshold.bottom
+                && y < fromY - mSwipeDistanceThreshold
+                && elapsed < SWIPE_TIMEOUT_MS) {
+            return SWIPE_FROM_BOTTOM;
+        }
+
+   => a swipe that starts in the top 24 dp and travels >24 dp within 500 ms is
+      a framework-level SWIPE_FROM_TOP. On this panel that is 48 px of travel.
+      It fires from the monitor copy regardless of which window received DOWN.
+
+==============================================================================
+D. Why the old 32 dp strip was blamed for the cancel: the framework thresholds
+   (24 dp start / 24 dp distance = 48 px) are BELOW the 32 dp (64 px) window
+   edge, so the observed DOWN -> MOVE(s) -> CANCEL could equally be either.
+   The new logging distinguishes them: a cancel while the window is attached,
+   touchable and 512 px tall is NOT a bounds exit, and the strip logs exactly
+   that.
+==============================================================================

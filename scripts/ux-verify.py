@@ -1656,17 +1656,23 @@ class Runner:
         dev.shell("am", "start", "-a", "android.intent.action.MAIN",
                   "-c", "android.intent.category.APP_CALENDAR")
         time.sleep(2.0)
-        self._note("input swipe 360 6 360 400 250 (top-edge strip); wait 2 s")
-        dev.swipe(360, 6, 360, 400, 250)
+        self._note("input tap 360 12 on the top strip (tap path); wait 2 s")
+        dev.shell("input", "tap", "360", "12")
         time.sleep(2.0)
         shot, meta = self._capture("action-centre")
         if "org.ztmetro.actioncentre" not in meta["focus"]:
-            self._note("action-centre: focus is not our panel — wake, collapse, retry the strip")
+            self._note("action-centre: tap did not open the panel — retry with a swipe")
             self._prepare("action-centre")
             time.sleep(0.6)
             dev.swipe(360, 6, 360, 400, 250)
-            time.sleep(2.0)
+            time.sleep(2.5)
             shot, meta = self._capture("action-centre")
+        if "org.ztmetro.actioncentre" not in meta["focus"]:
+            self._note("action-centre: panel still not focused — SKIP this capture")
+            self.checks += _surface_actioncentre(shot, self._set_expected_context(meta))
+            self._annotate("action-centre", shot, self.checks)
+            self._diff("action-centre", shot)
+            return
         self.checks += _surface_actioncentre(shot, self._set_expected_context(meta))
         self._annotate("action-centre", shot, self.checks)
         self._diff("action-centre", shot)

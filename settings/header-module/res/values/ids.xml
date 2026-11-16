@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Tag key for the per-view row style cache (FlatRows / ScreenPass).
+
+  Row styling writes layout params (card margins, the stock icon cell inset and
+  the chevron slot). A RecyclerView re-binds views, and every styling pass used
+  to walk back up each title and write those params again, so a Settings screen
+  could issue requestLayout() for the same row several times per open. The
+  applied style is now cached on the view itself under this id; a row whose
+  style is already current is skipped entirely.
+
+  The key must be a resource id (View.setTag(int, Object) requires one), which
+  is why it lives here instead of in a plain int constant. If the lookup ever
+  fails the helpers simply do not cache and fall back to the old behaviour.
+-->
+<resources>
+    <item name="metro_style" type="id" />
+</resources>

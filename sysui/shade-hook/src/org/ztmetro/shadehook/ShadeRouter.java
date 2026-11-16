@@ -13,7 +13,14 @@ import android.view.View;
 import de.robv.android.xposed.XposedHelpers;
 
 /**
- * Redirect policy: when the stock shade starts opening on the unlocked shade,
+ * SystemUI half of the module — the <b>safety net</b>. The primary defence is
+ * {@link FrameworkHooks} in system_server, which stops the top-edge gesture from being
+ * transferred to the status bar window in the first place (see that class for the exact
+ * DisplayPolicy path). This class only runs when a stock shade opened anyway: it closes the
+ * shade and starts the Metro Action Centre, at the cost of the visible shade flash that the
+ * framework guard exists to remove.
+ *
+ * <p>Redirect policy: when the stock shade starts opening on the unlocked shade,
  * close it and start the Metro Action Centre.
  *
  * <p>Guards, in order (any failure or exclusion leaves the stock shade alone):
@@ -51,6 +58,12 @@ final class ShadeRouter {
     static final String ACTION_CENTRE_PACKAGE = "org.ztmetro.actioncentre";
     static final String ACTION_CENTRE_ACTIVITY =
             "org.ztmetro.actioncentre.ActionCentreActivity";
+
+    /**
+     * ActionCentreActivity.EXTRA_INSTANT (ActionCentreActivity.java:51, value "extra_instant"):
+     * "this launch came from the shade gesture", so the panel skips its entry animation.
+     */
+    static final String EXTRA_INSTANT = "extra_instant";
 
     /** Settings.System boolean-ish flag (1 = redirect, 0 = stock shade). */
     static final String SETTING_ENABLED = "ztmetro_shade_hook";
@@ -120,6 +133,9 @@ final class ShadeRouter {
             }
 
             sLastRedirectMs = now;
+            SLog.info(TAG, "SAFETY NET: stock shade reached STATE_OPENING — the system_server"
+                    + " transfer guard did not stop it (scope 'android' missing, or another"
+                    + " shade path); collapsing and starting the Action Centre");
             MAIN.post(new Runnable() {
                 @Override
                 public void run() {
@@ -263,10 +279,13 @@ final class ShadeRouter {
         try {
             Intent intent = new Intent(Intent.ACTION_MAIN);
             intent.setComponent(new ComponentName(ACTION_CENTRE_PACKAGE, ACTION_CENTRE_ACTIVITY));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            intent.putExtra(EXTRA_INSTANT, true);
             context.startActivity(intent);
             SLog.info(TAG, "shade collapsed; started " + ACTION_CENTRE_PACKAGE
-                    + "/.ActionCentreActivity");
+                    + "/.ActionCentreActivity (NEW_TASK, " + EXTRA_INSTANT + "=true)");
         } catch (Throwable t) {
             SLog.once(TAG, "start", t);
         }

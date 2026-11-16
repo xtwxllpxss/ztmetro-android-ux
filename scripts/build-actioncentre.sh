@@ -477,7 +477,7 @@ verify_apk() {
     UNLOCK_SRC="$APP/java/org/ztmetro/actioncentre/UnlockProxyActivity.java"
     UNLOCK_CTRL="$APP/java/org/ztmetro/actioncentre/LockOverlayController.java"
     LOCK_VIEW_SRC="$APP/java/org/ztmetro/actioncentre/LockOverlayView.java"
-    for cls in UnlockProxyActivity UnlockTimeline LockClockPanel; do
+    for cls in UnlockProxyActivity UnlockTimeline LockClockPanel LockAuthPanel LockPinPad; do
         if grep -qF "Lorg/ztmetro/actioncentre/$cls;" "$EVID/dexdump-classes.txt"; then
             printf 'PASS  dexdump lists %s\n' "$cls" >> "$CHECKS"
         else
@@ -529,6 +529,67 @@ verify_apk() {
         printf 'PASS  clock area is a separate panel with the PIN-pad hook\n' >> "$CHECKS"
     else
         printf 'FAIL  clock panel/PIN-pad hook missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    # ---- custom lock auth panel (agent-56): interface, reference pad, wiring ----
+    AUTH_IFACE="$APP/java/org/ztmetro/actioncentre/LockAuthPanel.java"
+    PIN_PAD_SRC="$APP/java/org/ztmetro/actioncentre/LockPinPad.java"
+    if grep -q "interface LockAuthPanel" "$AUTH_IFACE" \
+            && grep -q "onSubmit(String pin)" "$AUTH_IFACE"; then
+        printf 'PASS  LockAuthPanel interface with onSubmit(String pin) callback\n' >> "$CHECKS"
+    else
+        printf 'FAIL  LockAuthPanel interface/callback missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "implements LockAuthPanel" "$PIN_PAD_SRC" \
+            && grep -q "PIN_LENGTH = 4" "$PIN_PAD_SRC" \
+            && grep -q "KEY_BACKSPACE" "$PIN_PAD_SRC" \
+            && grep -q "KEY_ENTER" "$PIN_PAD_SRC" \
+            && grep -q "canvas.drawRect" "$PIN_PAD_SRC" \
+            && grep -q "U.ACCENT" "$PIN_PAD_SRC"; then
+        printf 'PASS  reference pad: Canvas square keys, 0-9/backspace/enter, 4 accent dots\n' >> "$CHECKS"
+    else
+        printf 'FAIL  reference pad drawing/keys/dots missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    # The pad's javadoc names the system verification APIs on purpose; only the
+    # executable lines may not touch credentials.
+    PAD_CODE=$(grep -vE '^[[:space:]]*(\*|//|/\*)' "$PIN_PAD_SRC" 2>/dev/null || true)
+    if printf '%s\n' "$PAD_CODE" | grep -qE "KeyguardManager|isDeviceSecure|createConfirmDeviceCredentialIntent|requestDismissKeyguard|checkPin|verifyPin|MessageDigest"; then
+        printf 'FAIL  PIN pad handles credentials itself (must be UI only)\n' >> "$CHECKS"
+        failed=1
+    else
+        printf 'PASS  PIN pad is UI only: no keyguard/credential/verify call in it\n' >> "$CHECKS"
+    fi
+    if grep -q "PIN_PAD_ENABLED" "$UNLOCK_CTRL" \
+            && grep -q "configureAuthPanel" "$UNLOCK_CTRL" \
+            && grep -q "authTouchView" "$UNLOCK_CTRL" \
+            && grep -q "isDeviceSecure" "$UNLOCK_CTRL"; then
+        printf 'PASS  pad wiring: owner flag, secure-only panel, second touchable window\n' >> "$CHECKS"
+    else
+        printf 'FAIL  pad wiring (flag/secure gate/touch window) missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q 'startUnlockProxy("pin_enter")' "$UNLOCK_CTRL" \
+            && grep -q 'startUnlockProxy("swipe_up")' "$UNLOCK_CTRL"; then
+        printf 'PASS  pad enter and strip swipe start the same unlock proxy (no PIN in Intent)\n' >> "$CHECKS"
+    else
+        printf 'FAIL  pad enter/strip swipe proxy wiring missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "pin pad touch window added" "$UNLOCK_CTRL" \
+            && grep -q "NOT_TOUCHABLE" "$UNLOCK_CTRL" \
+            && grep -q "getAuthPanel" "$LOCK_VIEW_SRC"; then
+        printf 'PASS  pad has its own touchable window while the main surface stays NOT_TOUCHABLE\n' >> "$CHECKS"
+    else
+        printf 'FAIL  separate pad touch window/main-surface flag missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "pin pad disabled for this wake" "$UNLOCK_CTRL" \
+            && grep -q "setAuthPanel(null)" "$UNLOCK_CTRL"; then
+        printf 'PASS  pad fail-safe restores the clock and keeps the unlock path\n' >> "$CHECKS"
+    else
+        printf 'FAIL  pad fail-safe/clock restore missing\n' >> "$CHECKS"
         failed=1
     fi
     if grep -q "Theme.ActionCentre.UnlockProxy" \
@@ -654,7 +715,7 @@ verify_apk() {
     for symbol in ActionCentreActivity ActionCentreListener ShadeBridgeService \
                   QuickTile QuickGrid NotificationRowView StatusStripView Motion \
                   LockOverlayController LockOverlayView LockClockPanel \
-                  UnlockProxyActivity UnlockTimeline \
+                  UnlockProxyActivity UnlockTimeline LockAuthPanel LockPinPad \
                   StatusStripService StatusStripOverlayView RecentsActivity; do
         if grep -aq "$symbol" "$BUILD/verify.dex"; then
             printf 'PASS  class %s in dex\n' "$symbol" >> "$CHECKS"
@@ -736,6 +797,7 @@ verify_apk() {
         printf 'reveal:     lock overlay reveal: alpha 1->0 + scale 1->0.96 over 160 ms (previous build: 120 ms, no scale), then the window is removed; surface TRANSLUCENT so the alpha composites\n'
         printf 'strip:      StatusStripService (res/xml/status_strip_service.xml), TYPE_ACCESSIBILITY_OVERLAY 28 dp, NOT_TOUCHABLE; READ_PHONE_STATE optional for live signal\n'
         printf 'lock:       LockOverlayController: TYPE_ACCESSIBILITY_OVERLAY, NOT_FOCUSABLE|NOT_TOUCHABLE|LAYOUT_IN_SCREEN, bottom strip starts the unlock proxy\n'
+        printf 'lock pad:   LockPinPad (LockAuthPanel): 0-9/backspace/enter + 4 accent dots, Canvas square keys, no Material; UI ONLY, PIN never verified/stored/passed; enter starts UnlockProxyActivity -> system credential screen; second touchable window sized to the pad, main surface stays NOT_TOUCHABLE; owner flag LockOverlayController.PIN_PAD_ENABLED\n'
         printf 'unlock:     UnlockProxyActivity: requestDismissKeyguard (non-secure) or ConfirmDeviceCredential (secure); overlay stays until USER_PRESENT/credential on top\n'
         printf 'fonts:      Open Sans Light/Regular/SemiBold from repo/fonts (OFL, bundled)\n'
         printf 'built on:   %s\n' "$(uname -srm)"
@@ -797,9 +859,14 @@ collect_local() {
 }
 
 remote_build() {
-    say "staging sources on $REMOTE:$RWORK"
+    # Sources staged for the remote build. Defaults to the working tree; point
+    # ACTIONCENTRE_SRC_DIR at a snapshot to build one task's files on top of a
+    # committed base while other tasks edit the live tree.
+    local app_src="${ACTIONCENTRE_SRC_DIR:-$ROOT/actioncentre/app}"
+    [ -f "$app_src/src/main/AndroidManifest.xml" ] || die "staged app sources not found: $app_src"
+    say "staging sources on $REMOTE:$RWORK from ${app_src#$ROOT/}"
     ssh "$REMOTE" "mkdir -p '$RWORK'"
-    rsync -a --delete "$ROOT/actioncentre/app/" "$REMOTE:$RWORK/app/"
+    rsync -a --delete "$app_src/" "$REMOTE:$RWORK/app/"
     scp -q "$SCRIPT_DIR/build-actioncentre.sh" "$REMOTE:$RWORK/build-actioncentre.sh"
     say "remote build on $REMOTE (SDK ~/android-sdk, JDK ~/android-jdk)"
     ssh "$REMOTE" "cd '$RWORK' && ACTIONCENTRE_STAGE=1 APP_DIR=\"\$PWD/app/src/main\" BUILD_DIR=\"\$PWD/build\" bash ./build-actioncentre.sh"

@@ -15,6 +15,8 @@ import android.net.NetworkCapabilities;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.telephony.PhoneStateListener;
@@ -35,24 +37,44 @@ import android.view.accessibility.AccessibilityEvent;
  * below it. The window is 28 dp tall (ztmetro.tokens.json
  * {@code metrics.status_strip_height_dp}), full width, opaque black, and
  * {@code FLAG_NOT_TOUCHABLE}, so it hides the system icons without stealing the
- * top-edge gesture or any other touch. The existing 24 dp transparent gesture
+ * top-edge gesture or any other touch. The existing 32 dp transparent gesture
  * strip in {@link ShadeBridgeService} stays below it and still receives gestures.
  *
- * <p>Data comes from the real system APIs, event-driven only: sticky
- * {@code ACTION_BATTERY_CHANGED} for level/charging, {@link WifiManager} plus a
- * default-network callback for Wi-Fi, {@link TelephonyManager#getSignalStrength()}
- * / a telephony signal callback for the bars (four static bars when
- * {@code READ_PHONE_STATE} is not granted), and {@code ACTION_TIME_TICK} for the
- * clock. There is no 1 Hz timer and no wakelock.
+ * <p><b>Pass 2 (perf): this service is idle when nothing changed.</b>
+ *
+ * <ul>
+ *   <li><b>Two receivers, not one.</b> {@link #screenReceiver} (screen on/off,
+ *       user present) is registered for the whole life of the service because it
+ *       is what brings the strip back. {@link #dataReceiver} (battery, clock,
+ *       Wi-Fi state, airplane) is registered <em>only while the screen is on</em>
+ *       and the strip exists, and the same applies to the network and telephony
+ *       callbacks. While the screen is off the app is not woken by the
+ *       {@code ACTION_TIME_TICK} minute broadcast or by capability callbacks.</li>
+ *   <li><b>One coalesced network read.</b> {@code onCapabilitiesChanged} fires on
+ *       bandwidth/strength updates; a burst now posts one 400 ms coalescing
+ *       one-shot ({@link #NETWORK_COALESCE_MS}) that reads the active network
+ *       once (two binder calls shared by Wi-Fi and cellular) and redraws only if
+ *       the transport bits actually changed.</li>
+ *   <li><b>No redraw without a change.</b> Every value is cached here and in
+ *       {@link StatusStripOverlayView}, whose setters reject an identical state;
+ *       a battery broadcast that does not move the rounded percentage, or a
+ *       capability callback that does not change a transport, produces no frame
+ *       and no view call.</li>
+ *   <li><b>Clock once a minute.</b> {@code ACTION_TIME_TICK} only (plus explicit
+ *       time/timezone changes), and only while the strip is on screen.</li>
+ * </ul>
  *
  * <p>Fail-safe: every entry point is wrapped. If the window cannot be added the
- * service logs and does nothing, and the stock status bar is left untouched. The
- * strip is removed whenever the keyguard is locked or the screen is off, so the
- * separate ztMetro lock overlay owns the screen, and it is re-added on
- * {@code ACTION_USER_PRESENT} / screen-on-without-keyguard.
+ * service logs and does nothing, and the stock status bar is left untouched.
  */
 public class StatusStripService extends AccessibilityService {
     static final String TAG = "StatusStrip";
+
+    /**
+     * A burst of {@code onCapabilitiesChanged} callbacks collapses into one read.
+     * Not a poll: it is posted only by a callback, never by itself.
+     */
+    private static final long NETWORK_COALESCE_MS = 400L;
 
     /**
      * True while ActionCentreActivity is resumed. That screen hides the system
@@ -67,22 +89,46 @@ public class StatusStripService extends AccessibilityService {
     private WindowManager.LayoutParams stripParams;
     private boolean overlayAdded;
 
-    private BroadcastReceiver receiver;
-    private boolean receiverRegistered;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+
+    /** Screen on/off + user present: lives for the whole service (see class doc). */
+    private BroadcastReceiver screenReceiver;
+    private boolean screenReceiverRegistered;
+    /** Battery / clock / Wi-Fi / airplane: only while the screen is on. */
+    private BroadcastReceiver dataReceiver;
+    private boolean dataReceiverRegistered;
 
     private ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback networkCallback;
     private boolean networkCallbackRegistered;
+    private boolean networkRefreshQueued;
 
     private TelephonyManager telephonyManager;
     /** Api31 callback, kept as Object so API 29/30 never resolve TelephonyCallback. */
     private Object telephonyCallback;
     private PhoneStateListener phoneStateListener;
-    private int lastSignalLevel = -1;
 
     private KeyguardManager keyguardManager;
     /** Api33 listener, kept as Object so API 29-32 never resolve the new interface. */
     private Object keyguardLockedListener;
+
+    /** Screen state, owned by {@link #screenReceiver}; no getter binder call per update. */
+    private boolean interactive = true;
+
+    /*
+     * Last values actually pushed to the view. They let a capability callback
+     * decide "nothing visible changed" without touching a system service.
+     */
+    private int batteryLevel = -1;
+    private boolean charging;
+    private boolean wifiEnabled;
+    private boolean wifiTransport;
+    private boolean cellularTransport;
+    private boolean airplane;
+    private boolean simReady;
+    private int signalLevel = -1;
+    /** False until the first active-network read of this overlay session. */
+    private boolean networkKnown;
 
     @Override
     protected void onServiceConnected() {
@@ -97,12 +143,12 @@ public class StatusStripService extends AccessibilityService {
             keyguardManager =
                     (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
 
-            registerReceivers();
-            registerConnectivityCallback();
-            registerTelephonyCallback();
+            // One binder read at connect; afterwards the screen receiver owns this.
+            interactive = readInteractive();
+            registerScreenReceiver();
             registerKeyguardListener();
 
-            if (!isKeyguardLocked() && isInteractive()) {
+            if (!isKeyguardLocked() && interactive) {
                 addOverlay();
             } else {
                 Log.i(TAG, "status strip held back: keyguard/screen not ready");
@@ -123,7 +169,7 @@ public class StatusStripService extends AccessibilityService {
             Log.i(TAG, "not adding strip: Action Centre panel owns the screen");
             return;
         }
-        if (isKeyguardLocked() || !isInteractive()) {
+        if (isKeyguardLocked() || !interactive) {
             Log.i(TAG, "not adding strip: keyguard locked or screen off");
             return;
         }
@@ -160,6 +206,11 @@ public class StatusStripService extends AccessibilityService {
             windowManager.addView(stripView, params);
             stripParams = params;
             overlayAdded = true;
+            // Sources are subscribed only while the strip is actually on screen.
+            networkKnown = false;
+            registerDataReceiver();
+            registerConnectivityCallback();
+            registerTelephonyCallback();
             updateAll();
             Log.i(TAG, "status strip added: " + height + " px / "
                     + StatusStripOverlayView.HEIGHT_DP
@@ -170,12 +221,14 @@ public class StatusStripService extends AccessibilityService {
             overlayAdded = false;
             stripView = null;
             stripParams = null;
+            unregisterDataSources();
         }
     }
 
     private void removeOverlay() {
         if (!overlayAdded || stripView == null || windowManager == null) {
             overlayAdded = false;
+            unregisterDataSources();
             return;
         }
         try {
@@ -187,6 +240,7 @@ public class StatusStripService extends AccessibilityService {
         overlayAdded = false;
         stripView = null;
         stripParams = null;
+        unregisterDataSources();
     }
 
     private boolean isKeyguardLocked() {
@@ -202,13 +256,18 @@ public class StatusStripService extends AccessibilityService {
         }
     }
 
-    private boolean isInteractive() {
+    private boolean readInteractive() {
         try {
             PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
             return pm == null || pm.isInteractive();
         } catch (Throwable ignored) {
             return true;
         }
+    }
+
+    /** True only when a redraw would actually reach the screen. */
+    private boolean canDraw() {
+        return overlayAdded && stripView != null && interactive && !panelVisible;
     }
 
     /**
@@ -227,7 +286,7 @@ public class StatusStripService extends AccessibilityService {
         try {
             if (visible) {
                 removeOverlay();
-            } else if (!isKeyguardLocked() && isInteractive()) {
+            } else if (!isKeyguardLocked() && interactive) {
                 addOverlay();
             }
         } catch (Throwable t) {
@@ -237,8 +296,87 @@ public class StatusStripService extends AccessibilityService {
 
     // ---- receivers --------------------------------------------------------
 
-    private void registerReceivers() {
-        receiver = new BroadcastReceiver() {
+    /**
+     * Screen + user-present only. This one is always registered: it is the only
+     * thing that can bring the strip back after {@code ACTION_SCREEN_OFF}, and it
+     * keeps the app out of the minute-tick path while the screen is off.
+     */
+    private void registerScreenReceiver() {
+        if (screenReceiverRegistered) {
+            return;
+        }
+        screenReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                try {
+                    if (intent == null) {
+                        return;
+                    }
+                    String action = intent.getAction();
+                    if (Intent.ACTION_SCREEN_OFF.equals(action)) {
+                        onScreenOff();
+                    } else if (Intent.ACTION_SCREEN_ON.equals(action)) {
+                        onScreenOn();
+                    } else if (Intent.ACTION_USER_PRESENT.equals(action)) {
+                        interactive = true;
+                        addOverlay();
+                    }
+                } catch (Throwable t) {
+                    Log.w(TAG, "screen receiver failed", t);
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_USER_PRESENT);
+        try {
+            if (Build.VERSION.SDK_INT >= 33) {
+                registerReceiver(screenReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(screenReceiver, filter);
+            }
+            screenReceiverRegistered = true;
+        } catch (Throwable t) {
+            screenReceiver = null;
+            screenReceiverRegistered = false;
+            Log.w(TAG, "screen receiver registration failed", t);
+        }
+    }
+
+    private void unregisterScreenReceiver() {
+        if (!screenReceiverRegistered || screenReceiver == null) {
+            return;
+        }
+        try {
+            unregisterReceiver(screenReceiver);
+        } catch (Throwable ignored) {
+        }
+        screenReceiverRegistered = false;
+        screenReceiver = null;
+    }
+
+    private void onScreenOff() {
+        interactive = false;
+        // removeOverlay() also drops the data receiver, the network callback and
+        // the telephony callback: no minute tick and no capability wakeup while
+        // the screen is off.
+        removeOverlay();
+    }
+
+    private void onScreenOn() {
+        interactive = true;
+        if (!isKeyguardLocked()) {
+            addOverlay();
+        }
+    }
+
+    /** Battery / clock / Wi-Fi / airplane: screen-on only. */
+    private void registerDataReceiver() {
+        if (dataReceiverRegistered || dataReceiver != null) {
+            return;
+        }
+        dataReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 try {
@@ -249,25 +387,18 @@ public class StatusStripService extends AccessibilityService {
                     if (Intent.ACTION_BATTERY_CHANGED.equals(action)) {
                         handleBattery(intent);
                     } else if (WifiManager.WIFI_STATE_CHANGED_ACTION.equals(action)) {
-                        updateWifi();
+                        updateWifiState();
                     } else if (Intent.ACTION_TIME_TICK.equals(action)
                             || Intent.ACTION_TIME_CHANGED.equals(action)
                             || Intent.ACTION_TIMEZONE_CHANGED.equals(action)) {
-                        if (stripView != null) {
+                        // Clock: exactly once a minute (plus explicit changes).
+                        if (canDraw()) {
                             stripView.refreshClock();
                         }
-                    } else if (Intent.ACTION_SCREEN_OFF.equals(action)) {
-                        removeOverlay();
-                    } else if (Intent.ACTION_SCREEN_ON.equals(action)) {
-                        if (!isKeyguardLocked()) {
-                            addOverlay();
-                        }
-                    } else if (Intent.ACTION_USER_PRESENT.equals(action)) {
-                        addOverlay();
                     } else if (Intent.ACTION_AIRPLANE_MODE_CHANGED.equals(action)) {
                         updateAirplane();
-                        updateWifi();
-                        updateSignal();
+                        updateSimState();
+                        scheduleNetworkRefresh();
                     }
                 } catch (Throwable t) {
                     Log.w(TAG, "broadcast ignored after error", t);
@@ -280,20 +411,45 @@ public class StatusStripService extends AccessibilityService {
         filter.addAction(Intent.ACTION_TIME_TICK);
         filter.addAction(Intent.ACTION_TIME_CHANGED);
         filter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
-        filter.addAction(Intent.ACTION_SCREEN_OFF);
-        filter.addAction(Intent.ACTION_SCREEN_ON);
-        filter.addAction(Intent.ACTION_USER_PRESENT);
         filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
-        if (Build.VERSION.SDK_INT >= 33) {
-            registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            registerReceiver(receiver, filter);
+        try {
+            if (Build.VERSION.SDK_INT >= 33) {
+                registerReceiver(dataReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(dataReceiver, filter);
+            }
+            dataReceiverRegistered = true;
+        } catch (Throwable t) {
+            dataReceiver = null;
+            dataReceiverRegistered = false;
+            Log.w(TAG, "data receiver registration failed", t);
         }
-        receiverRegistered = true;
+    }
+
+    private void unregisterDataReceiver() {
+        if (!dataReceiverRegistered || dataReceiver == null) {
+            dataReceiverRegistered = false;
+            dataReceiver = null;
+            return;
+        }
+        try {
+            unregisterReceiver(dataReceiver);
+        } catch (Throwable ignored) {
+        }
+        dataReceiverRegistered = false;
+        dataReceiver = null;
+    }
+
+    private void unregisterDataSources() {
+        handler.removeCallbacks(networkRefresh);
+        networkRefreshQueued = false;
+        unregisterDataReceiver();
+        unregisterConnectivityCallback();
+        unregisterTelephonyCallback();
     }
 
     private void handleBattery(Intent intent) {
-        if (intent == null || stripView == null) {
+        if (intent == null || !canDraw()) {
             return;
         }
         int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
@@ -303,34 +459,40 @@ public class StatusStripService extends AccessibilityService {
         if (level >= 0 && scale > 0) {
             percent = Math.min(100, Math.round(level * 100f / scale));
         }
-        boolean charging = status == BatteryManager.BATTERY_STATUS_CHARGING
+        boolean nowCharging = status == BatteryManager.BATTERY_STATUS_CHARGING
                 || status == BatteryManager.BATTERY_STATUS_FULL;
-        stripView.setBattery(percent, charging);
+        if (percent == batteryLevel && nowCharging == charging) {
+            // Voltage/temperature updates also arrive as ACTION_BATTERY_CHANGED.
+            return;
+        }
+        batteryLevel = percent;
+        charging = nowCharging;
+        stripView.setBattery(percent, nowCharging);
     }
 
+    // ---- network ----------------------------------------------------------
+
     private void registerConnectivityCallback() {
-        if (connectivityManager == null || Build.VERSION.SDK_INT < 24) {
+        if (networkCallbackRegistered || connectivityManager == null
+                || Build.VERSION.SDK_INT < 24) {
             return;
         }
         try {
             networkCallback = new ConnectivityManager.NetworkCallback() {
                 @Override
                 public void onAvailable(Network network) {
-                    updateWifi();
-                    updateSignal();
+                    scheduleNetworkRefresh();
                 }
 
                 @Override
                 public void onLost(Network network) {
-                    updateWifi();
-                    updateSignal();
+                    scheduleNetworkRefresh();
                 }
 
                 @Override
                 public void onCapabilitiesChanged(Network network,
                                                 NetworkCapabilities capabilities) {
-                    updateWifi();
-                    updateSignal();
+                    scheduleNetworkRefresh();
                 }
             };
             connectivityManager.registerDefaultNetworkCallback(networkCallback);
@@ -340,8 +502,143 @@ public class StatusStripService extends AccessibilityService {
         }
     }
 
+    private void unregisterConnectivityCallback() {
+        if (!networkCallbackRegistered || connectivityManager == null || networkCallback == null) {
+            networkCallbackRegistered = false;
+            networkCallback = null;
+            return;
+        }
+        try {
+            connectivityManager.unregisterNetworkCallback(networkCallback);
+        } catch (Throwable ignored) {
+        }
+        networkCallbackRegistered = false;
+        networkCallback = null;
+    }
+
+    /**
+     * One coalesced read per burst. A capabilities storm (bandwidth, signal,
+     * captive-portal checks) must not turn into a read per callback.
+     */
+    private void scheduleNetworkRefresh() {
+        if (!canDraw() || networkRefreshQueued) {
+            return;
+        }
+        networkRefreshQueued = true;
+        handler.postDelayed(networkRefresh, NETWORK_COALESCE_MS);
+    }
+
+    private final Runnable networkRefresh = new Runnable() {
+        @Override
+        public void run() {
+            networkRefreshQueued = false;
+            if (!canDraw()) {
+                return;
+            }
+            try {
+                // Two binder calls, shared by the Wi-Fi and cellular glyphs.
+                boolean wifiNow = false;
+                boolean cellularNow = false;
+                Network active = connectivityManager == null
+                        ? null : connectivityManager.getActiveNetwork();
+                if (active != null) {
+                    NetworkCapabilities caps =
+                            connectivityManager.getNetworkCapabilities(active);
+                    if (caps != null) {
+                        wifiNow = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+                        cellularNow = caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+                    }
+                }
+                if (networkKnown && wifiNow == wifiTransport && cellularNow == cellularTransport) {
+                    return;   // a capability change that is not on our two glyphs
+                }
+                networkKnown = true;
+                wifiTransport = wifiNow;
+                cellularTransport = cellularNow;
+                stripView.setWifi(wifiEnabled, wifiTransport);
+                stripView.setSignal(simReady, signalLevel, cellularTransport);
+            } catch (Throwable t) {
+                Log.w(TAG, "network refresh failed", t);
+            }
+        }
+    };
+
+    private void updateWifiState() {
+        if (!canDraw()) {
+            return;
+        }
+        boolean enabled = false;
+        try {
+            WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+            enabled = wm != null && wm.isWifiEnabled();
+        } catch (Throwable t) {
+            Log.w(TAG, "reading Wi-Fi state failed", t);
+        }
+        if (enabled == wifiEnabled) {
+            return;
+        }
+        wifiEnabled = enabled;
+        stripView.setWifi(wifiEnabled, wifiTransport);
+    }
+
+    private void updateAirplane() {
+        if (!canDraw()) {
+            return;
+        }
+        boolean on = false;
+        try {
+            on = Settings.Global.getInt(getContentResolver(),
+                    Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
+        } catch (Throwable t) {
+            Log.w(TAG, "reading airplane mode failed", t);
+        }
+        if (on == airplane) {
+            return;
+        }
+        airplane = on;
+        stripView.setAirplane(on);
+    }
+
+    /** SIM readiness only; the level arrives through the signal callback. */
+    private void updateSimState() {
+        if (!canDraw() || telephonyManager == null) {
+            return;
+        }
+        boolean nowReady = false;
+        try {
+            nowReady = telephonyManager.getSimState() == TelephonyManager.SIM_STATE_READY;
+        } catch (Throwable ignored) {
+        }
+        if (nowReady == simReady) {
+            return;
+        }
+        simReady = nowReady;
+        stripView.setSignal(simReady, signalLevel, cellularTransport);
+    }
+
+    private void updateSignalLevel() {
+        if (!canDraw() || telephonyManager == null) {
+            return;
+        }
+        int level = signalLevel;
+        try {
+            SignalStrength strength = telephonyManager.getSignalStrength();
+            if (strength != null) {
+                level = strength.getLevel();
+            }
+        } catch (Throwable ignored) {
+            // No READ_PHONE_STATE or no radio: fall back to the cached level.
+        }
+        if (level == signalLevel) {
+            return;
+        }
+        signalLevel = level;
+        stripView.setSignal(simReady, signalLevel, cellularTransport);
+    }
+
     private void registerTelephonyCallback() {
-        if (telephonyManager == null) {
+        if (telephonyCallback != null || phoneStateListener != null
+                || telephonyManager == null) {
             return;
         }
         boolean granted = checkSelfPermission(Manifest.permission.READ_PHONE_STATE)
@@ -367,6 +664,20 @@ public class StatusStripService extends AccessibilityService {
         } catch (Throwable t) {
             Log.w(TAG, "telephony signal callback not registered; static bars", t);
         }
+    }
+
+    private void unregisterTelephonyCallback() {
+        try {
+            if (Build.VERSION.SDK_INT >= 31 && telephonyCallback != null
+                    && telephonyManager != null) {
+                Api31.unregisterSignalCallback(telephonyManager, telephonyCallback);
+            } else if (phoneStateListener != null && telephonyManager != null) {
+                telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE);
+            }
+        } catch (Throwable ignored) {
+        }
+        telephonyCallback = null;
+        phoneStateListener = null;
     }
 
     /** API 31+ telephony callback; this class is only loaded on API 31+. */
@@ -419,7 +730,7 @@ public class StatusStripService extends AccessibilityService {
                             try {
                                 if (isKeyguardLocked) {
                                     service.removeOverlay();
-                                } else if (service.isInteractive()) {
+                                } else if (service.interactive) {
                                     service.addOverlay();
                                 }
                             } catch (Throwable t) {
@@ -441,6 +752,10 @@ public class StatusStripService extends AccessibilityService {
 
     // ---- state ------------------------------------------------------------
 
+    /**
+     * First fill after the overlay appears. One read per source; afterwards each
+     * value is refreshed only by the event that can change it.
+     */
     private void updateAll() {
         try {
             Intent battery = registerReceiver(null,
@@ -448,97 +763,29 @@ public class StatusStripService extends AccessibilityService {
             handleBattery(battery);
         } catch (Throwable ignored) {
         }
-        updateWifi();
+        updateWifiState();
         updateAirplane();
-        updateSignal();
-        if (stripView != null) {
+        updateSimState();
+        updateSignalLevel();
+        scheduleNetworkRefresh();
+        if (canDraw()) {
             stripView.refreshClock();
         }
     }
 
-    private void updateWifi() {
-        if (stripView == null) {
-            return;
-        }
-        boolean enabled = false;
-        try {
-            WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-            enabled = wm != null && wm.isWifiEnabled();
-        } catch (Throwable t) {
-            Log.w(TAG, "reading Wi-Fi state failed", t);
-        }
-        boolean connected = hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
-        stripView.setWifi(enabled, connected);
-    }
-
-    private void updateAirplane() {
-        if (stripView == null) {
-            return;
-        }
-        boolean on = false;
-        try {
-            on = Settings.Global.getInt(getContentResolver(),
-                    Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
-        } catch (Throwable t) {
-            Log.w(TAG, "reading airplane mode failed", t);
-        }
-        stripView.setAirplane(on);
-    }
-
-    private void updateSignal() {
-        if (stripView == null || telephonyManager == null) {
-            return;
-        }
-        boolean simReady = false;
-        try {
-            simReady = telephonyManager.getSimState() == TelephonyManager.SIM_STATE_READY;
-        } catch (Throwable ignored) {
-        }
-        int level = lastSignalLevel;
-        try {
-            SignalStrength strength = telephonyManager.getSignalStrength();
-            if (strength != null) {
-                level = strength.getLevel();
-                lastSignalLevel = level;
-            }
-        } catch (Throwable ignored) {
-            // No READ_PHONE_STATE or no radio: fall back to the cached/unknown level.
-        }
-        boolean cellular = hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
-        stripView.setSignal(simReady, level, cellular);
-    }
-
     private void handleSignalStrength(SignalStrength strength) {
         try {
-            if (strength == null) {
+            if (strength == null || !canDraw()) {
                 return;
             }
-            lastSignalLevel = strength.getLevel();
-            if (stripView != null) {
-                boolean simReady = telephonyManager != null
-                        && telephonyManager.getSimState() == TelephonyManager.SIM_STATE_READY;
-                stripView.setSignal(simReady, lastSignalLevel,
-                        hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR));
+            int level = strength.getLevel();
+            if (level == signalLevel) {
+                return;
             }
+            signalLevel = level;
+            stripView.setSignal(simReady, signalLevel, cellularTransport);
         } catch (Throwable t) {
             Log.w(TAG, "signal update failed", t);
-        }
-    }
-
-    private boolean hasTransport(int transport) {
-        if (connectivityManager == null) {
-            return false;
-        }
-        try {
-            Network network = connectivityManager.getActiveNetwork();
-            if (network == null) {
-                return false;
-            }
-            NetworkCapabilities capabilities =
-                    connectivityManager.getNetworkCapabilities(network);
-            return capabilities != null && capabilities.hasTransport(transport);
-        } catch (Throwable ignored) {
-            return false;
         }
     }
 
@@ -577,31 +824,7 @@ public class StatusStripService extends AccessibilityService {
             instance = null;
         }
         removeOverlay();
-        if (receiverRegistered && receiver != null) {
-            try {
-                unregisterReceiver(receiver);
-            } catch (Throwable ignored) {
-            }
-        }
-        receiverRegistered = false;
-        if (networkCallbackRegistered && connectivityManager != null && networkCallback != null) {
-            try {
-                connectivityManager.unregisterNetworkCallback(networkCallback);
-            } catch (Throwable ignored) {
-            }
-        }
-        networkCallbackRegistered = false;
-        try {
-            if (Build.VERSION.SDK_INT >= 31 && telephonyCallback != null
-                    && telephonyManager != null) {
-                Api31.unregisterSignalCallback(telephonyManager, telephonyCallback);
-            } else if (phoneStateListener != null && telephonyManager != null) {
-                telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE);
-            }
-        } catch (Throwable ignored) {
-        }
-        telephonyCallback = null;
-        phoneStateListener = null;
+        unregisterScreenReceiver();
         if (keyguardLockedListener != null && keyguardManager != null
                 && Build.VERSION.SDK_INT >= 33) {
             try {

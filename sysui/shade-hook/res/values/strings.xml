@@ -3,5 +3,5 @@
      looked up from the SystemUI resource table. -->
 <resources>
     <string name="app_name">ztMetro Shade Hook</string>
-    <string name="xposed_description">Opens the Metro Action Centre (org.ztmetro.actioncentre) instead of the stock notification shade. Fail-safe: any error, the lock screen or a right-edge swipe leaves the stock shade untouched.</string>
+    <string name="xposed_description">Keeps the stock notification shade from opening on a top-edge swipe and opens the Metro Action Centre instead. Scope android (system_server) blocks the status-bar touch transfer; scope com.android.systemui is the fallback that closes a shade which opened anyway. Fail-safe: any error, the lock screen or settings ztmetro_shade_hook=0 leaves the stock shade working.</string>
 </resources>

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Build, sign and verify the ztMetro shade-hook LSPosed module
-# (org.ztmetro.shadehook): swipe-down shade -> Metro Action Centre.
+# Build, sign and verify the ztMetro shade-hook LSPosed module v2
+# (org.ztmetro.shadehook): keep the stock shade from opening on a top-edge swipe
+# and open the Metro Action Centre instead.  Two scopes: "android" (system_server,
+# WindowState#transferTouch guard) and "com.android.systemui" (safety net).
 #
 # Portable (macOS + Linux/Ubuntu), idempotent, offline after the one pinned
 # download.  Everything it writes lives under the module's gitignored build/
@@ -214,12 +216,12 @@ VERIFY="$BUILD_DIR/verify.txt"
     unzip -p "$APK" classes.dex > "$BUILD_DIR/classes.dex"
     echo "## hook target names referenced by classes.dex"
     LC_ALL=C grep -a -o -E \
-        'com\.android\.systemui\.shade\.(NotificationPanelViewController|ShadeControllerImpl)|org\.ztmetro\.actioncentre(\.ActionCentreActivity)?|ztmetro_shade_hook|onPanelStateChanged|makeExpandedVisible|instantCollapseShade|makeExpandedInvisible' \
+        'com\.android\.systemui\.shade\.(NotificationPanelViewController|ShadeControllerImpl)|com\.android\.server\.wm\.WindowState|org\.ztmetro\.actioncentre(\.ActionCentreActivity)?|ztmetro_shade_hook|enabled_accessibility_services|extra_instant|onPanelStateChanged|makeExpandedVisible|instantCollapseShade|makeExpandedInvisible|transferTouch' \
         "$BUILD_DIR/classes.dex" | sort -u || true
     if [ -x "$DEXDUMP" ]; then
         "$DEXDUMP" -f "$BUILD_DIR/classes.dex" | sed -n '1,40p'
         "$DEXDUMP" -d "$BUILD_DIR/classes.dex" \
-            | grep -E "Class descriptor|name +: '(onPanelStateChanged|makeExpandedVisible|instantCollapseShade|makeExpandedInvisible|startActivity|getActivityInfo)'" \
+            | grep -E "Class descriptor|name +: '(onPanelStateChanged|makeExpandedVisible|instantCollapseShade|makeExpandedInvisible|transferTouch|startActivity|getActivityInfo)'" \
             | sed -n '1,60p'
     else
         echo "dexdump not available in $BUILD_TOOLS"
@@ -236,6 +238,8 @@ grep -q "xposedscope" "$VERIFY" || die "manifest has no xposedscope metadata"
 grep -q "assets/xposed_init" "$VERIFY" \
     || die "APK has no assets/xposed_init (legacy Xposed entry point)"
 grep -q "com.android.systemui" "$VERIFY" || die "scope array does not name SystemUI"
+grep -q "<item>android</item>" "$VERIFY" \
+    || die "scope array does not name android (system_server guard)"
 if grep -q "uses-permission" "$VERIFY"; then
     die "module requests a permission; it must be a passive container"
 fi
@@ -258,6 +262,14 @@ LC_ALL=C grep -a -q "org.ztmetro.actioncentre" "$VERIFY" \
     || die "dex does not reference the Action Centre package"
 LC_ALL=C grep -a -q "ActionCentreActivity" "$VERIFY" \
     || die "dex does not reference ActionCentreActivity"
+LC_ALL=C grep -a -q "com.android.server.wm.WindowState" "$VERIFY" \
+    || die "dex does not reference com.android.server.wm.WindowState (system_server guard)"
+LC_ALL=C grep -a -q "transferTouch" "$VERIFY" \
+    || die "dex does not reference WindowState#transferTouch"
+LC_ALL=C grep -a -q "enabled_accessibility_services" "$VERIFY" \
+    || die "dex does not reference the accessibility-service gate"
+LC_ALL=C grep -a -q "extra_instant" "$VERIFY" \
+    || die "dex does not pass ActionCentreActivity.EXTRA_INSTANT"
 if [ -x "$DEXDUMP" ]; then
     grep -q 'Lorg/ztmetro/shadehook/ModuleEntry;' "$VERIFY" \
         || die "classes.dex does not contain ModuleEntry"
@@ -265,6 +277,8 @@ if [ -x "$DEXDUMP" ]; then
         || die "classes.dex does not contain ShadeHooks"
     grep -q 'Lorg/ztmetro/shadehook/ShadeRouter;' "$VERIFY" \
         || die "classes.dex does not contain ShadeRouter"
+    grep -q 'Lorg/ztmetro/shadehook/FrameworkHooks;' "$VERIFY" \
+        || die "classes.dex does not contain FrameworkHooks"
     grep -q 'Lorg/ztmetro/shadehook/SLog;' "$VERIFY" \
         || die "classes.dex does not contain SLog"
 fi

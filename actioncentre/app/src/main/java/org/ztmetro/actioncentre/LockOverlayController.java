@@ -18,6 +18,7 @@ import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
@@ -43,14 +44,16 @@ import java.util.Locale;
  *
  * <p><b>Flags.</b> Main surface: NOT_FOCUSABLE | NOT_TOUCHABLE | LAYOUT_IN_SCREEN
  * | LAYOUT_NO_LIMITS | HARDWARE_ACCELERATED, {@code PixelFormat.TRANSLUCENT}, no
- * system-bar/cutout insets fitted. The only touchable window is a transparent
- * bottom strip (same type and layout flags plus NOT_TOUCH_MODAL) that consumes
- * the swipe up and removes the overlay, revealing the stock keyguard. The black
- * surface never receives touches, so the system's own unlock path is never
- * taken away. The surface is TRANSLUCENT, not OPAQUE: the reveal animation
- * changes the root view's alpha and scale, and an opaque buffer would drop the
- * alpha channel and turn both the 180 ms fade-in and the 160 ms fade/scale-out
- * into an abrupt window removal.
+ * system-bar/cutout insets fitted. Touchable windows: a transparent bottom strip
+ * (same type and layout flags plus NOT_TOUCH_MODAL) that consumes the swipe up
+ * and starts the unlock proxy, and - when {@link #PIN_PAD_ENABLED} and the
+ * device is secure - a second transparent window sized exactly to the
+ * {@link LockPinPad} that forwards touches to the panel. The black surface
+ * itself never receives touches, so the system's own unlock path is never taken
+ * away. The surface is TRANSLUCENT, not OPAQUE: the reveal animation changes the
+ * root view's alpha and scale, and an opaque buffer would drop the alpha channel
+ * and turn both the 180 ms fade-in and the 160 ms fade/scale-out into an abrupt
+ * window removal.
  *
  * <p><b>When it is shown.</b> {@link KeyguardManager#isKeyguardLocked()} is the
  * authoritative signal, with {@link PowerManager#isInteractive()} and
@@ -95,6 +98,23 @@ final class LockOverlayController {
     private static final int STRIP_MIN_DP = 200;
     private static final int STRIP_MAX_DP = 280;
 
+    /**
+     * Owner switch for the reference custom PIN pad.
+     *
+     * <p>{@code true}: on a <b>secure</b> device the clock slots a
+     * {@link LockPinPad}; the pad's enter starts {@link UnlockProxyActivity},
+     * which launches the system credential screen. On a non-secure device the
+     * clock stays and the swipe strip dismisses directly.
+     *
+     * <p>{@code false}: the pre-pad lock screen (clock, counts, hint) with the
+     * unchanged swipe-up unlock path. This is the rollback switch; it needs no
+     * other change and no reinstall of anything else.
+     */
+    static final boolean PIN_PAD_ENABLED = true;
+
+    /** Audit-loud tag for the pad's window/touch lifecycle, separate from LockOverlay. */
+    private static final String AUTH_TAG = "LockAuth";
+
     private final AccessibilityService service;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final KeyguardManager keyguardManager;
@@ -103,6 +123,16 @@ final class LockOverlayController {
     private final WindowManager windowManager;
     private final LockOverlayView content;
     private final View stripView;
+    /** Transparent view in the pad's own touchable window; forwards to the pad. */
+    private final View authTouchView;
+
+    /** The installed custom auth panel, or null while the clock is shown. */
+    private LockAuthPanel authPanel;
+    private WindowManager.LayoutParams authTouchParams;
+    private boolean authTouchAdded;
+    /** One failing pad per wake is enough; the clock + swipe path stay. */
+    private boolean authTouchFailed;
+    private final Rect authBounds = new Rect();
 
     private WindowManager.LayoutParams overlayParams;
     private WindowManager.LayoutParams stripParams;
@@ -159,6 +189,7 @@ final class LockOverlayController {
                 (WindowManager) service.getSystemService(Context.WINDOW_SERVICE);
         this.content = new LockOverlayView(service);
         this.stripView = new SwipeStrip(service);
+        this.authTouchView = new AuthTouchLayer(service);
         instance = this;
     }
 
@@ -273,8 +304,9 @@ final class LockOverlayController {
 
     private void onScreenOn() {
         // One add attempt per wake, so a ROM that refuses the window logs once
-        // rather than on every event.
+        // rather than on every event. The same applies to the pad's touch window.
         addFailed = false;
+        authTouchFailed = false;
         // The surface becomes visible now, even if it was pre-added while the
         // display was off: the foreign-window grace is measured from wake, not
         // from the pre-add.
@@ -284,7 +316,9 @@ final class LockOverlayController {
         Log.i(TAG, "screen on: keyguard locked=" + locked + " attached=" + attached);
         if (locked && !userRevealed) {
             if (attached) {
+                configureAuthPanel();
                 content.refreshNotifications();
+                scheduleAuthTouchSync();
                 startPolling();
                 scheduleMinuteTick();
             } else {
@@ -683,9 +717,11 @@ final class LockOverlayController {
             unlockedChecks = 0;
             content.refreshClock();
             content.refreshNotifications();
+            configureAuthPanel();
             addNotificationsListener();
             startPolling();
             scheduleMinuteTick();
+            scheduleAuthTouchSync();
             Log.i(TAG, "shown: type=TYPE_ACCESSIBILITY_OVERLAY("
                     + WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY + ")"
                     + " flags=" + flags(overlayParams)
@@ -762,15 +798,228 @@ final class LockOverlayController {
         }
     }
 
+    // ------------------------------------------------------------ auth panel
+
+    /**
+     * Put the reference PIN pad in the clock slot when the owner switch is on
+     * and the device is secure. A non-secure keyguard keeps the clock screen and
+     * the swipe-up strip dismisses it directly; no pad is added and no window is
+     * created. Never throws into {@link #show()}: a failure restores the clock.
+     */
+    private void configureAuthPanel() {
+        try {
+            if (!PIN_PAD_ENABLED || authTouchFailed || !isDeviceSecure()) {
+                authPanel = null;
+                content.setAuthPanel(null);
+                return;
+            }
+            if (authPanel == null) {
+                LockPinPad pad = new LockPinPad(service);
+                pad.setOnSubmitListener(new LockAuthPanel.OnSubmitListener() {
+                    @Override
+                    public void onSubmit(String pin) {
+                        onPinSubmitted(pin);
+                    }
+                });
+                pad.getView().addOnLayoutChangeListener(authLayoutListener);
+                authPanel = pad;
+            }
+            content.setAuthPanel(authPanel.getView());
+            authPanel.reset();
+            Log.i(TAG, "pin pad: secure keyguard, clock slot replaced; pad touches go"
+                    + " through a separate touchable window, main surface stays"
+                    + " NOT_TOUCHABLE");
+        } catch (Throwable t) {
+            authTouchFailed = true;
+            authPanel = null;
+            removeAuthTouchWindow();
+            try {
+                content.setAuthPanel(null);
+            } catch (Throwable ignored) {
+            }
+            Log.w(TAG, "pin pad disabled; clock screen and swipe unlock stay intact ("
+                    + t.getClass().getSimpleName() + ": " + t.getMessage() + ")", t);
+        }
+    }
+
+    private boolean isDeviceSecure() {
+        try {
+            return keyguardManager != null && keyguardManager.isDeviceSecure();
+        } catch (Throwable ignored) {
+            // Unknown security state: do not put a credential UI on the lock
+            // screen; the swipe path is the safe default.
+            return false;
+        }
+    }
+
+    /**
+     * The pad's enter. The pad is UI only: the digits are never compared,
+     * stored or put in an Intent here. On a secure device the unlock proxy
+     * launches {@code createConfirmDeviceCredentialIntent(null, null)} and the
+     * system verifies whatever the user types there. The overlay stays up until
+     * that credential window is actually on top.
+     */
+    private void onPinSubmitted(String pin) {
+        try {
+            if (!attached) {
+                return;
+            }
+            if (credentialFlow) {
+                Log.i(TAG, "pin enter ignored: unlock already in flight");
+                return;
+            }
+            int digits = pin == null ? 0 : pin.length();
+            Log.i(TAG, "pin enter: " + digits + " digit(s); not verified in this app");
+            startUnlockProxy("pin_enter");
+            UnlockTimeline.mark("pin_submitted digits=" + digits
+                    + " (pad is UI only; system credential screen verifies)");
+        } catch (Throwable t) {
+            Log.w(TAG, "pin submit handling failed", t);
+        }
+    }
+
+    private final View.OnLayoutChangeListener authLayoutListener =
+            new View.OnLayoutChangeListener() {
+                @Override
+                public void onLayoutChange(View view, int left, int top, int right, int bottom,
+                                           int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                    scheduleAuthTouchSync();
+                }
+            };
+
+    /** The first layout may still be pending; retry once shortly after show. */
+    private void scheduleAuthTouchSync() {
+        handler.removeCallbacks(authLayoutRunnable);
+        handler.post(authLayoutRunnable);
+        handler.postDelayed(authLayoutRunnable, 300L);
+    }
+
+    private final Runnable authLayoutRunnable = new Runnable() {
+        @Override
+        public void run() {
+            syncAuthTouchWindow();
+        }
+    };
+
+    /**
+     * Add or move the second, touchable window so it covers exactly the pad's
+     * on-screen bounds. The main surface keeps its NOT_TOUCHABLE flag; this
+     * window is the only place the lock overlay accepts touches besides the
+     * bottom swipe strip. A window's touchable region is its bounds, and because
+     * this one is added after the strip it receives the keys that overlap it;
+     * swipes that start below the pad still reach the strip.
+     */
+    private void syncAuthTouchWindow() {
+        if (!attached || authTouchFailed || !PIN_PAD_ENABLED) {
+            return;
+        }
+        try {
+            View panel = content.getAuthPanel();
+            if (panel == null || !panel.isAttachedToWindow()) {
+                return;
+            }
+            int width = panel.getWidth();
+            int height = panel.getHeight();
+            if (width <= 0 || height <= 0) {
+                return;
+            }
+            int[] location = new int[2];
+            panel.getLocationOnScreen(location);
+            if (location[0] < 0 || location[1] < 0) {
+                return;
+            }
+            authBounds.set(location[0], location[1],
+                    location[0] + width, location[1] + height);
+            if (!authTouchAdded) {
+                authTouchParams = authTouchParams();
+                windowManager.addView(authTouchView, authTouchParams);
+                authTouchAdded = true;
+                Log.i(AUTH_TAG, "pin pad touch window added: type="
+                        + WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY
+                        + " bounds=" + authBounds.toShortString()
+                        + " flags=NOT_FOCUSABLE|NOT_TOUCH_MODAL|LAYOUT_IN_SCREEN"
+                        + " (main surface still NOT_TOUCHABLE; swipe strip still"
+                        + " underneath)");
+                UnlockTimeline.mark("pin_pad_touch_window " + authBounds.toShortString());
+                return;
+            }
+            if (authTouchParams == null) {
+                return;
+            }
+            if (authTouchParams.x == authBounds.left
+                    && authTouchParams.y == authBounds.top
+                    && authTouchParams.width == authBounds.width()
+                    && authTouchParams.height == authBounds.height()) {
+                return;
+            }
+            authTouchParams.x = authBounds.left;
+            authTouchParams.y = authBounds.top;
+            authTouchParams.width = authBounds.width();
+            authTouchParams.height = authBounds.height();
+            windowManager.updateViewLayout(authTouchView, authTouchParams);
+            Log.i(AUTH_TAG, "pin pad touch window moved: " + authBounds.toShortString());
+        } catch (Throwable t) {
+            failAuthPanel("touch window: " + t.getClass().getSimpleName()
+                    + ": " + t.getMessage(), t);
+        }
+    }
+
+    private WindowManager.LayoutParams authTouchParams() {
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                authBounds.width(),
+                authBounds.height(),
+                WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                        | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                        | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                PixelFormat.TRANSPARENT);
+        params.gravity = Gravity.TOP | Gravity.START;
+        params.x = authBounds.left;
+        params.y = authBounds.top;
+        params.setTitle("ztMetro lock pin pad");
+        applyFullscreenGeometry(params);
+        return params;
+    }
+
+    /**
+     * Fail-safe: remove the whole pad (touch window and clock-slot view) and go
+     * back to the clock screen. The swipe strip was never touched, so the
+     * previous unlock path is still there.
+     */
+    private void failAuthPanel(String why, Throwable error) {
+        authTouchFailed = true;
+        handler.removeCallbacks(authLayoutRunnable);
+        removeAuthTouchWindow();
+        authPanel = null;
+        try {
+            content.setAuthPanel(null);
+        } catch (Throwable ignored) {
+        }
+        Log.w(TAG, "pin pad disabled for this wake (" + why
+                + "); clock screen and swipe unlock stay intact", error);
+        UnlockTimeline.mark("pin_pad_fallback: " + why);
+    }
+
+    private void removeAuthTouchWindow() {
+        if (authTouchAdded || authTouchView.getParent() != null) {
+            removeViewQuietly(authTouchView, "pin pad");
+        }
+        authTouchAdded = false;
+        authTouchParams = null;
+    }
+
     private void hide(String reason) {
         handler.removeCallbacks(pollRunnable);
         handler.removeCallbacks(minuteRunnable);
         handler.removeCallbacks(prepareRunnable);
         handler.removeCallbacks(credentialTimeoutRunnable);
+        handler.removeCallbacks(authLayoutRunnable);
         credentialFlow = false;
         removeNotificationsListener();
         boolean hadWindow = attached || content.getParent() != null
-                || stripView.getParent() != null;
+                || stripView.getParent() != null || authTouchView.getParent() != null;
         if (hadWindow) {
             UnlockTimeline.mark("overlay_removed (" + reason + ")");
         }
@@ -779,8 +1028,10 @@ final class LockOverlayController {
             removeViewsQuietly();
             return;
         }
-        // Fade out 120 ms on reveal, then drop the window. The touch strip goes
-        // at once so a swipe cannot land on a surface that is already leaving.
+        // Fade out 120 ms on reveal, then drop the window. The touch surfaces go
+        // at once so a swipe or a key tap cannot land on a surface that is
+        // already leaving.
+        removeAuthTouchWindow();
         removeViewQuietly(stripView, "strip");
         int fadeOut = Motion.ms(service, FADE_OUT_MS);
         if (fadeOut <= 0 || content.getParent() == null) {
@@ -812,6 +1063,7 @@ final class LockOverlayController {
     }
 
     private void removeViewsQuietly() {
+        removeAuthTouchWindow();
         removeViewQuietly(stripView, "strip");
         removeViewQuietly(content, "surface");
         stripParams = null;
@@ -1105,22 +1357,24 @@ final class LockOverlayController {
     }
 
     /**
-     * Bottom-strip swipe: keep this surface attached and hand the unlock to the
-     * transparent {@link UnlockProxyActivity}. It calls requestDismissKeyguard
-     * for a non-secure lock (our surface stays until USER_PRESENT) or opens the
-     * system credential confirmation for a secure one (we hide only when that
-     * activity reports itself on top).
+     * Keep this surface attached and hand the unlock to the transparent
+     * {@link UnlockProxyActivity}. It calls requestDismissKeyguard for a
+     * non-secure lock (our surface stays until USER_PRESENT) or opens the system
+     * credential confirmation for a secure one (we hide only when that activity
+     * reports itself on top). {@code trigger} is "swipe_up" or "pin_enter"; the
+     * PIN itself is never put in the Intent - the credential screen asks the
+     * system directly.
      */
-    private void startUnlockProxy() {
+    private void startUnlockProxy(String trigger) {
         if (!attached) {
             return;
         }
         if (credentialFlow) {
-            Log.i(TAG, "unlock already in flight; swipe ignored");
+            Log.i(TAG, "unlock already in flight; " + trigger + " ignored");
             return;
         }
         credentialFlow = true;
-        UnlockTimeline.start("swipe_up");
+        UnlockTimeline.start(trigger);
         UnlockTimeline.mark("proxy_launch_requested");
         try {
             Intent intent = new Intent(service, UnlockProxyActivity.class);
@@ -1174,9 +1428,52 @@ final class LockOverlayController {
     }
 
     /**
-     * The only touchable part of the overlay. It swallows taps (nothing else is
-     * interactive) and starts the unlock proxy on a swipe up. The overlay stays
-     * up until the keyguard/credential screen actually replaces it.
+     * Transparent surface of the pad's second window. The main lock surface is
+     * NOT_TOUCHABLE; this view is the only receiver of pad touches and forwards
+     * them to the {@link LockAuthPanel} view. Both windows share the same screen
+     * origin for the pad rect, so the event coordinates need no translation and
+     * the panel's own hit-testing/children work unchanged.
+     */
+    private final class AuthTouchLayer extends View {
+        AuthTouchLayer(Context context) {
+            super(context);
+            setBackgroundColor(Color.TRANSPARENT);
+            setFocusable(false);
+            setClickable(false);
+            setImportantForAccessibility(
+                    View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            if (event == null) {
+                return false;
+            }
+            try {
+                LockAuthPanel panel = authPanel;
+                View view = panel == null ? null : panel.getView();
+                if (view == null) {
+                    return false;
+                }
+                MotionEvent copy = MotionEvent.obtain(event);
+                try {
+                    return view.dispatchTouchEvent(copy);
+                } finally {
+                    copy.recycle();
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "pin pad touch handling failed", t);
+                return false;
+            }
+        }
+    }
+
+    /**
+     * The bottom-strip swipe: the pre-pad unlock path, unchanged. It swallows
+     * taps and starts the unlock proxy on a swipe up; with the PIN pad shown it
+     * receives the touches outside the pad's touch window (below it, and beside
+     * its narrower column), so swipe-up always remains a way into the system
+     * credential screen.
      */
     private final class SwipeStrip extends View {
         private float downY;
@@ -1209,7 +1506,7 @@ final class LockOverlayController {
                             // dismisses a non-secure keyguard or opens the system
                             // credential screen, and the overlay leaves only when
                             // one of those is actually on top.
-                            startUnlockProxy();
+                            startUnlockProxy("swipe_up");
                         }
                         return true;
                     case android.view.MotionEvent.ACTION_CANCEL:

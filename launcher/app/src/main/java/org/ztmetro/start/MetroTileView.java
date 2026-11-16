@@ -260,8 +260,9 @@ final class MetroTileView extends View {
      * screen, so unrelated notification traffic never flips the tile. The flip
      * is started here, not by a timer: 0 -> 180 degrees over
      * {@code metro_live_flip_ms}, face swap at 90. An initial bind (not laid
-     * out yet) applies without animation; the grid re-creates views on resume,
-     * so this is also what keeps a return to Start calm.
+     * out yet) applies without animation; pass 2 keeps the tile views across a
+     * resume (the grid only re-creates them when the tile signature changed),
+     * so a return to Start no longer rebuilds every face.
      */
     void setLiveFace(LiveTiles.Face face, boolean animate) {
         if (tile != null && tile.size == TileStore.SIZE_SMALL && face != null

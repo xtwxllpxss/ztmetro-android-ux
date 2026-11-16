@@ -1,0 +1,51 @@
+# Android 16 (API 36) public SDK: what a window can and cannot do about its touchable region
+# source: ~/android-sdk/platforms/android-36/android.jar on hermes-ubuntu, javap from ~/android-jdk (JDK 17)
+# captured: 2026-11-16T13:48:18Z on the build host
+
+## 1. WindowManager.LayoutParams: every touch-related member is window-wide, there is no region
+  public static final int FLAG_NOT_TOUCHABLE;
+  public static final int FLAG_NOT_TOUCH_MODAL;
+  public static final int FLAG_SPLIT_TOUCH;
+  public static final int FLAG_TOUCHABLE_WHEN_WAKING;
+  public static final int FLAG_WATCH_OUTSIDE_TOUCH;
+  public static final int SOFT_INPUT_ADJUST_NOTHING;
+  public static final int SOFT_INPUT_ADJUST_PAN;
+  public static final int SOFT_INPUT_ADJUST_RESIZE;
+  public static final int SOFT_INPUT_ADJUST_UNSPECIFIED;
+  public static final int SOFT_INPUT_IS_FORWARD_NAVIGATION;
+  public static final int SOFT_INPUT_MASK_ADJUST;
+  public static final int SOFT_INPUT_MASK_STATE;
+  public static final int SOFT_INPUT_MODE_CHANGED;
+  public static final int SOFT_INPUT_STATE_ALWAYS_HIDDEN;
+  public static final int SOFT_INPUT_STATE_ALWAYS_VISIBLE;
+  public static final int SOFT_INPUT_STATE_HIDDEN;
+  public static final int SOFT_INPUT_STATE_UNCHANGED;
+  public static final int SOFT_INPUT_STATE_UNSPECIFIED;
+  public static final int SOFT_INPUT_STATE_VISIBLE;
+  public static final int TYPE_INPUT_METHOD;
+  public static final int TYPE_INPUT_METHOD_DIALOG;
+  public int softInputMode;
+  public boolean areWallpaperTouchEventsEnabled();
+  public boolean getFrameRateBoostOnTouchEnabled();
+  public static boolean mayUseInputMethod(int);
+  public void setFrameRateBoostOnTouchEnabled(boolean);
+  public void setWallpaperTouchEventsEnabled(boolean);
+
+## 2. ViewTreeObserver: the internal-insets API (which CAN set a touchable region) is not in the public stub
+(no internal-insets member in the public API: addOnComputeInternalInsetsListener is @hide)
+
+## 3. SurfaceControl.Transaction: no input-window / input-region setter (setInputWindowInfo is @hide)
+  public android.view.SurfaceControl$Transaction setDamageRegion(android.view.SurfaceControl, android.graphics.Region);
+
+## 4. View: only gesture exclusion (back gesture) and TouchDelegate (view tree), neither is a window input region
+  public java.util.List<android.graphics.Rect> getSystemGestureExclusionRects();
+  public android.view.TouchDelegate getTouchDelegate();
+  public void setSystemGestureExclusionRects(java.util.List<android.graphics.Rect>);
+  public void setTouchDelegate(android.view.TouchDelegate);
+
+## 5. Classes an app could use to install a sub-window touchable region are absent from the stub jar
+(no InternalInsets/InputWindowInfo/TouchableRegion class in android.jar)
+
+## 6. Hidden flag that would do the opposite (FLAG_SLIPPERY hands the gesture to the window below) is not public either
+0
+(0 hits = FLAG_SLIPPERY is not in the public API; it is @hide and would leak the gesture to SystemUI, not help)

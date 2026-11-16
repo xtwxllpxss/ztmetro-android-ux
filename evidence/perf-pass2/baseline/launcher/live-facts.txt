@@ -1,0 +1,10 @@
+service              org.ztmetro.start/org.ztmetro.start.StartNotificationListener
+flip                 rotateY 0 -> 180, 240 ms, face swap at 90 deg
+trigger              LiveTiles.Face.signature() change only; no periodic timer
+animator scale       Settings.Global.ANIMATOR_DURATION_SCALE; 0 applies the face instantly
+content              messaging/email: count + latest title/text; calendar: big day;
+                     music: track title while a media notification exists
+persistence          none: bounded in-memory map (24 packages, 48 keys/package)
+listener enable      adb shell cmd notification allow_listener
+                     org.ztmetro.start/org.ztmetro.start.StartNotificationListener
+settings path        Settings > Apps > Special access > Notification access > ztmetro start
