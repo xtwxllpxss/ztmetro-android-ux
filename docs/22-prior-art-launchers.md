@@ -695,7 +695,7 @@ rikka **Shizuku** client (Apache-2.0) for shell-privileged toggles; nothing else
 3. **Their 20 dp strip swallows the top-edge swipe** system-wide. On our build the status
    bar is already Motif-wrapped by LSPosed; two owners of the top edge must be sequenced
    (strip only when the stock shade is not wanted), or the user loses the stock shade.
-4. **929 Compose files / 118 KB `LauncherApp.kt`** as a design template: their architecture
+4. **Their app shape (929-blob tree / 118 KB `LauncherApp.kt`)** as a design template: their architecture
    is a product, ours is a shell. Do not let the adopt list grow into "port their app".
 5. **Android-version drift:** they test on one OEM skin (Vivo) `[F: their limits section]`.
    Every overlay/flip claim needs a check on `ugglite` (LineageOS 23.2, API 36) before it

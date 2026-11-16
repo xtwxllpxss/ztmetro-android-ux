@@ -1,0 +1,21 @@
+Binary APK
+Package name=org.ztos.overlay.systemui.extra id=7f
+  type dimen id=01 entryCount=2
+    resource 0x7f010000 dimen/global_actions_corner_radius
+      () 0.000000dp
+    resource 0x7f010001 dimen/volume_dialog_background_corner_radius
+      () 0.000000dp
+  type drawable id=02 entryCount=5
+    resource 0x7f020000 drawable/global_actions_lite_background
+      () (file) res/drawable/global_actions_lite_background.xml type=XML
+    resource 0x7f020001 drawable/global_actions_popup_bg
+      () (file) res/drawable/global_actions_popup_bg.xml type=XML
+    resource 0x7f020002 drawable/volume_dialog_background
+      () (file) res/drawable/volume_dialog_background.xml type=XML
+    resource 0x7f020003 drawable/volume_dialog_floating_slider_background
+      () (file) res/drawable/volume_dialog_floating_slider_background.xml type=XML
+    resource 0x7f020004 drawable/volume_dialog_ringer_background
+      () (file) res/drawable/volume_dialog_ringer_background.xml type=XML
+  type layout id=03 entryCount=1
+    resource 0x7f030000 layout/global_actions_grid_item_lite
+      () (file) res/layout/global_actions_grid_item_lite.xml type=XML

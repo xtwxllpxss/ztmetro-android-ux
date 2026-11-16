@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the ztmetro Start HOME launcher APK (v3, WP redraw) with only the SDK + JDK.
+# Build the ztmetro Start HOME launcher APK (v4, WP redraw + live tiles) with only the SDK + JDK.
 #
 #   repo/scripts/build-launcher.sh
 #
@@ -14,7 +14,7 @@ ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 APP="$ROOT/launcher/app/src/main"
 BUILD="$ROOT/launcher/build"
 OUT="$BUILD/out"
-EVIDENCE="${EVIDENCE_DIR:-$ROOT/evidence/launcher-v3}"
+EVIDENCE="${EVIDENCE_DIR:-$ROOT/evidence/live-tiles}"
 APK="$OUT/ztmetro-start.apk"
 
 say() { printf '==> %s\n' "$*"; }
@@ -135,6 +135,10 @@ extra_styles += ramp_style(ramp["body_large"], "BodyLarge",
                            ramp["body_large"]["semibold_weight"])
 extra_styles += ramp_style(ramp["caption"], "SectionHeader",
                            "@color/metro_accent", 600, True)
+# Live-tile second face: caption 12sp in white, sentence case. The count and
+# the latest line sit on an accent tile, so the colour is on_accent.
+extra_styles += ramp_style(ramp["caption"], "LiveText",
+                           "@color/metro_on_accent", 400)
 
 header_gap = gen.num(tokens["type"]["header"]["gap"])
 scrim = tokens["color"]["chrome"]["scrim_alpha"]
@@ -174,6 +178,13 @@ xml = "\n".join([
     '    <dimen name="metro_v3_bottom_bar">56dp</dimen>',
     '    <fraction name="metro_v3_icon_fraction">44%</fraction>',
     '    <integer name="metro_motion_tilt_deg">%s</integer>' % tilt_deg,
+    '',
+    '    <!-- Live-tile second face, not ztmetro C facts. The flip is deliberately',
+    '         in the 220-260ms band the brief fixes for the WP flip (240ms); the',
+    '         calendar day and corner count sizes are fractions of the short side. -->',
+    '    <integer name="metro_live_flip_ms">240</integer>',
+    '    <fraction name="metro_live_date_fraction">34%</fraction>',
+    '    <fraction name="metro_live_count_fraction">15%</fraction>',
     '',
     '    <!-- ztmetro per-app tile palette (core/zrnmetrocore.c:203-208, as',
     "         measured for the v3 reference frame). Cobalt is the default and",
@@ -262,8 +273,8 @@ printf '%s\n' "$XMLTREE" | grep -q "android.intent.category.HOME" \
     || die "HOME category missing from the merged manifest"
 printf '%s\n' "$BADGING" | grep -q "minSdkVersion:'29'" || die "minSdk 29 missing"
 printf '%s\n' "$BADGING" | grep -q "targetSdkVersion:'36'" || die "targetSdk 36 missing"
-printf '%s\n' "$BADGING" | grep -q "versionCode='3'" || die "versionCode 3 missing"
-printf '%s\n' "$BADGING" | grep -q "versionName='3.0'" || die "versionName 3.0 missing"
+printf '%s\n' "$BADGING" | grep -q "versionCode='4'" || die "versionCode 4 missing"
+printf '%s\n' "$BADGING" | grep -q "versionName='4.0'" || die "versionName 4.0 missing"
 
 # v3 keeps the v2 notification listener service (optional live counts) and must
 # still request no permission; the HOME role is the only role it owns.
@@ -284,7 +295,7 @@ if grep -aq "androidx" "$BUILD/verify.dex"; then
 fi
 for symbol in StartNotificationListener MetroTileView MetroGridView \
               MetroListRowView MetroPager MetroCircleGlyphView \
-              MetroSectionHeaderView SystemGlyphs TileArt; do
+              MetroSectionHeaderView SystemGlyphs TileArt LiveTiles; do
     grep -aq "$symbol" "$BUILD/verify.dex" \
         || die "$symbol class missing from classes.dex"
 done
@@ -292,7 +303,9 @@ done
 # The v3 redraw must actually be in the resource table, not just in Java.
 RESOURCES=$("$BT/aapt2" dump resources "$APK")
 for symbol in metro_tile_gap metro_tile_steel metro_v3_icon_fraction \
-              metro_v3_arrow TextAppearance.Metro.SectionHeader; do
+              metro_v3_arrow TextAppearance.Metro.SectionHeader \
+              metro_live_flip_ms metro_live_date_fraction \
+              metro_live_count_fraction TextAppearance.Metro.LiveText; do
     printf '%s\n' "$RESOURCES" | grep -q "$symbol" \
         || die "$symbol missing from the compiled resources"
 done
@@ -323,6 +336,30 @@ for token in metro_motion_row_out_ms metro_motion_row_in_ms metro_motion_row_sta
 ' "$RESOURCES" | grep -q "$token" \
         || die "$token missing from the compiled resources"
 done
+
+# Live tiles: the listener class is a real service in the dex (not just a
+# manifest entry), the model/mapping strings are compiled in, and the flip
+# duration is inside the brief's 220-260ms band.
+DEXDUMP="$BT/dexdump"
+if [ -x "$DEXDUMP" ]; then
+    "$DEXDUMP" -l plain "$BUILD/verify.dex" > "$EVIDENCE/dexdump-classes.txt" 2>/dev/null \
+        || die "dexdump failed"
+    grep -q "Lorg/ztmetro/start/StartNotificationListener;" \
+        "$EVIDENCE/dexdump-classes.txt" \
+        || die "dexdump does not list StartNotificationListener"
+    grep -q "Lorg/ztmetro/start/LiveTiles" "$EVIDENCE/dexdump-classes.txt" \
+        || die "dexdump does not list LiveTiles"
+    grep -q "Lorg/ztmetro/start/MetroTileView;" "$EVIDENCE/dexdump-classes.txt" \
+        || die "dexdump does not list MetroTileView"
+else
+    die "dexdump missing from $BT"
+fi
+for literal in animator_duration_scale enabled_notification_listeners; do
+    grep -aq "$literal" "$BUILD/verify.dex" \
+        || die "$literal missing from classes.dex"
+done
+grep -q 'metro_live_flip_ms">240<' "$TOKENS_XML" \
+    || die "live flip token is not 240ms"
 
 SIZE_BYTES=$(wc -c < "$APK" | tr -d ' ')
 if [ "$SIZE_BYTES" -ge 3145728 ]; then
@@ -366,7 +403,8 @@ DEX_BYTES=$(wc -c < "$BUILD/verify.dex" | tr -d ' ')
     printf 'package classes:\n'
     for symbol in StartActivity MetroTileView MetroGridView MetroPager \
                   MetroCircleGlyphView MetroSectionHeaderView MetroListRowView \
-                  SystemGlyphs TileArt TileStore StartNotificationListener; do
+                  SystemGlyphs TileArt TileStore StartNotificationListener \
+                  LiveTiles Motion Turnstile; do
         if grep -aq "$symbol" "$BUILD/verify.dex"; then
             printf '  %s: present\n' "$symbol"
         else
@@ -375,15 +413,27 @@ DEX_BYTES=$(wc -c < "$BUILD/verify.dex" | tr -d ' ')
     done
 } > "$EVIDENCE/dex-facts.txt"
 {
-    printf 'apk:      launcher/build/out/ztmetro-start.apk (evidence/launcher-v3/ztmetro-start.apk)\n'
+    printf 'service              org.ztmetro.start/org.ztmetro.start.StartNotificationListener\n'
+    printf 'flip                 rotateY 0 -> 180, %s ms, face swap at 90 deg\n' "240"
+    printf 'trigger              LiveTiles.Face.signature() change only; no periodic timer\n'
+    printf 'animator scale       Settings.Global.ANIMATOR_DURATION_SCALE; 0 applies the face instantly\n'
+    printf 'content              messaging/email: count + latest title/text; calendar: big day;\n'
+    printf '                     music: track title while a media notification exists\n'
+    printf 'persistence          none: bounded in-memory map (24 packages, 48 keys/package)\n'
+    printf 'listener enable      adb shell cmd notification allow_listener\n'
+    printf '                     org.ztmetro.start/org.ztmetro.start.StartNotificationListener\n'
+    printf 'settings path        Settings > Apps > Special access > Notification access > ztmetro start\n'
+} > "$EVIDENCE/live-facts.txt"
+{
+    printf 'apk:      launcher/build/out/ztmetro-start.apk (evidence/live-tiles/ztmetro-start.apk)\n'
     printf 'size:     %s bytes\n' "$SIZE_BYTES"
     printf 'sha256:   %s\n' "$SHA"
     printf 'package:  org.ztmetro.start\n'
-    printf 'version:  3 (3.0)\n'
+    printf 'version:  4 (4.0)\n'
     printf 'min/target: 29 / 36\n'
     printf 'build:    %s, %s\n' "$(basename "$SDK")" "$("$JDK/bin/java" -version 2>&1 | head -n 1)"
-    printf 'checks:   HOME category, listener service + BIND permission, no uses-permission,\n'
-    printf '          no androidx, v3 redraw classes/resources present, <3 MB\n'
+    printf 'checks:   HOME category, notification listener + BIND permission, no uses-permission,\n'
+    printf '          no androidx, live flip 240ms + dexdump service, <3 MB\n'
 } > "$EVIDENCE/artifact-facts.txt"
 
 say "done"
@@ -392,4 +442,4 @@ printf 'evidence:%s\n' "$EVIDENCE/ztmetro-start.apk"
 printf 'size:    %s bytes (%s)\n' "$SIZE_BYTES" "$(du -h "$APK" | awk '{print $1}')"
 printf 'sha256:  %s\n' "$SHA"
 printf 'verify:  HOME category, label/icon, minSdk 29 / targetSdk 36, listener service,\n'
-printf '         no uses-permission, no androidx, v3 classes/resources, <3 MB\n'
+printf '         no uses-permission, no androidx, live flip 240ms, dexdump service, <3 MB\n'

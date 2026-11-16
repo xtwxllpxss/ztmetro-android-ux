@@ -1,0 +1,337 @@
+  Class descriptor  : 'Lorg/ztmetro/start/StartNotificationListener;'
+  Access flags      : 0x0011 (PUBLIC FINAL)
+  Superclass        : 'Landroid/service/notification/NotificationListenerService;'
+  Interfaces        -
+  Static fields     -
+    #0              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'MAX_KEYS_PER_PACKAGE'
+      type          : 'I'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      value         : 48
+    #1              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'MESSAGE_HINTS'
+      type          : '[Ljava/lang/String;'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+  Instance fields   -
+    #0              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'active'
+      type          : 'Ljava/util/HashMap;'
+      access        : 0x0012 (PRIVATE FINAL)
+    #1              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'latest'
+      type          : 'Ljava/util/HashMap;'
+      access        : 0x0012 (PRIVATE FINAL)
+  Direct methods    -
+    #0              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : '<clinit>'
+      type          : '()V'
+      access        : 0x10008 (STATIC CONSTRUCTOR)
+      code          -
+      registers     : 13
+      ins           : 0
+      outs          : 13
+      insns size    : 33 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=38
+      locals        :
+    #1              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : '<init>'
+      type          : '()V'
+      access        : 0x10001 (PUBLIC CONSTRUCTOR)
+      code          -
+      registers     : 2
+      ins           : 1
+      outs          : 1
+      insns size    : 18 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=33
+        0x0003 line=51
+        0x000a line=53
+      locals        :
+        0x0000 - 0x0012 reg=1 this Lorg/ztmetro/start/StartNotificationListener;
+    #2              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'clean'
+      type          : '(Ljava/lang/CharSequence;I)Ljava/lang/String;'
+      access        : 0x000a (PRIVATE STATIC)
+      code          -
+      registers     : 4
+      ins           : 2
+      outs          : 3
+      insns size    : 58 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0002 line=297
+        0x0005 line=299
+        0x001b line=300
+        0x0023 line=301
+        0x002a line=303
+      locals        :
+        0x0000 - 0x003a reg=2 (null) Ljava/lang/CharSequence;
+        0x0000 - 0x003a reg=3 (null) I
+    #3              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'isEmpty'
+      type          : '(Ljava/lang/CharSequence;)Z'
+      access        : 0x000a (PRIVATE STATIC)
+      code          -
+      registers     : 1
+      ins           : 1
+      outs          : 1
+      insns size    : 21 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0002 line=292
+      locals        :
+        0x0000 - 0x0015 reg=0 (null) Ljava/lang/CharSequence;
+    #4              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'isMedia'
+      type          : '(Landroid/app/Notification;)Z'
+      access        : 0x000a (PRIVATE STATIC)
+      code          -
+      registers     : 4
+      ins           : 1
+      outs          : 2
+      insns size    : 30 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0004 line=199
+        0x0010 line=202
+        0x0014 line=203
+      locals        :
+        0x0000 - 0x001e reg=3 (null) Landroid/app/Notification;
+    #5              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'isTileNotification'
+      type          : '(Landroid/service/notification/StatusBarNotification;)Z'
+      access        : 0x0002 (PRIVATE)
+      code          -
+      registers     : 4
+      ins           : 2
+      outs          : 2
+      insns size    : 52 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=212
+        0x0010 line=215
+        0x0017 line=219
+        0x001e line=222
+        0x0026 line=225
+      locals        :
+        0x0000 - 0x0034 reg=2 this Lorg/ztmetro/start/StartNotificationListener;
+        0x0000 - 0x0034 reg=3 (null) Landroid/service/notification/StatusBarNotification;
+    #6              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'kindOf'
+      type          : '(Landroid/service/notification/StatusBarNotification;Landroid/app/Notification;)I'
+      access        : 0x000a (PRIVATE STATIC)
+      code          -
+      registers     : 7
+      ins           : 2
+      outs          : 2
+      insns size    : 100 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0004 line=174
+        0x0010 line=177
+        0x001c line=180
+        0x0022 line=181
+        0x002f line=182
+        0x0041 line=183
+        0x0050 line=186
+        0x0058 line=187
+      locals        :
+        0x0000 - 0x0064 reg=5 (null) Landroid/service/notification/StatusBarNotification;
+        0x0000 - 0x0064 reg=6 (null) Landroid/app/Notification;
+    #7              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'prune'
+      type          : '()V'
+      access        : 0x0002 (PRIVATE)
+      code          -
+      registers     : 13
+      ins           : 1
+      outs          : 2
+      insns size    : 216 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=231
+        0x001c line=232
+        0x0022 line=233
+        0x002a line=236
+        0x0040 line=237
+        0x004e line=238
+        0x0058 line=239
+        0x0062 line=245
+        0x0066 line=248
+        0x0068 line=249
+        0x0076 line=250
+        0x0088 line=251
+        0x008c line=254
+        0x0096 line=257
+        0x00ae line=258
+        0x00ba line=259
+        0x00c2 line=260
+        0x00cc line=266
+        0x00d1 line=267
+      locals        :
+        0x0000 - 0x00d8 reg=12 this Lorg/ztmetro/start/StartNotificationListener;
+    #8              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'publish'
+      type          : '()V'
+      access        : 0x0002 (PRIVATE)
+      code          -
+      registers     : 16
+      ins           : 1
+      outs          : 7
+      insns size    : 103 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=273
+        0x0005 line=274
+        0x001b line=275
+        0x0023 line=276
+        0x0028 line=279
+        0x0039 line=280
+        0x003d line=281
+        0x0045 line=284
+        0x004f line=285
+        0x005f line=284
+        0x0063 line=288
+      locals        :
+        0x0000 - 0x0067 reg=15 this Lorg/ztmetro/start/StartNotificationListener;
+    #9              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'rebuild'
+      type          : '()V'
+      access        : 0x0002 (PRIVATE)
+      code          -
+      registers     : 10
+      ins           : 1
+      outs          : 4
+      insns size    : 116 16-bit code units
+      catches       : 1
+        0x000a - 0x000e
+          Ljava/lang/Exception; -> 0x000f
+      positions     :
+        0x0000 line=108
+        0x0005 line=109
+        0x000a line=112
+        0x0012 line=117
+        0x001a line=118
+        0x0021 line=121
+        0x0025 line=122
+        0x002b line=123
+        0x0034 line=126
+        0x0042 line=128
+        0x0047 line=129
+        0x0050 line=131
+        0x005f line=132
+        0x006d line=135
+        0x0070 line=136
+      locals        :
+        0x0000 - 0x0074 reg=9 this Lorg/ztmetro/start/StartNotificationListener;
+    #10              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'recordLatest'
+      type          : '(Ljava/lang/String;Landroid/service/notification/StatusBarNotification;I)V'
+      access        : 0x0002 (PRIVATE)
+      code          -
+      registers     : 9
+      ins           : 4
+      outs          : 3
+      insns size    : 138 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=140
+        0x000a line=141
+        0x0015 line=144
+        0x001b line=145
+        0x0021 line=146
+        0x0023 line=147
+        0x0032 line=149
+        0x0038 line=150
+        0x003e line=151
+        0x0044 line=153
+        0x004a line=154
+        0x0050 line=155
+        0x0056 line=157
+        0x005c line=158
+        0x0062 line=160
+        0x006e line=161
+        0x0076 line=163
+        0x007e line=164
+        0x0084 line=166
+      locals        :
+        0x0000 - 0x008a reg=5 this Lorg/ztmetro/start/StartNotificationListener;
+        0x0000 - 0x008a reg=6 (null) Ljava/lang/String;
+        0x0000 - 0x008a reg=7 (null) Landroid/service/notification/StatusBarNotification;
+        0x0000 - 0x008a reg=8 (null) I
+  Virtual methods   -
+    #0              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'onListenerConnected'
+      type          : '()V'
+      access        : 0x0001 (PUBLIC)
+      code          -
+      registers     : 1
+      ins           : 1
+      outs          : 1
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=57
+      locals        :
+        0x0000 - 0x0004 reg=0 this Lorg/ztmetro/start/StartNotificationListener;
+    #1              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'onListenerDisconnected'
+      type          : '()V'
+      access        : 0x0001 (PUBLIC)
+      code          -
+      registers     : 2
+      ins           : 1
+      outs          : 1
+      insns size    : 14 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=62
+        0x0005 line=63
+        0x000a line=64
+      locals        :
+        0x0000 - 0x000e reg=1 this Lorg/ztmetro/start/StartNotificationListener;
+    #2              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'onNotificationPosted'
+      type          : '(Landroid/service/notification/StatusBarNotification;)V'
+      access        : 0x0001 (PUBLIC)
+      code          -
+      registers     : 8
+      ins           : 2
+      outs          : 4
+      insns size    : 77 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0002 line=69
+        0x0009 line=72
+        0x000d line=73
+        0x0011 line=75
+        0x0018 line=77
+        0x001c line=79
+        0x0026 line=81
+        0x002b line=82
+        0x0030 line=84
+        0x003f line=85
+        0x0046 line=87
+        0x0049 line=88
+      locals        :
+        0x0000 - 0x004d reg=6 this Lorg/ztmetro/start/StartNotificationListener;
+        0x0000 - 0x004d reg=7 (null) Landroid/service/notification/StatusBarNotification;
+    #3              : (in Lorg/ztmetro/start/StartNotificationListener;)
+      name          : 'onNotificationRemoved'
+      type          : '(Landroid/service/notification/StatusBarNotification;)V'
+      access        : 0x0001 (PUBLIC)
+      code          -
+      registers     : 2
+      ins           : 2
+      outs          : 1
+      insns size    : 7 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0003 line=99
+      locals        :
+        0x0000 - 0x0007 reg=0 this Lorg/ztmetro/start/StartNotificationListener;
+        0x0000 - 0x0007 reg=1 (null) Landroid/service/notification/StatusBarNotification;
+  source_file_idx   : 406 (StartNotificationListener.java)

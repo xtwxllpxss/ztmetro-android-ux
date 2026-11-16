@@ -6,6 +6,8 @@ import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
@@ -13,6 +15,9 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
@@ -54,6 +59,12 @@ public class ShadeBridgeService extends AccessibilityService {
     private static final long POLL_INTERVAL_MS = 50L;
     /** Wait at most this long for the shade window; then start the panel anyway. */
     private static final long BACK_WAIT_MAX_MS = 250L;
+    /** Transparent touch strip over the status bar (MetroWinLauncher's A1 trick). */
+    private static final int STRIP_HEIGHT_DP = 20;
+    /** A downward drag further than this in the strip opens the panel. */
+    private static final int STRIP_DRAG_DP = 24;
+    /** Ignore strip touches while a panel launch is already in flight. */
+    private static final long STRIP_OPEN_THROTTLE_MS = 600L;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private long lastTriggerUptime;
@@ -67,10 +78,20 @@ public class ShadeBridgeService extends AccessibilityService {
     /** Display bounds captured at detection, reused by the collapse poll. */
     private Rect collapseDisplay;
 
+    /** Transparent top-edge strip: the system shade never sees these touches. */
+    private View stripView;
+    private WindowManager stripWindowManager;
+    private WindowManager.LayoutParams stripParams;
+    private KeyguardManager stripKeyguardManager;
+    private KeyguardManager.KeyguardLockedStateListener stripKeyguardListener;
+    private long lastStripOpenUptime;
+
     /** Detection -> panel-visible timing, shared with ActionCentreActivity. */
     private static volatile long detectedAtUptime;
     private static volatile long detectedAtWall;
     private static volatile boolean panelVisibleLogged;
+    /** "detection" for the window-state fallback, "strip trigger" for the strip. */
+    private static volatile String triggerLabel = "detection";
 
     /**
      * Waits up to 250 ms for the SystemUI full-screen window to disappear, then
@@ -128,6 +149,7 @@ public class ShadeBridgeService extends AccessibilityService {
             super.onServiceConnected();
             Log.i(TAG, "service connected; shade = fullscreen " + SYSTEMUI_PACKAGE
                     + " window (class name is not used)");
+            addStripOverlay();
         } catch (Throwable t) {
             Log.w(TAG, "onServiceConnected failed", t);
         }
@@ -192,6 +214,7 @@ public class ShadeBridgeService extends AccessibilityService {
         detectedAtUptime = now;
         detectedAtWall = System.currentTimeMillis();
         panelVisibleLogged = false;
+        triggerLabel = "detection";
         Log.i(TAG, "shade detected: " + shade.describe(display)
                 + " last=" + lastForegroundPackage + "; collapsing with GLOBAL_ACTION_BACK");
         boolean collapsed = performGlobalAction(GLOBAL_ACTION_BACK);
@@ -401,8 +424,8 @@ public class ShadeBridgeService extends AccessibilityService {
             panelVisibleLogged = true;
             long elapsed = SystemClock.uptimeMillis() - detected;
             long wall = System.currentTimeMillis() - detectedAtWall;
-            Log.i(TAG, "panel visible " + elapsed + " ms after detection (wall-clock delta "
-                    + wall + " ms)");
+            Log.i(TAG, "panel visible " + elapsed + " ms after " + triggerLabel
+                    + " (wall-clock delta " + wall + " ms)");
         } catch (Throwable t) {
             Log.w(TAG, "panel-visible log failed", t);
         }
@@ -420,6 +443,7 @@ public class ShadeBridgeService extends AccessibilityService {
     public boolean onUnbind(Intent intent) {
         try {
             handler.removeCallbacks(collapsePoll);
+            removeStripOverlay();
             Log.i(TAG, "service unbound");
         } catch (Throwable ignored) {
         }
@@ -430,6 +454,7 @@ public class ShadeBridgeService extends AccessibilityService {
     public void onDestroy() {
         try {
             handler.removeCallbacks(collapsePoll);
+            removeStripOverlay();
         } catch (Throwable ignored) {
         }
         super.onDestroy();

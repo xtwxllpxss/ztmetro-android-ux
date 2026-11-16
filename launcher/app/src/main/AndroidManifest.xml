@@ -5,14 +5,21 @@
   It owns exactly one Android role: the HOME activity. No runtime permissions
   are requested. Package visibility for other launchable apps comes from the
   <queries> element below (the documented alternative to QUERY_ALL_PACKAGES),
-  not from a special permission. Live tiles use a notification listener that
-  the user must grant; until then the service is never bound and tiles stay
-  static.
+  not from a special permission. Live tiles (v4 second face + WP flip) use a
+  notification listener that the user must grant:
+
+    adb shell cmd notification allow_listener \
+        org.ztmetro.start/org.ztmetro.start.StartNotificationListener
+
+  or Settings > Apps > Special access > Notification access > ztmetro start.
+  Until then the system never binds the service, the in-memory map stays empty
+  and every tile keeps its static glyph face; the calendar date face needs no
+  access at all.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.ztmetro.start"
-    android:versionCode="3"
-    android:versionName="3.0">
+    android:versionCode="4"
+    android:versionName="4.0">
 
     <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="36" />
 

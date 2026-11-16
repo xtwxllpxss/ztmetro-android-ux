@@ -1,0 +1,17 @@
+Binary APK
+Package name=org.ztos.overlay.framework.extra id=7f
+  type drawable id=01 entryCount=2
+    resource 0x7f010000 drawable/dialog_background_material
+      () (file) res/drawable/dialog_background_material.xml type=XML
+    resource 0x7f010001 drawable/toast_frame
+      () (file) res/drawable/toast_frame.xml type=XML
+  type style id=02 entryCount=1
+    resource 0x7f020000 style/TextAppearance.Toast
+      () (style) size=7 parent=0x0103003e
+        0x01010095=13.000000sp
+        0x01010097=0x00000000
+        0x01010098=#ffffffff
+        0x0101038c=false
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00
+        0x0101057f=18.000000sp

@@ -1,0 +1,6 @@
+    resource 0x7f010016 color/metro_on_accent
+    resource 0x7f040000 fraction/metro_live_count_fraction
+    resource 0x7f040001 fraction/metro_live_date_fraction
+    resource 0x7f050000 integer/metro_live_flip_ms
+    resource 0x7f070008 style/TextAppearance.Metro.LiveText
+        0x01010098=@color/metro_on_accent

@@ -20,7 +20,7 @@ on the device. This revision removes the recovery BACK entirely.
 |---|---|
 | APK | [`ztmetro-actioncentre.apk`](ztmetro-actioncentre.apk) (build: `actioncentre/build/out/ztmetro-actioncentre.apk`) |
 | size | **304 621 bytes (297.5 KiB)** |
-| sha256 | `9f2a4c6db27ab36d394cc6a248a8eac796e94d82ab6e2f11ab7909c5eaa912b5` |
+| sha256 | `f1cc744b7efb28b27157dcf3e14b49514d7f2d64207d9b500c105f57058274c5` |
 | package / version | `org.ztmetro.actioncentre` 1 (1.0), unchanged |
 | service | `org.ztmetro.actioncentre.ShadeBridgeService` |
 | config | `res/xml/shade_bridge.xml`, referenced by the service `meta-data` |

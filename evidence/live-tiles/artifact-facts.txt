@@ -1,0 +1,9 @@
+apk:      launcher/build/out/ztmetro-start.apk (evidence/live-tiles/ztmetro-start.apk)
+size:     69910 bytes
+sha256:   af62dc84787fbac20028d2d98dc83e0c3b75e4c9433b75a29b1e73e369dc8c95
+package:  org.ztmetro.start
+version:  4 (4.0)
+min/target: 29 / 36
+build:    android-sdk, openjdk version "17.0.21" 2026-10-20
+checks:   HOME category, notification listener + BIND permission, no uses-permission,
+          no androidx, live flip 240ms + dexdump service, <3 MB

@@ -1,0 +1,9 @@
+Archive:  /home/denis/ztux/livetiles/launcher/build/out/ztmetro-start.apk
+ Length   Method    Size  Cmpr    Date    Time   CRC-32   Name
+--------  ------  ------- ---- ---------- ----- --------  ----
+    3768  Defl:N     1236  67% 1980-01-01 00:00 4e4ebfdb  AndroidManifest.xml
+     724  Defl:N      361  50% 1980-01-01 00:00 8cfa906b  res/drawable/ic_launcher.xml
+   10944  Stored    10944   0% 1980-01-01 00:00 167675f8  resources.arsc
+  100588  Defl:N    48904  51% 1980-01-01 03:00 879850a3  classes.dex
+--------          -------  ---                            -------
+  116024            61445  47%                            4 files

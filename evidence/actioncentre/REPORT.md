@@ -10,7 +10,7 @@ Android 16, 720x1280 @ 320 dpi (360x640 dp) · Package: `org.ztmetro.actioncentr
 |---|---|
 | APK | `repo/evidence/actioncentre/ztmetro-actioncentre.apk` (build output: `repo/actioncentre/build/out/ztmetro-actioncentre.apk`) |
 | size | **304 621 bytes (297.5 KiB)** — limit 2 MiB |
-| sha256 | `9f2a4c6db27ab36d394cc6a248a8eac796e94d82ab6e2f11ab7909c5eaa912b5` |
+| sha256 | `f1cc744b7efb28b27157dcf3e14b49514d7f2d64207d9b500c105f57058274c5` |
 | package / version | `org.ztmetro.actioncentre`, versionCode 1 / versionName 1.0 |
 | SDK | minSdk 29, targetSdk 36, compileSdk 36 |
 | signer | v3 signature, throwaway RSA-2048 key generated under `actioncentre/build/keystore/` (gitignored) |
