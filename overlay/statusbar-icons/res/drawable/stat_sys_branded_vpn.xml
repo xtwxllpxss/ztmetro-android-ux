@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- branded VPN: same shield -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="17dp"
+    android:height="17dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="butt"
+        android:strokeLineJoin="miter"
+        android:pathData="M12,2.6 L19.6,5.6 L19.6,12 C19.6,16.4 16.4,19.6 12,21.4 C7.6,19.6 4.4,16.4 4.4,12 L4.4,5.6 Z" />
+</vector>

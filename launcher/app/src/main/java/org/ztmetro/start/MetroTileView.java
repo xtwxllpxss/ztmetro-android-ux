@@ -15,7 +15,6 @@ import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
-import android.view.animation.DecelerateInterpolator;
 
 /**
  * One WP tile, drawn by us — not an Android widget.
@@ -26,9 +25,14 @@ import android.view.animation.DecelerateInterpolator;
  * there is no silhouette the first letter is drawn white at 40% of the tile
  * height. The 1x1 tile is glyph-only, like the ztmetro reference.
  *
- * Press is the ztmetro tilt: wait 80ms (tokens motion.press_delay_ms), then
- * lean up to 14 degrees toward the finger and scale to 0.97 over 90ms; release
- * returns over 200ms. A 450ms hold opens the tile menu and swallows the launch.
+ * Press is the ztmetro tilt: wait 80ms (tokens motion.press_delay_ms, the C's
+ * PRESS_DELAY_MS at {@code ztmetro.c:148}), then lean up to 14 degrees toward
+ * the finger and scale to 0.97 over 90ms ({@code ZMC_TILT_IN_MS},
+ * {@code core/zrnmetrocore.h:35}); release returns over 200ms
+ * ({@code ZMC_TILT_OUT_MS}, {@code core/zrnmetrocore.h:36}). One 60 Hz frame
+ * before the lean the tile takes a faint white press wash, WP's early cue.
+ * A 450ms hold ({@code LONG_PRESS_MS}, {@code ztmetro.c:145}) opens the tile
+ * menu, cancels the lean and swallows the launch.
  */
 final class MetroTileView extends View {
 
@@ -68,7 +72,6 @@ final class MetroTileView extends View {
     private StaticLayout labelLayout;
     private String letter = "?";
     private int baseColor;
-    private int pressedColor;
     private int liveCount;
     private int iconPx;
     private int labelTop;
@@ -76,9 +79,54 @@ final class MetroTileView extends View {
 
     private boolean down;
     private boolean leaning;
+    private boolean highlight;
     private boolean longFired;
+
+    /* ---- live second face: extension point, not implemented yet --------
+     * This class owns the press and tilt only. MetroGridView.refreshLive
+     * already feeds a LiveTiles.Face; that is stored here so the back-face
+     * renderer and the flip (ztmetro.c:4309, 520 ms with overshoot) can be
+     * added by the live-tile work without reopening the press state machine
+     * above. Nothing below draws the face yet: it is inert state. */
+    private LiveTiles.Face liveFace;
+    private float liveFaceFlipDegrees;
+
+    /** The face MetroGridView.refreshLive hands over; stored, not drawn. */
+    void setLiveFace(LiveTiles.Face face, boolean animateFlip) {
+        this.liveFace = face;
+        if (!animateFlip && liveFaceFlipDegrees != 0f) {
+            liveFaceFlipDegrees = 0f;
+            invalidate();
+        }
+    }
+
+    /** 0 = front, 180 = back; the caller owns the flip animation. */
+    void setLiveFaceFlip(float degrees) {
+        liveFaceFlipDegrees = degrees;
+        invalidate();
+    }
+
+    LiveTiles.Face liveFace() {
+        return liveFace;
+    }
+
+    float liveFaceFlipDegrees() {
+        return liveFaceFlipDegrees;
+    }
+
     private float downX;
     private float downY;
+
+    private final Runnable highlightRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!down || longFired) {
+                return;
+            }
+            highlight = true;
+            invalidate();
+        }
+    };
 
     private final Runnable tiltRunnable = new Runnable() {
         @Override
@@ -98,8 +146,9 @@ final class MetroTileView extends View {
             }
             longFired = true;
             down = false;
+            highlight = false;
             leaning = false;
-            resetTilt(true);
+            resetTilt(false);   /* the menu takes over: no lean underneath it */
             performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
             if (listener != null && tile != null) {
                 listener.onTileLongPress(tile);
@@ -117,10 +166,10 @@ final class MetroTileView extends View {
         pad = padPx;
         pressDelayMs = context.getResources().getInteger(
                 R.integer.metro_motion_press_delay_ms);
-        pressInMs = context.getResources().getInteger(
-                R.integer.metro_motion_press_in_ms);
-        pressOutMs = context.getResources().getInteger(
-                R.integer.metro_motion_press_out_ms);
+        pressInMs = Motion.ms(context, context.getResources().getInteger(
+                R.integer.metro_motion_press_in_ms));
+        pressOutMs = Motion.ms(context, context.getResources().getInteger(
+                R.integer.metro_motion_press_out_ms));
         longPressMs = context.getResources().getInteger(
                 R.integer.metro_motion_long_press_ms);
         tiltDeg = context.getResources().getInteger(
@@ -162,12 +211,10 @@ final class MetroTileView extends View {
         this.liveCount = 0;
         if (tile != null) {
             baseColor = art.colorFor(tile.key());
-            pressedColor = TileArt.blend(baseColor, onAccent, 0.12f);
             letter = TileArt.firstLetter(tile.label);
             setContentDescription(tile.label);
         } else {
             baseColor = getResources().getColor(R.color.metro_accent, null);
-            pressedColor = TileArt.blend(baseColor, onAccent, 0.12f);
             setContentDescription(null);
         }
         glyphArt = null;
@@ -257,8 +304,14 @@ final class MetroTileView extends View {
         if (tile == null) {
             return;
         }
-        fillPaint.setColor(isPressedVisual() ? pressedColor : baseColor);
+        fillPaint.setColor(baseColor);
         canvas.drawRect(0f, 0f, getWidth(), getHeight(), fillPaint);
+        if (highlight || leaning) {
+            /* One frame ahead of the lean, and kept while it leans: a 6 % white
+             * wash, not a colour change and not a ripple. */
+            fillPaint.setColor(0x10FFFFFF);
+            canvas.drawRect(0f, 0f, getWidth(), getHeight(), fillPaint);
+        }
 
         if (tile.appearance) {
             SystemGlyphs.draw(canvas, SystemGlyphs.GEAR, glyphRect);
@@ -286,10 +339,6 @@ final class MetroTileView extends View {
         }
     }
 
-    private boolean isPressedVisual() {
-        return down || leaning;
-    }
-
     private void commitTilt() {
         leaning = true;
         float halfW = Math.max(1f, getWidth() / 2f);
@@ -312,27 +361,34 @@ final class MetroTileView extends View {
         float rotationX = -tiltDeg * ny;
         float rotationY = tiltDeg * nx;
         animate().cancel();
-        animate()
-                .rotationX(rotationX)
-                .rotationY(rotationY)
-                .scaleX(PRESS_SCALE)
-                .scaleY(PRESS_SCALE)
-                .setDuration(pressInMs)
-                .setInterpolator(new DecelerateInterpolator())
-                .start();
+        if (pressInMs <= 0) {
+            setRotationX(rotationX);
+            setRotationY(rotationY);
+            setScaleX(PRESS_SCALE);
+            setScaleY(PRESS_SCALE);
+        } else {
+            animate()
+                    .rotationX(rotationX)
+                    .rotationY(rotationY)
+                    .scaleX(PRESS_SCALE)
+                    .scaleY(PRESS_SCALE)
+                    .setDuration(pressInMs)
+                    .setInterpolator(Motion.WP_LOG)
+                    .start();
+        }
         invalidate();
     }
 
     private void resetTilt(boolean animate) {
         animate().cancel();
-        if (animate) {
+        if (animate && pressOutMs > 0) {
             animate()
                     .rotationX(0f)
                     .rotationY(0f)
                     .scaleX(1f)
                     .scaleY(1f)
                     .setDuration(pressOutMs)
-                    .setInterpolator(new DecelerateInterpolator())
+                    .setInterpolator(Motion.WP_LOG)
                     .start();
         } else {
             setRotationX(0f);
@@ -345,9 +401,11 @@ final class MetroTileView extends View {
     }
 
     private void cancelPress() {
+        handler.removeCallbacks(highlightRunnable);
         handler.removeCallbacks(tiltRunnable);
         handler.removeCallbacks(longPressRunnable);
         down = false;
+        highlight = false;
         longFired = false;
         resetTilt(true);
     }
@@ -358,11 +416,15 @@ final class MetroTileView extends View {
             case MotionEvent.ACTION_DOWN: {
                 down = true;
                 leaning = false;
+                highlight = false;
                 longFired = false;
                 downX = event.getX();
                 downY = event.getY();
+                handler.removeCallbacks(highlightRunnable);
                 handler.removeCallbacks(tiltRunnable);
                 handler.removeCallbacks(longPressRunnable);
+                handler.postDelayed(highlightRunnable,
+                        Math.max(0, pressDelayMs - Motion.HIGHLIGHT_LEAD_MS));
                 handler.postDelayed(tiltRunnable, pressDelayMs);
                 handler.postDelayed(longPressRunnable, longPressMs);
                 invalidate();
@@ -376,11 +438,13 @@ final class MetroTileView extends View {
                 return down;
             }
             case MotionEvent.ACTION_UP: {
+                handler.removeCallbacks(highlightRunnable);
                 handler.removeCallbacks(tiltRunnable);
                 handler.removeCallbacks(longPressRunnable);
                 boolean fired = longFired;
                 boolean wasDown = down;
                 down = false;
+                highlight = false;
                 longFired = false;
                 resetTilt(true);
                 if (!fired && wasDown && tile != null) {
@@ -404,6 +468,7 @@ final class MetroTileView extends View {
 
     @Override
     protected void onDetachedFromWindow() {
+        handler.removeCallbacks(highlightRunnable);
         handler.removeCallbacks(tiltRunnable);
         handler.removeCallbacks(longPressRunnable);
         animate().cancel();

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Power-action button plate: square, Metro surface_off #1F1F1F.
+
+  Target at lineage-23.2
+  packages/SystemUI/res/drawable/global_actions_lite_button.xml:19-23:
+
+      <shape android:shape="oval">
+          <solid android:color="@androidprv:color/materialColorSurfaceContainerHighest"/>
+      </shape>
+
+  The oval/circle is the most un-Metro cue in the power menu (tokens:
+  metrics.corner_radius_dp 0, color.neutrals.surface_off #1F1F1F).  The icon
+  itself is tinted by global_actions_grid_item_lite.xml:33, not here.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#FF1F1F1F" />
+</shape>

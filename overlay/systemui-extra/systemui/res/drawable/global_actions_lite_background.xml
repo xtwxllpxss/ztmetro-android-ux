@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Power menu / global-actions sheet background: flat black, square.
+
+  Target at lineage-23.2
+  packages/SystemUI/res/drawable/global_actions_lite_background.xml:19-23:
+
+      <solid android:color="@androidprv:color/materialColorSurfaceContainerLow"/>
+      <corners android:radius="@dimen/global_actions_corner_radius" />
+
+  Live APK: same file, dimen global_actions_corner_radius = 28 dp (aapt2
+  dump resources /tmp/sysui.apk: 0x7f07035b -> 28.0dp).
+  Metro: token color.chrome.action_centre #000000, radius 0
+  (metrics.corner_radius_dp 0).  Used by both global_actions_grid_lite.xml:44
+  and global_actions_power_dialog_flow.xml:23, so the grid and the long-press
+  power submenu share the same flat panel.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="0dp" />
+    <solid android:color="#FF000000" />
+</shape>

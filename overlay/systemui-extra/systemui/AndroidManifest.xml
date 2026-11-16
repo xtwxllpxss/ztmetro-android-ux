@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro SystemUI *extra* RRO — the four stock Material surfaces that the
+  Start/launcher, Settings and Action Centre overlays do not cover:
+  the volume panel, the power menu, and the SystemUI-drawn toast frame.
+
+  Target: com.android.systemui, LineageOS 23.2 / Android 16, shipped
+  SystemUI APK sha256 67e2f10c… (the same APK examined in
+  repo/evidence/qs-square/REPORT.md).  The overlay deliberately targets only
+  resource names that exist in that APK's resource table; the legacy
+  volume_dialog_legacy/* names still present in the lineage-23.2 source tree
+  are absent from the shipped APK and are NOT declared here (they would be
+  inert new entries).
+
+  * android:hasCode="false" — an RRO carries resources only.
+  * no android:targetName — SystemUI declares no <overlayable>
+    (docs/10b-overlay-and-hook-facts.md §1); idmap2 accepts every resource
+    because the APK is preinstalled on a read-only partition
+    (frameworks/base/cmds/idmap2/libidmap2/ResourceMapping.cpp:69-75).
+  * not static — enable at runtime with
+        su 0 cmd overlay enable org.ztos.overlay.systemui.extra
+    then restart SystemUI.  priority 30 keeps it above the generic
+    ztmetro SystemUI (10) and status-strip (20) overlays; no resource name
+    is shared with either of them.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztos.overlay.systemui.extra"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="36" android:targetSdkVersion="36" />
+
+    <application
+        android:hasCode="false"
+        android:label="ztos volume + power (SystemUI)" />
+
+    <overlay
+        android:targetPackage="com.android.systemui"
+        android:priority="30" />
+</manifest>

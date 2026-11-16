@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro status-bar glyph RRO — replaces the SystemUI status-bar drawables
+  that SystemUI actually reads with flat white WP/Metro vectors.
+
+  Target: com.android.systemui (LineageOS 23.2 / Android 16, ugglite 720x1280).
+  SystemUI declares no <overlayable>, so this overlay must be PREINSTALLED on a
+  read-only partition (/product/overlay/...): idmap2 accepts it through the
+  SYSTEM_PARTITION/PRODUCT_PARTITION policy, exactly like
+  org.ztos.overlay.systemui and org.ztos.overlay.status.systemui
+  (docs/10b-overlay-and-hook-facts.md section 4).
+  No android:targetName: there is no group to name.
+  hasCode="false": resources only, no code, no new resource references.
+
+  Not static: the lead enables it once with
+    su 0 cmd overlay enable org.ztos.overlay.statusbaricons
+  (or adds it to modules/ztmetro-overlays/service.sh). Priority 30 so it wins
+  over the two ztmetro SystemUI overlays (10 and 20); no shared names today.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztos.overlay.statusbaricons"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <application
+        android:hasCode="false"
+        android:label="ztmetro status-bar icons" />
+
+    <overlay
+        android:targetPackage="com.android.systemui"
+        android:priority="30" />
+</manifest>

@@ -1,0 +1,7 @@
+classes.dex: 14880 bytes
+androidx occurrences: 0 (build fails if any)
+uses-permission elements: 0 (build fails if any)
+service classes (dexdump):
+Class descriptor  : 'Lorg/ztmetro/ime/ZtKeyboardView;'
+Class descriptor  : 'Lorg/ztmetro/ime/ZtMetroIme;'
+superclass: Landroid/inputmethodservice/InputMethodService; (ZtMetroIme)

@@ -1,0 +1,126 @@
+# Name verification — ztmetro status-bar glyph RRO
+# target : com.android.systemui (LineageOS 23.2 / Android 16)
+# source : LineageOS/android_frameworks_base @ 797e43244b96c6a0dff5c81b21c4d4be665b082e
+#          (lineage-23.2), read in ~/ztux/status/tree on hermes-ubuntu
+#          (sparse checkout: core/res/res/values, packages/SystemUI/{res,res-keyguard,
+#          res-product,src,aconfig}, packages/SettingsLib/{aconfig,res})
+# Every name below is a file that exists in packages/SystemUI/res/drawable*/ —
+# i.e. a resource idmap2 can map onto the target. Names that do NOT exist in
+# SystemUI are listed at the end and are NOT shipped.
+
+## 1. The 20 overridden drawables — definitions in SystemUI
+
+# stat_sys_alarm.xml:18-21            <inset 2.5dp> -> @drawable/ic_alarm (17dp vector, 24 viewport)
+# stat_sys_alarm_dim.xml:16-19        <inset 2.5dp> -> @drawable/ic_alarm_dim (fillAlpha 0.3)
+# stat_sys_data_bluetooth_connected.xml:16-17   <inset> -> @drawable/ic_bluetooth_connected (17dp)
+# stat_sys_data_bluetooth_connected_battery_0..9.xml:19-20  <vector 20dp x 17dp, viewport 21x18,
+#                                     group scale 0.75, rune + device-battery gauge>
+# stat_sys_headset.xml:16-19          <inset 2.5dp> -> @drawable/ic_headset (17dp)
+# stat_sys_headset_mic.xml:16-19      <inset 2.5dp> -> @drawable/ic_headset_mic (17dp)
+# stat_sys_airplane_mode.xml:19-20    <inset> -> @*android:drawable/ic_qs_airplane
+# stat_sys_vpn_ic.xml:19-20           <vector 17dp, 24 viewport>
+# stat_sys_no_internet_vpn_ic.xml:19-20  <vector 17dp, 24 viewport>
+# stat_sys_branded_vpn.xml:17-18      <vector 17.0dp, 24 viewport>
+# stat_sys_no_internet_branded_vpn.xml:19-20  <vector 17dp, 24 viewport>
+
+## 2. Who reads them (the live rendering path)
+
+# packages/SystemUI/src/com/android/systemui/statusbar/phone/CentralSurfacesImpl.java:375
+#     private final PhoneStatusBarPolicy mIconPolicy;
+# packages/SystemUI/src/com/android/systemui/statusbar/phone/CentralSurfacesImpl.java:436
+#     private final StatusBarSignalPolicy mStatusBarSignalPolicy;
+# packages/SystemUI/src/com/android/systemui/statusbar/phone/CentralSurfacesImpl.java:693
+#     PhoneStatusBarPolicy phoneStatusBarPolicy,  (Dagger-injected => constructed on the live path)
+
+# alarm
+# packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBarPolicy.java:296
+#     mIconController.setIcon(mSlotAlarmClock, R.drawable.stat_sys_alarm, null);
+# packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBarPolicy.java:433-434
+#     mIconController.setIcon(mSlotAlarmClock, zenNone ? R.drawable.stat_sys_alarm_dim
+#                                                     : R.drawable.stat_sys_alarm, ...);
+
+# bluetooth (plain + device-battery variants)
+# packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBarPolicy.java:496
+#     int iconId = R.drawable.stat_sys_data_bluetooth_connected;
+# packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBarPolicy.java:506-524
+#     iconId = R.drawable.stat_sys_data_bluetooth_connected_battery_{9..0};
+
+# headset
+# packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBarPolicy.java:783-784
+#     mIconController.setIcon(mSlotHeadset, hasMic ? R.drawable.stat_sys_headset_mic
+#                                                  : R.drawable.stat_sys_headset, ...);
+
+# airplane
+# packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarSignalPolicy.java:167
+#     R.drawable.stat_sys_airplane_mode,
+# packages/SystemUI/src/com/android/systemui/statusbar/connectivity/NetworkControllerImpl.java:727,1097,1273
+#     R.drawable.stat_sys_airplane_mode,
+
+# vpn — read by BOTH pipelines (legacy policy and the new system-status-icons VM)
+# packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarSignalPolicy.java:118
+#     ? R.drawable.stat_sys_vpn_ic
+# packages/SystemUI/src/com/android/systemui/statusbar/systemstatusicons/vpn/ui/viewmodel/VpnIconViewModel.kt:61-69
+#     R.drawable.stat_sys_branded_vpn / stat_sys_no_internet_branded_vpn / stat_sys_vpn_ic /
+#     stat_sys_no_internet_vpn_ic
+
+## 3. Which pipeline draws the system icons (this is the risk in task 4)
+
+# The status bar root IS Compose on 23.2:
+# packages/SystemUI/src/com/android/systemui/statusbar/pipeline/shared/ui/composable/StatusBarRoot.kt:339
+#     if (SystemStatusIconsInCompose.isEnabled) { ...addEndSideComposable... } else {
+#         StatusIconContainer + StatusBarIconController + DarkIconManager  <- our drawables
+#     }
+# packages/SystemUI/src/com/android/systemui/statusbar/systemstatusicons/SystemStatusIconsInCompose.kt:37
+#     get() = Flags.statusBarSystemStatusIconsInCompose() && NewStatusBarIcons.isEnabled
+# packages/SystemUI/aconfig/systemui.aconfig:372
+#     flag { name: "status_bar_system_status_icons_in_compose" ... }  (no build-time default:
+#     release builds do not set it; device_config can)
+# packages/SettingsLib/aconfig/settingslib.aconfig:5  flag { name: "new_status_bar_icons" }
+# => Legacy branch (the one that reads stat_sys_*) is the default; the Compose
+#    branch replaces alarm/bluetooth/airplane with ic_alarm / ic_bluetooth_connected /
+#    ic_qs_airplane (NextAlarmIconViewModel.kt:66, BluetoothIconViewModel.kt:66,
+#    AirplaneModeIconViewModel.kt:72). VPN keeps stat_sys_vpn_ic in both branches.
+
+## 4. Battery / wifi / signal are NOT SystemUI drawables (not shipped)
+
+# stat_sys_battery*: no file in packages/SystemUI/res/drawable*/ (grep of the whole
+#   SystemUI res tree finds only stat_sys_data_bluetooth_connected_battery_*).
+#   The only stat_sys_battery* assets in the tree are framework leftovers:
+#   core/res/res/drawable-*/stat_sys_battery_{0,10,15,20,28,40,43,57,60,71,80,85,100}.png
+#   plus charge anims, referenced by core/res/res/values/symbols.xml:2151-2153.
+#   SystemUI 23.2 draws the battery in code:
+#   packages/SystemUI/src/com/android/systemui/battery/BatteryMeterView.java:77,123
+#   packages/SystemUI/src/com/android/systemui/battery/AccessorizedBatteryDrawable.kt:49
+#       : DrawableWrapper(ThemedBatteryDrawable(context, frameColor))
+#   new path: pipeline/battery/shared/ui/BatteryFrame.kt (Compose Canvas).
+#
+# wifi: WifiIcon.Visible carries a resource id, but the array is either framework
+#   or SettingsLib — never a SystemUI drawable:
+#   packages/SystemUI/src/com/android/systemui/statusbar/connectivity/WifiIcons.java:34-53
+#       com.android.internal.R.drawable.ic_wifi_signal_0..4      (flag off)
+#       com.android.settingslib.R.drawable.ic_wifi_0..3          (new_status_bar_icons on)
+#   There is no stat_sys_wifi_signal_* anywhere in the 23.2 tree.
+#
+# signal: five bars drawn by SettingsLib's SignalDrawable (Canvas), used from
+#   packages/SystemUI/src/com/android/systemui/statusbar/connectivity/MobileSignalController.java:234-248
+#   and, on the new path, by Compose MobileSignalIcon
+#   (pipeline/mobile/ui/compose/MobileIcon.kt:183).
+#   There is no stat_sys_signal_* drawable in SystemUI; the framework has only
+#   leftover cdma/evdo PNGs (core/res/res/drawable-*/stat_sys_signal_*_cdma.png).
+
+# SAB chip/background: no chip background sits behind the status-icon row in
+# either pipeline. statusbar_battery_chip_bg.xml is used only by the battery
+# status event chip:
+#   packages/SystemUI/src/com/android/systemui/statusbar/events/ui/view/BatteryStatusEventComposeChip.kt:100
+# => not overridden; there is nothing to restyle there.
+
+## 5. Probe for the lead (device-side confirmation of the branch)
+
+# adb shell su -c 'cmd device_config get systemui status_bar_system_status_icons_in_compose'
+# adb shell su -c 'cmd device_config get systemui new_status_bar_icons'
+#   -> "null"/false = legacy View branch = the 20 names above are live.
+#   -> true        = Compose system icons: alarm/bluetooth/airplane switch to the
+#      ic_* resources; vpn still uses stat_sys_vpn_ic; battery/wifi/signal need a
+#      fork in all cases.
+# adb shell su -c 'aapt2 dump resources /system/priv-app/SystemUI/SystemUI.apk' | grep -E 'stat_sys_alarm|ic_wifi_'
+#   (aapt2 on device is usually absent; run the same dump on the pulled APK)

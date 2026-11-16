@@ -1,0 +1,35 @@
+== no local aapt2/android.jar: building on hermes-ubuntu (~/ztux/icons) ==
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+== compile ==
+== link ==
+== align ==
+== sign (throwaway key: /home/denis/.ztmetro-overlay-debug.keystore) ==
+== verify ==
+Signer #1 certificate DN: CN=ztmetro overlay (throwaway)
+Signer #1 certificate SHA-256 digest: 16e91082631bef535eba7ebe3a62ff3b01f47b95acd1415db151c92addcb8d3e
+Signer #1 certificate SHA-1 digest: efc3661d8294c0c47dabd1a392a7350ec23d8bd8
+Signer #1 certificate MD5 digest: 9d262864bd433272b746998161cb3c96
+package: name='org.ztos.overlay.statusbaricons' versionCode='1' versionName='1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+application-label:'ztmetro status-bar icons'
+application: label='ztmetro status-bar icons' icon=''
+overlay: targetPackage='com.android.systemui' priority='30' isStatic='false'
+entry check: 20 drawables, exact match
+== APK ==
+APK    /home/denis/ztux/icons/out/ztmetro-statusbar-icons-rro.apk
+sha256 f86ed13c8559f9a434da4f4b36eaa39a3542679f8b684f55511c18b09193a9db
+entries:  37477 25 files
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+
+== APK ==
+APK    /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/statusbar-icons/ztmetro-statusbar-icons-rro.apk
+sha256 f86ed13c8559f9a434da4f4b36eaa39a3542679f8b684f55511c18b09193a9db

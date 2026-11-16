@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro framework *extra* RRO — the framework-res resources that stock
+  SystemUI/apps still use but that the existing repo/overlay/framework overlay
+  does not touch: the toast frame + toast type, and the Material alert-dialog
+  window background.
+
+  Target: android, LineageOS 23.2 / AOSP android-16.0.0_r3.  No
+  <overlayable> is declared by framework-res either, so the preinstalled
+  partition-policy branch applies (ResourceMapping.cpp:69-75).
+
+  * android:isStatic="true" — enabled at boot; matches the existing
+    org.ztos.overlay.framework overlay.  No `cmd overlay enable` needed (and
+    static overlays cannot be toggled).  Priority 3 > 2 only orders it above
+    the existing framework overlay if a name ever collides; today no name is
+    shared with repo/overlay/framework.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztos.overlay.framework.extra"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="36" android:targetSdkVersion="36" />
+
+    <application
+        android:hasCode="false"
+        android:label="ztos toast + dialogs (framework)" />
+
+    <overlay
+        android:targetPackage="android"
+        android:isStatic="true"
+        android:priority="3" />
+</manifest>

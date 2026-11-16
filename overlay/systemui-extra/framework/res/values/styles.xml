@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Toast typography: 13sp white, no tracking, no caps.
+
+  Target at lineage-23.2 core/res/res/values/styles.xml:992-999:
+
+      <style name="TextAppearance.Toast">
+          <item name="fontFamily" android:featureFlag="…notifications_redesign_fonts">variable-body-medium</item>
+          <item name="fontFamily" android:featureFlag="!…">@*android:string/config_bodyFontFamily</item>
+          <item name="textSize">14sp</item>
+          <item name="lineHeight">20sp</item>
+          <item name="textColor">?android:attr/textColorPrimary</item>
+      </style>
+
+  Consumer: packages/SystemUI/res/layout/text_toast.xml:48
+  android:textAppearance="@*android:style/TextAppearance.Toast" (live APK
+  xmltree: framework id 0x010303f1); SystemUIToast.java:174-176 inflates it.
+  The style is replaced as a whole bag, so the parent and every wanted item
+  are re-declared.  Metro body = 13sp, text_primary = #FFFFFF
+  (design/tokens/ztmetro.tokens.json).
+
+  No duplicate: repo/overlay/framework overrides TextAppearance.Material.* and
+  the status-bar event styles, but not TextAppearance.Toast.
+-->
+<resources>
+    <style name="TextAppearance.Toast" parent="@android:style/TextAppearance">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:lineHeight">18sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+</resources>

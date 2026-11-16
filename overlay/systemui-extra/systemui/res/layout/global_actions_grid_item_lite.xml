@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Power-menu action item, restyled without touching any SystemUI-only
+  resource reference (so this file links against android.jar alone):
+
+    * icon tint / label colour  -> literal #FFFFFFFF (Metro text_primary)
+    * label size                -> 13sp (Metro body) instead of 14sp
+    * icon plate                -> flat #FF1F1F1F (Metro surface_off),
+                                   supplied here as a colour instead of the
+                                   target's @drawable/global_actions_lite_button
+                                   so the layout carries no SystemUI @drawable id
+    * ids @android:id/icon + @android:id/message are the SAME framework ids
+      the target uses (GlobalActionsDialogLite.java imports
+      com.android.internal.R, lines 115, 2365-2366, 2392-2403), so
+      findViewById() in the target keeps working.
+
+  Target definition: packages/SystemUI/res/layout/global_actions_grid_item_lite.xml
+  at lineage-23.2, lines 26-45 (icon tint @androidprv:color/materialColorOnSurface,
+  TextView 14sp / same colour).  Live APK xmltree confirms tint 0x010602b8 =
+  @androidprv:color/materialColorOnSurface.
+
+  CAVEAT (honest split): when the QsInCompose feature flag is on,
+  GlobalActionsDialogLite.java:2392-2403 re-applies materialColorOnSurface to
+  the label and icon at runtime.  This layout then only keeps the white/size
+  values on the non-Compose path; the runtime tint wins.  See
+  evidence/volume-power-toast/REPORT.md §4.
+-->
+<com.android.systemui.globalactions.GlobalActionsItem
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:gravity="center"
+    android:layout_gravity="center"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@android:id/icon"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:layout_marginBottom="8dp"
+        android:padding="38dp"
+        android:scaleType="centerInside"
+        android:tint="#FFFFFFFF"
+        android:background="#FF1F1F1F" />
+
+    <TextView
+        android:id="@android:id/message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:singleLine="true"
+        android:textSize="13sp"
+        android:textColor="#FFFFFFFF"
+        android:fontFamily="sans-serif"
+        android:letterSpacing="0"
+        android:gravity="center" />
+
+</com.android.systemui.globalactions.GlobalActionsItem>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- flat airplane silhouette -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="17dp"
+    android:height="17dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,2.5 L13.7,8.6 L21,12.6 L21,14.1 L13.7,12.3 L13.7,17.6 L16.2,19.6 L16.2,21.1 L12,19.7 L7.8,21.1 L7.8,19.6 L10.3,17.6 L10.3,12.3 L3,14.1 L3,12.6 L10.3,8.6 Z" />
+</vector>

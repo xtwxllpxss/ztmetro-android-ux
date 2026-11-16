@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WP bluetooth rune + device battery gauge, level 6/9 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="17dp"
+    android:height="17dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="butt"
+        android:strokeLineJoin="miter"
+        android:pathData="M8.6,5.7 L8.6,18.3" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="butt"
+        android:strokeLineJoin="miter"
+        android:pathData="M8.6,5.7 L12.45,8.85 L8.6,12 L12.45,15.15 L8.6,18.3" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="butt"
+        android:strokeLineJoin="miter"
+        android:pathData="M14,8 L22,8 L22,16 L14,16 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M22,10.6 L23.2,10.6 L23.2,13.4 L22,13.4 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M15.1,9.1 L18.87,9.1 L18.87,14.9 L15.1,14.9 Z" />
+</vector>

@@ -1,0 +1,139 @@
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+== host / toolchain ==
+denis-HP-Pavilion-Laptop-13-an0xxx
+Android Asset Packaging Tool (aapt) 2.20-13193326
+openjdk version "17.0.21" 2026-10-20
+apksigner: 0.9
+
+===== ztmetro-systemui-extra-rro.apk =====
+361deb614345db0095a6f71940f07371dd107c54eada60c6443a190fd52167c0  /home/denis/ztux/vpt/out/ztmetro-systemui-extra-rro.apk
+-rw-rw-r-- 1 denis denis 13274 ноя 16 13:40 /home/denis/ztux/vpt/out/ztmetro-systemui-extra-rro.apk
+Signer #1 certificate DN: CN=ztmetro overlay (throwaway)
+Signer #1 certificate SHA-256 digest: 16e91082631bef535eba7ebe3a62ff3b01f47b95acd1415db151c92addcb8d3e
+Signer #1 certificate SHA-1 digest: efc3661d8294c0c47dabd1a392a7350ec23d8bd8
+Signer #1 certificate MD5 digest: 9d262864bd433272b746998161cb3c96
+-- badging --
+package: name='org.ztos.overlay.systemui.extra' versionCode='1' versionName='1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+application-label:'ztos volume + power (SystemUI)'
+application: label='ztos volume + power (SystemUI)' icon=''
+overlay: targetPackage='com.android.systemui' priority='30' isStatic='false'
+-- resources (overlay package ids) --
+  type dimen id=01 entryCount=3
+    resource 0x7f010000 dimen/global_actions_corner_radius
+    resource 0x7f010001 dimen/volume_dialog_background_corner_radius
+    resource 0x7f010002 dimen/volume_dialog_background_square_corner_radius
+  type drawable id=02 entryCount=6
+    resource 0x7f020000 drawable/global_actions_lite_background
+    resource 0x7f020001 drawable/global_actions_lite_button
+    resource 0x7f020002 drawable/global_actions_popup_bg
+    resource 0x7f020003 drawable/volume_dialog_background
+    resource 0x7f020004 drawable/volume_dialog_floating_slider_background
+    resource 0x7f020005 drawable/volume_dialog_ringer_background
+  type layout id=03 entryCount=1
+    resource 0x7f030000 layout/global_actions_grid_item_lite
+
+===== ztmetro-framework-extra-rro.apk =====
+f66070a06b66c2bd0d0dba41325f0d8fe13ccbf09b13bc3447b0e416ae2116ba  /home/denis/ztux/vpt/out/ztmetro-framework-extra-rro.apk
+-rw-rw-r-- 1 denis denis 12795 ноя 16 13:40 /home/denis/ztux/vpt/out/ztmetro-framework-extra-rro.apk
+Signer #1 certificate DN: CN=ztmetro overlay (throwaway)
+Signer #1 certificate SHA-256 digest: 16e91082631bef535eba7ebe3a62ff3b01f47b95acd1415db151c92addcb8d3e
+Signer #1 certificate SHA-1 digest: efc3661d8294c0c47dabd1a392a7350ec23d8bd8
+Signer #1 certificate MD5 digest: 9d262864bd433272b746998161cb3c96
+-- badging --
+package: name='org.ztos.overlay.framework.extra' versionCode='1' versionName='1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+application-label:'ztos toast + dialogs (framework)'
+application: label='ztos toast + dialogs (framework)' icon=''
+overlay: targetPackage='android' priority='3' isStatic='true'
+-- resources (overlay package ids) --
+  type drawable id=01 entryCount=2
+    resource 0x7f010000 drawable/dialog_background_material
+    resource 0x7f010001 drawable/toast_frame
+  type style id=02 entryCount=1
+    resource 0x7f020000 style/TextAppearance.Toast
+
+===== target-existence check: SystemUI names in shipped APK =====
+PRESENT  dimen/global_actions_corner_radius  ->      resource 0x7f07035b dimen/global_actions_corner_radius
+PRESENT  dimen/volume_dialog_background_corner_radius  ->      resource 0x7f070d6d dimen/volume_dialog_background_corner_radius
+PRESENT  dimen/volume_dialog_background_square_corner_radius  ->      resource 0x7f070d70 dimen/volume_dialog_background_square_corner_radius
+PRESENT  drawable/global_actions_lite_background  ->      resource 0x7f080646 drawable/global_actions_lite_background
+PRESENT  drawable/global_actions_lite_button  ->      resource 0x7f080647 drawable/global_actions_lite_button
+PRESENT  drawable/global_actions_popup_bg  ->      resource 0x7f080649 drawable/global_actions_popup_bg
+PRESENT  drawable/volume_dialog_background  ->      resource 0x7f080ccc drawable/volume_dialog_background
+PRESENT  drawable/volume_dialog_floating_slider_background  ->      resource 0x7f080ccf drawable/volume_dialog_floating_slider_background
+PRESENT  drawable/volume_dialog_ringer_background  ->      resource 0x7f080cd1 drawable/volume_dialog_ringer_background
+PRESENT  layout/global_actions_grid_item_lite  ->      resource 0x7f0d00d1 layout/global_actions_grid_item_lite
+
+===== target-existence check: framework names in android-36/android.jar =====
+PRESENT  drawable/dialog_background_material  ->      resource 0x01080300 drawable/dialog_background_material
+PRESENT  drawable/toast_frame  ->      resource 0x01080096 drawable/toast_frame PUBLIC
+PRESENT  style/TextAppearance.Toast  ->      resource 0x010303ef style/TextAppearance.Toast
+NOTE: SDK android.jar is not the device framework-res; resource ids differ
+      (e.g. TextAppearance.Toast 0x010303ef here vs 0x010303f1 in shipped
+      SystemUI references). idmap2 matches by (type,name) at install time.
+
+===== legacy volume names: source-only, absent from shipped SystemUI =====
+ABSENT  volume_dialog_legacy
+ABSENT  volume_dialog_panel_width
+ABSENT  volume_dialog_panel_width_half
+ABSENT  volume_row_rounded_background
+ABSENT  volume_background_top_legacy
+ABSENT  volume_background_bottom
+ABSENT  volume_row_seekbar
+ABSENT  TextAppearance.Volume.Header
+
+===== old values in shipped SystemUI (the rows we override) =====
+-- dimen/volume_dialog_background_corner_radius
+    resource 0x7f070d6d dimen/volume_dialog_background_corner_radius
+      () 30.000000dp
+-- dimen/volume_dialog_background_square_corner_radius
+    resource 0x7f070d70 dimen/volume_dialog_background_square_corner_radius
+      () 12.000000dp
+-- dimen/global_actions_corner_radius
+    resource 0x7f07035b dimen/global_actions_corner_radius
+      () 28.000000dp
+
+===== power item layout: target vs overlay ids/colors =====
+-- target res/layout/global_actions_grid_item_lite.xml
+    E: com.android.systemui.globalactions.GlobalActionsItem (line=16)
+        E: ImageView (line=26)
+          A: http://schemas.android.com/apk/res/android:id(0x010100d0)=@0x01020006
+          A: http://schemas.android.com/apk/res/android:tint(0x01010121)=@0x010602b8
+        E: TextView (line=35)
+          A: http://schemas.android.com/apk/res/android:textSize(0x01010095)=14.000000sp
+          A: http://schemas.android.com/apk/res/android:textColor(0x01010098)=@0x010602b8
+          A: http://schemas.android.com/apk/res/android:id(0x010100d0)=@0x0102000b
+-- overlay res/layout/global_actions_grid_item_lite.xml
+  E: com.android.systemui.globalactions.GlobalActionsItem (line=28)
+      E: ImageView (line=37)
+        A: http://schemas.android.com/apk/res/android:id(0x010100d0)=@0x01020006
+        A: http://schemas.android.com/apk/res/android:tint(0x01010121)=#ffffffff
+      E: TextView (line=47)
+        A: http://schemas.android.com/apk/res/android:textSize(0x01010095)=13.000000sp
+        A: http://schemas.android.com/apk/res/android:textColor(0x01010098)=#ffffffff
+        A: http://schemas.android.com/apk/res/android:id(0x010100d0)=@0x0102000b
+
+===== volume panel shape: target vs overlay =====
+-- target res/drawable/volume_dialog_background.xml
+        E: corners (line=20)
+          A: http://schemas.android.com/apk/res/android:radius(0x010101a8)=@0x7f070d6d
+        E: solid (line=21)
+          A: http://schemas.android.com/apk/res/android:color(0x010101a5)=@0x010602d3
+-- overlay res/drawable/volume_dialog_background.xml
+      E: corners (line=26)
+        A: http://schemas.android.com/apk/res/android:radius(0x010101a8)=0.000000dp
+      E: solid (line=27)
+        A: http://schemas.android.com/apk/res/android:color(0x010101a5)=#ff000000
+
+===== framework toast_frame: SDK android.jar old shape vs overlay =====
+-- android.jar res/drawable/toast_frame.xml
+      E: solid (line=20)
+        A: http://schemas.android.com/apk/res/android:color(0x010101a5)=?0x0112002e
+      E: corners (line=21)
+        A: http://schemas.android.com/apk/res/android:radius(0x010101a8)=28.000000dp
+-- overlay res/drawable/toast_frame.xml
+      E: corners (line=23)
+        A: http://schemas.android.com/apk/res/android:radius(0x010101a8)=0.000000dp
+      E: solid (line=24)
+        A: http://schemas.android.com/apk/res/android:color(0x010101a5)=#ff000000

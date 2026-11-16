@@ -1,0 +1,43 @@
+Binary APK
+Package name=org.ztos.overlay.statusbaricons id=7f
+  type drawable id=01 entryCount=20
+    resource 0x7f010000 drawable/stat_sys_airplane_mode
+      () (file) res/drawable/stat_sys_airplane_mode.xml type=XML
+    resource 0x7f010001 drawable/stat_sys_alarm
+      () (file) res/drawable/stat_sys_alarm.xml type=XML
+    resource 0x7f010002 drawable/stat_sys_alarm_dim
+      () (file) res/drawable/stat_sys_alarm_dim.xml type=XML
+    resource 0x7f010003 drawable/stat_sys_branded_vpn
+      () (file) res/drawable/stat_sys_branded_vpn.xml type=XML
+    resource 0x7f010004 drawable/stat_sys_data_bluetooth_connected
+      () (file) res/drawable/stat_sys_data_bluetooth_connected.xml type=XML
+    resource 0x7f010005 drawable/stat_sys_data_bluetooth_connected_battery_0
+      () (file) res/drawable/stat_sys_data_bluetooth_connected_battery_0.xml type=XML
+    resource 0x7f010006 drawable/stat_sys_data_bluetooth_connected_battery_1
+      () (file) res/drawable/stat_sys_data_bluetooth_connected_battery_1.xml type=XML
+    resource 0x7f010007 drawable/stat_sys_data_bluetooth_connected_battery_2
+      () (file) res/drawable/stat_sys_data_bluetooth_connected_battery_2.xml type=XML
+    resource 0x7f010008 drawable/stat_sys_data_bluetooth_connected_battery_3
+      () (file) res/drawable/stat_sys_data_bluetooth_connected_battery_3.xml type=XML
+    resource 0x7f010009 drawable/stat_sys_data_bluetooth_connected_battery_4
+      () (file) res/drawable/stat_sys_data_bluetooth_connected_battery_4.xml type=XML
+    resource 0x7f01000a drawable/stat_sys_data_bluetooth_connected_battery_5
+      () (file) res/drawable/stat_sys_data_bluetooth_connected_battery_5.xml type=XML
+    resource 0x7f01000b drawable/stat_sys_data_bluetooth_connected_battery_6
+      () (file) res/drawable/stat_sys_data_bluetooth_connected_battery_6.xml type=XML
+    resource 0x7f01000c drawable/stat_sys_data_bluetooth_connected_battery_7
+      () (file) res/drawable/stat_sys_data_bluetooth_connected_battery_7.xml type=XML
+    resource 0x7f01000d drawable/stat_sys_data_bluetooth_connected_battery_8
+      () (file) res/drawable/stat_sys_data_bluetooth_connected_battery_8.xml type=XML
+    resource 0x7f01000e drawable/stat_sys_data_bluetooth_connected_battery_9
+      () (file) res/drawable/stat_sys_data_bluetooth_connected_battery_9.xml type=XML
+    resource 0x7f01000f drawable/stat_sys_headset
+      () (file) res/drawable/stat_sys_headset.xml type=XML
+    resource 0x7f010010 drawable/stat_sys_headset_mic
+      () (file) res/drawable/stat_sys_headset_mic.xml type=XML
+    resource 0x7f010011 drawable/stat_sys_no_internet_branded_vpn
+      () (file) res/drawable/stat_sys_no_internet_branded_vpn.xml type=XML
+    resource 0x7f010012 drawable/stat_sys_no_internet_vpn_ic
+      () (file) res/drawable/stat_sys_no_internet_vpn_ic.xml type=XML
+    resource 0x7f010013 drawable/stat_sys_vpn_ic
+      () (file) res/drawable/stat_sys_vpn_ic.xml type=XML

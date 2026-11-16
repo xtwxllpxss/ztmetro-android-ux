@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Ringer drawer background (the three ringer buttons that slide out of the
+  volume panel).  Target at lineage-23.2
+  packages/SystemUI/res/drawable/volume_dialog_ringer_background.xml:17-22:
+
+      <corners android:radius="@dimen/volume_dialog_background_corner_radius"/>
+      <solid android:color="@androidprv:color/materialColorSurface" />
+
+  Live APK confirms 30 dp + materialColorSurface (0x010602d3).
+  Metro: opaque black, 0 corners.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="0dp" />
+    <solid android:color="#FF000000" />
+</shape>

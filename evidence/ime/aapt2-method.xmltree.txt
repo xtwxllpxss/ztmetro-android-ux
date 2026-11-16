@@ -1,0 +1,15 @@
+N: android=http://schemas.android.com/apk/res/android (line=5)
+  E: input-method (line=5)
+    A: http://schemas.android.com/apk/res/android:supportsSwitchingToNextInputMethod(0x010103eb)=true
+      E: subtype (line=8)
+        A: http://schemas.android.com/apk/res/android:label(0x01010001)=@0x7f020002
+        A: http://schemas.android.com/apk/res/android:imeSubtypeLocale(0x010102ec)="ru_RU" (Raw: "ru_RU")
+        A: http://schemas.android.com/apk/res/android:imeSubtypeMode(0x010102ed)="keyboard" (Raw: "keyboard")
+        A: http://schemas.android.com/apk/res/android:isAsciiCapable(0x010103e9)=false
+        A: http://schemas.android.com/apk/res/android:languageTag(0x01010508)="ru-RU" (Raw: "ru-RU")
+      E: subtype (line=15)
+        A: http://schemas.android.com/apk/res/android:label(0x01010001)=@0x7f020001
+        A: http://schemas.android.com/apk/res/android:imeSubtypeLocale(0x010102ec)="en_US" (Raw: "en_US")
+        A: http://schemas.android.com/apk/res/android:imeSubtypeMode(0x010102ed)="keyboard" (Raw: "keyboard")
+        A: http://schemas.android.com/apk/res/android:isAsciiCapable(0x010103e9)=true
+        A: http://schemas.android.com/apk/res/android:languageTag(0x01010508)="en-US" (Raw: "en-US")

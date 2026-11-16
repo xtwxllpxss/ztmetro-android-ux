@@ -4,32 +4,36 @@
 SystemUI changes. On this LineageOS 23.2 build the shade window reports as
 `android.widget.FrameLayout`, so detection does **not** use the class name: it finds the
 expanded shade as the SystemUI window whose bounds cover at least 85 % of the display
-(the status bar is the small SystemUI window). It then sends `GLOBAL_ACTION_BACK`, polls
-`getWindows()` every 50 ms until that window is gone (a second BACK at ~200 ms, hard cap
-600 ms) and only then starts `ActionCentreActivity`. The service is off by default; with
-it off the app adds nothing to the shade path.
+(the status bar is the small SystemUI window). It sends **one** `GLOBAL_ACTION_BACK`,
+polls that window every 50 ms for at most **250 ms**, and then starts
+`ActionCentreActivity` with `extra_instant=true` — either when the shade window is gone or
+at the 250 ms cap. There is **no recovery BACK**: a BACK sent after the panel starts would
+dismiss our own focused panel (observed on device). The service is off by default; with it
+off the app adds nothing to the shade path.
 **Scope**: the APK was built and statically verified on `hermes-ubuntu`; the class-name
-mismatch, the geometry trigger and the "panel started but stock shade on top" race were
-observed by the lead on the device. This revision fixes the sequencing.
+mismatch, the geometry trigger and the late-BACK panel dismissal were observed by the lead
+on the device. This revision removes the recovery BACK entirely.
 
 ## 1. Artifact and static proof
 
 | field | value |
 |---|---|
 | APK | [`ztmetro-actioncentre.apk`](ztmetro-actioncentre.apk) (build: `actioncentre/build/out/ztmetro-actioncentre.apk`) |
-| size | **300 525 bytes (293.5 KiB)** |
-| sha256 | `54897ba7f050b3c5549447faab259ad8eb5f37f59ee02b3c9ec97fa29154f500` |
+| size | **304 621 bytes (297.5 KiB)** |
+| sha256 | `9f2a4c6db27ab36d394cc6a248a8eac796e94d82ab6e2f11ab7909c5eaa912b5` |
 | package / version | `org.ztmetro.actioncentre` 1 (1.0), unchanged |
 | service | `org.ztmetro.actioncentre.ShadeBridgeService` |
 | config | `res/xml/shade_bridge.xml`, referenced by the service `meta-data` |
 | bind permission | `android.permission.BIND_ACCESSIBILITY_SERVICE` (service attribute, **no new `uses-permission`**) |
 | build | same script: `aapt2` + `javac` (Java 8) + `d8 --min-api 29` + `zipalign` + `apksigner`; no Gradle/AndroidX/network |
 
-`verify.txt` has **44 PASS / 0 FAIL**, including: service + bind permission + intent action +
+`verify.txt` has **48 PASS / 0 FAIL**, including: service + bind permission + intent action +
 config meta-data; `typeWindowStateChanged` (`0x20`), `feedbackGeneric` (`0x10`), flags
 `0x51`, `canRetrieveWindowContent=true`; **no** `packageNames` filter (needed for previous
 foreground tracking); no new `uses-permission`; `dexdump -f` lists `ShadeBridgeService`,
-`onAccessibilityEvent` and the geometry detector `findFullscreenSystemUiWindow`.
+`onAccessibilityEvent`, the geometry detector `findFullscreenSystemUiWindow`, the
+panel-visible timing hook `notifyPanelVisible`, the packaged `extra_instant` extra, and a
+regression guard that the service contains **exactly one** `performGlobalAction` call.
 
 ## 2. Detection and action sequence
 
@@ -45,13 +49,17 @@ Non-SystemUI events only update `lastForegroundPackage`; nothing is read from th
 | 5 | keyguard | `KeyguardManager.isKeyguardLocked()` → skip; unreadable lock state counts as locked |
 | 6 | own panel | focused window's root package is ours → skip |
 | 7 | previous app | `lastForegroundPackage == org.ztmetro.actioncentre` **and** our panel window is still on screen → skip (window check prevents a stale record blocking the bridge after the panel is closed) |
-| 8 | collapse | `performGlobalAction(GLOBAL_ACTION_BACK)` #1, result logged |
-| 9 | wait for close | poll `getWindows()` every **50 ms** up to **600 ms**; if a full-screen SystemUI window is still there at ~200 ms, send BACK #2 (**max 2**) |
-| 10 | open | only when the full-screen SystemUI window is gone, or at the 600 ms timeout: `startActivity(ActionCentreActivity, NEW_TASK\|SINGLE_TOP)` |
-| 11 | race probe | 400 ms after the start, scan once more and log `W/ShadeBridge: race: …` if a full-screen SystemUI window is visible again |
+| 8 | collapse | `performGlobalAction(GLOBAL_ACTION_BACK)` #1 immediately; this is the **only** BACK in the service (build-enforced) |
+| 9 | short wait | poll `getWindows()` every **50 ms**, max **250 ms**, for the full-screen SystemUI window |
+| 10 | open | when it is gone, or at the 250 ms cap, `startActivity(ActionCentreActivity, NEW_TASK\|SINGLE_TOP\|NO_ANIMATION)` with `extra_instant=true`; then stop. No BACK is sent from here on |
+| 11 | instant panel | `ActionCentreActivity` records the extra and skips the open travel entirely (`root.post(openRunnable)` only when not launched from the bridge); window transitions are suppressed on this build, and the close travel is unchanged |
+| 12 | timing | when the panel's window first gains focus, the activity calls `notifyPanelVisible()`; the service logs detection → visible time (uptime delta + wall-clock delta) |
 
 The threshold is area-based: 720×1280 display → a status bar of 720×96 is ~7.5 % and is
 rejected, the expanded shade at 720×1280 (or 720×1216 without the nav bar, ~95 %) passes.
+The wait is deliberately capped at 250 ms: if SystemUI still reports the window at the cap
+the panel starts anyway, rather than waiting with the stock shade on screen. Because the
+poll never sends BACK, the panel cannot be dismissed by the bridge after it is focused.
 The window class and title are logged but never used for the decision. Every callback is
 wrapped in `try/catch`; a bad event is logged and dropped.
 
@@ -104,25 +112,16 @@ D/ShadeBridge: systemui window-state; inspecting 3 window(s), display=720x1280
 D/ShadeBridge: systemui window type=3 bounds=[0,0][720,1280] 100% of display title=NotificationShade
 I/ShadeBridge: shade detected: type=3 bounds=[0,0][720,1280] 100% of display 720x1280 last=com.android.launcher3; collapsing with GLOBAL_ACTION_BACK
 I/ShadeBridge: GLOBAL_ACTION_BACK #1 returned true
-I/ShadeBridge: shade gone after 150 ms
-I/ShadeBridge: Action Centre started (shade gone after 150 ms)
-D/ShadeBridge: post-start check: no systemui shade visible
+I/ShadeBridge: shade gone after 100 ms; starting Action Centre
+I/ShadeBridge: panel visible 160 ms after detection (wall-clock delta 161 ms)
 ```
 
-If the first BACK is not enough, the second one and the 600 ms cap look like this:
+If SystemUI still reports the full-screen window at the 250 ms cap, the panel starts
+anyway — there is no second BACK:
 
 ```
-I/ShadeBridge: shade still visible after 200 ms; GLOBAL_ACTION_BACK #2 returned true
-I/ShadeBridge: shade gone after 260 ms
-I/ShadeBridge: Action Centre started (shade gone after 260 ms)
-```
-
-If the shade is still up at the cap (the failure case, now visible in logs):
-
-```
-I/ShadeBridge: shade still visible, starting anyway after 600 ms
-I/ShadeBridge: Action Centre started (timeout after 600 ms)
-W/ShadeBridge: race: fullscreen SystemUI shade visible after Action Centre start
+I/ShadeBridge: shade still visible at 250 ms; starting Action Centre anyway
+I/ShadeBridge: panel visible 310 ms after detection (wall-clock delta 311 ms)
 ```
 
 Ordinary status-bar windows are ignored (small bounds):
@@ -142,14 +141,15 @@ I/ShadeBridge: skip: previous foreground was Action Centre (last=org.ztmetro.act
 W/ShadeBridge: starting Action Centre failed
 ```
 
-## 5. Expected flicker
+## 5. Expected on-screen timing
 
-The stock shade is visible for as long as it takes to collapse — typically **100–300 ms**,
-up to the 600 ms cap. Unlike the previous revision the panel no longer starts at a fixed
-100 ms: it waits until the full-screen SystemUI window is gone, so the closing shade is
-not drawn on top of it. If the 600 ms cap expires the shade may still cover the panel, and
-the race line above records it. Zero-flicker still needs a SystemUI hook (the LSPosed
-attempt that did not fire).
+The owner measures the stock shade's on-screen time. The shade is BACKed immediately and
+starts closing at once. The service waits for its full-screen window to disappear (poll
+every 50 ms) and starts the panel no later than **250 ms** after detection, so the stock
+shade can only be visible for its own close animation, never the old ~600 ms wait. The
+panel launches with no animation and is simply revealed. The `panel visible` log gives the
+detection → visible wall-clock delta for the frame-by-frame screenrecord comparison.
+Zero-flicker still needs a SystemUI hook (the LSPosed attempt that did not fire).
 
 ## 6. Limitations and risks
 
@@ -161,17 +161,19 @@ attempt that did not fire).
 - **Only window-state events.** No content-changed events, no text: the service reads window
   package/title/bounds only and all packages' foreground package name. Accessibility is still
   a high-trust grant.
-- **At most two BACKs.** The second BACK fires only if a poll at ≥200 ms still sees the
-  full-screen shade, so a shade that disappears between polls is not hit again. Still, a
-  second BACK while SystemUI is finishing the close can reach the focused app; the 600 ms
-  timeout starts the panel anyway rather than looping. The 1500 ms throttle prevents a
-  retry storm.
+- **Exactly one BACK, ever.** There is no recovery BACK, so a panel that has started cannot
+  be dismissed by the bridge. The trade-off: if BACK #1 is swallowed and the shade is still
+  full-screen at 250 ms, the panel starts underneath it (logged as `starting Action Centre
+  anyway`); another swipe will trigger again after the 1500 ms throttle.
+- **Panel may appear behind a closing shade.** The wait is capped at 250 ms; the panel is
+  revealed as the shade closes, and the detection → visible log makes the overlap
+  measurable.
 - **Throttle is a safety valve.** A second shade open within 1500 ms stays stock.
 - **Background activity start.** Accessibility services are bound by the system (documented
   exemption); if a build blocks it, the panel does not appear and
   `W/ShadeBridge: starting Action Centre failed` is logged.
-- **No runtime re-verification yet.** The poll/gone sequence, the 200 ms second BACK and the
-  post-start race line must be confirmed on the device with the commands above.
+- **No runtime re-verification yet.** The 250 ms cap, the single BACK and the
+  instant-open extra must be confirmed on the device with the commands above.
 
 ## 7. Rollback
 

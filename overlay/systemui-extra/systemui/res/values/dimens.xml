@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SystemUI dimensions for the four stock surfaces.
+
+  All three names exist in the SHIPPED SystemUI APK (aapt2 dump resources
+  /tmp/sysui.apk, sha256 67e2f10c…):
+    0x7f070d6d volume_dialog_background_corner_radius       30dp
+    0x7f070d70 volume_dialog_background_square_corner_radius 12dp
+    0x7f07035b global_actions_corner_radius                  28dp
+
+  Source definitions: packages/SystemUI/res/values/dimens.xml:2238
+  (volume_dialog_background_corner_radius 30dp), :2264
+  (volume_dialog_background_square_corner_radius 12dp), :1159
+  (global_actions_corner_radius 28dp).
+
+  The volume-panel stock VERTICAL SLIDER lives in Compose and reads no dimen
+  here (it hard-codes trackCornerSize 12.dp / trackSize 40.dp in
+  volume/dialog/sliders/ui/compose/VolumeDialogSliderTrack.kt:58-60), so
+  these values square only the View-drawn panel shell, ringer drawer and
+  floating capsule; they do not square the Compose slider itself (reported
+  as inert in evidence/volume-power-toast/REPORT.md §4).
+-->
+<resources>
+    <dimen name="volume_dialog_background_corner_radius">0dp</dimen>
+    <dimen name="volume_dialog_background_square_corner_radius">0dp</dimen>
+    <dimen name="global_actions_corner_radius">0dp</dimen>
+</resources>

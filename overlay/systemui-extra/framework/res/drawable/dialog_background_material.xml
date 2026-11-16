@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Material alert-dialog window background: flat black, square.
+
+  Target at lineage-23.2 core/res/res/drawable/dialog_background_material.xml:17-22:
+
+      <inset android:inset="16dp">
+          <shape android:shape="rectangle">
+              <corners android:radius="?attr/dialogCornerRadius" />
+              <solid android:color="?attr/colorBackground" />
+          </shape>
+      </inset>
+
+  Reached by Theme.Material.Dialog.Alert through ThemeOverlay.Material.BaseDialog
+  (core/res/res/values/themes_material.xml:910-925, windowBackground at :912).
+
+  What is ALREADY covered by repo/overlay/framework (not duplicated here):
+    * dialog_corner_radius 2dp -> 0dp  (core/res/res/values/dimens.xml:1162,
+      overridden in overlay/framework/res/values/ztmetro_dimens.xml)
+    * config_dialogCornerRadius 0dp    (same file)
+    * TextAppearance.Material.Title 20sp, which is the parent of
+      TextAppearance.Material.DialogWindowTitle
+      (core/res/res/values/styles_material.xml:410) used by
+      DialogWindowTitle.Material (:1306-1310) — so the 20sp dialog title is
+      already in place and is NOT re-declared.
+
+  What was missing: the solid fill still resolved to ?attr/colorBackground
+  (light surface).  16 dp inset is kept: it is the window shadow/inset space,
+  not a visual corner; removing it would change dialog layout.
+-->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:inset="16dp">
+    <shape android:shape="rectangle">
+        <corners android:radius="0dp" />
+        <solid android:color="#FF000000" />
+    </shape>
+</inset>

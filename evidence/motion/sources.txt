@@ -1,0 +1,120 @@
+# ztmetro motion constants, verbatim from the upstream checkout
+# (quoted for evidence; the repository does not vendor upstream/)
+
+== core/zrnmetrocore.c:46-60
+ * for two or three frames; and the new page's rows arrive the same way.
+ * Going back, both pages turn from the bottom up. The first page arrives
+ * like that when the app starts and leaves like that when it is closed.
+ */
+#define ROW_OUT_MS	128	/* one row turning away (UIXMobile TurnstileForwardOut: 0.128 s) */
+#define ROW_IN_MS	180	/* one row arriving (the Lumia's Settings: ~150) */
+#define ROW_STAGGER_MS	33	/* between one row starting and the next (its Settings: 33) */
+/* An app's first page arrives row by row as on the Lumia's Settings screen.
+ * The row stagger is from that recording; the 3D turn, depth and travel use
+ * the Start tiles' arrival curve in ztmetro.c. A touch ends it at once. */
+#define ENTER_STAGGER_MS	28
+#define ENTER_ROW_MS	190
+#define ENTER_TITLE_MS	200
+#define ENTER_HOLD_MS	60	/* before a touch may cut it short */
+#define GAP_MS		120	/* black between the two pages */
+
+== core/zrnmetrocore.c:64-68
+ * away from it; the new page's rows always arrive from behind the screen and
+ * swing forward into place. */
+#define TURN_OUT_DEG	50.0	/* TurnstileForwardOut ends at 50 degrees about Y */
+#define TURN_IN_DEG	80.0
+#define DEPTH_FOV_DEG	34.0	/* the shell's field of view, for the same depth */
+
+== core/zrnmetrocore.c:1627-1628 (Log(10) ease-out)
+	double t = clamp01((double)(now - zmc.press_start) / PRESS_OUT_MS);
+	t = (1.0 - pow(0.1, t)) / 0.9;	/* Log(10) = (b^t - 1)/(b - 1), b = 1/10 */
+
+== core/zrnmetrocore.c:1393-1396 (rows_duration)
+		last = set->rows[i].order > last ? set->rows[i].order : last;
+	}
+	return set->n ? last * ROW_STAGGER_MS + row_ms : 0;
+}
+
+== core/zrnmetrocore.c:1424-1440 (turnstile out curve)
+	uint32_t out_ms = zmc.anim_from_surface ? rows_duration(&zmc.out_rows, ROW_OUT_MS) : 0;
+	uint32_t in_start = out_ms + (zmc.anim_from_surface && zmc.anim_to_surface ? GAP_MS : 0);
+	if (zmc.anim_from_surface && ms < out_ms) {
+		for (int i = 0; i < zmc.out_rows.n; i++) {
+			double t = clamp01(((double)ms - zmc.out_rows.rows[i].order * ROW_STAGGER_MS) / ROW_OUT_MS);
+			double p = i == out_tapped && t <= 0 ? press_amount() : 0;
+			if (p > 0.001) {
+				double rx, ry, sink = press_geometry(zmc.pressed.w, zmc.pressed.h, &rx, &ry);
+				pressed_strip(cr, zmc.anim_from_surface, zmc.out_rows.rows[i].y0,
+					zmc.out_rows.rows[i].y1, 1.0 - sink * p);
+				continue;
+			}
+			double e = t * t;	/* gathering speed as it goes */
+			/* solid while it turns, gone only at the end (as on the Lumia) */
+			double alpha = e < 0.7 ? 1 : (1 - e) / 0.3;
+			turned_strip(cr, zmc.anim_from_surface, zmc.out_rows.rows[i].y0,
+				zmc.out_rows.rows[i].y1, (zmc.anim_back ? TURN_OUT_DEG : -TURN_OUT_DEG) * e, alpha);
+
+== core/zrnmetrocore.c:1461-1474 (turnstile in curve)
+			} else {
+				t = clamp01(((double)(ms - in_start) -
+					zmc.in_rows.rows[i].order * ROW_STAGGER_MS) / ROW_IN_MS);
+				e = 1 - (1 - t) * (1 - t) * (1 - t);	/* settling as it lands */
+			}
+			if (t <= 0) {
+				continue;	/* not set off yet */
+			}
+			double alpha = e > 0.3 ? 1 : e / 0.3;	/* solid for most of the turn */
+			turned_strip(cr, zmc.anim_to_surface, zmc.in_rows.rows[i].y0,
+				zmc.in_rows.rows[i].y1, TURN_IN_DEG * (1 - e), alpha);
+		}
+	}
+}
+
+== core/zrnmetrocore.h:29-36 (the press)
+ * ZMC_TILT_DEG, though its far end never rises more than ZMC_TILT_LIFT points,
+ * and sinks ZMC_PRESS_SINK of the eye's distance; in over ZMC_TILT_IN_MS, back
+ * over ZMC_TILT_OUT_MS. */
+#define ZMC_TILT_DEG	14.0
+#define ZMC_TILT_LIFT	40.0
+#define ZMC_PRESS_SINK	0.045
+#define ZMC_TILT_IN_MS	90
+#define ZMC_TILT_OUT_MS	200
+
+== ztmetro.c:143-148 (hold thresholds)
+#define SWIPE		56	/* how far a system gesture has to travel */
+#define SLOP		8	/* movement that turns a tap into a drag */
+#define LONG_PRESS_MS	450
+/* A tile or row leans in only once the finger has stayed put this long: shown
+ * at once, the start of every scroll pressed the tile under it first */
+#define PRESS_DELAY_MS	80
+
+== ztmetro.c:227-233 (tile sweep / arrival)
+#define TILE_OUT_SWEEP_L	0.047f	/* swept left, shares of the screen's width: */
+#define TILE_OUT_SWEEP_R	0.098f	/* at its left edge, and at its right */
+#define TILE_TAPPED_WAIT_MS	80.0f	/* the tapped tile on its own before it goes */
+#define TILE_TAPPED_LIFE_MS	55.0f	/* and its own, quicker, exit */
+#define TILE_IN_DEG	69.8f	/* arriving: turned this far away at first */
+#define TILE_IN_DEPTH	0.182f	/* and this share of the eye's distance behind the screen */
+#define TILE_LIFE_MS	186.0f	/* a tile's arrival, start to rest */
+
+== ztmetro.c:4307-4310 (live-tile flip, agent-35's scope)
+	/* the Windows Phone live-tile notify flip: the face turns in and rocks
+	 * back a little (NotificationCycleShow overshoots -180 -> 35 -> -6 -> 0) */
+	animate_spring(server, &t->flip, to_back ? 180.0f : 0.0f, 520, 0.08f);
+	/* the back stays up a while to be read; the front a random while */
+
+== ztmetro.c:6557-6559 (shade open/close travel)
+static void shade_set_open(struct zt_server *server, bool open) {
+	animate(server, &server->shade_h, open ? (float)SHADE_MAX_H : 0.0f, SHADE_MS, 0, false);
+	server->shade_open = open;
+
+== ztmetro.c:11757-11762 (shade drag commit)
+		} else if (p->moved) {
+			/* it goes the way it was last being moved, once it has moved enough */
+			double dy = p->y - p->y0;
+			bool was_open = p->scroll0 > SHADE_MAX_H / 2;
+			shade_set_open(server, was_open ? dy > -40 : dy > 40);
+		}
+
+== ztmetro.c:138 (SHADE_MS)
+#define SHADE_MS	260	/* settling after the finger lets go */

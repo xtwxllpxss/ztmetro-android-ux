@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Floating secondary-stream slider capsule.  Target at lineage-23.2
+  packages/SystemUI/res/drawable/volume_dialog_floating_slider_background.xml:16-21:
+
+      <corners android:radius="20dp"/>
+      <solid android:color="@androidprv:color/materialColorSurface" />
+
+  Live APK confirms 20 dp + materialColorSurface.  Metro: black, square.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="0dp" />
+    <solid android:color="#FF000000" />
+</shape>

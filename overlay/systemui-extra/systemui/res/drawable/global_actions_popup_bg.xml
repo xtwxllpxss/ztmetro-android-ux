@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Power-menu overflow popup background.  Target at lineage-23.2
+  packages/SystemUI/res/drawable/global_actions_popup_bg.xml:17-25:
+
+      <solid android:color="?android:attr/colorBackgroundFloating" />
+      <corners android:*Radius="?android:attr/dialogCornerRadius" />
+
+  The framework RRO already pins dialogCornerRadius to 0 dp, but the fill is
+  still the floating surface colour.  Metro: black, 0 corners (self-contained
+  literals, no theme attr needed).
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="0dp" />
+    <solid android:color="#FF000000" />
+</shape>

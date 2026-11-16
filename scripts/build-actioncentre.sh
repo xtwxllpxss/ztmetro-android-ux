@@ -18,7 +18,7 @@ APP="${APP_DIR:-$ROOT/actioncentre/app/src/main}"
 BUILD="${BUILD_DIR:-$ROOT/actioncentre/build}"
 OUT="$BUILD/out"
 EVID="$BUILD/evidence"
-EVIDENCE="$ROOT/evidence/actioncentre"
+EVIDENCE="${EVIDENCE_DIR:-$ROOT/evidence/actioncentre}"
 APK_NAME="ztmetro-actioncentre.apk"
 APK="$OUT/$APK_NAME"
 REMOTE="${ACTIONCENTRE_REMOTE:-hermes-ubuntu}"
@@ -269,6 +269,28 @@ verify_apk() {
         printf 'FAIL  dexdump lists geometry detector\n' >> "$CHECKS"
         failed=1
     fi
+    if grep -qF "notifyPanelVisible" "$EVID/dexdump-classes.txt"; then
+        printf 'PASS  dexdump lists panel-visible timing hook\n' >> "$CHECKS"
+    else
+        printf 'FAIL  dexdump lists panel-visible timing hook\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -aq "extra_instant" "$BUILD/verify.dex"; then
+        printf 'PASS  instant-launch extra packaged\n' >> "$CHECKS"
+    else
+        printf 'FAIL  instant-launch extra packaged\n' >> "$CHECKS"
+        failed=1
+    fi
+    # Regression guard: exactly one BACK in the whole service. A later BACK can
+    # dismiss our own panel once it has focus.
+    back_calls=$(grep -c "performGlobalAction" \
+        "$APP/java/org/ztmetro/actioncentre/ShadeBridgeService.java" 2>/dev/null || true)
+    if [ "${back_calls:-0}" -eq 1 ]; then
+        printf 'PASS  exactly one BACK call in ShadeBridgeService\n' >> "$CHECKS"
+    else
+        printf 'FAIL  expected exactly one BACK call, found %s\n' "${back_calls:-0}" >> "$CHECKS"
+        failed=1
+    fi
     if grep -aq "androidx" "$BUILD/verify.dex"; then
         printf 'FAIL  AndroidX classes found in dex\n' >> "$CHECKS"
         failed=1
@@ -277,7 +299,7 @@ verify_apk() {
     fi
     local symbol
     for symbol in ActionCentreActivity ActionCentreListener ShadeBridgeService \
-                  QuickTile QuickGrid NotificationRowView StatusStripView; do
+                  QuickTile QuickGrid NotificationRowView StatusStripView Motion; do
         if grep -aq "$symbol" "$BUILD/verify.dex"; then
             printf 'PASS  class %s in dex\n' "$symbol" >> "$CHECKS"
         else
@@ -309,6 +331,16 @@ verify_apk() {
     sha=$(sha256 "$APK")
 
     printf '%s  %s\n' "$sha" "$APK_NAME" > "$EVID/$APK_NAME.sha256"
+    {
+        printf 'shade open         260 ms  ztmetro.c:138 SHADE_MS (animate, ztmetro.c:6558)\n'
+        printf 'shade close        220 ms  res/anim/ac_slide_down.xml (C uses SHADE_MS 260 both ways)\n'
+        printf 'drag commit        40 dp   ztmetro.c:11761 (dy > 40)\n'
+        printf 'drag travel        1:1 with the finger, handle drag\n'
+        printf 'scale              Settings.Global.ANIMATOR_DURATION_SCALE read at every motion start; 0 = instant\n'
+        printf 'window             translucent, no window animation: the content slides itself\n'
+        printf 'easing             (1 - pow(0.1, t)) / 0.9  core/zrnmetrocore.c:1628 (Log(10))\n'
+        printf 'frames at 60 Hz    open 15.6, close 13.2\n'
+    } > "$EVID/motion-facts.txt"
     {
         printf 'apk:        actioncentre/build/out/%s\n' "$APK_NAME"
         printf 'evidence:   evidence/actioncentre/%s\n' "$APK_NAME"

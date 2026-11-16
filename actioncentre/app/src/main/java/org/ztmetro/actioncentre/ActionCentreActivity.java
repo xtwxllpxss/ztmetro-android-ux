@@ -18,7 +18,9 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
@@ -39,6 +41,12 @@ import java.util.Map;
  * CLEAR ALL / ALL SETTINGS links and the notification list.
  */
 public class ActionCentreActivity extends Activity implements NotificationRowView.Host {
+    /**
+     * Set by ShadeBridgeService: the panel is already in place behind the
+     * closing shade, so the 260 ms slide-up must not run under it.
+     */
+    public static final String EXTRA_INSTANT = "extra_instant";
+
     private static final int REQ_CAMERA = 41;
 
     private static final int TILE_WIFI = 0;
@@ -53,6 +61,7 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
     private final QuickTile[] tiles = new QuickTile[8];
     private final Handler handler = new Handler(Looper.getMainLooper());
 
+    private LinearLayout root;
     private QuickGrid grid;
     private ScrollView scroll;
     private LinearLayout notificationList;
@@ -62,6 +71,15 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
     private boolean torchCallbackRegistered;
     private String cameraId;
     private boolean torchOn;
+
+    /** The shade's own travel, in px; 0 = fully open, the view height = gone. */
+    private boolean closing;
+    private float dragStartY;
+    private float dragStartTranslation;
+    private boolean dragging;
+    private int touchSlop;
+    private boolean launchedFromBridge;
+    private boolean panelVisibleReported;
 
     private final NotificationRepository.Listener repoListener =
             new NotificationRepository.Listener() {
@@ -82,16 +100,38 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(buildUi());
+        launchedFromBridge = getIntent() != null
+                && getIntent().getBooleanExtra(EXTRA_INSTANT, false);
+        root = buildUi();
+        setContentView(root);
+        touchSlop = ViewConfiguration.get(this).getScaledTouchSlop();
+        // Our own 260 ms travel replaces the window animation, so it can follow
+        // Settings.Global.ANIMATOR_DURATION_SCALE and the handle drag.
+        suppressWindowAnimation();
         // The decor view does not exist before setContentView; hiding the bars earlier
         // throws NPE on this build (observed on LineageOS 23.2).
         hideSystemBars();
-        applyOpenTransition();
+        if (!launchedFromBridge) {
+            // Offscreen from the first frame: no flash of a fully open panel
+            // before the runnable gets its height.
+            root.setTranslationY(getResources().getDisplayMetrics().heightPixels);
+            root.post(openRunnable);
+        }
         findFlash();
         registerTorchCallback();
         ActionCentreListener.ensureRebind(this);
         rebuildNotifications();
         refreshTiles();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (intent != null) {
+            setIntent(intent);
+            launchedFromBridge = intent.getBooleanExtra(EXTRA_INSTANT, false);
+            panelVisibleReported = false;
+        }
     }
 
     @Override
@@ -136,6 +176,10 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
             hideSystemBars();
+            if (launchedFromBridge && !panelVisibleReported) {
+                panelVisibleReported = true;
+                ShadeBridgeService.notifyPanelVisible();
+            }
         }
     }
 
@@ -164,28 +208,121 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
     }
 
-    private void applyOpenTransition() {
-        if (Build.VERSION.SDK_INT >= 34) {
-            overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN,
-                    R.anim.ac_slide_up, R.anim.ac_stay);
-        } else {
-            overridePendingTransition(R.anim.ac_slide_up, R.anim.ac_stay);
+    /** No window animation: the content slides itself (see {@link #openRunnable}). */
+    private void suppressWindowAnimation() {
+        try {
+            if (Build.VERSION.SDK_INT >= 34) {
+                overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0);
+                overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0);
+            } else {
+                overridePendingTransition(0, 0);
+            }
+        } catch (Throwable ignored) {
         }
     }
+
+    /** 260 ms up ({@code ztmetro.c:138} SHADE_MS), scaled by the animator scale. */
+    private final Runnable openRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (root == null || closing) {
+                return;
+            }
+            int height = panelHeight();
+            int duration = Motion.ms(ActionCentreActivity.this, Motion.SHADE_OPEN_MS);
+            root.animate().cancel();
+            if (duration <= 0) {
+                root.setTranslationY(0f);
+                return;
+            }
+            root.setTranslationY(height);
+            root.animate().translationY(0f)
+                    .setDuration(duration)
+                    .setInterpolator(Motion.WP_LOG)
+                    .start();
+        }
+    };
+
+    private final Runnable finishNowRunnable = new Runnable() {
+        @Override
+        public void run() {
+            finishNow();
+        }
+    };
 
     @Override
     public void finish() {
-        if (Build.VERSION.SDK_INT >= 34) {
-            overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE,
-                    R.anim.ac_stay, R.anim.ac_slide_down);
-            super.finish();
-        } else {
-            super.finish();
-            overridePendingTransition(R.anim.ac_stay, R.anim.ac_slide_down);
+        if (closing) {
+            return;
+        }
+        closing = true;
+        int duration = Motion.ms(this, Motion.SHADE_CLOSE_MS);
+        if (root == null || duration <= 0) {
+            finishNow();
+            return;
+        }
+        root.animate().cancel();
+        root.animate().translationY(panelHeight())
+                .setDuration(duration)
+                .setInterpolator(Motion.WP_LOG)
+                .withEndAction(finishNowRunnable)
+                .start();
+    }
+
+    private void finishNow() {
+        super.finish();
+        try {
+            if (Build.VERSION.SDK_INT >= 34) {
+                overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0);
+            } else {
+                overridePendingTransition(0, 0);
+            }
+        } catch (Throwable ignored) {
         }
     }
 
-    private View buildUi() {
+    private int panelHeight() {
+        int height = root != null ? root.getHeight() : 0;
+        return height > 0 ? height : getResources().getDisplayMetrics().heightPixels;
+    }
+
+    /**
+     * 1:1 with the finger, then a 220 ms close or 260 ms snap back. The C
+     * commits the shade on a 40 pt drag ({@code ztmetro.c:11761}); our panel is
+     * a bottom sheet, so a downward drag is what closes it.
+     */
+    private void snapPanel(float translation) {
+        int height = panelHeight();
+        boolean close = translation > Motion.DRAG_COMMIT_DP
+                * getResources().getDisplayMetrics().density;
+        root.animate().cancel();
+        if (!close) {
+            int duration = Motion.ms(this, Motion.SHADE_OPEN_MS);
+            if (duration <= 0) {
+                root.setTranslationY(0f);
+            } else {
+                root.animate().translationY(0f)
+                        .setDuration(duration)
+                        .setInterpolator(Motion.WP_LOG)
+                        .start();
+            }
+            return;
+        }
+        closing = true;
+        int duration = Motion.ms(this, Motion.SHADE_CLOSE_MS);
+        if (duration <= 0) {
+            root.setTranslationY(height);
+            finishNow();
+            return;
+        }
+        root.animate().translationY(height)
+                .setDuration(duration)
+                .setInterpolator(Motion.WP_LOG)
+                .withEndAction(finishNowRunnable)
+                .start();
+    }
+
+    private LinearLayout buildUi() {
         LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
         column.setBackgroundColor(U.BLACK);
@@ -235,6 +372,51 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
             @Override
             public void onClick(View v) {
                 finish();
+            }
+        });
+        handle.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        dragStartY = event.getRawY();
+                        dragStartTranslation = root.getTranslationY();
+                        dragging = false;
+                        v.setPressed(true);
+                        return true;
+                    case MotionEvent.ACTION_MOVE:
+                        float dy = event.getRawY() - dragStartY;
+                        if (!dragging && Math.abs(dy) > touchSlop) {
+                            dragging = true;
+                        }
+                        if (dragging) {
+                            float target = dragStartTranslation + dy;
+                            if (target < 0f) {
+                                target = 0f;
+                            }
+                            int height = root.getHeight();
+                            if (height > 0 && target > height) {
+                                target = height;
+                            }
+                            root.animate().cancel();
+                            root.setTranslationY(target);
+                        }
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        v.setPressed(false);
+                        if (!dragging) {
+                            v.performClick();
+                        } else {
+                            snapPanel(root.getTranslationY());
+                        }
+                        return true;
+                    case MotionEvent.ACTION_CANCEL:
+                        v.setPressed(false);
+                        snapPanel(root.getTranslationY());
+                        return true;
+                    default:
+                        return false;
+                }
             }
         });
         column.addView(handle, new LinearLayout.LayoutParams(

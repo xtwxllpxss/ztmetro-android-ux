@@ -1,0 +1,4 @@
+Signer #1 certificate DN: CN=ztmetro overlay (throwaway)
+Signer #1 certificate SHA-256 digest: 16e91082631bef535eba7ebe3a62ff3b01f47b95acd1415db151c92addcb8d3e
+Signer #1 certificate SHA-1 digest: efc3661d8294c0c47dabd1a392a7350ec23d8bd8
+Signer #1 certificate MD5 digest: 9d262864bd433272b746998161cb3c96

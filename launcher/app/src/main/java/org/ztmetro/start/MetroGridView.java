@@ -79,14 +79,27 @@ final class MetroGridView extends ViewGroup implements MetroTileView.Listener {
         invalidate();
     }
 
+    /**
+     * Feed each tile its live face. The view diffs the face signature, so a
+     * refresh caused by an unrelated package does not flip this tile, and a
+     * calendar tile keeps its date face without notification access.
+     */
     void refreshLive() {
+        long now = System.currentTimeMillis();
         for (int i = 0; i < tiles.size() && i < getChildCount(); i++) {
             TileStore.Tile tile = tiles.get(i);
+            MetroTileView view = (MetroTileView) getChildAt(i);
             if (tile.appearance || tile.component == null) {
+                view.setLiveFace(null, false);
                 continue;
             }
-            LiveTiles.Entry entry = LiveTiles.get(tile.component.getPackageName());
-            ((MetroTileView) getChildAt(i)).setLiveCount(entry == null ? 0 : entry.count);
+            String pkg = tile.component.getPackageName();
+            if (LiveTiles.isCalendarPackage(pkg)) {
+                view.setLiveFace(LiveTiles.calendarFace(now), true);
+                continue;
+            }
+            LiveTiles.Entry entry = LiveTiles.get(pkg);
+            view.setLiveFace(entry == null ? null : entry.face(), true);
         }
     }
 

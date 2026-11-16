@@ -14,7 +14,7 @@ ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 APP="$ROOT/launcher/app/src/main"
 BUILD="$ROOT/launcher/build"
 OUT="$BUILD/out"
-EVIDENCE="$ROOT/evidence/launcher-v3"
+EVIDENCE="${EVIDENCE_DIR:-$ROOT/evidence/launcher-v3}"
 APK="$OUT/ztmetro-start.apk"
 
 say() { printf '==> %s\n' "$*"; }
@@ -297,6 +297,33 @@ for symbol in metro_tile_gap metro_tile_steel metro_v3_icon_fraction \
         || die "$symbol missing from the compiled resources"
 done
 
+# Motion: the classes and the C-sourced durations must be in the artifact, not
+# just in the sources. Values are the compiled tokens; origins are the C lines
+# quoted in evidence/motion/README.md.
+for symbol in Motion Turnstile; do
+    grep -aq "$symbol" "$BUILD/verify.dex" \
+        || die "$symbol class missing from classes.dex"
+done
+TOKENS_XML="$BUILD/res/values/metro_tokens.xml"
+for expect in \
+    'metro_motion_row_out_ms">128<' \
+    'metro_motion_row_in_ms">180<' \
+    'metro_motion_row_stagger_ms">33<' \
+    'metro_motion_press_delay_ms">80<' \
+    'metro_motion_press_in_ms">90<' \
+    'metro_motion_press_out_ms">200<' \
+    'metro_motion_long_press_ms">450<'; do
+    grep -q "$expect" "$TOKENS_XML" \
+        || die "motion token $expect missing from $TOKENS_XML"
+done
+grep -q 'metro_motion_tilt_deg">14<' "$TOKENS_XML" \
+    || die "motion token tilt_deg 14 missing from $TOKENS_XML"
+for token in metro_motion_row_out_ms metro_motion_row_in_ms metro_motion_row_stagger_ms; do
+    printf '%s
+' "$RESOURCES" | grep -q "$token" \
+        || die "$token missing from the compiled resources"
+done
+
 SIZE_BYTES=$(wc -c < "$APK" | tr -d ' ')
 if [ "$SIZE_BYTES" -ge 3145728 ]; then
     die "APK is larger than 3 MB ($SIZE_BYTES bytes)"
@@ -316,6 +343,21 @@ unzip -lv "$APK" > "$EVIDENCE/apk-contents.txt"
 "$BT/apksigner" verify --min-sdk-version 29 --verbose --print-certs "$APK" \
     > "$EVIDENCE/apksigner-verify.txt" 2>&1 || die "apksigner verify failed"
 cp "$BUILD/res/values/metro_tokens.xml" "$EVIDENCE/metro_tokens.generated.xml"
+{
+    printf 'turnstile out       %s ms  core/zrnmetrocore.c:50 ROW_OUT_MS\n' "128"
+    printf 'turnstile in        %s ms  core/zrnmetrocore.c:51 ROW_IN_MS\n' "180"
+    printf 'turnstile stagger   %s ms  core/zrnmetrocore.c:52 ROW_STAGGER_MS\n' "33"
+    printf 'turnstile turn      out 50 deg, in 80 deg  core/zrnmetrocore.c:66-67\n'
+    printf 'tilt delay          %s ms  ztmetro.c:148 PRESS_DELAY_MS\n' "80"
+    printf 'tilt in             %s ms  core/zrnmetrocore.h:35 ZMC_TILT_IN_MS\n' "90"
+    printf 'tilt out            %s ms  core/zrnmetrocore.h:36 ZMC_TILT_OUT_MS\n' "200"
+    printf 'tilt geometry       %s deg  core/zrnmetrocore.h:32 ZMC_TILT_DEG\n' "14"
+    printf 'long press          %s ms  ztmetro.c:145 LONG_PRESS_MS\n' "450"
+    printf 'press highlight     %s ms before the lean (one 60 Hz frame)\n' "16"
+    printf 'scale               Settings.Global.ANIMATOR_DURATION_SCALE read at every motion start; 0 = instant\n'
+    printf 'frames at 60 Hz     out 7.7, in 10.8, stagger 2.0, tilt in 5.4, tilt out 12.0, press delay 4.8\n'
+    printf 'easing              (1 - pow(0.1, t)) / 0.9  core/zrnmetrocore.c:1628 (Log(10))\n'
+} > "$EVIDENCE/motion-facts.txt"
 DEX_BYTES=$(wc -c < "$BUILD/verify.dex" | tr -d ' ')
 {
     printf 'classes.dex: %s bytes\n' "$DEX_BYTES"

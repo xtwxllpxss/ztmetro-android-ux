@@ -31,6 +31,9 @@ PASS  no BLUETOOTH_CONNECT (dangerous) requested
 PASS  dexdump lists ShadeBridgeService
 PASS  dexdump lists onAccessibilityEvent callback
 PASS  dexdump lists geometry detector
+PASS  dexdump lists panel-visible timing hook
+PASS  instant-launch extra packaged
+PASS  exactly one BACK call in ShadeBridgeService
 PASS  no androidx in classes.dex
 PASS  class ActionCentreActivity in dex
 PASS  class ActionCentreListener in dex
@@ -39,6 +42,7 @@ PASS  class QuickTile in dex
 PASS  class QuickGrid in dex
 PASS  class NotificationRowView in dex
 PASS  class StatusStripView in dex
+PASS  class Motion in dex
 PASS  bundled Open Sans Light asset in APK
 PASS  classes.dex packaged
-PASS  APK smaller than 2 MB (300525 bytes)
+PASS  APK smaller than 2 MB (304621 bytes)

@@ -118,12 +118,11 @@ Package name=org.ztmetro.actioncentre id=7f
         0x010100ba=@anim/ac_stay
         0x010100bb=@anim/ac_slide_down
     resource 0x7f050001 style/Theme.ActionCentre
-      () (style) size=13 parent=0x0103022e
-        0x01010054=@color/ac_black
+      () (style) size=12 parent=0x0103022e
+        0x01010054=@0x0106000d
         0x01010056=true
+        0x01010058=true
         0x01010059=@null
-        0x010100ae=@style/Animation.ActionCentre
-        0x0101020d=true
         0x01010222=true
         0x010102dd=true
         0x01010435=@color/ac_accent

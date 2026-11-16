@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Flat full-screen panel: no elevation, no rounded corners, no ripple. -->
+    <!-- Flat full-screen panel: no elevation, no rounded corners, no ripple.
+         Translucent so Start stays visible behind the 260 ms shade travel; the
+         slide itself is in ActionCentreActivity, not a window animation, so it
+         can follow the animator-duration scale and the handle. -->
     <style name="Theme.ActionCentre" parent="@android:style/Theme.Material.NoActionBar">
-        <item name="android:windowBackground">@color/ac_black</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
         <item name="android:colorAccent">@color/ac_accent</item>
-        <item name="android:windowFullscreen">true</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="android:windowAnimationStyle">@style/Animation.ActionCentre</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@color/ac_black</item>
         <item name="android:windowLightStatusBar">false</item>
@@ -17,7 +19,8 @@
         <item name="android:windowDisablePreview">true</item>
     </style>
 
-    <!-- WP8.1 shade slide: 260 ms up on open, 220 ms down on close. -->
+    <!-- Kept for the aapt2 resource check and as the record of the old window
+         animation. The activity now slides its own content (Motion.SHADE_*). -->
     <style name="Animation.ActionCentre" parent="@android:style/Animation.Activity">
         <item name="android:activityOpenEnterAnimation">@anim/ac_slide_up</item>
         <item name="android:activityOpenExitAnimation">@anim/ac_stay</item>

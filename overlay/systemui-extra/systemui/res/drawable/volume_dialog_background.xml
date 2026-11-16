@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Volume panel background: flat black, square.
+
+  Target definition (packages/SystemUI/res/drawable/volume_dialog_background.xml
+  at lineage-23.2, lines 17-22):
+
+      <shape android:shape="rectangle">
+          <corners android:radius="@dimen/volume_dialog_background_corner_radius"/>
+          <solid android:color="@androidprv:color/materialColorSurface" />
+      </shape>
+
+  Live shipped APK (aapt2 dump xmltree /tmp/sysui.apk): corners = @dimen/…
+  (30 dp) and solid = 0x010602d3 = @androidprv:color/materialColorSurface.
+  The consistent black is token color.chrome.action_centre #000000
+  (ztmetro.c:6501-6502); radius 0 is token metrics.corner_radius_dp 0
+  (ztmetro.c:3657-3697).
+
+  Inline literals only: idmap2 maps this file by (type,name) and the target
+  AssetManager must not need a cross-package reference.  The Compose content
+  inside the panel (slider, labels) is NOT affected by this drawable — see
+  evidence/volume-power-toast/REPORT.md §4.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="0dp" />
+    <solid android:color="#FF000000" />
+</shape>
