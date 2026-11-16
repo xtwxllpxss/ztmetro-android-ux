@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro launch turnstile, leaving side.
+
+  Start (the HOME window the user launched from) slides left and fades over
+  128 ms (core/zrnmetrocore.c:50 ROW_OUT_MS, the C's UIXMobile
+  TurnstileForwardOut 0.128 s). The outgoing curve is e = t^2
+  (core/zrnmetrocore.c:1424-1475): it starts slowly and leaves quickly, with
+  the alpha dropping only over the last part of the move. No overshoot.
+
+  This is the exit side of ActivityOptions.makeCustomAnimation() in
+  StartActivity.launchApp(); returns to home are not this animation, because
+  the reverse transition is owned by WMShell (see docs in
+  evidence/transitions-recents).
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:interpolator/accelerate_cubic">
+    <translate
+        android:fromXDelta="0"
+        android:toXDelta="-100%p"
+        android:duration="128" />
+    <alpha
+        android:fromAlpha="1.0"
+        android:toAlpha="0.0"
+        android:duration="128" />
+</set>

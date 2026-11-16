@@ -1,0 +1,56 @@
+    resource 0x010100bc attr/taskOpenEnterAnimation PUBLIC
+    resource 0x010100bd attr/taskOpenExitAnimation PUBLIC
+    resource 0x010100be attr/taskCloseEnterAnimation PUBLIC
+    resource 0x010100bf attr/taskCloseExitAnimation PUBLIC
+    resource 0x010100c0 attr/taskToFrontEnterAnimation PUBLIC
+    resource 0x010100c1 attr/taskToFrontExitAnimation PUBLIC
+    resource 0x010100c2 attr/taskToBackEnterAnimation PUBLIC
+    resource 0x010100c3 attr/taskToBackExitAnimation PUBLIC
+    resource 0x01010293 attr/wallpaperOpenEnterAnimation PUBLIC
+    resource 0x01010294 attr/wallpaperOpenExitAnimation PUBLIC
+    resource 0x01010295 attr/wallpaperCloseEnterAnimation PUBLIC
+    resource 0x01010296 attr/wallpaperCloseExitAnimation PUBLIC
+        taskOpenEnterAnimation(0x010100bc)=@anim/task_open_enter
+        taskOpenExitAnimation(0x010100bd)=@anim/task_open_exit
+        taskCloseEnterAnimation(0x010100be)=@anim/task_close_enter
+        taskCloseExitAnimation(0x010100bf)=@anim/task_close_exit
+        taskToFrontEnterAnimation(0x010100c0)=@anim/task_open_enter
+        taskToFrontExitAnimation(0x010100c1)=@anim/task_open_exit
+        taskToBackEnterAnimation(0x010100c2)=@anim/task_close_enter
+        taskToBackExitAnimation(0x010100c3)=@anim/task_close_exit
+        wallpaperOpenEnterAnimation(0x01010293)=@anim/wallpaper_open_enter
+        wallpaperOpenExitAnimation(0x01010294)=@anim/wallpaper_open_exit
+        wallpaperCloseEnterAnimation(0x01010295)=@anim/wallpaper_close_enter
+        wallpaperCloseExitAnimation(0x01010296)=@anim/wallpaper_close_exit
+        taskOpenEnterAnimation(0x010100bc)=@anim/resolver_launch_anim
+        taskOpenExitAnimation(0x010100bd)=@anim/resolver_close_anim
+        taskOpenEnterAnimation(0x010100bc)=@anim/rounded_window_enter
+        taskOpenExitAnimation(0x010100bd)=@null
+        taskCloseEnterAnimation(0x010100be)=@null
+        taskCloseExitAnimation(0x010100bf)=@anim/rounded_window_exit
+        taskToFrontEnterAnimation(0x010100c0)=@anim/rounded_window_enter
+        taskToFrontExitAnimation(0x010100c1)=@null
+        taskToBackEnterAnimation(0x010100c2)=@null
+        taskToBackExitAnimation(0x010100c3)=@anim/rounded_window_exit
+        wallpaperOpenEnterAnimation(0x01010293)=@null
+        wallpaperOpenExitAnimation(0x01010294)=@anim/rounded_window_exit
+        wallpaperCloseEnterAnimation(0x01010295)=@anim/rounded_window_enter
+        wallpaperCloseExitAnimation(0x01010296)=@null
+    resource 0x010a00b1 anim/task_close_enter
+      () (file) res/anim/task_close_enter.xml type=XML
+    resource 0x010a00b2 anim/task_close_exit
+      () (file) res/anim/task_close_exit.xml type=XML
+    resource 0x010a00bb anim/task_open_enter
+      () (file) res/anim/task_open_enter.xml type=XML
+    resource 0x010a00bc anim/task_open_enter_cross_profile_apps
+      () (file) res/anim/task_open_enter_cross_profile_apps.xml type=XML
+    resource 0x010a00bd anim/task_open_exit
+      () (file) res/anim/task_open_exit.xml type=XML
+    resource 0x010a00ca anim/wallpaper_close_enter
+      () (file) res/anim/wallpaper_close_enter.xml type=XML
+    resource 0x010a00cb anim/wallpaper_close_exit
+      () (file) res/anim/wallpaper_close_exit.xml type=XML
+    resource 0x010a00d2 anim/wallpaper_open_enter
+      () (file) res/anim/wallpaper_open_enter.xml type=XML
+    resource 0x010a00d3 anim/wallpaper_open_exit
+      () (file) res/anim/wallpaper_open_exit.xml type=XML

@@ -1,0 +1,19 @@
+{
+  "schema": "ztos.conductor.run/1",
+  "run_id": "20261116-144708",
+  "command": "./scripts/ztmetro-conductor.sh --with-factory",
+  "started": "2026-11-16T14:47:08+03:00",
+  "finished": "2026-11-16T14:47:20+03:00",
+  "duration_s": 12,
+  "stages": [
+    {
+      "stage": "build",
+      "status": "failed",
+      "duration_s": 12,
+      "notes": "see build logs"
+    }
+  ],
+  "artifacts": [],
+  "verify_summary": "",
+  "factory": []
+}

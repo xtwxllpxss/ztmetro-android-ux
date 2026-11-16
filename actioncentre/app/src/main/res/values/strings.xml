@@ -43,4 +43,21 @@
     <string name="toast_brightness">Яркость: %1$d%%</string>
     <string name="toast_settings_missing">Системные настройки не найдены</string>
     <string name="toast_camera_denied">Без разрешения камеры фонарик не включить</string>
+
+    <!-- Recents prototype. The title is WP's lower-case "recent"; the body is
+         English because it states an Android API/permission fact verbatim. -->
+    <string name="recents_title">recent</string>
+    <string name="recents_caps">RECENT APPS</string>
+    <string name="recents_status_tasks">%1$d tasks · recents-component task access</string>
+    <string name="recents_status_usage_only">no cross-app task access · usage-access app list only</string>
+    <string name="recents_status_no_access">no cross-app task access · usage access not granted</string>
+    <string name="recents_task_detail">TASK #%1$d\n%2$s</string>
+    <string name="recents_swipe_hint">SWIPE UP TO DISMISS</string>
+    <string name="recents_no_access_title">No task list on stock LineageOS 23.2</string>
+    <string name="recents_no_access_body">This is an ordinary app. ActivityManager.getRunningTasks() may return only this app\'s own tasks and HOME: cross-app recents require REAL_GET_TASKS (signature|privileged), or being the UID of the component named by android:string/config_recentsComponentName. ActivityManager.getRecentTasks() is filtered the same way; AppTask lists only this app; GET_TASKS is deprecated and only helps a privileged system image.</string>
+    <string name="recents_change_title">EXACT SYSTEM-SIDE CHANGE</string>
+    <string name="recents_change_body">1. Install a framework RRO (targetPackage android) that overrides config_recentsComponentName to org.ztmetro.actioncentre/org.ztmetro.actioncentre.RecentsActivity, then reboot: system_server reads the string once in RecentTasks.loadRecentsComponent() during onSystemReadyLocked().\n\n2. Put this APK in /system_ext/priv-app (factory package). PackageManagerService.ensureSystemPackageName() only accepts a factory system package as PACKAGE_RECENTS; the signature|recents permissions REMOVE_TASKS, MANAGE_ACTIVITY_TASKS and START_TASKS_FROM_RECENTS are granted only to that known package. The RRO alone gives read access, not swipe-dismiss.\n\n3. The gesture and 3-button recents still run through WMShell + Launcher3QuickStep, not through this activity. Replacing that UI needs a WMShell overview patch or a QuickStep replacement. config_recentsComponentName is read by system_server/PackageManagerService, not by WMShell or Launcher3.</string>
+    <string name="recents_usage_title">RECENTLY USED APPS · USAGE ACCESS</string>
+    <string name="recents_open_denied">Не удалось открыть задачу</string>
+    <string name="recents_dismiss_denied">Удаление задачи требует REMOVE_TASKS (системное приложение)</string>
 </resources>

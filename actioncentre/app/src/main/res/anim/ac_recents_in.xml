@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ztmetro recents frame entering: 180 ms from the right after the 33 ms
+     row stagger, decelerate, no overshoot. Same turnstile numbers as the
+     launcher's zt_turnstile_in (core/zrnmetrocore.c:51-52). -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:interpolator/decelerate_cubic">
+    <translate
+        android:fromXDelta="100%p"
+        android:toXDelta="0"
+        android:duration="180"
+        android:startOffset="33" />
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0"
+        android:duration="180"
+        android:startOffset="33" />
+</set>

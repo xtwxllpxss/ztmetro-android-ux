@@ -1,0 +1,1078 @@
+====================================================================================================
+Q1 Launcher3 QuickstepTransitionManager: remote transition + closing animation
+FILE: /tmp/qtm.java
+----------------------------------------------------------------------------------------------------
+LINES 226-226
+   226      private static final int CLOSING_TRANSITION_DURATION_MS = 250;
+----------------------------------------------------------------------------------------------------
+LINES 1308-1345
+  1308      public void registerRemoteTransitions() {
+  1309          SystemUiProxy.INSTANCE.get(mLauncher).shareTransactionQueue();
+  1310          if (SEPARATE_RECENTS_ACTIVITY.get()) {
+  1311              return;
+  1312          }
+  1313  
+  1314          mWallpaperOpenTransitionRunner = new WallpaperOpenLauncherAnimationRunner();
+  1315          mLauncherOpenTransition = new RemoteTransition(
+  1316                  new LauncherAnimationRunner(mHandler, mWallpaperOpenTransitionRunner,
+  1317                          false /* startAtFrontOfQueue */).toRemoteTransition(),
+  1318                  mLauncher.getIApplicationThread(), "QuickstepLaunchHome");
+  1319  
+  1320          TransitionFilter homeCheck = new TransitionFilter();
+  1321          // No need to handle the transition that also dismisses keyguard.
+  1322          homeCheck.mNotFlags = TRANSIT_FLAG_KEYGUARD_GOING_AWAY;
+  1323  
+  1324          homeCheck.mRequirements =
+  1325                  new TransitionFilter.Requirement[]{new TransitionFilter.Requirement(),
+  1326                          new TransitionFilter.Requirement(),
+  1327                          new TransitionFilter.Requirement()};
+  1328  
+  1329          homeCheck.mRequirements[0].mActivityType = ACTIVITY_TYPE_HOME;
+  1330          homeCheck.mRequirements[0].mTopActivity = mLauncher.getComponentName();
+  1331          homeCheck.mRequirements[0].mModes = new int[]{TRANSIT_OPEN, TRANSIT_TO_FRONT};
+  1332          if (!com.android.window.flags.Flags.polishCloseWallpaperIncludesOpenChange()) {
+  1333              homeCheck.mRequirements[0].mOrder = CONTAINER_ORDER_TOP;
+  1334          }
+  1335  
+  1336          homeCheck.mRequirements[1].mActivityType = ACTIVITY_TYPE_STANDARD;
+  1337          homeCheck.mRequirements[1].mModes = new int[]{TRANSIT_CLOSE, TRANSIT_TO_BACK};
+  1338  
+  1339          homeCheck.mRequirements[2].mNot = true;
+  1340          homeCheck.mRequirements[2].mCustomAnimation = true;
+  1341          homeCheck.mRequirements[2].mMustBeTask = true;
+  1342          homeCheck.mRequirements[2].mMustBeIndependent = true;
+  1343  
+  1344          SystemUiProxy.INSTANCE.get(mLauncher)
+  1345                  .registerRemoteTransition(mLauncherOpenTransition, homeCheck);
+----------------------------------------------------------------------------------------------------
+LINES 1546-1588
+  1546      protected RectFSpringAnim getClosingWindowAnimators(AnimatorSet animation,
+  1547              RemoteAnimationTarget[] targets, View launcherView, PointF velocityPxPerS,
+  1548              RectF closingWindowStartRectF, float startWindowCornerRadius) {
+  1549          FloatingIconView floatingIconView = null;
+  1550          FloatingWidgetView floatingWidget = null;
+  1551          RectF targetRect = new RectF();
+  1552  
+  1553          RemoteAnimationTarget runningTaskTarget = null;
+  1554          boolean isTransluscent = false;
+  1555          for (RemoteAnimationTarget target : targets) {
+  1556              if (target.mode == MODE_CLOSING) {
+  1557                  runningTaskTarget = target;
+  1558                  isTransluscent = runningTaskTarget.isTranslucent;
+  1559                  break;
+  1560              }
+  1561          }
+  1562  
+  1563          // Get floating view and target rect.
+  1564          boolean isInHotseat = false;
+  1565          if (launcherView instanceof LauncherAppWidgetHostView) {
+  1566              Size windowSize = new Size(mDeviceProfile.getDeviceProperties().getWidthPx(),
+  1567                      mDeviceProfile.getDeviceProperties().getHeightPx());
+  1568              int fallbackBackgroundColor =
+  1569                      FloatingWidgetView.getDefaultBackgroundColor(mLauncher, runningTaskTarget);
+  1570              floatingWidget = FloatingWidgetView.getFloatingWidgetView(mLauncher,
+  1571                      (LauncherAppWidgetHostView) launcherView, targetRect, windowSize,
+  1572                      getWindowCornerRadius(mLauncher), isTransluscent, fallbackBackgroundColor);
+  1573          } else if (launcherView != null && !RemoveAnimationSettingsTracker.INSTANCE.get(
+  1574                  mLauncher).isRemoveAnimationEnabled()) {
+  1575              floatingIconView = getFloatingIconView(mLauncher, launcherView, null,
+  1576                      mLauncher.getTaskbarInteractor() == null
+  1577                              ? null
+  1578                              : mLauncher.getTaskbarInteractor().findMatchingAsyncView(launcherView),
+  1579                      true /* hideOriginal */, targetRect, false /* isOpening */);
+  1580          } else {
+  1581              targetRect.set(getDefaultWindowTargetRect());
+  1582          }
+  1583  
+  1584          boolean useTaskbarHotseatParams = mDeviceProfile.isTaskbarPresent && isInHotseat;
+  1585          RectFSpringAnim anim = new RectFSpringAnim(useTaskbarHotseatParams
+  1586                  ? new TaskbarHotseatSpringConfig(mLauncher, closingWindowStartRectF, targetRect)
+  1587                  : new DefaultSpringConfig(mLauncher, mDeviceProfile, closingWindowStartRectF,
+  1588                          targetRect));
+----------------------------------------------------------------------------------------------------
+LINES 1800-1830
+  1800      public BackAnimState createWallpaperOpenAnimations(
+  1801              RemoteAnimationTarget[] appTargets,
+  1802              RemoteAnimationTarget[] wallpapers,
+  1803              RemoteAnimationTarget[] nonAppTargets,
+  1804              RectF startRect,
+  1805              float startWindowCornerRadius,
+  1806              boolean fromPredictiveBack) {
+  1807          View launcherView = findLauncherView(appTargets);
+  1808          if (launcherView != null
+  1809                  && launcherView.getTag() instanceof ItemInfo info
+  1810                  && info.shouldUseBackgroundAnimation()) {
+  1811              // Try to create a return animation
+  1812              RunnableList onEndCallback = new RunnableList();
+  1813              WindowAnimationState windowState = new WindowAnimationState();
+  1814              windowState.bounds = startRect;
+  1815              windowState.bottomLeftRadius = windowState.bottomRightRadius =
+  1816                      windowState.topLeftRadius = windowState.topRightRadius =
+  1817                              startWindowCornerRadius;
+  1818              ContainerAnimationRunner runner = ContainerAnimationRunner.fromView(
+  1819                      launcherView, false /* forLaunch */, mLauncher, mStartingWindowListener,
+  1820                      onEndCallback, windowState);
+  1821              if (runner != null) {
+  1822                  runner.startAnimation(TRANSIT_CLOSE,
+  1823                          appTargets, wallpapers, nonAppTargets,
+  1824                          new IRemoteAnimationFinishedCallback.Stub() {
+  1825                              @Override
+  1826                              public void onAnimationFinished() {
+  1827                                  onEndCallback.executeAllAndDestroy();
+  1828                              }
+  1829                          });
+  1830                  return new AlreadyStartedBackAnimState(onEndCallback);
+----------------------------------------------------------------------------------------------------
+LINES 1956-1996
+  1956      protected class WallpaperOpenLauncherAnimationRunner implements RemoteAnimationFactory {
+  1957  
+  1958          @Override
+  1959          public void onAnimationStart(int transit,
+  1960                  RemoteAnimationTarget[] appTargets,
+  1961                  RemoteAnimationTarget[] wallpaperTargets,
+  1962                  RemoteAnimationTarget[] nonAppTargets,
+  1963                  LauncherAnimationRunner.AnimationResult result) {
+  1964              if (mLauncher.isDestroyed()) {
+  1965                  AnimatorSet anim = new AnimatorSet();
+  1966                  anim.play(getFallbackClosingWindowAnimators(appTargets));
+  1967                  result.setAnimation(anim, mLauncher.getApplicationContext());
+  1968                  return;
+  1969              }
+  1970  
+  1971              if (mLauncher.hasSomeInvisibleFlag(PENDING_INVISIBLE_BY_WALLPAPER_ANIMATION)) {
+  1972                  mLauncher.addForceInvisibleFlag(INVISIBLE_BY_PENDING_FLAGS);
+  1973                  mLauncher.getStateManager().moveToRestState();
+  1974              }
+  1975  
+  1976              RectF windowTargetBounds =
+  1977                      new RectF(getWindowTargetBounds(appTargets, getRotationChange(appTargets)));
+  1978  
+  1979              final RectF resolveRectF = new RectF(windowTargetBounds);
+  1980              for (RemoteAnimationTarget t : appTargets) {
+  1981                  if (t.mode == MODE_CLOSING) {
+  1982                      transferRectToTargetCoordinate(
+  1983                              t, windowTargetBounds, true, resolveRectF);
+  1984                      break;
+  1985                  }
+  1986              }
+  1987  
+  1988              BackAnimState bankAnimState = createWallpaperOpenAnimations(
+  1989                      appTargets, wallpaperTargets, nonAppTargets, resolveRectF,
+  1990                      QuickStepContract.getWindowCornerRadius(mLauncher),
+  1991                      false /* fromPredictiveBack */);
+  1992  
+  1993              TaskViewUtils.createSplitAuxiliarySurfacesAnimator(nonAppTargets, false, null);
+  1994              mLauncher.clearForceInvisibleFlag(INVISIBLE_ALL);
+  1995              bankAnimState.applyToAnimationResult(result, mLauncher);
+  1996          }
+====================================================================================================
+Q1 Launcher3 QuickstepLauncher registration
+FILE: /tmp/l3/quickstep/src/com/android/launcher3/uioverrides/QuickstepLauncher.java
+----------------------------------------------------------------------------------------------------
+LINES 360-367
+   360          mActionsView.updateDimension(getDeviceProfile(), overviewPanel.getLastComputedTaskSize());
+   361          mActionsView.updateVerticalMargin(DisplayController.getNavigationMode(this));
+   362  
+   363          mAppTransitionManager = buildAppTransitionManager();
+   364          mAppTransitionManager.registerRemoteAnimations();
+   365          mAppTransitionManager.registerRemoteTransitions();
+   366  
+   367          mTISBindHelper = new TISBindHelper(this, this::onTISConnected);
+====================================================================================================
+Q1 WMShell Transitions: handler order, scale, registration, dispatch
+FILE: /tmp/ShellTransitions.java
+----------------------------------------------------------------------------------------------------
+LINES 350-364
+   350          mAnimExecutor = animExecutor;
+   351          mDisplayController = displayController;
+   352          mPlayerImpl = new TransitionPlayerImpl();
+   353          mDefaultTransitionHandler = new DefaultTransitionHandler(context, shellInit,
+   354                  displayController, displayInsetsController, pool, mainExecutor, mainHandler,
+   355                  animExecutor, rootTDAOrganizer, InteractionJankMonitor.getInstance());
+   356          mRemoteTransitionHandler = new RemoteTransitionHandler(mMainExecutor);
+   357          mShellCommandHandler = shellCommandHandler;
+   358          mShellController = shellController;
+   359          // The very last handler (0 in the list) should be the default one.
+   360          mHandlers.add(mDefaultTransitionHandler);
+   361          ProtoLog.v(WM_SHELL_TRANSITIONS, "addHandler: Default");
+   362          // Next lowest priority is remote transitions.
+   363          mHandlers.add(mRemoteTransitionHandler);
+   364          ProtoLog.v(WM_SHELL_TRANSITIONS, "addHandler: Remote");
+----------------------------------------------------------------------------------------------------
+LINES 397-405
+   397  
+   398          mShellCommandHandler.addCommandCallback("transitions", this, this);
+   399          mShellCommandHandler.addDumpCallback(this::dump, this);
+   400      }
+   401  
+   402      private float getTransitionAnimationScaleSetting() {
+   403          return fixScale(Settings.Global.getFloat(mContext.getContentResolver(),
+   404                  Settings.Global.TRANSITION_ANIMATION_SCALE, mContext.getResources().getFloat(
+   405                                  R.dimen.config_appTransitionAnimationDurationScaleDefault)));
+----------------------------------------------------------------------------------------------------
+LINES 462-469
+   462      /**
+   463       * Register a remote transition to be used for all operations except takeovers when `filter`
+   464       * matches an incoming transition.
+   465       */
+   466      public void registerRemote(@NonNull TransitionFilter filter,
+   467              @NonNull RemoteTransition remoteTransition) {
+   468          mRemoteTransitionHandler.addFiltered(filter, remoteTransition);
+   469      }
+----------------------------------------------------------------------------------------------------
+LINES 1056-1085
+  1056       * Gives every handler (in order) a chance to animate until one consumes the transition.
+  1057       * @return the handler which consumed the transition.
+  1058       */
+  1059      public TransitionHandler dispatchTransition(
+  1060              @NonNull IBinder transition,
+  1061              @NonNull TransitionInfo info,
+  1062              @NonNull SurfaceControl.Transaction startT,
+  1063              @NonNull SurfaceControl.Transaction finishT,
+  1064              @NonNull TransitionFinishCallback finishCB,
+  1065              @Nullable TransitionHandler skip
+  1066      ) {
+  1067          for (int i = mHandlers.size() - 1; i >= 0; --i) {
+  1068              if (mHandlers.get(i) == skip) {
+  1069                  ProtoLog.v(WM_SHELL_TRANSITIONS, " skip handler %s",
+  1070                          mHandlers.get(i));
+  1071                  continue;
+  1072              }
+  1073              boolean consumed = mHandlers.get(i).startAnimation(transition, info, startT, finishT,
+  1074                      finishCB);
+  1075              if (consumed) {
+  1076                  ProtoLog.v(WM_SHELL_TRANSITIONS, " animated by %s",
+  1077                          mHandlers.get(i));
+  1078                  mTransitionTracer.logDispatched(info.getDebugId(), mHandlers.get(i));
+  1079                  if (Trace.isTagEnabled(TRACE_TAG_WINDOW_MANAGER)) {
+  1080                      Trace.instant(TRACE_TAG_WINDOW_MANAGER,
+  1081                              mHandlers.get(i).getClass().getSimpleName()
+  1082                                      + "#startAnimation animated "
+  1083                                      + transitTypeToString(info.getType()));
+  1084                  }
+  1085                  return mHandlers.get(i);
+====================================================================================================
+Q1 WMShell RemoteTransitionHandler: filter match and remote call
+FILE: /tmp/RemoteTransitionHandler.java
+----------------------------------------------------------------------------------------------------
+LINES 117-153
+   117      public boolean startAnimation(@NonNull IBinder transition, @NonNull TransitionInfo info,
+   118              @NonNull SurfaceControl.Transaction startTransaction,
+   119              @NonNull SurfaceControl.Transaction finishTransaction,
+   120              @NonNull Transitions.TransitionFinishCallback finishCallback) {
+   121          // Ignore the remote transition if the display changes size or rotation, since Launcher
+   122          // doesn't have the necessary permission to deal with such changes.
+   123          final boolean ignoreTransition = !Transitions.SHELL_TRANSITIONS_ROTATION
+   124                  && (Flags.enableCrossDisplaysAppLaunchTransition()
+   125                          ? TransitionUtil.hasNonOrderOnlyDisplayChange(info) :
+   126                          TransitionUtil.hasDisplayChange(info));
+   127          if (ignoreTransition) {
+   128              // Note that if the remote doesn't have permission ACCESS_SURFACE_FLINGER, some
+   129              // operations of the start transaction may be ignored.
+   130              mRequestedRemotes.remove(transition);
+   131              return false;
+   132          }
+   133          RemoteTransition pendingRemote = mRequestedRemotes.get(transition);
+   134          if (pendingRemote == null) {
+   135              ProtoLog.v(ShellProtoLogGroup.WM_SHELL_TRANSITIONS, "Transition doesn't have "
+   136                      + "explicit remote, search filters for match for %s", info);
+   137              // If no explicit remote, search filters until one matches
+   138              for (int i = mFilters.size() - 1; i >= 0; --i) {
+   139                  ProtoLog.v(ShellProtoLogGroup.WM_SHELL_TRANSITIONS, " Checking filter %s",
+   140                          mFilters.get(i));
+   141                  if (mFilters.get(i).first.matches(info)) {
+   142                      Slog.d(TAG, "Found filter" + mFilters.get(i));
+   143                      pendingRemote = mFilters.get(i).second;
+   144                      // Add to requested list so that it can be found for merge requests.
+   145                      mRequestedRemotes.put(transition, pendingRemote);
+   146                      break;
+   147                  }
+   148              }
+   149          }
+   150          ProtoLog.v(ShellProtoLogGroup.WM_SHELL_TRANSITIONS, " Delegate animation for (#%d) to %s",
+   151                  info.getDebugId(), pendingRemote);
+   152  
+   153          if (pendingRemote == null) return false;
+----------------------------------------------------------------------------------------------------
+LINES 179-195
+   179          try {
+   180              handleDeath(remote.asBinder(), finishCallback);
+   181              remote.getRemoteTransition().startAnimation(transition, remoteInfo, remoteStartT, cb);
+   182              // assume that remote will apply the start transaction.
+   183              startTransaction.clear();
+   184              Transitions.setRunningRemoteTransitionDelegate(transition);
+   185          } catch (RemoteException e) {
+   186              Log.e(Transitions.TAG, "Error running remote transition.", e);
+   187              if (remoteStartT != startTransaction) {
+   188                  remoteStartT.close();
+   189              }
+   190              startTransaction.apply();
+   191              unhandleDeath(remote.asBinder(), finishCallback);
+   192              mRequestedRemotes.remove(transition);
+   193              mMainExecutor.execute(() -> finishCallback.onTransitionFinished(null /* wct */));
+   194          }
+   195          return true;
+====================================================================================================
+Q1/Q5 WMShell DefaultTransitionHandler: fallback, custom, frame scale
+FILE: /tmp/dth2.java
+----------------------------------------------------------------------------------------------------
+LINES 336-358
+   336      public boolean startAnimation(@NonNull IBinder transition, @NonNull TransitionInfo info,
+   337              @NonNull SurfaceControl.Transaction startTransaction,
+   338              @NonNull SurfaceControl.Transaction finishTransaction,
+   339              @NonNull Transitions.TransitionFinishCallback finishCallback) {
+   340          ProtoLog.v(ShellProtoLogGroup.WM_SHELL_TRANSITIONS,
+   341                  "start default transition animation, info = %s", info);
+   342          // If keyguard goes away, we should loadKeyguardExitAnimation. Otherwise this just
+   343          // immediately finishes since there is no animation for screen-wake.
+   344          if (info.getType() == WindowManager.TRANSIT_WAKE && !info.isKeyguardGoingAway()) {
+   345              startTransaction.apply();
+   346              finishCallback.onTransitionFinished(null /* wct */);
+   347              return true;
+   348          }
+   349  
+   350          // Early check if the transition doesn't warrant an animation.
+   351          if (isAnimationsDisabledForAnyDisplay(info) || TransitionUtil.isAllNoAnimation(info)
+   352                  || TransitionUtil.isAllOrderOnly(info)
+   353                  || (info.getFlags() & WindowManager.TRANSIT_FLAG_INVISIBLE) != 0) {
+   354              startTransaction.apply();
+   355              // As a contract, finishTransaction should only be applied in Transitions#onFinish
+   356              finishCallback.onTransitionFinished(null /* wct */);
+   357              return true;
+   358          }
+----------------------------------------------------------------------------------------------------
+LINES 505-510
+   505              // Don't animate anything that isn't independent.
+   506              if (!TransitionInfo.isIndependent(change, info)) continue;
+   507  
+   508              final int type = getTransitionTypeFromInfo(info);
+   509              Animation a = loadAnimation(type, info, change, wallpaperTransit, isDreamTransition);
+   510              if (a != null) {
+----------------------------------------------------------------------------------------------------
+LINES 865-871
+   865          return null;
+   866      }
+   867  
+   868      @Override
+   869      public void setAnimScaleSetting(float scale) {
+   870          mTransitionAnimationScaleSetting = scale;
+   871      }
+----------------------------------------------------------------------------------------------------
+LINES 873-947
+   873      @Nullable
+   874      private Animation loadAnimation(@WindowManager.TransitionType int type,
+   875              @NonNull TransitionInfo info, @NonNull TransitionInfo.Change change,
+   876              int wallpaperTransit, boolean isDreamTransition) {
+   877          Animation a;
+   878  
+   879          final int flags = info.getFlags();
+   880          final int changeMode = change.getMode();
+   881          final int changeFlags = change.getFlags();
+   882          final boolean isOpeningType = TransitionUtil.isOpeningType(type);
+   883          final boolean enter = TransitionUtil.isOpeningType(changeMode);
+   884          final boolean isTask = change.getTaskInfo() != null;
+   885          final TransitionInfo.AnimationOptions options = change.getAnimationOptions();
+   886          final int overrideType = options != null ? options.getType() : ANIM_NONE;
+   887          final int userId = options != null ? options.getUserId() : UserHandle.USER_CURRENT;
+   888          final Rect endBounds = TransitionUtil.isClosingType(changeMode)
+   889                  ? mRotator.getEndBoundsInStartRotation(change)
+   890                  : change.getEndAbsBounds();
+   891  
+   892          if (info.isKeyguardGoingAway()) {
+   893              a = mTransitionAnimation.loadKeyguardExitAnimation(flags,
+   894                      (changeFlags & FLAG_SHOW_WALLPAPER) != 0);
+   895          } else if (type == TRANSIT_KEYGUARD_UNOCCLUDE) {
+   896              a = mTransitionAnimation.loadKeyguardUnoccludeAnimation(userId);
+   897          } else if ((changeFlags & FLAG_IS_VOICE_INTERACTION) != 0) {
+   898              if (isOpeningType) {
+   899                  a = mTransitionAnimation.loadVoiceActivityOpenAnimation(enter, userId);
+   900              } else {
+   901                  a = mTransitionAnimation.loadVoiceActivityExitAnimation(enter, userId);
+   902              }
+   903          } else if (changeMode == TRANSIT_CHANGE) {
+   904              // Apply end state directly by default.
+   905              return null;
+   906          } else if (type == TRANSIT_RELAUNCH) {
+   907              a = mTransitionAnimation.createRelaunchAnimation(endBounds, mInsets, endBounds);
+   908          } else if (overrideType == ANIM_CUSTOM
+   909                  && (!isTask || options.getOverrideTaskTransition())) {
+   910              a = mTransitionAnimation.loadAnimationRes(options.getPackageName(), enter
+   911                      ? options.getEnterResId() : options.getExitResId(), userId);
+   912          } else if (overrideType == ANIM_OPEN_CROSS_PROFILE_APPS && enter) {
+   913              a = mTransitionAnimation.loadCrossProfileAppEnterAnimation(userId);
+   914          } else if (overrideType == ANIM_CLIP_REVEAL) {
+   915              a = mTransitionAnimation.createClipRevealAnimationLocked(type, wallpaperTransit, enter,
+   916                      endBounds, endBounds, options.getTransitionBounds());
+   917          } else if (overrideType == ANIM_SCALE_UP) {
+   918              a = mTransitionAnimation.createScaleUpAnimationLocked(type, wallpaperTransit, enter,
+   919                      endBounds, options.getTransitionBounds());
+   920          } else if (overrideType == ANIM_THUMBNAIL_SCALE_UP
+   921                  || overrideType == ANIM_THUMBNAIL_SCALE_DOWN) {
+   922              final boolean scaleUp = overrideType == ANIM_THUMBNAIL_SCALE_UP;
+   923              a = mTransitionAnimation.createThumbnailEnterExitAnimationLocked(enter, scaleUp,
+   924                      endBounds, type, wallpaperTransit, options.getThumbnail(),
+   925                      options.getTransitionBounds());
+   926          } else if ((changeFlags & FLAG_STARTING_WINDOW_TRANSFER_RECIPIENT) != 0 && isOpeningType) {
+   927              // This received a transferred starting window, so don't animate
+   928              return null;
+   929          } else if (overrideType == ANIM_SCENE_TRANSITION) {
+   930              // If there's a scene-transition, then jump-cut.
+   931              return null;
+   932          } else {
+   933              a = loadAttributeAnimation(
+   934                      type, info, change, wallpaperTransit, mTransitionAnimation, isDreamTransition);
+   935          }
+   936  
+   937          if (a != null) {
+   938              if (!a.isInitialized()) {
+   939                  final Rect animationRange = TransitionUtil.isClosingType(changeMode)
+   940                          ? change.getStartAbsBounds() : change.getEndAbsBounds();
+   941                  a.initialize(animationRange.width(), animationRange.height(),
+   942                          endBounds.width(), endBounds.height());
+   943              }
+   944              a.restrictDuration(MAX_ANIMATION_DURATION);
+   945              a.scaleCurrentDuration(mTransitionAnimationScaleSetting);
+   946          }
+   947          return a;
+====================================================================================================
+Q2/Q4 framework TransitionAnimationHelper: which anim attribute per type
+FILE: /tmp/TransitionAnimationHelper.java
+----------------------------------------------------------------------------------------------------
+LINES 68-80
+    68      public static Animation loadAttributeAnimation(@WindowManager.TransitionType int type,
+    69              @NonNull TransitionInfo info,
+    70              @NonNull TransitionInfo.Change change, int wallpaperTransit,
+    71              @NonNull TransitionAnimation transitionAnimation, boolean isDreamTransition) {
+    72          final int changeMode = change.getMode();
+    73          final int changeFlags = change.getFlags();
+    74          final boolean enter = TransitionUtil.isOpeningType(changeMode);
+    75          final boolean isTask = change.getTaskInfo() != null;
+    76          final boolean isFreeform = isTask && change.getTaskInfo().isFreeform();
+    77          final boolean isCoveredByOpaqueFullscreenChange =
+    78                  isCoveredByOpaqueFullscreenChange(info, change);
+    79          final TransitionInfo.AnimationOptions options = change.getAnimationOptions();
+    80          final int overrideType = options != null ? options.getType() : ANIM_NONE;
+----------------------------------------------------------------------------------------------------
+LINES 127-165
+   127          } else if (type == TRANSIT_OPEN) {
+   128              // We will translucent open animation for translucent activities and tasks. Choose
+   129              // WindowAnimation_activityOpenEnterAnimation and set translucent here, then
+   130              // TransitionAnimation loads appropriate animation later.
+   131              translucent = (changeFlags & FLAG_TRANSLUCENT) != 0;
+   132              if (isTask && translucent && !enter) {
+   133                  // For closing translucent tasks, use the activity close animation
+   134                  animAttr = R.styleable.WindowAnimation_activityCloseExitAnimation;
+   135              } else if (isTask && !translucent) {
+   136                  animAttr = enter
+   137                          ? R.styleable.WindowAnimation_taskOpenEnterAnimation
+   138                          : R.styleable.WindowAnimation_taskOpenExitAnimation;
+   139              } else {
+   140                  animAttr = enter
+   141                          ? R.styleable.WindowAnimation_activityOpenEnterAnimation
+   142                          : R.styleable.WindowAnimation_activityOpenExitAnimation;
+   143              }
+   144          } else if (type == TRANSIT_TO_FRONT) {
+   145              animAttr = enter
+   146                      ? R.styleable.WindowAnimation_taskToFrontEnterAnimation
+   147                      : R.styleable.WindowAnimation_taskToFrontExitAnimation;
+   148          } else if (type == TRANSIT_CLOSE) {
+   149              if ((changeFlags & FLAG_TRANSLUCENT) != 0 && !enter) {
+   150                  translucent = true;
+   151              }
+   152              if (isTask && !translucent) {
+   153                  animAttr = enter
+   154                          ? R.styleable.WindowAnimation_taskCloseEnterAnimation
+   155                          : R.styleable.WindowAnimation_taskCloseExitAnimation;
+   156              } else {
+   157                  animAttr = enter
+   158                          ? R.styleable.WindowAnimation_activityCloseEnterAnimation
+   159                          : R.styleable.WindowAnimation_activityCloseExitAnimation;
+   160              }
+   161          } else if (type == TRANSIT_TO_BACK) {
+   162              animAttr = enter
+   163                      ? R.styleable.WindowAnimation_taskToBackEnterAnimation
+   164                      : R.styleable.WindowAnimation_taskToBackExitAnimation;
+   165          }
+----------------------------------------------------------------------------------------------------
+LINES 181-199
+   181          if (animAttr != 0) {
+   182              if (overrideType == ANIM_FROM_STYLE && !isTask) {
+   183                  final TransitionInfo.AnimationOptions.CustomActivityTransition customTransition =
+   184                          getCustomActivityTransition(animAttr, options);
+   185                  if (customTransition != null) {
+   186                      a = loadCustomActivityTransition(
+   187                              customTransition, options, enter, transitionAnimation);
+   188                  } else {
+   189                      a = transitionAnimation
+   190                              .loadAnimationAttr(options.getPackageName(), options.getAnimations(),
+   191                                      animAttr, translucent);
+   192                  }
+   193              } else if (translucent && !isTask && ((changeFlags & FLAGS_IS_NON_APP_WINDOW) == 0)) {
+   194                  // Un-styled translucent activities technically have undefined animations; however,
+   195                  // as is always the case, some apps now rely on this being no-animation, so skip
+   196                  // loading animations here.
+   197              } else {
+   198                  a = transitionAnimation.loadDefaultAnimationAttr(animAttr, translucent);
+   199              }
+----------------------------------------------------------------------------------------------------
+LINES 209-229
+   209      static TransitionInfo.AnimationOptions.CustomActivityTransition getCustomActivityTransition(
+   210              int animAttr, TransitionInfo.AnimationOptions options) {
+   211          boolean isOpen = false;
+   212          switch (animAttr) {
+   213              case R.styleable.WindowAnimation_activityOpenEnterAnimation:
+   214              case R.styleable.WindowAnimation_activityOpenExitAnimation:
+   215                  isOpen = true;
+   216                  break;
+   217              case R.styleable.WindowAnimation_activityCloseEnterAnimation:
+   218              case R.styleable.WindowAnimation_activityCloseExitAnimation:
+   219                  break;
+   220              default:
+   221                  return null;
+   222          }
+   223  
+   224          return options.getCustomActivityTransition(isOpen);
+   225      }
+   226  
+   227      /**
+   228       * Gets the final transition type from {@link TransitionInfo} for determining the animation.
+   229       */
+====================================================================================================
+Q2 framework styles: Animation.Activity mapping
+FILE: /tmp/styles.xml
+----------------------------------------------------------------------------------------------------
+LINES 94-113
+    94  
+    95      <!-- Standard animations for a full-screen window or activity. -->
+    96      <style name="Animation.Activity">
+    97          <item name="activityOpenEnterAnimation">@anim/activity_open_enter</item>
+    98          <item name="activityOpenExitAnimation">@anim/activity_open_exit</item>
+    99          <item name="activityCloseEnterAnimation">@anim/activity_close_enter</item>
+   100          <item name="activityCloseExitAnimation">@anim/activity_close_exit</item>
+   101          <item name="dreamActivityCloseExitAnimation">@anim/dream_activity_close_exit</item>
+   102          <item name="dreamActivityOpenEnterAnimation">@anim/dream_activity_open_enter</item>
+   103          <item name="dreamActivityOpenExitAnimation">@anim/dream_activity_open_exit</item>
+   104          <item name="taskOpenEnterAnimation">@anim/task_open_enter</item>
+   105          <item name="taskOpenExitAnimation">@anim/task_open_exit</item>
+   106          <item name="launchTaskBehindTargetAnimation">@anim/launch_task_behind_target</item>
+   107          <item name="launchTaskBehindSourceAnimation">@anim/launch_task_behind_source</item>
+   108          <item name="taskCloseEnterAnimation">@anim/task_close_enter</item>
+   109          <item name="taskCloseExitAnimation">@anim/task_close_exit</item>
+   110          <item name="taskToFrontEnterAnimation">@anim/task_open_enter</item>
+   111          <item name="taskToFrontExitAnimation">@anim/task_open_exit</item>
+   112          <item name="taskToBackEnterAnimation">@anim/task_close_enter</item>
+   113          <item name="taskToBackExitAnimation">@anim/task_close_exit</item>
+====================================================================================================
+Q2 framework task_open_enter
+FILE: /tmp/task_open_enter.xml
+----------------------------------------------------------------------------------------------------
+LINES 19-31
+    19  <!-- This should be kept in sync with cross_profile_apps_thumbnail_enter.xml -->
+    20  <set xmlns:android="http://schemas.android.com/apk/res/android"
+    21       android:shareInterpolator="false"
+    22       android:zAdjustment="top"
+    23       android:hasRoundedCorners="true">
+    24  
+    25      <translate
+    26          android:fromXDelta="105%"
+    27          android:toXDelta="0"
+    28          android:fillEnabled="true"
+    29          android:fillBefore="true"
+    30          android:fillAfter="true"
+    31          android:interpolator="@interpolator/fast_out_extra_slow_in"
+====================================================================================================
+Q2 framework task_open_exit
+FILE: /tmp/task_open_exit.xml
+----------------------------------------------------------------------------------------------------
+LINES 19-31
+    19  <set xmlns:android="http://schemas.android.com/apk/res/android"
+    20       android:shareInterpolator="false"
+    21       android:hasRoundedCorners="true">
+    22  
+    23      <translate
+    24          android:fromXDelta="0"
+    25          android:toXDelta="-105%"
+    26          android:fillEnabled="true"
+    27          android:fillBefore="true"
+    28          android:fillAfter="true"
+    29          android:interpolator="@interpolator/fast_out_extra_slow_in"
+    30          android:startOffset="0"
+    31          android:duration="500"/>
+====================================================================================================
+Q2/Q4 framework Transition: activity custom options only on activity change; top activity
+FILE: /tmp/Transition.java
+----------------------------------------------------------------------------------------------------
+LINES 3155-3165
+  3155      static TransitionInfo calculateTransitionInfo(@TransitionType int type, int flags,
+  3156              ArrayList<ChangeInfo> sortedTargets,
+  3157              @NonNull SurfaceControl.Transaction startT) {
+  3158          final TransitionInfo out = new TransitionInfo(type, flags);
+  3159          calculateTransitionRoots(out, sortedTargets, startT);
+  3160          if (out.getRootCount() == 0) {
+  3161              return out;
+  3162          }
+  3163  
+  3164          final AnimationOptions animOptionsForActivityTransition =
+  3165                  calculateAnimationOptionsForActivityTransition(type, sortedTargets);
+----------------------------------------------------------------------------------------------------
+LINES 3286-3302
+  3286              AnimationOptions animOptions = null;
+  3287              if (activityRecord != null && animOptionsForActivityTransition != null) {
+  3288                  animOptions = animOptionsForActivityTransition;
+  3289              } else if (isEmbeddedTaskFragment) {
+  3290                  final TaskFragmentAnimationParams params = taskFragment.getAnimationParams();
+  3291                  if (params.hasOverrideAnimation()) {
+  3292                      // Only set AnimationOptions if there's any animation override.
+  3293                      animOptions = AnimationOptions.makeCustomAnimOptions(
+  3294                              taskFragment.getTask().getBasePackageName(),
+  3295                              params.getOpenAnimationResId(), params.getChangeAnimationResId(),
+  3296                              params.getCloseAnimationResId(), false /* overrideTaskTransition */);
+  3297                      animOptions.setUserId(taskFragment.getTask().mUserId);
+  3298                  }
+  3299              }
+  3300              if (animOptions != null) {
+  3301                  change.setAnimationOptions(animOptions);
+  3302              }
+----------------------------------------------------------------------------------------------------
+LINES 3333-3371
+  3333      private static AnimationOptions calculateAnimationOptionsForActivityTransition(
+  3334              @TransitionType int type, @NonNull ArrayList<ChangeInfo> sortedTargets) {
+  3335          TransitionInfo.AnimationOptions animOptions = null;
+  3336  
+  3337          // Check if the top-most app is an activity (ie. activity->activity). If so, make sure
+  3338          // to honor its custom transition options.
+  3339          WindowContainer<?> topApp = null;
+  3340          for (int i = 0; i < sortedTargets.size(); i++) {
+  3341              if (isWallpaper(sortedTargets.get(i).mContainer)) continue;
+  3342              topApp = sortedTargets.get(i).mContainer;
+  3343              break;
+  3344          }
+  3345          if (topApp instanceof ActivityRecord) {
+  3346              final ActivityRecord topActivity = topApp.asActivityRecord();
+  3347              animOptions = addCustomActivityTransition(topActivity, true/* open */,
+  3348                      null /* animOptions */);
+  3349              animOptions = addCustomActivityTransition(topActivity, false/* open */,
+  3350                      animOptions);
+  3351          }
+  3352          final ActivityRecord animLpActivity =
+  3353                  findAnimLayoutParamsActivityRecord(type, sortedTargets);
+  3354          final WindowState mainWindow = animLpActivity != null
+  3355                  ? animLpActivity.findMainWindow() : null;
+  3356          WindowManager.LayoutParams animLp = mainWindow != null ? mainWindow.mAttrs : null;
+  3357          if (animLp != null && animLp.type != TYPE_APPLICATION_STARTING
+  3358                  && animLp.windowAnimations != 0) {
+  3359              // Don't send animation options if no windowAnimations have been set or if the we
+  3360              // are running an app starting animation, in which case we don't want the app to be
+  3361              // able to change its animation directly.
+  3362              if (animOptions != null) {
+  3363                  animOptions.addOptionsFromLayoutParameters(animLp);
+  3364              } else {
+  3365                  animOptions = TransitionInfo.AnimationOptions
+  3366                          .makeAnimOptionsFromLayoutParameters(animLp);
+  3367                  animOptions.setUserId(animLpActivity.mUserId);
+  3368              }
+  3369          }
+  3370          return animOptions;
+  3371      }
+----------------------------------------------------------------------------------------------------
+LINES 3383-3398
+  3383      @Nullable
+  3384      private static TransitionInfo.AnimationOptions addCustomActivityTransition(
+  3385              @NonNull ActivityRecord activity, boolean open,
+  3386              @Nullable TransitionInfo.AnimationOptions animOptions) {
+  3387          final ActivityRecord.CustomAppTransition customAnim =
+  3388                  activity.getCustomAnimation(open);
+  3389          if (customAnim != null) {
+  3390              if (animOptions == null) {
+  3391                  animOptions = TransitionInfo.AnimationOptions
+  3392                          .makeCommonAnimOptions(activity.packageName);
+  3393                  animOptions.setUserId(activity.mUserId);
+  3394              }
+  3395              animOptions.addCustomActivityTransition(open, customAnim.mEnterAnim,
+  3396                      customAnim.mExitAnim, customAnim.mBackgroundColor);
+  3397          }
+  3398          return animOptions;
+====================================================================================================
+Q4 Activity#overrideActivityTransition: docs + cross-task limitation
+FILE: /tmp/Activity.java
+----------------------------------------------------------------------------------------------------
+LINES 6990-7004
+  6990       * </ul>
+  6991       *
+  6992       * <p><b>Predictive Back Animation:</b></p>
+  6993       * <p>When predictive back is enabled (see {@code enableOnBackInvokedCallback} in the manifest),
+  6994       * the system may control the preview phase of the back animation. The custom transition defined
+  6995       * by {@code enterAnim} and {@code exitAnim} is then applied only after the back gesture is
+  6996       * committed.</p>
+  6997       *
+  6998       * <p><b>Limitations:</b></p>
+  6999       * <ul>
+  7000       * <li>This method, along with {@link #overridePendingTransition(int, int)} and
+  7001       * {@link Window#setWindowAnimations(int)}, is ignored if the activity is started with
+  7002       * {@link ActivityOptions#makeSceneTransitionAnimation(Activity, android.util.Pair[])}.</li>
+  7003       * <li>As of Android 11, this method cannot be used to customize cross-task transitions.</li>
+  7004       * </ul>
+----------------------------------------------------------------------------------------------------
+LINES 7021-7024
+  7021      public void overrideActivityTransition(@OverrideTransition int overrideType,
+  7022              @AnimRes int enterAnim, @AnimRes int exitAnim) {
+  7023          overrideActivityTransition(overrideType, enterAnim, exitAnim, Color.TRANSPARENT);
+  7024      }
+----------------------------------------------------------------------------------------------------
+LINES 7076-7088
+  7076       * @see #overridePendingTransition(int, int)
+  7077       * @see Window#setWindowAnimations(int)
+  7078       * @see ActivityOptions#makeSceneTransitionAnimation(Activity, android.util.Pair[])
+  7079       */
+  7080      public void overrideActivityTransition(@OverrideTransition int overrideType,
+  7081              @AnimRes int enterAnim, @AnimRes int exitAnim, @ColorInt int backgroundColor) {
+  7082          if (overrideType != OVERRIDE_TRANSITION_OPEN && overrideType != OVERRIDE_TRANSITION_CLOSE) {
+  7083              throw new IllegalArgumentException("Override type must be either open or close");
+  7084          }
+  7085  
+  7086          ActivityClient.getInstance().overrideActivityTransition(mToken,
+  7087                  overrideType == OVERRIDE_TRANSITION_OPEN, enterAnim, exitAnim, backgroundColor);
+  7088      }
+====================================================================================================
+Q4 ActivityRecord custom transition storage
+FILE: /tmp/ActivityRecord.java
+----------------------------------------------------------------------------------------------------
+LINES 9560-9574
+  9560      void overrideCustomTransition(boolean open, int enterAnim, int exitAnim, int backgroundColor) {
+  9561          CustomAppTransition transition = getCustomAnimation(open);
+  9562          if (transition == null) {
+  9563              transition = new CustomAppTransition();
+  9564              if (open) {
+  9565                  mCustomOpenTransition = transition;
+  9566              } else {
+  9567                  mCustomCloseTransition = transition;
+  9568              }
+  9569          }
+  9570  
+  9571          transition.mEnterAnim = enterAnim;
+  9572          transition.mExitAnim = exitAnim;
+  9573          transition.mBackgroundColor = backgroundColor;
+  9574      }
+----------------------------------------------------------------------------------------------------
+LINES 9600-9609
+  9600      CustomAppTransition getCustomAnimation(boolean open) {
+  9601          return open ? mCustomOpenTransition : mCustomCloseTransition;
+  9602      }
+  9603  
+  9604      // Override the WindowAnimation_(Open/Close)(Enter/Exit)Animation
+  9605      static class CustomAppTransition {
+  9606          int mEnterAnim;
+  9607          int mExitAnim;
+  9608          int mBackgroundColor;
+  9609      }
+====================================================================================================
+Q4 TransitionInfo AnimationOptions: ANIM_FROM_STYLE vs ANIM_CUSTOM / overrideTaskTransition
+FILE: /tmp/TransitionInfo.java
+----------------------------------------------------------------------------------------------------
+LINES 1181-1218
+  1181          /** Make basic customized animation for a package */
+  1182          @NonNull
+  1183          public static AnimationOptions makeCommonAnimOptions(@NonNull String packageName) {
+  1184              AnimationOptions options = new AnimationOptions(ANIM_FROM_STYLE);
+  1185              options.mPackageName = packageName;
+  1186              return options;
+  1187          }
+  1188  
+  1189          /** Make custom animation from the content of LayoutParams */
+  1190          @NonNull
+  1191          public static AnimationOptions makeAnimOptionsFromLayoutParameters(
+  1192                  @NonNull WindowManager.LayoutParams lp) {
+  1193              AnimationOptions options = new AnimationOptions(ANIM_FROM_STYLE);
+  1194              options.mPackageName = lp.packageName;
+  1195              options.mAnimations = lp.windowAnimations;
+  1196              return options;
+  1197          }
+  1198  
+  1199          /** Add customized window animations */
+  1200          public void addOptionsFromLayoutParameters(@NonNull WindowManager.LayoutParams lp) {
+  1201              mAnimations = lp.windowAnimations;
+  1202          }
+  1203  
+  1204          /** Add customized activity animation attributes */
+  1205          public void addCustomActivityTransition(boolean isOpen,
+  1206                  int enterResId, int exitResId, int backgroundColor) {
+  1207              CustomActivityTransition customTransition = isOpen
+  1208                      ? mCustomActivityOpenTransition : mCustomActivityCloseTransition;
+  1209              if (customTransition == null) {
+  1210                  customTransition = new CustomActivityTransition();
+  1211                  if (isOpen) {
+  1212                      mCustomActivityOpenTransition = customTransition;
+  1213                  } else {
+  1214                      mCustomActivityCloseTransition = customTransition;
+  1215                  }
+  1216              }
+  1217              customTransition.addCustomActivityTransition(enterResId, exitResId, backgroundColor);
+  1218          }
+----------------------------------------------------------------------------------------------------
+LINES 1229-1240
+  1229          @NonNull
+  1230          public static AnimationOptions makeCustomAnimOptions(@NonNull String packageName,
+  1231                  @AnimRes int enterResId, @AnimRes int changeResId, @AnimRes int exitResId,
+  1232                  boolean overrideTaskTransition) {
+  1233              AnimationOptions options = new AnimationOptions(ANIM_CUSTOM);
+  1234              options.mPackageName = packageName;
+  1235              options.mEnterResId = enterResId;
+  1236              options.mChangeResId = changeResId;
+  1237              options.mExitResId = exitResId;
+  1238              options.mOverrideTaskTransition = overrideTaskTransition;
+  1239              return options;
+  1240          }
+----------------------------------------------------------------------------------------------------
+LINES 1313-1315
+  1313          public boolean getOverrideTaskTransition() {
+  1314              return mOverrideTaskTransition;
+  1315          }
+----------------------------------------------------------------------------------------------------
+LINES 1336-1340
+  1336          /** Return customized activity transition if existed. */
+  1337          @Nullable
+  1338          public CustomActivityTransition getCustomActivityTransition(boolean open) {
+  1339              return open ? mCustomActivityOpenTransition : mCustomActivityCloseTransition;
+  1340          }
+====================================================================================================
+Q5 WMS scale settings (window/transition/animator)
+FILE: /tmp/WindowManagerService.java
+----------------------------------------------------------------------------------------------------
+LINES 826-833
+   826          private final Uri mDisplayInversionEnabledUri =
+   827                  Settings.Secure.getUriFor(Settings.Secure.ACCESSIBILITY_DISPLAY_INVERSION_ENABLED);
+   828          private final Uri mWindowAnimationScaleUri =
+   829                  Settings.Global.getUriFor(Settings.Global.WINDOW_ANIMATION_SCALE);
+   830          private final Uri mTransitionAnimationScaleUri =
+   831                  Settings.Global.getUriFor(Settings.Global.TRANSITION_ANIMATION_SCALE);
+   832          private final Uri mAnimationDurationScaleUri =
+   833                  Settings.Global.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE);
+----------------------------------------------------------------------------------------------------
+LINES 1558-1572
+  1558      private float getTransitionAnimationScaleSetting() {
+  1559          return fixScale(Settings.Global.getFloat(mContext.getContentResolver(),
+  1560                  Settings.Global.TRANSITION_ANIMATION_SCALE, mContext.getResources().getFloat(
+  1561                                  R.dimen.config_appTransitionAnimationDurationScaleDefault)));
+  1562      }
+  1563  
+  1564      private float getAnimatorDurationScaleSetting() {
+  1565          return fixScale(Settings.Global.getFloat(mContext.getContentResolver(),
+  1566                  Settings.Global.ANIMATOR_DURATION_SCALE, mAnimatorScale.getCurrentScale()));
+  1567      }
+  1568  
+  1569      private float getWindowAnimationScaleSetting(float defaultValue) {
+  1570          return fixScale(Settings.Global.getFloat(mContext.getContentResolver(),
+  1571                  Settings.Global.WINDOW_ANIMATION_SCALE, defaultValue));
+  1572      }
+----------------------------------------------------------------------------------------------------
+LINES 3855-3873
+  3855      private void setAnimatorDurationScale(float scale) {
+  3856          mAnimatorScale.setCurrentScale(scale);
+  3857          ValueAnimator.setDurationScale(scale);
+  3858      }
+  3859  
+  3860      @Override
+  3861      public float getAnimationScale(@UpdateAnimationScaleMode int which) {
+  3862          synchronized (mGlobalLock) {
+  3863              return getAnimationScaleLocked(which);
+  3864          }
+  3865      }
+  3866  
+  3867      float getAnimationScaleLocked(@UpdateAnimationScaleMode int which) {
+  3868          return switch (which) {
+  3869              case WINDOW_ANIMATION_SCALE -> mWindowAnimationScaleSetting;
+  3870              case TRANSITION_ANIMATION_SCALE -> mTransitionAnimationScaleSetting;
+  3871              case ANIMATION_DURATION_SCALE -> mAnimatorScale.getCurrentScale();
+  3872              default -> 0;
+  3873          };
+----------------------------------------------------------------------------------------------------
+LINES 6217-6233
+  6217                      synchronized (mGlobalLock) {
+  6218                          if (activity.isAttached()) {
+  6219                              activity.getRootTask().notifyActivityDrawnLocked(activity);
+  6220                          }
+  6221                      }
+  6222                      break;
+  6223                  }
+  6224                  case NEW_ANIMATOR_SCALE: {
+  6225                      float scale = getCurrentAnimatorScale();
+  6226                      ValueAnimator.setDurationScale(scale);
+  6227                      Session session = (Session)msg.obj;
+  6228                      if (session != null) {
+  6229                          try {
+  6230                              session.mCallback.onAnimatorScaleChanged(scale);
+  6231                          } catch (RemoteException e) {
+  6232                          }
+  6233                      } else {
+====================================================================================================
+Q5 ValueAnimator duration scale
+FILE: /tmp/ValueAnimator.java
+----------------------------------------------------------------------------------------------------
+LINES 308-340
+   308       */
+   309      @UnsupportedAppUsage
+   310      @TestApi
+   311      @MainThread
+   312      public static void setDurationScale(@FloatRange(from = 0) float durationScale) {
+   313          sDurationScale = durationScale;
+   314          List<WeakReference<DurationScaleChangeListener>> listenerCopy;
+   315  
+   316          synchronized (sDurationScaleChangeListeners) {
+   317              listenerCopy = new ArrayList<>(sDurationScaleChangeListeners);
+   318          }
+   319  
+   320          int listenersSize = listenerCopy.size();
+   321          for (int i = 0; i < listenersSize; i++) {
+   322              final DurationScaleChangeListener listener = listenerCopy.get(i).get();
+   323              if (listener != null) {
+   324                  listener.onChanged(durationScale);
+   325              }
+   326          }
+   327      }
+   328  
+   329      /**
+   330       * Returns the system-wide scaling factor for Animator-based animations.
+   331       *
+   332       * This affects both the start delay and duration of all such animations. Setting to 0 will
+   333       * cause animations to end immediately. The default value is 1.0f.
+   334       *
+   335       * @return the duration scale.
+   336       */
+   337      @FloatRange(from = 0)
+   338      public static float getDurationScale() {
+   339          return sDurationScale;
+   340      }
+----------------------------------------------------------------------------------------------------
+LINES 690-700
+   690       */
+   691      public void overrideDurationScale(float durationScale) {
+   692          mDurationScale = durationScale;
+   693      }
+   694  
+   695      private float resolveDurationScale() {
+   696          return mDurationScale >= 0f ? mDurationScale : sDurationScale;
+   697      }
+   698  
+   699      private long getScaledDuration() {
+   700          return (long)(mDuration * resolveDurationScale());
+====================================================================================================
+Q2 idmap2 overlayable policy (framework-res has no overlayable)
+FILE: /tmp/ResourceMapping.cpp
+----------------------------------------------------------------------------------------------------
+LINES 51-86
+    51  Result<Unit> CheckOverlayable(const TargetResourceContainer& target,
+    52                                const OverlayManifestInfo& overlay_info,
+    53                                const PolicyBitmask& fulfilled_policies,
+    54                                const ResourceId& target_resource) {
+    55    constexpr const PolicyBitmask kDefaultPolicies =
+    56        PolicyFlags::ODM_PARTITION | PolicyFlags::OEM_PARTITION | PolicyFlags::SYSTEM_PARTITION |
+    57        PolicyFlags::VENDOR_PARTITION | PolicyFlags::PRODUCT_PARTITION | PolicyFlags::SIGNATURE |
+    58        PolicyFlags::CONFIG_SIGNATURE;
+    59  
+    60    // If the resource does not have an overlayable definition, allow the resource to be overlaid if
+    61    // the overlay is preinstalled, signed with the same signature as the target or signed with the
+    62    // same signature as reference package defined in SystemConfig under 'overlay-config-signature'
+    63    // tag.
+    64    const Result<bool> defines_overlayable = target.DefinesOverlayable();
+    65    if (!defines_overlayable) {
+    66      return Error(defines_overlayable.GetError(), "unable to retrieve overlayable info");
+    67    }
+    68  
+    69    if (!*defines_overlayable) {
+    70      return (kDefaultPolicies & fulfilled_policies) != 0
+    71                 ? Result<Unit>({})
+    72                 : Error(
+    73                       "overlay must be preinstalled, signed with the same signature as the target,"
+    74                       " or signed with the same signature as the package referenced through"
+    75                       " <overlay-config-signature>.");
+    76    }
+    77  
+    78    const auto overlayable_info = target.GetOverlayableInfo(target_resource);
+    79    if (!overlayable_info) {
+    80      return overlayable_info.GetError();
+    81    }
+    82  
+    83    if (*overlayable_info == nullptr) {
+    84      // Do not allow non-overlayable resources to be overlaid.
+    85      return Error("target resource has no overlayable declaration");
+    86    }
+
+====================================================================================================
+Q6 SurfaceControl leash transform is a 3x3 affine matrix (no perspective / rotationY)
+FILE: /tmp/SurfaceControl.java
+----------------------------------------------------------------------------------------------------
+  3665         * Sets the transform and position of a {@link SurfaceControl} from a 3x3 transformation
+  3666         * matrix.
+  3675         public Transaction setMatrix(SurfaceControl sc, Matrix matrix, float[] float9) {
+  3676             matrix.getValues(float9);
+  3677             setMatrix(sc, float9[MSCALE_X], float9[MSKEW_Y],
+  3678                     float9[MSKEW_X], float9[MSCALE_Y]);
+====================================================================================================
+Q4 Launcher3 SystemUiProxy: the ShellTransitions binder is handed to the recents component
+FILE: /tmp/l3/quickstep/src/com/android/quickstep/SystemUiProxy.kt
+----------------------------------------------------------------------------------------------------
+   300     fun setProxy(
+   307         shellTransitions: IShellTransitions?,
+   323         this.shellTransitions = shellTransitions
+  1011     fun registerRemoteTransition(remoteTransition: RemoteTransition?, filter: TransitionFilter) {
+  1014             shellTransitions?.registerRemote(filter, remoteTransition)
+====================================================================================================
+Q2 DefaultTransitionHandler wallpaper transit type: HOME wallpaper makes the app use wallpaper_open_*
+FILE: /tmp/dth2.java
+----------------------------------------------------------------------------------------------------
+LINES 1031-1059
+  1031      private static int getWallpaperTransitType(TransitionInfo info) {
+  1032          boolean hasWallpaper = false;
+  1033          boolean hasOpenWallpaper = false;
+  1034          boolean hasCloseWallpaper = false;
+  1035  
+  1036          for (int i = info.getChanges().size() - 1; i >= 0; --i) {
+  1037              final TransitionInfo.Change change = info.getChanges().get(i);
+  1038              if ((change.getFlags() & FLAG_SHOW_WALLPAPER) != 0
+  1039                      || (change.getFlags() & FLAG_IS_WALLPAPER) != 0) {
+  1040                  hasWallpaper = true;
+  1041                  if (TransitionUtil.isOpeningType(change.getMode())) {
+  1042                      hasOpenWallpaper = true;
+  1043                  } else if (TransitionUtil.isClosingType(change.getMode())) {
+  1044                      hasCloseWallpaper = true;
+  1045                  }
+  1046              }
+  1047          }
+  1048  
+  1049          if (hasOpenWallpaper && hasCloseWallpaper) {
+  1050              return TransitionUtil.isOpeningType(info.getType())
+  1051                      ? WALLPAPER_TRANSITION_INTRA_OPEN : WALLPAPER_TRANSITION_INTRA_CLOSE;
+  1052          } else if (hasOpenWallpaper) {
+  1053              return WALLPAPER_TRANSITION_OPEN;
+  1054          } else if (hasCloseWallpaper) {
+  1055              return WALLPAPER_TRANSITION_CLOSE;
+  1056          } else if (hasWallpaper) {
+  1057              return WALLPAPER_TRANSITION_CHANGE;
+  1058          } else {
+  1059              return WALLPAPER_TRANSITION_NONE;
+====================================================================================================
+Q2 framework wallpaper_open_enter
+FILE: /tmp/wallpaper_open_enter.xml
+----------------------------------------------------------------------------------------------------
+LINES 19-31
+    19  
+    20  <set xmlns:android="http://schemas.android.com/apk/res/android"
+    21          android:detachWallpaper="true" android:shareInterpolator="false" android:zAdjustment="normal">
+    22      <alpha android:fromAlpha="1.0" android:toAlpha="1.0"
+    23              android:fillEnabled="true" android:fillBefore="true" android:fillAfter="true"
+    24              android:duration="225"/>
+    25  </set>
+====================================================================================================
+Q2 framework wallpaper_open_exit
+FILE: /tmp/wallpaper_open_exit.xml
+----------------------------------------------------------------------------------------------------
+LINES 19-31
+    19  
+    20  <set xmlns:android="http://schemas.android.com/apk/res/android"
+    21          android:shareInterpolator="false" android:zAdjustment="top">
+    22  
+    23      <translate android:fromYDelta="0" android:toYDelta="110%"
+    24              android:fillEnabled="true" android:fillBefore="true" android:fillAfter="true"
+    25              android:interpolator="@interpolator/fast_out_linear_in"
+    26              android:duration="225"/>
+    27  </set>

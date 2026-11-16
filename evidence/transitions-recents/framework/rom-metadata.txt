@@ -1,0 +1,9 @@
+ota-property-files=metadata:69:337,metadata.pb:474:238                 
+ota-required-cache=0
+ota-type=BLOCK
+post-build=Xiaomi/land/land:6.0.1/MMB29M/V10.2.2.0.MALMIXM:user/release-keys
+post-build-incremental=1786540067
+post-sdk-level=36
+post-security-patch-level=2026-08-01
+post-timestamp=1786540067
+pre-device=ugglite,rolex,riva,Mi8917

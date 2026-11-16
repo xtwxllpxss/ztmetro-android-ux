@@ -1,0 +1,43 @@
+LineageOS 23.2 ROM: lineage-23.2-20260812-microG-Mi8917.zip
+
+framework-res.apk sha256:
+6e51f5edf9af388c8adc3c26f185c178368102b1465f066a0530eb189bcbec8f  framework-res.apk
+
+aapt2 dump resources (excerpt):
+65119:    resource 0x010402cb string/config_recentsComponentName
+65120-      () "com.android.launcher3/com.android.quickstep.RecentsActivity"
+65121-    resource 0x010402cc string/config_retailDemoPackage
+
+services.jar sha256:
+bd8284a0ad4db6a8c901609a4212445e79d629c08bfda6c38ecb02e77d5773c5  services.jar
+
+services.jar dexdump method names (excerpt):
+      name          : 'isCallerRecents'
+      name          : 'isCallerRecents'
+      name          : 'isGetTasksAllowed'
+      name          : 'isCallerRecents'
+      name          : 'isGetTasksAllowed'
+      name          : 'isCallerRecents'
+      name          : 'isGetTasksAllowed'
+      name          : 'getRecentsComponent'
+      name          : 'getRecentsComponentFeatureId'
+      name          : 'getRecentsComponentUid'
+      name          : 'isCallerRecents'
+      name          : 'loadRecentsComponent'
+
+Launcher3QuickStep.apk permissions that matter for task access:
+        A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.permission.START_TASKS_FROM_RECENTS" (Raw: "android.permission.START_TASKS_FROM_RECENTS")
+        A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.permission.REMOVE_TASKS" (Raw: "android.permission.REMOVE_TASKS")
+        A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.permission.MANAGE_ACTIVITY_TASKS" (Raw: "android.permission.MANAGE_ACTIVITY_TASKS")
+        A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.permission.READ_FRAME_BUFFER" (Raw: "android.permission.READ_FRAME_BUFFER")
+
+RecentsActivity manifest entry:
+130-            A: http://schemas.android.com/apk/res/android:theme(0x01010000)=@0x7f130181
+131:            A: http://schemas.android.com/apk/res/android:name(0x01010003)="com.android.quickstep.RecentsActivity" (Raw: "com.android.quickstep.RecentsActivity")
+132-            A: http://schemas.android.com/apk/res/android:taskAffinity(0x01010012)=""
+
+config_recentsComponentName string in Launcher3/SystemUI dex (expect none):
+absent Launcher3QuickStep.apk classes.dex
+absent Launcher3QuickStep.apk classes2.dex
+absent SystemUI.apk classes.dex
+absent SystemUI.apk classes2.dex

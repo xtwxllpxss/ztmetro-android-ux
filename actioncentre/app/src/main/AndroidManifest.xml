@@ -21,6 +21,19 @@
          bars. Grant it once with `pm grant org.ztmetro.actioncentre
          android.permission.READ_PHONE_STATE` if real levels are wanted. -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <!-- Recents prototype: normal permission for moveTaskToFront(taskId). It is
+         not enough to remove another app's task (REMOVE_TASKS is
+         signature|recents|role); the activity reports that boundary instead of
+         faking a dismissal. -->
+    <uses-permission android:name="android.permission.REORDER_TASKS" />
+    <!-- Recents prototype fallback: lets the user grant Usage Access so the
+         frame can show a recently-used app list when the task list is not
+         visible. App-op permission, no runtime prompt. -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
+    <!-- Normal permission, no prompt: KeyguardManager.requestDismissKeyguard()
+         is the non-secure unlock path. A secure lock uses the system
+         confirm-credential activity instead. -->
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
@@ -45,6 +58,39 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Transparent helper for the lock overlay's unlock path. No UI, no
+             window animation, excluded from recents. showWhenLocked makes it the
+             top activity while the keyguard is up (our accessibility overlay is
+             above it); it dismisses a non-secure keyguard or launches the system
+             confirm-credential activity, then finishes. -->
+        <activity
+            android:name=".UnlockProxyActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:showWhenLocked="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.ActionCentre.UnlockProxy"
+            android:turnScreenOn="false" />
+
+        <!-- ztmetro recents prototype. Deliberately not a LAUNCHER activity:
+             it is reached explicitly (am start, a future Start gesture) and it
+             must stay out of the task list it is trying to draw. -->
+        <activity
+            android:name=".RecentsActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/recents_title"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Recents">
+            <intent-filter>
+                <action android:name="org.ztmetro.actioncentre.RECENTS" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 

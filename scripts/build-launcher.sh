@@ -3,26 +3,89 @@
 #
 #   repo/scripts/build-launcher.sh
 #
-# No Gradle, no AndroidX, no network. The design tokens are compiled in at
-# build time: design/tokens/gen_android.py reads ztmetro.tokens.json and the
-# merged res/values/metro_tokens.xml is generated for every build. The signing
-# key is throwaway, generated once under launcher/build/keystore (gitignored).
+# On a Mac without an Android SDK the script stages the sources on
+# hermes-ubuntu (~/ztux/transitions/launcher), builds there and copies the APK
+# and the static-verification evidence back. On a Linux host with android-36
+# present it builds locally. Override the remote with LAUNCHER_REMOTE.
 set -euo pipefail
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
-APP="$ROOT/launcher/app/src/main"
-BUILD="$ROOT/launcher/build"
+APP="${APP_DIR:-$ROOT/launcher/app/src/main}"
+BUILD="${BUILD_DIR:-$ROOT/launcher/build}"
 OUT="$BUILD/out"
 EVIDENCE="${EVIDENCE_DIR:-$ROOT/evidence/live-tiles}"
 APK="$OUT/ztmetro-start.apk"
+REMOTE="${LAUNCHER_REMOTE:-hermes-ubuntu}"
+RWORK="${LAUNCHER_REMOTE_DIR:-ztux/transitions/launcher}"
 
 say() { printf '==> %s\n' "$*"; }
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
+has_local_sdk() {
+    local candidate
+    for candidate in "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}" \
+                     "$HOME/android-sdk" "$HOME/Android/Sdk" /opt/android-sdk; do
+        if [ -n "$candidate" ] && [ -f "$candidate/platforms/android-36/android.jar" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+sha256_of() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$1" | awk '{print $1}'
+    else
+        shasum -a 256 "$1" | awk '{print $1}'
+    fi
+}
+
+# Build on hermes-ubuntu when this host has no android-36. Only the tree the
+# launcher build actually reads is staged: app sources/resources, the token
+# compiler, the glyph-sheet tool and this script.
+remote_build() {
+    command -v ssh >/dev/null 2>&1 || die "ssh is required for the remote build"
+    command -v rsync >/dev/null 2>&1 || die "rsync is required for the remote build"
+    command -v scp >/dev/null 2>&1 || die "scp is required for the remote build"
+    say "staging launcher sources on $REMOTE:$RWORK"
+    ssh "$REMOTE" "mkdir -p '$RWORK/launcher' '$RWORK/design' '$RWORK/scripts'"
+    rsync -a --delete --exclude '.DS_Store' \
+        "$ROOT/launcher/app/" "$REMOTE:$RWORK/launcher/app/"
+    rsync -a --delete --exclude '.DS_Store' \
+        "$ROOT/launcher/tools/" "$REMOTE:$RWORK/launcher/tools/"
+    rsync -a --delete --exclude '.DS_Store' \
+        "$ROOT/design/tokens/" "$REMOTE:$RWORK/design/tokens/"
+    scp -q "$SCRIPT_DIR/build-launcher.sh" "$REMOTE:$RWORK/scripts/build-launcher.sh"
+    say "remote build on $REMOTE (SDK ~/android-sdk, JDK ~/android-jdk)"
+    ssh "$REMOTE" "cd '$RWORK' && LAUNCHER_STAGE=1 \
+        APP_DIR=\"\$PWD/launcher/app/src/main\" \
+        BUILD_DIR=\"\$PWD/launcher/build\" \
+        EVIDENCE_DIR=\"\$PWD/evidence/transitions-recents/launcher\" \
+        bash ./scripts/build-launcher.sh"
+    mkdir -p "$OUT" "$EVIDENCE"
+    scp -q "$REMOTE:$RWORK/launcher/build/out/ztmetro-start.apk" "$APK"
+    scp -q "$REMOTE:$RWORK/evidence/transitions-recents/launcher/"* "$EVIDENCE/"
+    local local_sha remote_sha
+    local_sha=$(sha256_of "$APK")
+    remote_sha=$(awk '{print $1}' "$EVIDENCE/ztmetro-start.apk.sha256")
+    [ "$local_sha" = "$remote_sha" ] \
+        || die "sha256 mismatch after scp: local $local_sha remote $remote_sha"
+    say "artifact copied back; sha256 matches remote"
+    printf 'APK:     %s\n' "$APK"
+    printf 'evidence:%s\n' "$EVIDENCE/ztmetro-start.apk"
+    printf 'sha256:  %s\n' "$local_sha"
+}
+
 command -v python3 >/dev/null 2>&1 || die "python3 is required (token generation)"
 command -v zip >/dev/null 2>&1 || die "zip is required"
 command -v unzip >/dev/null 2>&1 || die "unzip is required"
+
+# --- host selection ----------------------------------------------------------
+if [ "${LAUNCHER_STAGE:-0}" != "1" ] && ! has_local_sdk; then
+    remote_build
+    exit 0
+fi
 
 # --- SDK ---------------------------------------------------------------------
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
@@ -350,10 +413,20 @@ RESOURCES=$("$BT/aapt2" dump resources "$APK")
 for symbol in metro_tile_gap metro_tile_steel metro_v3_icon_fraction \
               metro_v3_arrow TextAppearance.Metro.SectionHeader \
               metro_live_flip_ms metro_live_date_fraction \
-              metro_live_count_fraction TextAppearance.Metro.LiveText; do
+              metro_live_count_fraction TextAppearance.Metro.LiveText \
+              zt_turnstile_in zt_turnstile_out Animation.ZtmetroStart; do
     printf '%s\n' "$RESOURCES" | grep -q "$symbol" \
         || die "$symbol missing from the compiled resources"
 done
+
+# Launcher-initiated app launches must carry the ztmetro turnstile; the exit
+# is WMShell-owned. Check the call, the two anim resources and the source path.
+grep -aq "makeCustomAnimation" "$BUILD/verify.dex" \
+    || die "ActivityOptions.makeCustomAnimation is missing from classes.dex"
+grep -q "zt_turnstile_in" "$APP/java/org/ztmetro/start/StartActivity.java" \
+    || die "launchApp does not reference zt_turnstile_in"
+grep -q "zt_turnstile_out" "$APP/java/org/ztmetro/start/StartActivity.java" \
+    || die "launchApp does not reference zt_turnstile_out"
 
 # Motion: the classes and the C-sourced durations must be in the artifact, not
 # just in the sources. Values are the compiled tokens; origins are the C lines
@@ -440,6 +513,15 @@ cp "$BUILD/res/values/metro_tokens.xml" "$EVIDENCE/metro_tokens.generated.xml"
     printf 'frames at 60 Hz     out 7.7, in 10.8, stagger 2.0, tilt in 5.4, tilt out 12.0, press delay 4.8\n'
     printf 'easing              (1 - pow(0.1, t)) / 0.9  core/zrnmetrocore.c:1628 (Log(10))\n'
 } > "$EVIDENCE/motion-facts.txt"
+{
+    printf 'launcher launch     ActivityOptions.makeCustomAnimation(context, in, out)\n'
+    printf 'incoming app window %s ms from +100%%p to 0, alpha 0 -> 1, startOffset %s ms\n' "180" "33"
+    printf 'outgoing Start      %s ms from 0 to -100%%p, alpha 1 -> 0\n' "128"
+    printf 'easing              in decelerate_cubic / out accelerate_cubic; no overshoot\n'
+    printf 'sources             core/zrnmetrocore.c:50 ROW_OUT_MS 128, :51 ROW_IN_MS 180, :52 ROW_STAGGER_MS 33\n'
+    printf 'wired               tile tap, app-list row, both long-press sheet OPEN items, Settings shortcuts\n'
+    printf 'returns to home     WMShell-owned; not changed by this APK (startActivity cannot supply it)\n'
+} > "$EVIDENCE/launch-transition-facts.txt"
 DEX_BYTES=$(wc -c < "$BUILD/verify.dex" | tr -d ' ')
 {
     printf 'classes.dex: %s bytes\n' "$DEX_BYTES"

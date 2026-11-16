@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- THROWAWAY overlay value. The resource id must match the framework's
+     0x010402cb (string/config_recentsComponentName) on this LineageOS 23.2
+     build; aapt2 verifies that at link time against android-36. -->
+<resources>
+    <string name="config_recentsComponentName" translatable="false">org.ztmetro.actioncentre/org.ztmetro.actioncentre.RecentsActivity</string>
+</resources>

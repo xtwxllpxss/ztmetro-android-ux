@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Flat full-screen panel: no elevation, no rounded corners, no ripple.
-         Translucent so Start stays visible behind the 260 ms shade travel; the
-         slide itself is in ActionCentreActivity, not a window animation, so it
-         can follow the animator-duration scale and the handle. -->
+         The panel is a real window animation now: open slides the whole window
+         up over 260 ms, close slides it down over 220 ms (the same WP travel
+         the old in-content animation used). Window animations follow
+         Settings.Global.ANIMATOR_DURATION_SCALE. -->
     <style name="Theme.ActionCentre" parent="@android:style/Theme.Material.NoActionBar">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>
@@ -17,14 +18,51 @@
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
         <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowAnimationStyle">@style/Animation.ActionCentre</item>
     </style>
 
-    <!-- Kept for the aapt2 resource check and as the record of the old window
-         animation. The activity now slides its own content (Motion.SHADE_*). -->
+    <!-- Transparent no-UI helper for the unlock path (UnlockProxyActivity):
+         no background, no dim, no window animation, no recents entry. The
+         system credential activity is a separate window and keeps its own UI. -->
+    <style name="Theme.ActionCentre.UnlockProxy" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowDisablePreview">true</item>
+    </style>
+
+    <!-- ztmetro shade travel as a window animation. Open 260 ms
+         (ztmetro.c:138 SHADE_MS), close 220 ms (the shipped ac_slide_down).
+         The activity still drives the drag itself; this pair is used for
+         launches/returns that are not a finger drag. -->
     <style name="Animation.ActionCentre" parent="@android:style/Animation.Activity">
         <item name="android:activityOpenEnterAnimation">@anim/ac_slide_up</item>
         <item name="android:activityOpenExitAnimation">@anim/ac_stay</item>
         <item name="android:activityCloseEnterAnimation">@anim/ac_stay</item>
         <item name="android:activityCloseExitAnimation">@anim/ac_slide_down</item>
+    </style>
+
+    <!-- ztmetro recents prototype: black frame, window enter/exit is the same
+         horizontal WP motion as the launcher launch turnstile (128/180 ms). -->
+    <style name="Theme.Recents" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/ac_black</item>
+        <item name="android:colorAccent">@color/ac_accent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:statusBarColor">@color/ac_black</item>
+        <item name="android:navigationBarColor">@color/ac_black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:windowAnimationStyle">@style/Animation.Recents</item>
+    </style>
+
+    <style name="Animation.Recents" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/ac_recents_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/ac_recents_out</item>
+        <item name="android:activityCloseEnterAnimation">@anim/ac_recents_in</item>
+        <item name="android:activityCloseExitAnimation">@anim/ac_recents_out</item>
     </style>
 </resources>

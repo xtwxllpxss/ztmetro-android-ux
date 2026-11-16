@@ -1,0 +1,11 @@
+shade open         260 ms  ztmetro.c:138 SHADE_MS (window animation ac_slide_up)
+shade close        220 ms  res/anim/ac_slide_down.xml (window animation)
+drag commit        40 dp   ztmetro.c:11761 (dy > 40)
+drag travel        1:1 with the finger, handle drag (both ways)
+close gesture      swipe up > 60 dp or up-fling >= 1200 dp/s -> 220 ms slide-down
+close arming       top strip, or list at top with nothing to scroll / empty tail
+scale              Settings.Global.ANIMATOR_DURATION_SCALE applies to window animations; 0 = instant
+window             translucent; open/close are window animations (Theme.ActionCentre windowAnimationStyle)
+bridge launch      EXTRA_INSTANT suppresses open/close window animations
+easing             (1 - pow(0.1, t)) / 0.9  core/zrnmetrocore.c:1628 (Log(10)) for drag; XML cubic for windows
+frames at 60 Hz    open 15.6, close 13.2

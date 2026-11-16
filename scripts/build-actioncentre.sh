@@ -229,6 +229,19 @@ verify_apk() {
     check "WRITE_SETTINGS appop permission" "$xmltree" "android.permission.WRITE_SETTINGS"
     check "slide-up animation resource" "$resources" "ac_slide_up"
     check "slide-down animation resource" "$resources" "ac_slide_down"
+    check "recents activity registered" "$xmltree" ".RecentsActivity"
+    check "recents intent action" "$xmltree" "org.ztmetro.actioncentre.RECENTS"
+    check "recents theme in resource table" "$resources" "Theme.Recents"
+    check "recents entry animation resource" "$resources" "ac_recents_in"
+    check "recents exit animation resource" "$resources" "ac_recents_out"
+    check "recents title string" "$resources" "recents_title"
+    check "recents no-access statement" "$resources" "recents_no_access_body"
+    check "recents system-change statement" "$resources" "recents_change_body"
+    check "recents PACKAGE_USAGE_STATS (app-op, optional)" "$xmltree" \
+        "android.permission.PACKAGE_USAGE_STATS"
+    check "recents REORDER_TASKS (normal)" "$xmltree" \
+        "android.permission.REORDER_TASKS"
+    check "action centre window animation style" "$resources" "Animation.ActionCentre"
 
     # The accessibility config is binary XML; aapt2 prints packed flag values.
     # typeWindowStateChanged = 0x20, typeWindowContentChanged = 0x800
@@ -329,10 +342,11 @@ verify_apk() {
     fi
     # Notification tap: the contentIntent must be sent with a NEW_TASK fill-in
     # intent, with an action[0] fallback and a logged result.
-    if grep -qF "new Intent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)" "$ACTIVITY_SRC"; then
-        printf 'PASS  row tap sends contentIntent with FLAG_ACTIVITY_NEW_TASK fill-in\n' >> "$CHECKS"
+    if grep -qF "new Intent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)" "$ACTIVITY_SRC" \
+            && grep -qF "isImmutable()" "$ACTIVITY_SRC"; then
+        printf 'PASS  row tap sends contentIntent with FLAG_ACTIVITY_NEW_TASK fill-in (immutability logged)\n' >> "$CHECKS"
     else
-        printf 'FAIL  NEW_TASK fill-in intent for contentIntent missing\n' >> "$CHECKS"
+        printf 'FAIL  NEW_TASK fill-in intent / immutability log missing\n' >> "$CHECKS"
         failed=1
     fi
     if grep -qF "actionIntent" "$APP/java/org/ztmetro/actioncentre/Notif.java" \
@@ -411,6 +425,72 @@ verify_apk() {
     else
         printf 'PASS  lock overlay performs no global action (never unlocks)\n' >> "$CHECKS"
     fi
+    # ---- lock overlay unlock path ----
+    UNLOCK_SRC="$APP/java/org/ztmetro/actioncentre/UnlockProxyActivity.java"
+    UNLOCK_CTRL="$APP/java/org/ztmetro/actioncentre/LockOverlayController.java"
+    LOCK_VIEW_SRC="$APP/java/org/ztmetro/actioncentre/LockOverlayView.java"
+    for cls in UnlockProxyActivity UnlockTimeline LockClockPanel; do
+        if grep -qF "Lorg/ztmetro/actioncentre/$cls;" "$EVID/dexdump-classes.txt"; then
+            printf 'PASS  dexdump lists %s\n' "$cls" >> "$CHECKS"
+        else
+            printf 'FAIL  dexdump lists %s\n' "$cls" >> "$CHECKS"
+            failed=1
+        fi
+    done
+    check "unlock proxy activity registered" "$xmltree" ".UnlockProxyActivity"
+    check "DISABLE_KEYGUARD permission declared" "$xmltree" \
+        "android.permission.DISABLE_KEYGUARD"
+    if grep -q 'android:name=".UnlockProxyActivity"' "$APP/AndroidManifest.xml" \
+            && grep -q 'android:showWhenLocked="true"' "$APP/AndroidManifest.xml" \
+            && grep -q 'android:excludeFromRecents="true"' "$APP/AndroidManifest.xml" \
+            && grep -q 'android:exported="false"' "$APP/AndroidManifest.xml"; then
+        printf 'PASS  unlock proxy: showWhenLocked, excluded from recents, not exported\n' >> "$CHECKS"
+    else
+        printf 'FAIL  unlock proxy manifest attributes missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "requestDismissKeyguard" "$UNLOCK_SRC"; then
+        printf 'PASS  non-secure unlock calls requestDismissKeyguard\n' >> "$CHECKS"
+    else
+        printf 'FAIL  requestDismissKeyguard missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "createConfirmDeviceCredentialIntent" "$UNLOCK_SRC"; then
+        printf 'PASS  secure unlock opens the system credential screen\n' >> "$CHECKS"
+    else
+        printf 'FAIL  credential intent missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "UnlockTimeline" "$UNLOCK_SRC" \
+            && grep -q "UnlockTimeline" "$UNLOCK_CTRL"; then
+        printf 'PASS  unlock timeline logged from proxy and controller\n' >> "$CHECKS"
+    else
+        printf 'FAIL  unlock timeline logging missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "aboveKeyguard" "$UNLOCK_CTRL" \
+            && grep -q "getLayer" "$UNLOCK_CTRL" \
+            && grep -q "keyguardIndex" "$UNLOCK_CTRL"; then
+        printf 'PASS  foreign windows compared above/below the keyguard (layer/order)\n' >> "$CHECKS"
+    else
+        printf 'FAIL  foreign-window above/below-keyguard guard missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "setAuthPanel" "$LOCK_VIEW_SRC" \
+            && grep -q "LockClockPanel" "$LOCK_VIEW_SRC"; then
+        printf 'PASS  clock area is a separate panel with the PIN-pad hook\n' >> "$CHECKS"
+    else
+        printf 'FAIL  clock panel/PIN-pad hook missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "Theme.ActionCentre.UnlockProxy" \
+            "$APP/res/values/styles.xml"; then
+        printf 'PASS  unlock proxy has a no-animation transparent theme\n' >> "$CHECKS"
+    else
+        printf 'FAIL  unlock proxy theme missing\n' >> "$CHECKS"
+        failed=1
+    fi
+
     # ---- WP status strip (agent-37): its own accessibility service + view ----
     STRIP_SRC="$APP/java/org/ztmetro/actioncentre/StatusStripService.java"
     STRIP_VIEW="$APP/java/org/ztmetro/actioncentre/StatusStripOverlayView.java"
@@ -525,8 +605,9 @@ verify_apk() {
     local symbol
     for symbol in ActionCentreActivity ActionCentreListener ShadeBridgeService \
                   QuickTile QuickGrid NotificationRowView StatusStripView Motion \
-                  LockOverlayController LockOverlayView \
-                  StatusStripService StatusStripOverlayView; do
+                  LockOverlayController LockOverlayView LockClockPanel \
+                  UnlockProxyActivity UnlockTimeline \
+                  StatusStripService StatusStripOverlayView RecentsActivity; do
         if grep -aq "$symbol" "$BUILD/verify.dex"; then
             printf 'PASS  class %s in dex\n' "$symbol" >> "$CHECKS"
         else
@@ -534,6 +615,18 @@ verify_apk() {
             failed=1
         fi
     done
+    if grep -aq "getRunningTasks" "$BUILD/verify.dex"; then
+        printf 'PASS  recents reads ActivityManager.getRunningTasks\n' >> "$CHECKS"
+    else
+        printf 'FAIL  recents task read API missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -aq "removeTask" "$BUILD/verify.dex"; then
+        printf 'PASS  recents attempts the hidden removeTask boundary\n' >> "$CHECKS"
+    else
+        printf 'FAIL  recents dismissal probe missing\n' >> "$CHECKS"
+        failed=1
+    fi
 
     if unzip -l "$APK" | grep -q "assets/fonts/OpenSans-Light.ttf"; then
         printf 'PASS  bundled Open Sans Light asset in APK\n' >> "$CHECKS"
@@ -559,17 +652,28 @@ verify_apk() {
 
     printf '%s  %s\n' "$sha" "$APK_NAME" > "$EVID/$APK_NAME.sha256"
     {
-        printf 'shade open         260 ms  ztmetro.c:138 SHADE_MS (animate, ztmetro.c:6558)\n'
-        printf 'shade close        220 ms  res/anim/ac_slide_down.xml (C uses SHADE_MS 260 both ways)\n'
+        printf 'shade open         260 ms  ztmetro.c:138 SHADE_MS (window animation ac_slide_up)\n'
+        printf 'shade close        220 ms  res/anim/ac_slide_down.xml (window animation)\n'
         printf 'drag commit        40 dp   ztmetro.c:11761 (dy > 40)\n'
         printf 'drag travel        1:1 with the finger, handle drag (both ways)\n'
         printf 'close gesture      swipe up > 60 dp or up-fling >= 1200 dp/s -> 220 ms slide-down\n'
         printf 'close arming       top strip, or list at top with nothing to scroll / empty tail\n'
-        printf 'scale              Settings.Global.ANIMATOR_DURATION_SCALE read at every motion start; 0 = instant\n'
-        printf 'window             translucent, no window animation: the content slides itself\n'
-        printf 'easing             (1 - pow(0.1, t)) / 0.9  core/zrnmetrocore.c:1628 (Log(10))\n'
+        printf 'scale              Settings.Global.ANIMATOR_DURATION_SCALE applies to window animations; 0 = instant\n'
+        printf 'window             translucent; open/close are window animations (Theme.ActionCentre windowAnimationStyle)\n'
+        printf 'bridge launch      EXTRA_INSTANT suppresses open/close window animations\n'
+        printf 'easing             (1 - pow(0.1, t)) / 0.9  core/zrnmetrocore.c:1628 (Log(10)) for drag; XML cubic for windows\n'
         printf 'frames at 60 Hz    open 15.6, close 13.2\n'
     } > "$EVID/motion-facts.txt"
+    {
+        printf 'activity           org.ztmetro.actioncentre/.RecentsActivity (exported, action org.ztmetro.actioncentre.RECENTS)\n'
+        printf 'title              "recent" 58 sp Open Sans Light, WP lower-case page title\n'
+        printf 'layout             black frame, caps RECENT APPS, horizontal flat cards 248x320 dp, icon + label + TASK #id\n'
+        printf 'task source        ActivityManager.getRunningTasks(30); cross-app only when caller UID is config_recentsComponentName\n'
+        printf 'ordinary app       own tasks + HOME only (AOSP 16 ATMS.isGetTasksAllowed / RecentTasks)\n'
+        printf 'dismiss            swipe up; attempts hidden ActivityManager.removeTask(); needs REMOVE_TASKS (signature|recents|role)\n'
+        printf 'fallback           WP frame + exact system-side change + optional Usage Access app list (PACKAGE_USAGE_STATS app-op)\n'
+        printf 'wm shell           config_recentsComponentName is read by system_server RecentTasks/PMS, not by WMShell or Launcher3\n'
+    } > "$EVID/recents-facts.txt"
     {
         printf 'apk:        actioncentre/build/out/%s\n' "$APK_NAME"
         printf 'evidence:   %s/%s\n' "${EVIDENCE#$ROOT/}" "$APK_NAME"
@@ -581,7 +685,8 @@ verify_apk() {
         printf 'build:      plain javac + aapt2 + d8 + apksigner (no Gradle, no AndroidX)\n'
         printf 'bridge:     ShadeBridgeService (res/xml/shade_bridge.xml), BIND_ACCESSIBILITY_SERVICE; strip path starts the panel instantly, shade fallback = panel first + one BACK after 120 ms\n'
         printf 'strip:      StatusStripService (res/xml/status_strip_service.xml), TYPE_ACCESSIBILITY_OVERLAY 28 dp, NOT_TOUCHABLE; READ_PHONE_STATE optional for live signal\n'
-        printf 'lock:       LockOverlayController: TYPE_ACCESSIBILITY_OVERLAY, NOT_FOCUSABLE|NOT_TOUCHABLE|LAYOUT_IN_SCREEN, bottom strip reveals the stock keyguard\n'
+        printf 'lock:       LockOverlayController: TYPE_ACCESSIBILITY_OVERLAY, NOT_FOCUSABLE|NOT_TOUCHABLE|LAYOUT_IN_SCREEN, bottom strip starts the unlock proxy\n'
+        printf 'unlock:     UnlockProxyActivity: requestDismissKeyguard (non-secure) or ConfirmDeviceCredential (secure); overlay stays until USER_PRESENT/credential on top\n'
         printf 'fonts:      Open Sans Light/Regular/SemiBold from repo/fonts (OFL, bundled)\n'
         printf 'built on:   %s\n' "$(uname -srm)"
         printf 'jdk:        %s\n' "$("$JDK/bin/java" -version 2>&1 | head -n 1)"
@@ -636,6 +741,7 @@ collect_local() {
        "$EVID/dexdump-classes.txt" "$EVID/apksigner-verify.txt" \
        "$EVID/artifact-facts.txt" "$EVID/verify.txt" \
        "$EVID/status-strip-facts.txt" "$EVID/status-strip-verify.txt" \
+       "$EVID/recents-facts.txt" \
        "$EVID/$APK_NAME.sha256" "$EVIDENCE/"
     collect_status_strip
 }

@@ -1,0 +1,182 @@
+AOSP android16-release source excerpts (fetched 2026-11-16)
+Base: https://github.com/aosp-mirror/platform_frameworks_base/tree/android16-release
+
+=== services/core/java/com/android/server/wm/RecentTasks.java:405-451 — the resource is read here ===
+                : -1;
+    }
+
+    /**
+     * Loads the static recents component.  This is called after the system is ready, but before
+     * any dependent services (like SystemUI) is started.
+     */
+    void loadRecentsComponent(Resources res) {
+        final String rawRecentsComponent = res.getString(
+                com.android.internal.R.string.config_recentsComponentName);
+        if (TextUtils.isEmpty(rawRecentsComponent)) {
+            return;
+        }
+
+        final ComponentName cn = ComponentName.unflattenFromString(rawRecentsComponent);
+        if (cn != null) {
+            try {
+                final ApplicationInfo appInfo = AppGlobals.getPackageManager().getApplicationInfo(
+                        cn.getPackageName(),
+                        PackageManager.MATCH_UNINSTALLED_PACKAGES
+                                | PackageManager.MATCH_DISABLED_COMPONENTS,
+                        mService.mContext.getUserId());
+                if (appInfo != null) {
+                    mRecentsUid = appInfo.uid;
+                    mRecentsComponent = cn;
+                }
+            } catch (RemoteException e) {
+                Slog.w(TAG, "Could not load application info for recents component: " + cn);
+            }
+        }
+    }
+
+    /**
+     * @return whether the current caller has the same uid as the recents component.
+     */
+    boolean isCallerRecents(int callingUid) {
+        return UserHandle.isSameApp(callingUid, mRecentsUid);
+    }
+
+    /**
+     * @return whether the given component is the recents component and shares the same uid as the
+     * recents component.
+     */
+    boolean isRecentsComponent(ComponentName cn, int uid) {
+        return cn.equals(mRecentsComponent) && UserHandle.isSameApp(uid, mRecentsUid);
+    }
+
+
+=== services/core/java/com/android/server/wm/RecentTasks.java:440-442 — UID bypass ===
+    boolean isCallerRecents(int callingUid) {
+        return UserHandle.isSameApp(callingUid, mRecentsUid);
+    }
+
+=== services/core/java/com/android/server/wm/ActivityTaskManagerService.java:3430-3463 — who may see all tasks ===
+    boolean isCallerRecents(int callingUid) {
+        return mRecentTasks.isCallerRecents(callingUid);
+    }
+
+    boolean isGetTasksAllowed(String caller, int callingPid, int callingUid) {
+        if (isCallerRecents(callingUid)) {
+            // Always allow the recents component to get tasks
+            return true;
+        }
+
+        boolean allowed = checkPermission(android.Manifest.permission.REAL_GET_TASKS,
+                callingPid, callingUid) == PackageManager.PERMISSION_GRANTED;
+        if (!allowed) {
+            if (checkPermission(android.Manifest.permission.GET_TASKS,
+                    callingPid, callingUid) == PackageManager.PERMISSION_GRANTED) {
+                // Temporary compatibility: some existing apps on the system image may
+                // still be requesting the old permission and not switched to the new
+                // one; if so, we'll still allow them full access.  This means we need
+                // to see if they are holding the old permission and are a system app.
+                try {
+                    if (AppGlobals.getPackageManager().isUidPrivileged(callingUid)) {
+                        allowed = true;
+                        ProtoLog.w(WM_DEBUG_TASKS,
+                                "%s: caller %d is using old GET_TASKS but privileged; allowing",
+                                caller, callingUid);
+                    }
+                } catch (RemoteException e) {
+                }
+            }
+            ProtoLog.w(WM_DEBUG_TASKS,
+                    "%s: caller %d does not hold REAL_GET_TASKS; limiting output", caller,
+                    callingUid);
+        }
+        return allowed;
+
+=== services/core/java/com/android/server/pm/PackageManagerService.java:2347-2348 — PMS reads the same string ===
+            mRecentsPackage = ensureSystemPackageName(computer,
+                    getPackageFromComponentString(R.string.config_recentsComponentName));
+
+=== .../PackageManagerService.java:3790-3815 — only a factory system package becomes PACKAGE_RECENTS ===
+    @Nullable
+    String ensureSystemPackageName(@NonNull Computer snapshot,
+            @Nullable String packageName) {
+        if (packageName == null) {
+            return null;
+        }
+        final long token = Binder.clearCallingIdentity();
+        try {
+            if (snapshot.getPackageInfo(packageName, MATCH_FACTORY_ONLY,
+                    UserHandle.USER_SYSTEM) == null) {
+                PackageInfo packageInfo =
+                        snapshot.getPackageInfo(packageName, 0, UserHandle.USER_SYSTEM);
+                if (packageInfo != null) {
+                    EventLog.writeEvent(0x534e4554, "145981139", packageInfo.applicationInfo.uid,
+                            "");
+                }
+                Log.w(TAG, "Missing required system package: " + packageName + (packageInfo != null
+                        ? ", but found with extended search." : "."));
+                return null;
+            }
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+        return packageName;
+    }
+
+
+=== services/core/java/com/android/server/pm/permission/PermissionManagerServiceImpl.java:3522-3528 — recents-flagged perms go only to PACKAGE_RECENTS ===
+        if (!allowed && bp.isRecents()
+                && ArrayUtils.contains(mPackageManagerInt.getKnownPackageNames(
+                        KnownPackages.PACKAGE_RECENTS, UserHandle.USER_SYSTEM),
+                pkg.getPackageName())) {
+            // Special permission for the recents app.
+            allowed = true;
+        }
+
+=== core/res/AndroidManifest.xml — protection levels of the task permissions ===
+3364:    <permission android:name="android.permission.REAL_GET_TASKS"
+3365-        android:protectionLevel="signature|privileged" />
+3366-
+--
+3369:    <permission android:name="android.permission.START_TASKS_FROM_RECENTS"
+3370-        android:protectionLevel="signature|privileged|recents" />
+3371-
+--
+4318:    <permission android:name="android.permission.REMOVE_TASKS"
+4319-        android:protectionLevel="signature|recents|role" />
+4320-
+--
+4327:    <permission android:name="android.permission.MANAGE_ACTIVITY_TASKS"
+4328-        android:protectionLevel="signature|recents" />
+4329-
+
+=== services/core/java/com/android/server/wm/RecentsAnimation.java:58-74 — target type depends on client intent ===
+    RecentsAnimation(ActivityTaskManagerService atm, ActivityTaskSupervisor taskSupervisor,
+            ActivityStartController activityStartController,
+            Intent targetIntent, ComponentName recentsComponent, @Nullable String recentsFeatureId,
+            int recentsUid) {
+        mTaskSupervisor = taskSupervisor;
+        mDefaultTaskDisplayArea = atm.mRootWindowContainer.getDefaultTaskDisplayArea();
+        mActivityStartController = activityStartController;
+        mTargetIntent = targetIntent;
+        mRecentsComponent = recentsComponent;
+        mRecentsFeatureId = recentsFeatureId;
+        mRecentsUid = recentsUid;
+        mUserId = atm.getCurrentUserId();
+        mTargetActivityType = targetIntent.getComponent() != null
+                && recentsComponent.equals(targetIntent.getComponent())
+                        ? ACTIVITY_TYPE_RECENTS
+                        : ACTIVITY_TYPE_HOME;
+    }
+
+=== libs/WindowManager/Shell/src/com/android/wm/shell/transition/DefaultTransitionHandler.java:1024-1032 — ANIM_CUSTOM supported ===
+     * Returns {@code true} if the default transition handler can run the override animation.
+     * @see #loadAnimation(TransitionInfo, TransitionInfo.Change, int, boolean)
+     */
+    public static boolean isSupportedOverrideAnimation(
+            @NonNull TransitionInfo.AnimationOptions options) {
+        final int animType = options.getType();
+        return animType == ANIM_CUSTOM || animType == ANIM_SCALE_UP
+                || animType == ANIM_THUMBNAIL_SCALE_UP || animType == ANIM_THUMBNAIL_SCALE_DOWN
+                || animType == ANIM_CLIP_REVEAL || animType == ANIM_OPEN_CROSS_PROFILE_APPS
+
+Source base: https://github.com/aosp-mirror/platform_frameworks_base/tree/android16-release

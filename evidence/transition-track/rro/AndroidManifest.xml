@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Experimental runtime resource overlay for the LineageOS 23.2 / Android 16
+  framework task transition animations.
+
+  Purpose: test whether an overlay installed as a preinstalled (Magisk) static
+  RRO can replace the animation that com.android.wm.shell.transition.
+  DefaultTransitionHandler loads for an app -> HOME (task TO_FRONT/OPEN)
+  transition.  It is NOT a product overlay; it is built and inspected only.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztmetro.overlay.transitions">
+
+    <application android:hasCode="false" />
+
+    <overlay
+        android:targetPackage="android"
+        android:isStatic="true"
+        android:priority="1" />
+</manifest>

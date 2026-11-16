@@ -12,6 +12,8 @@ PASS  dexdump lists LockOverlayController
 PASS  dexdump lists LockOverlayView
 PASS  lock overlay uses TYPE_ACCESSIBILITY_OVERLAY
 PASS  lock overlay performs no global action (never unlocks)
+PASS  dexdump lists LockClockPanel
+PASS  clock area is a separate panel with the PIN-pad hook
 PASS  dexdump lists StatusStripService
 PASS  dexdump lists StatusStripOverlayView
 PASS  status strip uses TYPE_ACCESSIBILITY_OVERLAY
@@ -31,5 +33,6 @@ PASS  status strip is white-only (no green/red)
 PASS  class StatusStripView in dex
 PASS  class LockOverlayController in dex
 PASS  class LockOverlayView in dex
+PASS  class LockClockPanel in dex
 PASS  class StatusStripService in dex
 PASS  class StatusStripOverlayView in dex

@@ -1,0 +1,18 @@
+        taskOpenEnterAnimation(0x010100bc)=@anim/task_open_enter
+        taskOpenExitAnimation(0x010100bd)=@anim/task_open_exit
+        taskCloseEnterAnimation(0x010100be)=@anim/task_close_enter
+        taskCloseExitAnimation(0x010100bf)=@anim/task_close_exit
+        taskToFrontEnterAnimation(0x010100c0)=@anim/task_open_enter
+        taskToFrontExitAnimation(0x010100c1)=@anim/task_open_exit
+        taskToBackEnterAnimation(0x010100c2)=@anim/task_close_enter
+        taskToBackExitAnimation(0x010100c3)=@anim/task_close_exit
+    resource 0x010a00b1 anim/task_close_enter
+      () (file) res/anim/task_close_enter.xml type=XML
+    resource 0x010a00b2 anim/task_close_exit
+      () (file) res/anim/task_close_exit.xml type=XML
+    resource 0x010a00bb anim/task_open_enter
+      () (file) res/anim/task_open_enter.xml type=XML
+    resource 0x010a00bc anim/task_open_enter_cross_profile_apps
+      () (file) res/anim/task_open_enter_cross_profile_apps.xml type=XML
+    resource 0x010a00bd anim/task_open_exit
+      () (file) res/anim/task_open_exit.xml type=XML

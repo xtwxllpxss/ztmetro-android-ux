@@ -1,0 +1,89 @@
+[14:53:22] ztMetro conductor 20261116-145322  (dry-run=1, factory=1)
+[14:53:22] repo:   /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo
+[14:53:22] snapshot: d0087e33763aafb941a153ef98a2a86e8843441a (hermes-ubuntu:~/ztux/conductor/snapshots/d0087e33763a)
+[14:53:22] state:    hermes-ubuntu:~/ztux/conductor/state (stable keystores)
+[14:53:22] stage:  hermes-ubuntu:~/android-root/conductor
+[14:53:22] logs:   /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-145322
+[14:53:22] 
+[14:53:22] ================ stage: build ================
+[14:53:22] DRY snapshot: commit d0087e33763aafb941a153ef98a2a86e8843441a (git archive, working tree dirty paths excluded)
+[14:53:22] DRY git -C /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo archive --format=tar d0087e33763aafb941a153ef98a2a86e8843441a | ssh hermes-ubuntu 'rm -rf ~/ztux/conductor/snapshots/d0087e33763a && mkdir -p ~/ztux/conductor/snapshots/d0087e33763a && tar -x -C ~/ztux/conductor/snapshots/d0087e33763a'
+[14:53:22] DRY ssh hermes-ubuntu 'mkdir -p ~/ztux/conductor/state/{launcher,actioncentre,ime,header}-keystore ~/ztux/conductor/state/header-deps'
+[14:53:22] DRY ssh hermes-ubuntu 'ln -sfn ~/ztux/conductor/state/<component>-keystore ~/ztux/conductor/snapshots/d0087e33763a/<component>/build/keystore'   # x4
+[14:53:22] DRY ssh hermes-ubuntu 'ln -sfn ~/ztux/conductor/state/header-deps ~/ztux/conductor/snapshots/d0087e33763a/settings/header-module/build/deps'
+[14:53:22] DRY ssh hermes-ubuntu 'cd ~/ztux/conductor/snapshots/d0087e33763a && export ANDROID_HOME=$HOME/android-sdk ANDROID_SDK_ROOT=$HOME/android-sdk JAVA_HOME=$HOME/android-jdk; export PATH=$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH; bash scripts/build-overlay-module.sh'
+[14:53:22] DRY ssh hermes-ubuntu 'cd ~/ztux/conductor/snapshots/d0087e33763a && export ANDROID_HOME=$HOME/android-sdk ANDROID_SDK_ROOT=$HOME/android-sdk JAVA_HOME=$HOME/android-jdk; export PATH=$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH; bash scripts/build-launcher.sh'
+[14:53:22] DRY ssh hermes-ubuntu 'cd ~/ztux/conductor/snapshots/d0087e33763a && export ANDROID_HOME=$HOME/android-sdk ANDROID_SDK_ROOT=$HOME/android-sdk JAVA_HOME=$HOME/android-jdk; export PATH=$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH; bash scripts/build-actioncentre.sh'
+[14:53:22] DRY ssh hermes-ubuntu 'cd ~/ztux/conductor/snapshots/d0087e33763a && export ANDROID_HOME=$HOME/android-sdk ANDROID_SDK_ROOT=$HOME/android-sdk JAVA_HOME=$HOME/android-jdk; export PATH=$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH; bash scripts/build-ime.sh'
+[14:53:22] DRY ssh hermes-ubuntu 'cd ~/ztux/conductor/snapshots/d0087e33763a && export ANDROID_HOME=$HOME/android-sdk ANDROID_SDK_ROOT=$HOME/android-sdk JAVA_HOME=$HOME/android-jdk; export PATH=$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH; bash scripts/build-header-module.sh'
+[14:53:22] DRY ssh hermes-ubuntu 'sha256sum + stat -c%s each artifact'
+[14:53:22] ---------------- build: ok (0s)  ----------------
+[14:53:22] 
+[14:53:22] ================ stage: publish ================
+[14:53:22] DRY ssh hermes-ubuntu 'mkdir -p ~/android-root/conductor'
+[14:53:22] DRY ssh hermes-ubuntu 'cp ~/ztux/conductor/snapshots/d0087e33763a/<artifact> ~/android-root/conductor/<basename>'   # x5 (scp within hermes)
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb push ~/android-root/conductor/ztmetro-overlays-1.0.0.zip /sdcard/ztmetro-overlays-1.0.0.zip
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell su -c 'magisk --install-module /sdcard/ztmetro-overlays-1.0.0.zip'
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell su -c 'echo <sha256> > /data/adb/modules/ztmetro-overlays/.conductor-sha256'
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell pm path <pkg>  # compare sha256 + apksigner certs, then install -r / uninstall+install
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell cmd package set-home-activity org.ztmetro.start/.StartActivity
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb push <manifest> /data/local/tmp/ztmetro-manifest.json
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb reboot && $HOME/android-sdk/platform-tools/adb wait-for-device && poll sys.boot_completed (module changed)
+[14:53:22] ---------------- publish: ok (0s)  ----------------
+[14:53:22] 
+[14:53:22] ================ stage: apply ================
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell ls /data/adb/modules/ztmetro-overlays/system/product/overlay/*.apk
+[14:53:22] DRY for each module APK: $HOME/android-sdk/platform-tools/adb pull <apk> /tmp/... && aapt2 dump badging  # package list
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell su -c 'cmd overlay enable --user 0 org.ztmetro.overlay.framework'   # if not already [x]
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell su -c 'cmd overlay enable --user 0 org.ztos.overlay.framework.extra'   # if not already [x]
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell su -c 'cmd overlay enable --user 0 org.ztos.overlay.systemui'   # if not already [x]
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell su -c 'cmd overlay enable --user 0 org.ztos.overlay.settings'   # if not already [x]
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell su -c 'cmd overlay enable --user 0 org.ztos.overlay.status.framework'   # if not already [x]
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell su -c 'cmd overlay enable --user 0 org.ztos.overlay.status.systemui'   # if not already [x]
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell su -c 'cmd overlay enable --user 0 org.ztos.overlay.statusbaricons'   # if not already [x]
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell su -c 'cmd overlay enable --user 0 org.ztos.overlay.systemui.extra'   # if not already [x]
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell su -c 'cmd overlay enable --user 0 org.ztos.overlay.factory.org_lineageos_etar'   # if not already [x]
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell su -c 'cmd overlay set-priority org.ztmetro.overlay.framework highest'
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell settings put secure enabled_accessibility_services '<union of both services>'
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell settings put secure accessibility_enabled 1
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell cmd notification allow_listener <listener>   # x2
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell settings put secure icon_blacklist 'clock,battery,wifi,mobile,stacked_mobile,rotate,headset'
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell appops set org.ztmetro.actioncentre WRITE_SETTINGS allow
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell appops set org.ztmetro.actioncentre ACCESS_RESTRICTED_SETTINGS allow
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell pm grant org.ztmetro.actioncentre android.permission.CAMERA
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell pm grant org.ztmetro.actioncentre android.permission.READ_PHONE_STATE
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell su -c 'killall com.android.systemui'   # only if an overlay changed
+[14:53:22] ---------------- apply: ok (0s)  ----------------
+[14:53:22] 
+[14:53:22] ================ stage: verify ================
+[14:53:22] DRY python3 scripts/ux-verify.py --quick --out /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-145322/verify --timestamp run
+[14:53:22] DRY parse 'TOTAL  PASS n  FAIL n  SKIP n / n checks'
+[14:53:22] ---------------- verify: ok (0s) PASS/FAIL summary in verify.log ----------------
+[14:53:22] 
+[14:53:22] ================ stage: factory ================
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell pm path com.android.deskclock && $HOME/android-sdk/platform-tools/adb pull <apk> ~/ztux/conductor/factory/apk/com.android.deskclock.apk
+[14:53:22] DRY ssh hermes-ubuntu 'cd ~/ztux/conductor/snapshots/d0087e33763a && bash scripts/theme-factory.sh analyse --apk ... --out .../com.android.deskclock/profile.json'
+[14:53:22] DRY contrast gate: skip com.android.deskclock if safety.checks has an unresolved <4.5:1 entry
+[14:53:22] DRY ssh hermes-ubuntu 'bash scripts/theme-factory.sh generate --profile ... --out ... --force-package'
+[14:53:22] DRY build ztmetro-factory Magisk module, push+install, reboot, cmd overlay enable <overlay>
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell pm path com.android.contacts && $HOME/android-sdk/platform-tools/adb pull <apk> ~/ztux/conductor/factory/apk/com.android.contacts.apk
+[14:53:22] DRY ssh hermes-ubuntu 'cd ~/ztux/conductor/snapshots/d0087e33763a && bash scripts/theme-factory.sh analyse --apk ... --out .../com.android.contacts/profile.json'
+[14:53:22] DRY contrast gate: skip com.android.contacts if safety.checks has an unresolved <4.5:1 entry
+[14:53:22] DRY ssh hermes-ubuntu 'bash scripts/theme-factory.sh generate --profile ... --out ... --force-package'
+[14:53:22] DRY build ztmetro-factory Magisk module, push+install, reboot, cmd overlay enable <overlay>
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell pm path com.android.dialer && $HOME/android-sdk/platform-tools/adb pull <apk> ~/ztux/conductor/factory/apk/com.android.dialer.apk
+[14:53:22] DRY ssh hermes-ubuntu 'cd ~/ztux/conductor/snapshots/d0087e33763a && bash scripts/theme-factory.sh analyse --apk ... --out .../com.android.dialer/profile.json'
+[14:53:22] DRY contrast gate: skip com.android.dialer if safety.checks has an unresolved <4.5:1 entry
+[14:53:22] DRY ssh hermes-ubuntu 'bash scripts/theme-factory.sh generate --profile ... --out ... --force-package'
+[14:53:22] DRY build ztmetro-factory Magisk module, push+install, reboot, cmd overlay enable <overlay>
+[14:53:22] DRY $HOME/android-sdk/platform-tools/adb shell pm path org.lineageos.aperture && $HOME/android-sdk/platform-tools/adb pull <apk> ~/ztux/conductor/factory/apk/org.lineageos.aperture.apk
+[14:53:22] DRY ssh hermes-ubuntu 'cd ~/ztux/conductor/snapshots/d0087e33763a && bash scripts/theme-factory.sh analyse --apk ... --out .../org.lineageos.aperture/profile.json'
+[14:53:22] DRY contrast gate: skip org.lineageos.aperture if safety.checks has an unresolved <4.5:1 entry
+[14:53:22] DRY ssh hermes-ubuntu 'bash scripts/theme-factory.sh generate --profile ... --out ... --force-package'
+[14:53:22] DRY build ztmetro-factory Magisk module, push+install, reboot, cmd overlay enable <overlay>
+[14:53:22] ---------------- factory: ok (0s)  ----------------
+[14:53:22] 
+[14:53:22] ================ stage: report ================
+[14:53:22] DRY write /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-145322/report.md and /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-145322/run.json from stages.tsv/artifacts.tsv/verify-summary.txt
+[14:53:22] ---------------- report: ok (0s)  ----------------
+[14:53:22] done: total 0s, exit=0

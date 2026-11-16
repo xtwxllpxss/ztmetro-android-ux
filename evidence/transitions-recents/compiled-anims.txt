@@ -1,0 +1,71 @@
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+NOTE: aapt2 dump prints the negative `toXDelta="-100%p"` fraction as
+`16777215.000000%p` (0xFFFFFF, the 24-bit two's-complement -1.0 fraction).
+The runtime value is -100 %p; the same dump artifact appears in both APKs.
+
+== ztmetro-start.apk (launcher)
+-- res/anim/zt_turnstile_in.xml
+N: android=http://schemas.android.com/apk/res/android (line=18)
+  E: set (line=18)
+    A: http://schemas.android.com/apk/res/android:interpolator(0x01010141)=@0x010c0003
+      E: translate (line=20)
+        A: http://schemas.android.com/apk/res/android:duration(0x01010198)=180
+        A: http://schemas.android.com/apk/res/android:startOffset(0x010101be)=33
+        A: http://schemas.android.com/apk/res/android:fromXDelta(0x010101c6)=1.000000%p
+        A: http://schemas.android.com/apk/res/android:toXDelta(0x010101c7)=0.000000e+00
+      E: alpha (line=25)
+        A: http://schemas.android.com/apk/res/android:duration(0x01010198)=180
+        A: http://schemas.android.com/apk/res/android:startOffset(0x010101be)=33
+        A: http://schemas.android.com/apk/res/android:fromAlpha(0x010101ca)=0.000000e+00
+        A: http://schemas.android.com/apk/res/android:toAlpha(0x010101cb)=1
+-- res/anim/zt_turnstile_out.xml
+N: android=http://schemas.android.com/apk/res/android (line=16)
+  E: set (line=16)
+    A: http://schemas.android.com/apk/res/android:interpolator(0x01010141)=@0x010c0002
+      E: translate (line=18)
+        A: http://schemas.android.com/apk/res/android:duration(0x01010198)=128
+        A: http://schemas.android.com/apk/res/android:fromXDelta(0x010101c6)=0.000000e+00
+        A: http://schemas.android.com/apk/res/android:toXDelta(0x010101c7)=16777215.000000%p
+      E: alpha (line=22)
+        A: http://schemas.android.com/apk/res/android:duration(0x01010198)=128
+        A: http://schemas.android.com/apk/res/android:fromAlpha(0x010101ca)=1
+        A: http://schemas.android.com/apk/res/android:toAlpha(0x010101cb)=0.000000e+00
+-- ActivityOptions in dex
+makeCustomAnimation
+
+== ztmetro-actioncentre.apk
+-- res/anim/ac_recents_in.xml
+N: android=http://schemas.android.com/apk/res/android (line=5)
+  E: set (line=5)
+    A: http://schemas.android.com/apk/res/android:interpolator(0x01010141)=@0x010c0003
+      E: translate (line=7)
+        A: http://schemas.android.com/apk/res/android:duration(0x01010198)=180
+        A: http://schemas.android.com/apk/res/android:startOffset(0x010101be)=33
+        A: http://schemas.android.com/apk/res/android:fromXDelta(0x010101c6)=1.000000%p
+        A: http://schemas.android.com/apk/res/android:toXDelta(0x010101c7)=0.000000e+00
+      E: alpha (line=12)
+        A: http://schemas.android.com/apk/res/android:duration(0x01010198)=180
+        A: http://schemas.android.com/apk/res/android:startOffset(0x010101be)=33
+        A: http://schemas.android.com/apk/res/android:fromAlpha(0x010101ca)=0.000000e+00
+        A: http://schemas.android.com/apk/res/android:toAlpha(0x010101cb)=1
+-- res/anim/ac_recents_out.xml
+N: android=http://schemas.android.com/apk/res/android (line=4)
+  E: set (line=4)
+    A: http://schemas.android.com/apk/res/android:interpolator(0x01010141)=@0x010c0002
+      E: translate (line=6)
+        A: http://schemas.android.com/apk/res/android:duration(0x01010198)=128
+        A: http://schemas.android.com/apk/res/android:fromXDelta(0x010101c6)=0.000000e+00
+        A: http://schemas.android.com/apk/res/android:toXDelta(0x010101c7)=16777215.000000%p
+      E: alpha (line=10)
+        A: http://schemas.android.com/apk/res/android:duration(0x01010198)=128
+        A: http://schemas.android.com/apk/res/android:fromAlpha(0x010101ca)=1
+        A: http://schemas.android.com/apk/res/android:toAlpha(0x010101cb)=0.000000e+00
+-- RecentsActivity + task APIs in dex
+,Lorg/ztmetro/actioncentre/RecentsActivity$1;
+,Lorg/ztmetro/actioncentre/RecentsActivity$2;
+,Lorg/ztmetro/actioncentre/RecentsActivity$3;
+,Lorg/ztmetro/actioncentre/RecentsActivity$4;
+;Lorg/ztmetro/actioncentre/RecentsActivity$SwipeUpDismiss$1;
+9Lorg/ztmetro/actioncentre/RecentsActivity$SwipeUpDismiss;

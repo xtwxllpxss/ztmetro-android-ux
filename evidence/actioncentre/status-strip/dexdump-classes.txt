@@ -2,26 +2,26 @@ Processing '/home/denis/ztux/acfix/build/verify.dex'...
 Opened '/home/denis/ztux/acfix/build/verify.dex', DEX version '039'
 DEX file header:
 magic               : 'dex\n039\0'
-checksum            : 5315f340
-signature           : 61bd...1a22
-file_size           : 109820
+checksum            : 7dfb2d4a
+signature           : 1778...481a
+file_size           : 109940
 header_size         : 112
 link_size           : 0
 link_off            : 0 (0x000000)
-string_ids_size     : 1496
+string_ids_size     : 1498
 string_ids_off      : 112 (0x000070)
 type_ids_size       : 247
-type_ids_off        : 6096 (0x0017d0)
+type_ids_off        : 6104 (0x0017d8)
 proto_ids_size      : 307
-proto_ids_off       : 7084 (0x001bac)
+proto_ids_off       : 7092 (0x001bb4)
 field_ids_size      : 403
-field_ids_off       : 10768 (0x002a10)
-method_ids_size     : 948
-method_ids_off      : 13992 (0x0036a8)
+field_ids_off       : 10776 (0x002a18)
+method_ids_size     : 949
+method_ids_off      : 14000 (0x0036b0)
 class_defs_size     : 74
-class_defs_off      : 21576 (0x005448)
-data_size           : 85876
-data_off            : 23944 (0x005d88)
+class_defs_off      : 21592 (0x005458)
+data_size           : 85980
+data_off            : 23960 (0x005d98)
 
 Class #0            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$10;'
@@ -67,7 +67,7 @@ Class #0            -
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$10;
         0x0000 - 0x0006 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 97 (ActionCentreActivity.java)
+  source_file_idx   : 98 (ActionCentreActivity.java)
 
 Class #1            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$11;'
@@ -132,7 +132,7 @@ Class #1            -
       locals        :
         0x0000 - 0x001a reg=1 this Lorg/ztmetro/actioncentre/ActionCentreActivity$11;
         0x0000 - 0x001a reg=2 (null) Ljava/lang/String;
-  source_file_idx   : 97 (ActionCentreActivity.java)
+  source_file_idx   : 98 (ActionCentreActivity.java)
 
 Class #2            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$12;'
@@ -182,7 +182,7 @@ Class #2            -
         0x0000 line=986
       locals        :
         0x0000 - 0x000d reg=2 this Lorg/ztmetro/actioncentre/ActionCentreActivity$12;
-  source_file_idx   : 97 (ActionCentreActivity.java)
+  source_file_idx   : 98 (ActionCentreActivity.java)
 
 Class #3            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$13;'
@@ -228,7 +228,7 @@ Class #3            -
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$13;
         0x0000 - 0x0006 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 97 (ActionCentreActivity.java)
+  source_file_idx   : 98 (ActionCentreActivity.java)
 
 Class #4            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRepository$Listener;'
@@ -244,7 +244,7 @@ Class #4            -
       type          : '()V'
       access        : 0x0401 (PUBLIC ABSTRACT)
       code          : (none)
-  source_file_idx   : 428 (NotificationRepository.java)
+  source_file_idx   : 429 (NotificationRepository.java)
 
 Class #5            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$1;'
@@ -289,7 +289,7 @@ Class #5            -
         0x0000 line=104
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$1;
-  source_file_idx   : 97 (ActionCentreActivity.java)
+  source_file_idx   : 98 (ActionCentreActivity.java)
 
 Class #6            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$2;'
@@ -335,7 +335,7 @@ Class #6            -
         0x0005 line=112
       locals        :
         0x0000 - 0x000b reg=1 this Lorg/ztmetro/actioncentre/ActionCentreActivity$2;
-  source_file_idx   : 97 (ActionCentreActivity.java)
+  source_file_idx   : 98 (ActionCentreActivity.java)
 
 Class #7            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$3;'
@@ -389,7 +389,7 @@ Class #7            -
         0x005c line=395
       locals        :
         0x0000 - 0x0060 reg=4 this Lorg/ztmetro/actioncentre/ActionCentreActivity$3;
-  source_file_idx   : 97 (ActionCentreActivity.java)
+  source_file_idx   : 98 (ActionCentreActivity.java)
 
 Class #8            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$4;'
@@ -434,7 +434,7 @@ Class #8            -
         0x0000 line=402
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$4;
-  source_file_idx   : 97 (ActionCentreActivity.java)
+  source_file_idx   : 98 (ActionCentreActivity.java)
 
 Class #9            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$5;'
@@ -480,7 +480,7 @@ Class #9            -
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$5;
         0x0000 - 0x0006 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 97 (ActionCentreActivity.java)
+  source_file_idx   : 98 (ActionCentreActivity.java)
 
 Class #10            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$6;'
@@ -546,7 +546,7 @@ Class #10            -
         0x0000 - 0x00d0 reg=4 this Lorg/ztmetro/actioncentre/ActionCentreActivity$6;
         0x0000 - 0x00d0 reg=5 (null) Landroid/view/View;
         0x0000 - 0x00d0 reg=6 (null) Landroid/view/MotionEvent;
-  source_file_idx   : 97 (ActionCentreActivity.java)
+  source_file_idx   : 98 (ActionCentreActivity.java)
 
 Class #11            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$7;'
@@ -597,7 +597,7 @@ Class #11            -
       locals        :
         0x0000 - 0x0008 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$7;
         0x0000 - 0x0008 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 97 (ActionCentreActivity.java)
+  source_file_idx   : 98 (ActionCentreActivity.java)
 
 Class #12            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$8;'
@@ -643,7 +643,7 @@ Class #12            -
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$8;
         0x0000 - 0x0006 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 97 (ActionCentreActivity.java)
+  source_file_idx   : 98 (ActionCentreActivity.java)
 
 Class #13            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$9;'
@@ -689,7 +689,7 @@ Class #13            -
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$9;
         0x0000 - 0x0006 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 97 (ActionCentreActivity.java)
+  source_file_idx   : 98 (ActionCentreActivity.java)
 
 Class #14            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRowView$Host;'
@@ -710,7 +710,7 @@ Class #14            -
       type          : '(Lorg/ztmetro/actioncentre/Notif;)V'
       access        : 0x0401 (PUBLIC ABSTRACT)
       code          : (none)
-  source_file_idx   : 429 (NotificationRowView.java)
+  source_file_idx   : 430 (NotificationRowView.java)
 
 Class #15            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity;'
@@ -1324,24 +1324,24 @@ Class #15            -
       registers     : 7
       ins           : 1
       outs          : 5
-      insns size    : 123 16-bit code units
+      insns size    : 125 16-bit code units
       catches       : (none)
       positions     :
         0x0000 line=643
         0x0006 line=644
         0x000b line=645
         0x0010 line=646
-        0x0022 line=648
-        0x002a line=649
-        0x003f line=650
-        0x0046 line=651
-        0x004e line=657
-        0x005c line=660
-        0x0067 line=661
-        0x006a line=662
-        0x0072 line=668
+        0x0024 line=648
+        0x002c line=649
+        0x0041 line=650
+        0x0048 line=651
+        0x0050 line=657
+        0x005e line=660
+        0x0069 line=661
+        0x006c line=662
+        0x0074 line=668
       locals        :
-        0x0000 - 0x007b reg=6 this Lorg/ztmetro/actioncentre/ActionCentreActivity;
+        0x0000 - 0x007d reg=6 this Lorg/ztmetro/actioncentre/ActionCentreActivity;
     #27              : (in Lorg/ztmetro/actioncentre/ActionCentreActivity;)
       name          : 'buildTiles'
       type          : '()V'
@@ -1855,30 +1855,35 @@ Class #15            -
       type          : '(Lorg/ztmetro/actioncentre/Notif;Landroid/app/PendingIntent;Ljava/lang/String;)Z'
       access        : 0x0002 (PRIVATE)
       code          -
-      registers     : 10
+      registers     : 12
       ins           : 4
       outs          : 4
-      insns size    : 126 16-bit code units
-      catches       : 1
-        0x0007 - 0x0031
-          Landroid/app/PendingIntent$CanceledException; -> 0x0054
-          <any> -> 0x0033
+      insns size    : 148 16-bit code units
+      catches       : 2
+        0x0009 - 0x000d
+          <any> -> 0x000e
+        0x000f - 0x0049
+          Landroid/app/PendingIntent$CanceledException; -> 0x006c
+          <any> -> 0x004b
       positions     :
         0x0000 line=1084
-        0x0004 line=0
-        0x0007 line=1084
-        0x000e line=1085
-        0x0012 line=1084
-        0x0015 line=1086
-        0x0034 line=1092
-        0x0055 line=1089
-        0x006a line=1090
-        0x007a line=1089
+        0x0006 line=0
+        0x0009 line=1090
+        0x000f line=1093
+        0x0016 line=1094
+        0x001a line=1093
+        0x001d line=1095
+        0x0037 line=1097
+        0x0046 line=1095
+        0x004c line=1103
+        0x006d line=1100
+        0x0082 line=1101
+        0x0090 line=1100
       locals        :
-        0x0000 - 0x007e reg=6 this Lorg/ztmetro/actioncentre/ActionCentreActivity;
-        0x0000 - 0x007e reg=7 (null) Lorg/ztmetro/actioncentre/Notif;
-        0x0000 - 0x007e reg=8 (null) Landroid/app/PendingIntent;
-        0x0000 - 0x007e reg=9 (null) Ljava/lang/String;
+        0x0000 - 0x0094 reg=8 this Lorg/ztmetro/actioncentre/ActionCentreActivity;
+        0x0000 - 0x0094 reg=9 (null) Lorg/ztmetro/actioncentre/Notif;
+        0x0000 - 0x0094 reg=10 (null) Landroid/app/PendingIntent;
+        0x0000 - 0x0094 reg=11 (null) Ljava/lang/String;
     #50              : (in Lorg/ztmetro/actioncentre/ActionCentreActivity;)
       name          : 'snapPanel'
       type          : '(F)V'
@@ -1961,7 +1966,7 @@ Class #15            -
       insns size    : 9 16-bit code units
       catches       : (none)
       positions     :
-        0x0001 line=1116
+        0x0001 line=1127
       locals        :
         0x0000 - 0x0009 reg=1 this Lorg/ztmetro/actioncentre/ActionCentreActivity;
         0x0000 - 0x0009 reg=2 (null) I
@@ -2190,11 +2195,11 @@ Class #15            -
       insns size    : 66 16-bit code units
       catches       : (none)
       positions     :
-        0x0003 line=1103
-        0x0009 line=1104
-        0x000e line=1105
-        0x0014 line=1106
-        0x002b line=1109
+        0x0003 line=1114
+        0x0009 line=1115
+        0x000e line=1116
+        0x0014 line=1117
+        0x002b line=1120
       locals        :
         0x0000 - 0x0042 reg=2 this Lorg/ztmetro/actioncentre/ActionCentreActivity;
         0x0000 - 0x0042 reg=3 (null) Lorg/ztmetro/actioncentre/Notif;
@@ -2339,7 +2344,7 @@ Class #15            -
       locals        :
         0x0000 - 0x0017 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity;
         0x0000 - 0x0017 reg=1 (null) Z
-  source_file_idx   : 97 (ActionCentreActivity.java)
+  source_file_idx   : 98 (ActionCentreActivity.java)
 
 Class #16            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreListener;'
@@ -2658,7 +2663,7 @@ Class #16            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreListener;
         0x0000 - 0x0004 reg=1 (null) Landroid/service/notification/StatusBarNotification;
-  source_file_idx   : 98 (ActionCentreListener.java)
+  source_file_idx   : 99 (ActionCentreListener.java)
 
 Class #17            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/DeviceState;'
@@ -2797,7 +2802,7 @@ Class #17            -
       locals        :
         0x0000 - 0x0021 reg=3 (null) Landroid/content/Context;
   Virtual methods   -
-  source_file_idx   : 115 (DeviceState.java)
+  source_file_idx   : 116 (DeviceState.java)
 
 Class #18            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/HandleView;'
@@ -2869,7 +2874,7 @@ Class #18            -
         0x0000 - 0x0012 reg=1 this Lorg/ztmetro/actioncentre/HandleView;
         0x0000 - 0x0012 reg=2 (null) I
         0x0000 - 0x0012 reg=3 (null) I
-  source_file_idx   : 139 (HandleView.java)
+  source_file_idx   : 140 (HandleView.java)
 
 Class #19            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayController$1;'
@@ -2918,7 +2923,7 @@ Class #19            -
         0x0013 line=126
       locals        :
         0x0000 - 0x001b reg=2 this Lorg/ztmetro/actioncentre/LockOverlayController$1;
-  source_file_idx   : 344 (LockOverlayController.java)
+  source_file_idx   : 345 (LockOverlayController.java)
 
 Class #20            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayController$2;'
@@ -2979,7 +2984,7 @@ Class #20            -
         0x0000 - 0x006e reg=0 this Lorg/ztmetro/actioncentre/LockOverlayController$2;
         0x0000 - 0x006e reg=1 (null) Landroid/content/Context;
         0x0000 - 0x006e reg=2 (null) Landroid/content/Intent;
-  source_file_idx   : 344 (LockOverlayController.java)
+  source_file_idx   : 345 (LockOverlayController.java)
 
 Class #21            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayController$3;'
@@ -3031,7 +3036,7 @@ Class #21            -
         0x0039 line=278
       locals        :
         0x0000 - 0x0041 reg=2 this Lorg/ztmetro/actioncentre/LockOverlayController$3;
-  source_file_idx   : 344 (LockOverlayController.java)
+  source_file_idx   : 345 (LockOverlayController.java)
 
 Class #22            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayController$4;'
@@ -3077,7 +3082,7 @@ Class #22            -
         0x0006 line=580
       locals        :
         0x0000 - 0x000c reg=2 this Lorg/ztmetro/actioncentre/LockOverlayController$4;
-  source_file_idx   : 344 (LockOverlayController.java)
+  source_file_idx   : 345 (LockOverlayController.java)
 
 Class #23            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayController$5;'
@@ -3138,7 +3143,7 @@ Class #23            -
         0x006d line=670
       locals        :
         0x0000 - 0x0079 reg=8 this Lorg/ztmetro/actioncentre/LockOverlayController$5;
-  source_file_idx   : 344 (LockOverlayController.java)
+  source_file_idx   : 345 (LockOverlayController.java)
 
 Class #24            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayController$6;'
@@ -3185,7 +3190,7 @@ Class #24            -
         0x001a line=686
       locals        :
         0x0000 - 0x0020 reg=1 this Lorg/ztmetro/actioncentre/LockOverlayController$6;
-  source_file_idx   : 344 (LockOverlayController.java)
+  source_file_idx   : 345 (LockOverlayController.java)
 
 Class #25            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayController$SwipeStrip$1;'
@@ -3230,7 +3235,7 @@ Class #25            -
         0x0000 line=910
       locals        :
         0x0000 - 0x000a reg=1 this Lorg/ztmetro/actioncentre/LockOverlayController$SwipeStrip$1;
-  source_file_idx   : 344 (LockOverlayController.java)
+  source_file_idx   : 345 (LockOverlayController.java)
 
 Class #26            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayController$SwipeStrip;'
@@ -3297,7 +3302,7 @@ Class #26            -
       locals        :
         0x0000 - 0x005b reg=5 this Lorg/ztmetro/actioncentre/LockOverlayController$SwipeStrip;
         0x0000 - 0x005b reg=6 (null) Landroid/view/MotionEvent;
-  source_file_idx   : 344 (LockOverlayController.java)
+  source_file_idx   : 345 (LockOverlayController.java)
 
 Class #27            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayController$WindowSnapshot;'
@@ -3368,7 +3373,7 @@ Class #27            -
         0x0000 line=705
       locals        :
         0x0000 - 0x002f reg=2 this Lorg/ztmetro/actioncentre/LockOverlayController$WindowSnapshot;
-  source_file_idx   : 344 (LockOverlayController.java)
+  source_file_idx   : 345 (LockOverlayController.java)
 
 Class #28            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayController;'
@@ -4686,7 +4691,7 @@ Class #28            -
         0x0015 line=177
       locals        :
         0x0000 - 0x001b reg=3 this Lorg/ztmetro/actioncentre/LockOverlayController;
-  source_file_idx   : 344 (LockOverlayController.java)
+  source_file_idx   : 345 (LockOverlayController.java)
 
 Class #29            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayView$1;'
@@ -4733,7 +4738,7 @@ Class #29            -
       locals        :
         0x0000 - 0x000c reg=1 this Lorg/ztmetro/actioncentre/LockOverlayView$1;
         0x0000 - 0x000c reg=2 (null) Ljava/lang/Runnable;
-  source_file_idx   : 345 (LockOverlayView.java)
+  source_file_idx   : 346 (LockOverlayView.java)
 
 Class #30            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayView$2;'
@@ -4759,7 +4764,7 @@ Class #30            -
       insns size    : 6 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=151
+        0x0000 line=153
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/LockOverlayView$2;
         0x0000 - 0x0006 reg=1 (null) Lorg/ztmetro/actioncentre/LockOverlayView;
@@ -4777,18 +4782,18 @@ Class #30            -
         0x0000 - 0x003b
           <any> -> 0x003b
       positions     :
-        0x0000 line=155
-        0x0009 line=156
-        0x001e line=157
-        0x0020 line=158
-        0x002c line=159
-        0x0030 line=160
-        0x0032 line=161
+        0x0000 line=157
+        0x0009 line=158
+        0x001e line=159
+        0x0020 line=160
+        0x002c line=161
+        0x0030 line=162
+        0x0032 line=163
       locals        :
         0x0000 - 0x003c reg=3 this Lorg/ztmetro/actioncentre/LockOverlayView$2;
         0x0000 - 0x003c reg=4 (null) Landroid/view/View;
         0x0000 - 0x003c reg=5 (null) Landroid/view/WindowInsets;
-  source_file_idx   : 345 (LockOverlayView.java)
+  source_file_idx   : 346 (LockOverlayView.java)
 
 Class #31            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayView$3$1;'
@@ -4818,7 +4823,7 @@ Class #31            -
       insns size    : 8 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=316
+        0x0000 line=318
       locals        :
         0x0000 - 0x0008 reg=0 this Lorg/ztmetro/actioncentre/LockOverlayView$3$1;
         0x0000 - 0x0008 reg=1 (null) Lorg/ztmetro/actioncentre/LockOverlayView$3;
@@ -4835,13 +4840,13 @@ Class #31            -
       insns size    : 56 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=319
-        0x0010 line=322
-        0x001f line=323
-        0x0023 line=324
+        0x0000 line=321
+        0x0010 line=324
+        0x001f line=325
+        0x0023 line=326
       locals        :
         0x0000 - 0x0038 reg=3 this Lorg/ztmetro/actioncentre/LockOverlayView$3$1;
-  source_file_idx   : 345 (LockOverlayView.java)
+  source_file_idx   : 346 (LockOverlayView.java)
 
 Class #32            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayView$3;'
@@ -4879,7 +4884,7 @@ Class #32            -
       insns size    : 12 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=309
+        0x0000 line=311
       locals        :
         0x0000 - 0x000c reg=0 this Lorg/ztmetro/actioncentre/LockOverlayView$3;
         0x0000 - 0x000c reg=1 (null) Lorg/ztmetro/actioncentre/LockOverlayView;
@@ -4898,13 +4903,13 @@ Class #32            -
       insns size    : 51 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=312
-        0x0009 line=313
-        0x0011 line=314
-        0x0024 line=316
+        0x0000 line=314
+        0x0009 line=315
+        0x0011 line=316
+        0x0024 line=318
       locals        :
         0x0000 - 0x0033 reg=4 this Lorg/ztmetro/actioncentre/LockOverlayView$3;
-  source_file_idx   : 345 (LockOverlayView.java)
+  source_file_idx   : 346 (LockOverlayView.java)
 
 Class #33            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayView$LetterIcon;'
@@ -4941,18 +4946,18 @@ Class #33            -
       insns size    : 85 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=361
-        0x0005 line=357
-        0x000c line=358
-        0x0017 line=362
-        0x001e line=363
-        0x002d line=364
-        0x002f line=365
-        0x0034 line=366
-        0x003f line=367
-        0x0043 line=368
-        0x0046 line=369
-        0x004b line=370
+        0x0000 line=363
+        0x0005 line=359
+        0x000c line=360
+        0x0017 line=364
+        0x001e line=365
+        0x002d line=366
+        0x002f line=367
+        0x0034 line=368
+        0x003f line=369
+        0x0043 line=370
+        0x0046 line=371
+        0x004b line=372
       locals        :
         0x0000 - 0x0055 reg=5 this Lorg/ztmetro/actioncentre/LockOverlayView$LetterIcon;
         0x0000 - 0x0055 reg=6 (null) Lorg/ztmetro/actioncentre/LockOverlayView;
@@ -4969,13 +4974,13 @@ Class #33            -
       insns size    : 89 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=375
-        0x0004 line=376
-        0x0011 line=379
-        0x0029 line=380
-        0x0036 line=381
-        0x003c line=382
-        0x004b line=383
+        0x0000 line=377
+        0x0004 line=378
+        0x0011 line=381
+        0x0029 line=382
+        0x0036 line=383
+        0x003c line=384
+        0x004b line=385
       locals        :
         0x0000 - 0x0059 reg=8 this Lorg/ztmetro/actioncentre/LockOverlayView$LetterIcon;
         0x0000 - 0x0059 reg=9 (null) Landroid/graphics/Canvas;
@@ -5002,8 +5007,8 @@ Class #33            -
       insns size    : 11 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=388
-        0x0005 line=389
+        0x0000 line=390
+        0x0005 line=391
       locals        :
         0x0000 - 0x000b reg=1 this Lorg/ztmetro/actioncentre/LockOverlayView$LetterIcon;
         0x0000 - 0x000b reg=2 (null) I
@@ -5019,7 +5024,7 @@ Class #33            -
       catches       : (none)
       positions     :
       locals        :
-  source_file_idx   : 345 (LockOverlayView.java)
+  source_file_idx   : 346 (LockOverlayView.java)
 
 Class #34            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/LockOverlayView;'
@@ -5101,10 +5106,10 @@ Class #34            -
       type          : '(Landroid/content/Context;)V'
       access        : 0x10000 (CONSTRUCTOR)
       code          -
-      registers     : 13
+      registers     : 12
       ins           : 2
       outs          : 5
-      insns size    : 360 16-bit code units
+      insns size    : 354 16-bit code units
       catches       : (none)
       positions     :
         0x0000 line=76
@@ -5132,44 +5137,44 @@ Class #34            -
         0x0089 line=114
         0x008c line=115
         0x008f line=116
-        0x0096 line=117
-        0x0099 line=119
-        0x00a0 line=120
-        0x00a6 line=121
-        0x00ab line=122
-        0x00b4 line=125
-        0x00bb line=126
-        0x00be line=128
-        0x00c8 line=129
-        0x00cd line=130
-        0x00d0 line=131
-        0x00dc line=132
-        0x00e2 line=133
-        0x00e7 line=134
-        0x00ea line=135
-        0x00ed line=136
-        0x00f0 line=138
-        0x00f7 line=139
-        0x00fa line=140
-        0x00fd line=141
-        0x0108 line=144
-        0x010e line=145
-        0x0116 line=146
-        0x011c line=147
-        0x011f line=151
-        0x0127 line=169
-        0x012f line=172
-        0x0134 line=174
-        0x013a line=175
-        0x013d line=177
-        0x0144 line=179
-        0x014a line=180
-        0x014d line=182
-        0x0154 line=184
-        0x015a line=185
+        0x0096 line=119
+        0x0099 line=121
+        0x00a0 line=122
+        0x00a6 line=123
+        0x00ab line=124
+        0x00b4 line=127
+        0x00bb line=128
+        0x00be line=130
+        0x00c8 line=131
+        0x00cd line=132
+        0x00d0 line=133
+        0x00dc line=134
+        0x00e2 line=135
+        0x00e7 line=136
+        0x00ea line=137
+        0x00ed line=138
+        0x00f0 line=140
+        0x00f7 line=141
+        0x00fa line=142
+        0x00fd line=143
+        0x0108 line=146
+        0x010e line=147
+        0x0114 line=148
+        0x011a line=149
+        0x011d line=153
+        0x0125 line=171
+        0x012d line=174
+        0x0132 line=176
+        0x0134 line=177
+        0x0137 line=179
+        0x013e line=181
+        0x0144 line=182
+        0x0147 line=184
+        0x014e line=186
+        0x0154 line=187
       locals        :
-        0x0000 - 0x0168 reg=11 this Lorg/ztmetro/actioncentre/LockOverlayView;
-        0x0000 - 0x0168 reg=12 (null) Landroid/content/Context;
+        0x0000 - 0x0162 reg=10 this Lorg/ztmetro/actioncentre/LockOverlayView;
+        0x0000 - 0x0162 reg=11 (null) Landroid/content/Context;
     #1              : (in Lorg/ztmetro/actioncentre/LockOverlayView;)
       name          : 'access$000'
       type          : '(Lorg/ztmetro/actioncentre/LockOverlayView;I)I'
@@ -5253,7 +5258,7 @@ Class #34            -
       insns size    : 22 16-bit code units
       catches       : (none)
       positions     :
-        0x0001 line=352
+        0x0001 line=354
       locals        :
         0x0000 - 0x0016 reg=0 this Lorg/ztmetro/actioncentre/LockOverlayView;
         0x0000 - 0x0016 reg=1 (null) I
@@ -5270,7 +5275,7 @@ Class #34            -
         0x0000 - 0x000c
           <any> -> 0x000d
       positions     :
-        0x0000 line=335
+        0x0000 line=337
       locals        :
         0x0000 - 0x000f reg=0 this Lorg/ztmetro/actioncentre/LockOverlayView;
         0x0000 - 0x000f reg=1 (null) Ljava/lang/String;
@@ -5285,7 +5290,7 @@ Class #34            -
       insns size    : 11 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=309
+        0x0000 line=311
       locals        :
         0x0000 - 0x000b reg=2 this Lorg/ztmetro/actioncentre/LockOverlayView;
         0x0000 - 0x000b reg=3 (null) I
@@ -5305,25 +5310,25 @@ Class #34            -
         0x0000 - 0x00d5
           <any> -> 0x00d5
       positions     :
-        0x0000 line=191
-        0x0004 line=192
-        0x0010 line=193
-        0x0017 line=194
-        0x0022 line=198
-        0x0028 line=200
-        0x003d line=201
-        0x0051 line=202
-        0x0058 line=204
-        0x0060 line=205
-        0x006c line=206
-        0x0071 line=205
-        0x0074 line=207
-        0x0085 line=209
-        0x0094 line=212
-        0x0099 line=213
-        0x009e line=214
-        0x00c0 line=215
-        0x00d2 line=214
+        0x0000 line=193
+        0x0004 line=194
+        0x0010 line=195
+        0x0017 line=196
+        0x0022 line=200
+        0x0028 line=202
+        0x003d line=203
+        0x0051 line=204
+        0x0058 line=206
+        0x0060 line=207
+        0x006c line=208
+        0x0071 line=207
+        0x0074 line=209
+        0x0085 line=211
+        0x0094 line=214
+        0x0099 line=215
+        0x009e line=216
+        0x00c0 line=217
+        0x00d2 line=216
       locals        :
         0x0000 - 0x00d6 reg=6 this Lorg/ztmetro/actioncentre/LockOverlayView;
     #1              : (in Lorg/ztmetro/actioncentre/LockOverlayView;)
@@ -5339,59 +5344,59 @@ Class #34            -
         0x0000 - 0x0153
           <any> -> 0x0153
       positions     :
-        0x0000 line=229
-        0x0006 line=230
-        0x000b line=231
-        0x0013 line=232
-        0x0019 line=235
-        0x001d line=236
-        0x0022 line=237
-        0x0027 line=238
-        0x003a line=239
-        0x003f line=242
-        0x0049 line=244
-        0x0051 line=247
-        0x005a line=248
-        0x005c line=249
-        0x0069 line=250
-        0x006e line=248
-        0x0072 line=252
-        0x0078 line=255
-        0x007e line=256
-        0x0084 line=260
-        0x0089 line=261
-        0x008e line=262
-        0x00a2 line=263
-        0x00a8 line=264
-        0x00ae line=266
-        0x00b7 line=267
-        0x00bc line=268
-        0x00bf line=270
-        0x00c8 line=271
-        0x00cc line=272
-        0x00d7 line=273
-        0x00da line=274
-        0x00df line=275
-        0x00e7 line=276
-        0x00ea line=278
-        0x00f3 line=279
-        0x0105 line=280
-        0x0108 line=281
-        0x0112 line=282
-        0x0115 line=283
-        0x0118 line=284
-        0x011b line=285
-        0x0122 line=287
-        0x0128 line=288
-        0x012b line=290
-        0x012e line=291
-        0x0131 line=293
-        0x0138 line=295
-        0x013e line=296
-        0x0143 line=297
-        0x0146 line=298
-        0x014b line=300
-        0x0150 line=301
+        0x0000 line=231
+        0x0006 line=232
+        0x000b line=233
+        0x0013 line=234
+        0x0019 line=237
+        0x001d line=238
+        0x0022 line=239
+        0x0027 line=240
+        0x003a line=241
+        0x003f line=244
+        0x0049 line=246
+        0x0051 line=249
+        0x005a line=250
+        0x005c line=251
+        0x0069 line=252
+        0x006e line=250
+        0x0072 line=254
+        0x0078 line=257
+        0x007e line=258
+        0x0084 line=262
+        0x0089 line=263
+        0x008e line=264
+        0x00a2 line=265
+        0x00a8 line=266
+        0x00ae line=268
+        0x00b7 line=269
+        0x00bc line=270
+        0x00bf line=272
+        0x00c8 line=273
+        0x00cc line=274
+        0x00d7 line=275
+        0x00da line=276
+        0x00df line=277
+        0x00e7 line=278
+        0x00ea line=280
+        0x00f3 line=281
+        0x0105 line=282
+        0x0108 line=283
+        0x0112 line=284
+        0x0115 line=285
+        0x0118 line=286
+        0x011b line=287
+        0x0122 line=289
+        0x0128 line=290
+        0x012b line=292
+        0x012e line=293
+        0x0131 line=295
+        0x0138 line=297
+        0x013e line=298
+        0x0143 line=299
+        0x0146 line=300
+        0x014b line=302
+        0x0150 line=303
       locals        :
         0x0000 - 0x0154 reg=15 this Lorg/ztmetro/actioncentre/LockOverlayView;
     #2              : (in Lorg/ztmetro/actioncentre/LockOverlayView;)
@@ -5407,12 +5412,12 @@ Class #34            -
         0x0006 - 0x000b
           <any> -> 0x000b
       positions     :
-        0x0000 line=343
-        0x0006 line=345
-        0x000b line=348
+        0x0000 line=345
+        0x0006 line=347
+        0x000b line=350
       locals        :
         0x0000 - 0x0012 reg=1 this Lorg/ztmetro/actioncentre/LockOverlayView;
-  source_file_idx   : 345 (LockOverlayView.java)
+  source_file_idx   : 346 (LockOverlayView.java)
 
 Class #35            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/Motion$1;'
@@ -5453,7 +5458,7 @@ Class #35            -
       locals        :
         0x0000 - 0x0022 reg=2 this Lorg/ztmetro/actioncentre/Motion$1;
         0x0000 - 0x0022 reg=3 (null) F
-  source_file_idx   : 422 (Motion.java)
+  source_file_idx   : 423 (Motion.java)
 
 Class #36            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/Motion;'
@@ -5557,7 +5562,7 @@ Class #36            -
       locals        :
         0x0000 - 0x0022 reg=2 (null) Landroid/content/Context;
   Virtual methods   -
-  source_file_idx   : 422 (Motion.java)
+  source_file_idx   : 423 (Motion.java)
 
 Class #37            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/Notif;'
@@ -5642,7 +5647,7 @@ Class #37            -
         0x0000 - 0x001c reg=10 (null) Landroid/app/PendingIntent;
         0x0000 - 0x001c reg=11 (null) Ljava/lang/String;
   Virtual methods   -
-  source_file_idx   : 427 (Notif.java)
+  source_file_idx   : 428 (Notif.java)
 
 Class #38            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRepository$1;'
@@ -5700,7 +5705,7 @@ Class #38            -
         0x0000 - 0x0009 reg=2 this Lorg/ztmetro/actioncentre/NotificationRepository$1;
         0x0000 - 0x0009 reg=3 (null) Lorg/ztmetro/actioncentre/Notif;
         0x0000 - 0x0009 reg=4 (null) Lorg/ztmetro/actioncentre/Notif;
-  source_file_idx   : 428 (NotificationRepository.java)
+  source_file_idx   : 429 (NotificationRepository.java)
 
 Class #39            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRepository$2;'
@@ -5743,7 +5748,7 @@ Class #39            -
         0x0014 line=125
       locals        :
         0x0000 - 0x0019 reg=1 this Lorg/ztmetro/actioncentre/NotificationRepository$2;
-  source_file_idx   : 428 (NotificationRepository.java)
+  source_file_idx   : 429 (NotificationRepository.java)
 
 Class #40            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRepository;'
@@ -6004,7 +6009,7 @@ Class #40            -
       locals        :
         0x0000 - 0x0036 reg=5 (null) Lorg/ztmetro/actioncentre/Notif;
   Virtual methods   -
-  source_file_idx   : 428 (NotificationRepository.java)
+  source_file_idx   : 429 (NotificationRepository.java)
 
 Class #41            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRowView$1;'
@@ -6050,7 +6055,7 @@ Class #41            -
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/NotificationRowView$1;
         0x0000 - 0x0006 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 429 (NotificationRowView.java)
+  source_file_idx   : 430 (NotificationRowView.java)
 
 Class #42            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRowView$2;'
@@ -6096,7 +6101,7 @@ Class #42            -
       locals        :
         0x0000 - 0x0010 reg=0 this Lorg/ztmetro/actioncentre/NotificationRowView$2;
         0x0000 - 0x0010 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 429 (NotificationRowView.java)
+  source_file_idx   : 430 (NotificationRowView.java)
 
 Class #43            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRowView$3;'
@@ -6141,7 +6146,7 @@ Class #43            -
         0x0000 line=241
       locals        :
         0x0000 - 0x0010 reg=1 this Lorg/ztmetro/actioncentre/NotificationRowView$3;
-  source_file_idx   : 429 (NotificationRowView.java)
+  source_file_idx   : 430 (NotificationRowView.java)
 
 Class #44            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRowView;'
@@ -6408,7 +6413,7 @@ Class #44            -
       locals        :
         0x0000 - 0x00e2 reg=7 this Lorg/ztmetro/actioncentre/NotificationRowView;
         0x0000 - 0x00e2 reg=8 (null) Landroid/view/MotionEvent;
-  source_file_idx   : 429 (NotificationRowView.java)
+  source_file_idx   : 430 (NotificationRowView.java)
 
 Class #45            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/QuickGrid;'
@@ -6501,7 +6506,7 @@ Class #45            -
         0x0000 - 0x0052 reg=2 this Lorg/ztmetro/actioncentre/QuickGrid;
         0x0000 - 0x0052 reg=3 (null) I
         0x0000 - 0x0052 reg=4 (null) I
-  source_file_idx   : 436 (QuickGrid.java)
+  source_file_idx   : 437 (QuickGrid.java)
 
 Class #46            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/QuickTile;'
@@ -6749,7 +6754,7 @@ Class #46            -
         0x0000 - 0x000b reg=0 this Lorg/ztmetro/actioncentre/QuickTile;
         0x0000 - 0x000b reg=1 (null) Z
         0x0000 - 0x000b reg=2 (null) Z
-  source_file_idx   : 437 (QuickTile.java)
+  source_file_idx   : 438 (QuickTile.java)
 
 Class #47            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/R$anim;'
@@ -6789,7 +6794,7 @@ Class #47            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/R$anim;
   Virtual methods   -
-  source_file_idx   : 438 (R.java)
+  source_file_idx   : 439 (R.java)
 
 Class #48            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/R$color;'
@@ -6859,7 +6864,7 @@ Class #48            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/R$color;
   Virtual methods   -
-  source_file_idx   : 438 (R.java)
+  source_file_idx   : 439 (R.java)
 
 Class #49            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/R$drawable;'
@@ -6934,7 +6939,7 @@ Class #49            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/R$drawable;
   Virtual methods   -
-  source_file_idx   : 438 (R.java)
+  source_file_idx   : 439 (R.java)
 
 Class #50            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/R$string;'
@@ -7129,7 +7134,7 @@ Class #50            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/R$string;
   Virtual methods   -
-  source_file_idx   : 438 (R.java)
+  source_file_idx   : 439 (R.java)
 
 Class #51            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/R$style;'
@@ -7164,7 +7169,7 @@ Class #51            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/R$style;
   Virtual methods   -
-  source_file_idx   : 438 (R.java)
+  source_file_idx   : 439 (R.java)
 
 Class #52            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/R$xml;'
@@ -7199,7 +7204,7 @@ Class #52            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/R$xml;
   Virtual methods   -
-  source_file_idx   : 438 (R.java)
+  source_file_idx   : 439 (R.java)
 
 Class #53            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/R;'
@@ -7224,7 +7229,7 @@ Class #53            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/R;
   Virtual methods   -
-  source_file_idx   : 438 (R.java)
+  source_file_idx   : 439 (R.java)
 
 Class #54            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ShadeBridgeService$1;'
@@ -7282,7 +7287,7 @@ Class #54            -
         0x0075 line=155
       locals        :
         0x0000 - 0x007b reg=8 this Lorg/ztmetro/actioncentre/ShadeBridgeService$1;
-  source_file_idx   : 459 (ShadeBridgeService.java)
+  source_file_idx   : 460 (ShadeBridgeService.java)
 
 Class #55            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ShadeBridgeService$2;'
@@ -7328,7 +7333,7 @@ Class #55            -
       locals        :
         0x0000 - 0x0008 reg=0 this Lorg/ztmetro/actioncentre/ShadeBridgeService$2;
         0x0000 - 0x0008 reg=1 (null) Z
-  source_file_idx   : 459 (ShadeBridgeService.java)
+  source_file_idx   : 460 (ShadeBridgeService.java)
 
 Class #56            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ShadeBridgeService$3;'
@@ -7400,7 +7405,7 @@ Class #56            -
         0x0000 - 0x008d reg=4 this Lorg/ztmetro/actioncentre/ShadeBridgeService$3;
         0x0000 - 0x008d reg=5 (null) Landroid/view/View;
         0x0000 - 0x008d reg=6 (null) Landroid/view/MotionEvent;
-  source_file_idx   : 459 (ShadeBridgeService.java)
+  source_file_idx   : 460 (ShadeBridgeService.java)
 
 Class #57            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ShadeBridgeService$4;'
@@ -7463,7 +7468,7 @@ Class #57            -
         0x00cb line=532
       locals        :
         0x0000 - 0x00d1 reg=10 this Lorg/ztmetro/actioncentre/ShadeBridgeService$4;
-  source_file_idx   : 459 (ShadeBridgeService.java)
+  source_file_idx   : 460 (ShadeBridgeService.java)
 
 Class #58            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ShadeBridgeService$5;'
@@ -7524,7 +7529,7 @@ Class #58            -
         0x0094 line=565
       locals        :
         0x0000 - 0x009a reg=8 this Lorg/ztmetro/actioncentre/ShadeBridgeService$5;
-  source_file_idx   : 459 (ShadeBridgeService.java)
+  source_file_idx   : 460 (ShadeBridgeService.java)
 
 Class #59            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ShadeBridgeService$ShadeWindow;'
@@ -7584,7 +7589,7 @@ Class #59            -
       locals        :
         0x0000 - 0x0048 reg=2 this Lorg/ztmetro/actioncentre/ShadeBridgeService$ShadeWindow;
         0x0000 - 0x0048 reg=3 (null) Landroid/graphics/Rect;
-  source_file_idx   : 459 (ShadeBridgeService.java)
+  source_file_idx   : 460 (ShadeBridgeService.java)
 
 Class #60            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ShadeBridgeService;'
@@ -8600,7 +8605,7 @@ Class #60            -
       locals        :
         0x0000 - 0x002e reg=2 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
         0x0000 - 0x002e reg=3 (null) Landroid/content/Intent;
-  source_file_idx   : 459 (ShadeBridgeService.java)
+  source_file_idx   : 460 (ShadeBridgeService.java)
 
 Class #61            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripOverlayView;'
@@ -8999,7 +9004,7 @@ Class #61            -
         0x0000 - 0x0008 reg=0 this Lorg/ztmetro/actioncentre/StatusStripOverlayView;
         0x0000 - 0x0008 reg=1 (null) Z
         0x0000 - 0x0008 reg=2 (null) Z
-  source_file_idx   : 463 (StatusStripOverlayView.java)
+  source_file_idx   : 464 (StatusStripOverlayView.java)
 
 Class #62            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripService$1;'
@@ -9068,7 +9073,7 @@ Class #62            -
         0x0000 - 0x00a2 reg=1 this Lorg/ztmetro/actioncentre/StatusStripService$1;
         0x0000 - 0x00a2 reg=2 (null) Landroid/content/Context;
         0x0000 - 0x00a2 reg=3 (null) Landroid/content/Intent;
-  source_file_idx   : 464 (StatusStripService.java)
+  source_file_idx   : 465 (StatusStripService.java)
 
 Class #63            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripService$2;'
@@ -9147,7 +9152,7 @@ Class #63            -
       locals        :
         0x0000 - 0x000b reg=0 this Lorg/ztmetro/actioncentre/StatusStripService$2;
         0x0000 - 0x000b reg=1 (null) Landroid/net/Network;
-  source_file_idx   : 464 (StatusStripService.java)
+  source_file_idx   : 465 (StatusStripService.java)
 
 Class #64            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripService$3;'
@@ -9192,7 +9197,7 @@ Class #64            -
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/StatusStripService$3;
         0x0000 - 0x0006 reg=1 (null) Landroid/telephony/SignalStrength;
-  source_file_idx   : 464 (StatusStripService.java)
+  source_file_idx   : 465 (StatusStripService.java)
 
 Class #65            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripService$Api31$SignalCallback;'
@@ -9239,7 +9244,7 @@ Class #65            -
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/StatusStripService$Api31$SignalCallback;
         0x0000 - 0x0006 reg=1 (null) Landroid/telephony/SignalStrength;
-  source_file_idx   : 464 (StatusStripService.java)
+  source_file_idx   : 465 (StatusStripService.java)
 
 Class #66            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripService$Api31;'
@@ -9296,7 +9301,7 @@ Class #66            -
         0x0000 - 0x000a reg=1 (null) Landroid/telephony/TelephonyManager;
         0x0000 - 0x000a reg=2 (null) Ljava/lang/Object;
   Virtual methods   -
-  source_file_idx   : 464 (StatusStripService.java)
+  source_file_idx   : 465 (StatusStripService.java)
 
 Class #67            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripService$Api33$1;'
@@ -9347,7 +9352,7 @@ Class #67            -
       locals        :
         0x0000 - 0x001f reg=1 this Lorg/ztmetro/actioncentre/StatusStripService$Api33$1;
         0x0000 - 0x001f reg=2 (null) Z
-  source_file_idx   : 464 (StatusStripService.java)
+  source_file_idx   : 465 (StatusStripService.java)
 
 Class #68            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripService$Api33;'
@@ -9404,7 +9409,7 @@ Class #68            -
         0x0000 - 0x000a reg=1 (null) Landroid/app/KeyguardManager;
         0x0000 - 0x000a reg=2 (null) Ljava/lang/Object;
   Virtual methods   -
-  source_file_idx   : 464 (StatusStripService.java)
+  source_file_idx   : 465 (StatusStripService.java)
 
 Class #69            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripService;'
@@ -10193,7 +10198,7 @@ Class #69            -
       locals        :
         0x0000 - 0x000f reg=2 this Lorg/ztmetro/actioncentre/StatusStripService;
         0x0000 - 0x000f reg=3 (null) Landroid/content/Intent;
-  source_file_idx   : 464 (StatusStripService.java)
+  source_file_idx   : 465 (StatusStripService.java)
 
 Class #70            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripView$1;'
@@ -10241,7 +10246,7 @@ Class #70            -
         0x000f line=56
       locals        :
         0x0000 - 0x001b reg=3 this Lorg/ztmetro/actioncentre/StatusStripView$1;
-  source_file_idx   : 465 (StatusStripView.java)
+  source_file_idx   : 466 (StatusStripView.java)
 
 Class #71            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripView$2;'
@@ -10287,7 +10292,7 @@ Class #71            -
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/StatusStripView$2;
         0x0000 - 0x0006 reg=1 (null) Landroid/content/Context;
         0x0000 - 0x0006 reg=2 (null) Landroid/content/Intent;
-  source_file_idx   : 465 (StatusStripView.java)
+  source_file_idx   : 466 (StatusStripView.java)
 
 Class #72            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripView;'
@@ -10711,7 +10716,7 @@ Class #72            -
         0x0000 - 0x0012 reg=1 this Lorg/ztmetro/actioncentre/StatusStripView;
         0x0000 - 0x0012 reg=2 (null) I
         0x0000 - 0x0012 reg=3 (null) I
-  source_file_idx   : 465 (StatusStripView.java)
+  source_file_idx   : 466 (StatusStripView.java)
 
 Class #73            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/U;'
@@ -10919,5 +10924,5 @@ Class #73            -
         0x0000 - 0x000e reg=1 (null) Landroid/content/Context;
         0x0000 - 0x000e reg=2 (null) F
   Virtual methods   -
-  source_file_idx   : 480 (U.java)
+  source_file_idx   : 481 (U.java)
 

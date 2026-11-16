@@ -1,0 +1,7 @@
+launcher launch     ActivityOptions.makeCustomAnimation(context, in, out)
+incoming app window 180 ms from +100%p to 0, alpha 0 -> 1, startOffset 33 ms
+outgoing Start      128 ms from 0 to -100%p, alpha 1 -> 0
+easing              in decelerate_cubic / out accelerate_cubic; no overshoot
+sources             core/zrnmetrocore.c:50 ROW_OUT_MS 128, :51 ROW_IN_MS 180, :52 ROW_STAGGER_MS 33
+wired               tile tap, app-list row, both long-press sheet OPEN items, Settings shortcuts
+returns to home     WMShell-owned; not changed by this APK (startActivity cannot supply it)

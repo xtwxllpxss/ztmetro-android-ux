@@ -1,0 +1,19 @@
+classes.dex: 108164 bytes
+androidx occurrences: 0 (build fails if any)
+uses-permission elements: 0 (build fails if any)
+package classes:
+  StartActivity: present
+  MetroTileView: present
+  MetroGridView: present
+  MetroPager: present
+  MetroCircleGlyphView: present
+  MetroSectionHeaderView: present
+  MetroListRowView: present
+  SystemGlyphs: present
+  GlyphSet: present
+  TileArt: present
+  TileStore: present
+  StartNotificationListener: present
+  LiveTiles: present
+  Motion: present
+  Turnstile: present

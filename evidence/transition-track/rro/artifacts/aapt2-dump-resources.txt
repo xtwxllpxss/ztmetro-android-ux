@@ -1,0 +1,15 @@
+Binary APK
+Package name=org.ztmetro.overlay.transitions id=7f
+  type anim id=01 entryCount=6
+    resource 0x7f010000 anim/task_close_enter
+      () (file) res/anim/task_close_enter.xml type=XML
+    resource 0x7f010001 anim/task_close_exit
+      () (file) res/anim/task_close_exit.xml type=XML
+    resource 0x7f010002 anim/task_open_enter
+      () (file) res/anim/task_open_enter.xml type=XML
+    resource 0x7f010003 anim/task_open_exit
+      () (file) res/anim/task_open_exit.xml type=XML
+    resource 0x7f010004 anim/wallpaper_open_enter
+      () (file) res/anim/wallpaper_open_enter.xml type=XML
+    resource 0x7f010005 anim/wallpaper_open_exit
+      () (file) res/anim/wallpaper_open_exit.xml type=XML

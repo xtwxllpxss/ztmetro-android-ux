@@ -1,0 +1,12 @@
+Archive:  /home/denis/ztux/transition-lsposed/out/ZtMetroTransitionTrack.apk
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+     1784  1980-01-01 00:00   AndroidManifest.xml
+       40  1980-01-01 00:00   resources.arsc
+       50  1980-01-01 00:00   assets/xposed_init
+     5332  2026-11-16 14:54   classes.dex
+      502  2026-11-16 14:54   META-INF/ZT.SF
+     1206  2026-11-16 14:54   META-INF/ZT.RSA
+      375  2026-11-16 14:54   META-INF/MANIFEST.MF
+---------                     -------
+     9289                     7 files

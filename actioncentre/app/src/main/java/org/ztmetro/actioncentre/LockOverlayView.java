@@ -11,10 +11,6 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.RelativeSizeSpan;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -24,9 +20,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -43,11 +37,14 @@ import java.util.concurrent.ThreadFactory;
  *
  * <p>Metrics follow {@code design/components/lock-screen.md} and
  * {@code design/tokens/ztmetro.tokens.json}: the clock is {@code display_large}
- * 92 sp Light, the date is one 20 sp line (the requirement for this overlay; the
- * C shell uses two 30 sp lines), the glyph row is 26 dp glyph + count, the
- * background is pure black, square, no elevation, no corners. The clock sits in
- * the lower third, where Windows Phone puts it, instead of the Material top
+ * 92 sp Light, the date is two 30 sp lines, the glyph row is 26 dp glyph + count,
+ * the background is pure black, square, no elevation, no corners. The clock sits
+ * in the lower third, where Windows Phone puts it, instead of the Material top
  * centre.
+ *
+ * <p>The clock/date block lives in its own {@link LockClockPanel}. A future
+ * custom PIN pad replaces that block through {@link #setAuthPanel(View)}; it is
+ * the documented seam, not a design change to the black surface.
  *
  * <p>The view is deliberately excluded from the accessibility tree
  * ({@code NO_HIDE_DESCENDANTS}) so TalkBack keeps seeing the stock keyguard
@@ -64,8 +61,7 @@ final class LockOverlayView extends FrameLayout {
 
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService iconExecutor;
-    private final TextView clockView;
-    private final TextView dateView;
+    private final LockClockPanel clockPanel;
     private final LinearLayout countsRow;
     private final TextView hintView;
     private final LinearLayout column;
@@ -96,27 +92,7 @@ final class LockOverlayView extends FrameLayout {
             }
         });
 
-        clockView = new TextView(context);
-        clockView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 92f);
-        clockView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
-        clockView.setTextColor(WHITE);
-        clockView.setIncludeFontPadding(false);
-        clockView.setSingleLine(true);
-        clockView.setGravity(Gravity.START);
-        clockView.setText("00:00");
-
-        dateView = new TextView(context);
-        // mockup: two 30 sp Semilight lines (weekday, then "d MMMM"), 36 dp
-        // line height, under the 92 sp clock (ztmetro.c:5930-5945).
-        dateView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 30f);
-        dateView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
-        dateView.setTextColor(WHITE);
-        dateView.setIncludeFontPadding(false);
-        dateView.setSingleLine(false);
-        dateView.setGravity(Gravity.START);
-        // Android's Open Sans box is 1.36 em; 0.882 x 40.8 dp = the mockup's
-        // 36 dp line, so the two-line block is 72 dp as drawn.
-        dateView.setLineSpacing(0f, 0.882f);
+        clockPanel = new LockClockPanel(context);
 
         countsRow = new LinearLayout(context);
         countsRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -168,56 +144,57 @@ final class LockOverlayView extends FrameLayout {
             }
         });
 
-        column.addView(clockView, new LinearLayout.LayoutParams(
+        column.addView(clockPanel, new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-
-        LinearLayout.LayoutParams dateParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        dateParams.topMargin = 0;
-        column.addView(dateView, dateParams);
 
         LinearLayout.LayoutParams countsParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        countsParams.topMargin = dp(22);
+        // 18.5 dp, not the mockup's 22: Android's Open Sans line box is 1.36 em
+        // (36 dp where CSS says 36 dp only at multiplier .882), so the smaller
+        // gap puts the count row's ink at y 57..83 from the bottom, the
+        // mockup's 56..82. Model checked against the measured v3 screenshot.
+        countsParams.topMargin = dp(18.5f);
         column.addView(countsRow, countsParams);
 
         LinearLayout.LayoutParams hintParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        hintParams.topMargin = dp(30);
+        // 25.5 dp for the same reason: hint ink 17..24 from the bottom (mockup
+        // 17.5..24) and a 32 dp ink gap to the counts row.
+        hintParams.topMargin = dp(25.5f);
         column.addView(hintView, hintParams);
     }
 
     /** Current wall clock, 24 h or the system 12 h preference. */
     void refreshClock() {
-        try {
-            java.util.Calendar now = java.util.Calendar.getInstance();
-            boolean hour24 = android.text.format.DateFormat.is24HourFormat(getContext());
-            int hour = hour24 ? now.get(java.util.Calendar.HOUR_OF_DAY)
-                    : now.get(java.util.Calendar.HOUR);
-            if (!hour24 && hour == 0) {
-                hour = 12;
-            }
-            int minute = now.get(java.util.Calendar.MINUTE);
-            String time = hour24
-                    ? String.format(Locale.US, "%02d:%02d", hour, minute)
-                    : String.format(Locale.US, "%d:%02d", hour, minute);
-            SpannableStringBuilder text = new SpannableStringBuilder(time);
-            if (!hour24) {
-                int start = text.length() + 1;
-                text.append(' ').append(now.get(java.util.Calendar.AM_PM)
-                        == java.util.Calendar.AM ? "AM" : "PM");
-                text.setSpan(new RelativeSizeSpan(0.26f), start, text.length(),
-                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                text.setSpan(new ForegroundColorSpan(WHITE_80), start, text.length(),
-                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            }
-            clockView.setText(text);
-            Date now2 = new Date();
-            dateView.setText(new SimpleDateFormat("EEEE", Locale.getDefault()).format(now2)
-                    + "\n" + new SimpleDateFormat("d MMMM", Locale.getDefault()).format(now2));
-        } catch (Throwable ignored) {
-            // A failed clock refresh must never take the service down.
+        clockPanel.refreshClock();
+    }
+
+    /**
+     * Future custom PIN pad hook: replace the clock/date block with [panel] in
+     * the same column slot. The overlay's main window is NOT_TOUCHABLE today, so
+     * a real PIN pad also needs the touchable-window change documented in
+     * {@code evidence/lock-overlay/README.md}; this method only guarantees the
+     * layout seam and keeps the notification row/hint below it intact.
+     */
+    void setAuthPanel(View panel) {
+        if (panel == null) {
+            return;
         }
+        try {
+            int index = column.indexOfChild(clockPanel);
+            if (index < 0) {
+                return;
+            }
+            column.removeViewAt(index);
+            column.addView(panel, index, new LinearLayout.LayoutParams(
+                    LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** The view a future PIN pad replaces; exposed for the seam test. */
+    View getClockArea() {
+        return clockPanel;
     }
 
     /**
@@ -350,7 +327,7 @@ final class LockOverlayView extends FrameLayout {
         main.removeCallbacksAndMessages(null);
     }
 
-    private int dp(int value) {
+    private int dp(float value) {
         return Math.max(1, Math.round(value * getResources().getDisplayMetrics().density));
     }
 

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro launch turnstile, arriving side.
+
+  The launched app's window comes in from the right over 180 ms
+  (core/zrnmetrocore.c:51 ROW_IN_MS) after a 33 ms delay (ROW_STAGGER_MS,
+  core/zrnmetrocore.c:52), so the outgoing Start slab is already moving when
+  the app appears. The curve is the WP incoming curve
+  e = 1 - (1 - t)^3 (core/zrnmetrocore.c:1424-1475), i.e. decelerate, never
+  overshoot. Alpha follows the same translate: the app is transparent while
+  it is still off screen and solid once it lands. No rotation is used because
+  a window animation is 2D; this is the flat translatable half of the
+  turnstile, the same one the Start page uses for its rows.
+
+  Used by ActivityOptions.makeCustomAnimation() in StartActivity.launchApp()
+  for tile taps, app-list rows and both long-press "open" menu items.
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:interpolator/decelerate_cubic">
+    <translate
+        android:fromXDelta="100%p"
+        android:toXDelta="0"
+        android:duration="180"
+        android:startOffset="33" />
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0"
+        android:duration="180"
+        android:startOffset="33" />
+</set>

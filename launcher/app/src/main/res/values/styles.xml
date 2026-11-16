@@ -20,5 +20,21 @@
         <item name="android:colorAccent">@color/metro_accent</item>
         <item name="android:textColorPrimary">@color/metro_text_primary</item>
         <item name="android:textColorSecondary">@color/metro_text_secondary</item>
+        <!-- Launcher-initiated launches supply the same pair through
+             ActivityOptions.makeCustomAnimation(). This style covers the
+             cases where Start itself is the incoming/outgoing window (for
+             example another app starting HOME); WMShell still owns the
+             app -> HOME return transition and may override it. -->
+        <item name="android:windowAnimationStyle">@style/Animation.ZtmetroStart</item>
+    </style>
+
+    <!-- ztmetro turnstile as a window animation. Same two resources used by
+         ActivityOptions in StartActivity, so an app-to-Start transition and a
+         Start-to-app transition cannot drift apart. -->
+    <style name="Animation.ZtmetroStart" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/zt_turnstile_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/zt_turnstile_out</item>
+        <item name="android:activityCloseEnterAnimation">@anim/zt_turnstile_in</item>
+        <item name="android:activityCloseExitAnimation">@anim/zt_turnstile_out</item>
     </style>
 </resources>

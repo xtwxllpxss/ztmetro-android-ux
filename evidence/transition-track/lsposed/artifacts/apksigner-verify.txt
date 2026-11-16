@@ -1,0 +1,4 @@
+Signer #1 certificate DN: CN=ztmetro transition track, O=ztOS
+Signer #1 certificate SHA-256 digest: 8b4b677e58d2eadf34082239c324b37c9d5c77662b8535e4bcbc4e2e3a46ef21
+Signer #1 certificate SHA-1 digest: a7777b213b27ae9b27e97f87f223ef40599742a2
+Signer #1 certificate MD5 digest: b1c25b186a9aa72b414ef80098b74b94

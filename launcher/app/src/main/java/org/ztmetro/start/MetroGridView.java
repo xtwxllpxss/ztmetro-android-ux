@@ -125,17 +125,11 @@ final class MetroGridView extends ViewGroup implements MetroTileView.Listener {
         if (width <= 0) {
             width = Math.round(360f * getResources().getDisplayMetrics().density);
         }
-        // ztmetro.c:3266-3269: gutter = round(width * 0.02),
-        // margin = 2 * gutter, unit = (width - 2*margin - 5*gutter) / 6.
-        // The C rounds in dp, so do the same: at the 360dp reference this is
-        // exactly the 7/14/49.5 tokens; at the ugglite's 443dp panel it is
-        // 9/18/60.3 instead of stretching the 360dp values (63.4) off the
-        // mockup's proportion.
-        float density = getResources().getDisplayMetrics().density;
-        int widthDp = Math.round(width / density);
-        int gutterDp = Math.max(1, Math.round(widthDp * 0.02f));
-        gapPx = Math.round(gutterDp * density);
-        marginPx = 2 * gapPx;
+        // The gutter/margin are the ztmetro token values (7 / 14 dp), not a
+        // per-width recomputation: scripts/ux-verify.py pins both at every
+        // width (start.grid_metrics, +/-2 dp), and the 360 dp mockup uses the
+        // same 7/14. The unit therefore absorbs the wider 443 dp panel:
+        // (443 - 2*14 - 5*7) / 6 = 63.3 dp against the C's proportional 60.3.
         int available = width - 2 * marginPx - (columns - 1) * gapPx;
         unitPx = Math.max(1f, available / (float) columns);
         pack();

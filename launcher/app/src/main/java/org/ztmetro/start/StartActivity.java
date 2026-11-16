@@ -1,6 +1,7 @@
 package org.ztmetro.start;
 
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -683,18 +684,49 @@ public final class StartActivity extends Activity
         super.onDestroy();
     }
 
+    /**
+     * ztmetro turnstile for launcher-initiated launches.
+     *
+     * <p>{@link ActivityOptions#makeCustomAnimation} is the only public hook an
+     * app has into WMShell's app-launch transition. The enter side animates the
+     * launched app's window (180 ms from the right after a 33 ms stagger) and
+     * the exit side animates this Start window (128 ms to the left, fading).
+     * The numbers are the C turnstile (core/zrnmetrocore.c:50-52); the XMLs
+     * carry the curves.
+     *
+     * <p>The reverse (app -> Start, e.g. Back/Home) is deliberately absent: the
+     * system composes that transition in WMShell's
+     * {@code DefaultTransitionHandler}/Launcher, and an app cannot supply a
+     * custom animation for a task it does not start. See
+     * evidence/transitions-recents/README.md.
+     */
+    private Bundle launchTurnstile() {
+        return ActivityOptions.makeCustomAnimation(this,
+                R.anim.zt_turnstile_in, R.anim.zt_turnstile_out).toBundle();
+    }
+
     private void launchApp(ComponentName component) {
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         intent.setComponent(component);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        launchIntent(intent, R.string.app_missing);
+    }
+
+    /**
+     * One start path for every launcher-initiated activity: tile tap, app-list
+     * row, long-press sheet "open" and the Settings shortcuts all land here.
+     * The custom animation is supplied on the bundle so it wins over whatever
+     * windowAnimationStyle the target app declares.
+     */
+    private void launchIntent(Intent intent, int missingRes) {
         try {
-            startActivity(intent);
+            startActivity(intent, launchTurnstile());
         } catch (ActivityNotFoundException e) {
-            Toast.makeText(this, R.string.app_missing, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, missingRes, Toast.LENGTH_SHORT).show();
         } catch (SecurityException e) {
             // Component became unexported/disabled between query and tap.
-            Toast.makeText(this, R.string.app_missing, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, missingRes, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -776,11 +808,7 @@ public final class StartActivity extends Activity
     }
 
     private void openSettings(Intent intent) {
-        try {
-            startActivity(intent);
-        } catch (ActivityNotFoundException e) {
-            toast(R.string.settings_missing);
-        }
+        launchIntent(intent, R.string.settings_missing);
     }
 
     @Override

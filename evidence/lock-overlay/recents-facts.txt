@@ -1,0 +1,8 @@
+activity           org.ztmetro.actioncentre/.RecentsActivity (exported, action org.ztmetro.actioncentre.RECENTS)
+title              "recent" 58 sp Open Sans Light, WP lower-case page title
+layout             black frame, caps RECENT APPS, horizontal flat cards 248x320 dp, icon + label + TASK #id
+task source        ActivityManager.getRunningTasks(30); cross-app only when caller UID is config_recentsComponentName
+ordinary app       own tasks + HOME only (AOSP 16 ATMS.isGetTasksAllowed / RecentTasks)
+dismiss            swipe up; attempts hidden ActivityManager.removeTask(); needs REMOVE_TASKS (signature|recents|role)
+fallback           WP frame + exact system-side change + optional Usage Access app list (PACKAGE_USAGE_STATS app-op)
+wm shell           config_recentsComponentName is read by system_server RecentTasks/PMS, not by WMShell or Launcher3

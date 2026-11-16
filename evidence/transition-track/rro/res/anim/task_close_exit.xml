@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Same visual for the CLOSE/TO_BACK variants (covers the other WMS path). -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shareInterpolator="false">
+    <scale
+        android:fromXScale="1.0" android:toXScale="0.92"
+        android:fromYScale="1.0" android:toYScale="0.92"
+        android:pivotX="50%" android:pivotY="50%"
+        android:fillEnabled="true" android:fillBefore="true" android:fillAfter="true"
+        android:interpolator="@android:interpolator/decelerate_cubic"
+        android:duration="360" />
+    <translate
+        android:fromXDelta="0" android:toXDelta="10%"
+        android:fillEnabled="true" android:fillBefore="true" android:fillAfter="true"
+        android:interpolator="@android:interpolator/fast_out_extra_slow_in"
+        android:duration="360" />
+    <alpha
+        android:fromAlpha="1.0" android:toAlpha="0.55"
+        android:fillEnabled="true" android:fillBefore="true" android:fillAfter="true"
+        android:interpolator="@android:interpolator/linear"
+        android:duration="360" />
+</set>

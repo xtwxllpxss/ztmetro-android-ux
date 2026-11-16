@@ -25,6 +25,17 @@ PASS  CAMERA permission
 PASS  WRITE_SETTINGS appop permission
 PASS  slide-up animation resource
 PASS  slide-down animation resource
+PASS  recents activity registered
+PASS  recents intent action
+PASS  recents theme in resource table
+PASS  recents entry animation resource
+PASS  recents exit animation resource
+PASS  recents title string
+PASS  recents no-access statement
+PASS  recents system-change statement
+PASS  recents PACKAGE_USAGE_STATS (app-op, optional)
+PASS  recents REORDER_TASKS (normal)
+PASS  action centre window animation style
 PASS  accessibility config packaged
 PASS  accessibility config: window-state + content-changed events
 PASS  accessibility config: generic feedback
@@ -42,7 +53,13 @@ PASS  dexdump lists onAccessibilityEvent callback
 PASS  dexdump lists geometry detector
 PASS  dexdump lists panel-visible timing hook
 PASS  instant-launch extra packaged
-PASS  exactly one BACK call in ShadeBridgeService
+PASS  at most two BACK call sites (one per collapse path)
+PASS  panel-first shade path: BACK only after 120 ms, capped at one
+PASS  shade timeline logs detected/start/back/visible
+PASS  row tap sends contentIntent with FLAG_ACTIVITY_NEW_TASK fill-in (immutability logged)
+PASS  action[0] fallback carried and used when contentIntent is null
+PASS  row X cancels the notification and logs the result
+PASS  swipe-up close: 60 dp / fling, scroll-safe arming
 PASS  dexdump lists top-edge strip overlay
 PASS  strip uses TYPE_ACCESSIBILITY_OVERLAY
 PASS  dexdump lists LockOverlayController
@@ -50,6 +67,18 @@ PASS  dexdump lists LockOverlayView
 PASS  lock overlay uses TYPE_ACCESSIBILITY_OVERLAY
 PASS  lock surface NOT_FOCUSABLE|NOT_TOUCHABLE
 PASS  lock overlay performs no global action (never unlocks)
+PASS  dexdump lists UnlockProxyActivity
+PASS  dexdump lists UnlockTimeline
+PASS  dexdump lists LockClockPanel
+PASS  unlock proxy activity registered
+PASS  DISABLE_KEYGUARD permission declared
+PASS  unlock proxy: showWhenLocked, excluded from recents, not exported
+PASS  non-secure unlock calls requestDismissKeyguard
+PASS  secure unlock opens the system credential screen
+PASS  unlock timeline logged from proxy and controller
+PASS  foreign windows compared above/below the keyguard (layer/order)
+PASS  clock area is a separate panel with the PIN-pad hook
+PASS  unlock proxy has a no-animation transparent theme
 PASS  dexdump lists StatusStripService
 PASS  dexdump lists StatusStripOverlayView
 PASS  status strip uses TYPE_ACCESSIBILITY_OVERLAY
@@ -77,8 +106,14 @@ PASS  class StatusStripView in dex
 PASS  class Motion in dex
 PASS  class LockOverlayController in dex
 PASS  class LockOverlayView in dex
+PASS  class LockClockPanel in dex
+PASS  class UnlockProxyActivity in dex
+PASS  class UnlockTimeline in dex
 PASS  class StatusStripService in dex
 PASS  class StatusStripOverlayView in dex
+PASS  class RecentsActivity in dex
+PASS  recents reads ActivityManager.getRunningTasks
+PASS  recents attempts the hidden removeTask boundary
 PASS  bundled Open Sans Light asset in APK
 PASS  classes.dex packaged
-PASS  APK smaller than 2 MB (325179 bytes)
+PASS  APK smaller than 2 MB (345804 bytes)

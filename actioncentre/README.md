@@ -39,13 +39,16 @@ remote work directory (the Metro lock overlay run used `ztux/lock`), and
 
 | path | role |
 |---|---|
-| `ActionCentreActivity.java` | full-screen panel, tile wiring, settings intents, permission flows, slide transitions |
+| `ActionCentreActivity.java` | full-screen panel, tile wiring, settings intents, permission flows, slide transitions, swipe-up close + 1:1 handle |
 | `ShadeBridgeService.java` | optional accessibility service: top-edge strip / system shade → this panel, plus the lock overlay hook (`res/xml/shade_bridge.xml` config) |
-| `LockOverlayController.java` | keyguard detection + lock windows: display, bottom swipe strip, lifecycle, fail-safe |
-| `LockOverlayView.java` | the black lock surface: 92 sp clock, date, per-app counts, swipe hint |
+| `LockOverlayController.java` | keyguard detection + lock windows: display, bottom swipe strip, unlock proxy hand-off, above/below-keyguard window decision, lifecycle, fail-safe |
+| `LockOverlayView.java` | the black lock surface: per-app counts, hint, `setAuthPanel()` seam |
+| `LockClockPanel.java` | the clock/date block, separate for a future custom PIN pad |
+| `UnlockProxyActivity.java` | transparent `showWhenLocked` helper: dismiss a non-secure keyguard or launch the system credential screen |
+| `UnlockTimeline.java` | `UnlockTimeline` wall-clock log for swipe → proxy → credential → USER_PRESENT → removal |
 | `QuickGrid.java` / `QuickTile.java` | 4-column square tile grid, custom flat drawing (no ripple, no elevation) |
-| `StatusStripView.java` | our 30 dp operator/battery/clock/date strip |
-| `NotificationRowView.java` | flat notification row, tap-to-open, swipe-left/X dismiss |
+| `StatusStripView.java` | our 50 dp status strip (glyph row + operator/date/charge) |
+| `NotificationRowView.java` | flat notification row, tap-to-open (contentIntent + action[0] fallback, logged), swipe-left/X dismiss (logged) |
 | `ActionCentreListener.java` | optional `NotificationListenerService` + cancel helpers |
 | `NotificationRepository.java` | in-process notification cache shared by service and panel |
 | `HandleView.java` | 16 dp accent bottom handle with 28x3 white grip |
@@ -61,7 +64,9 @@ bar: a top-edge swipe/tap is consumed there and opens the panel, so the stock sh
 appears and there is no flicker. Taps on the status strip therefore no longer reach the
 clock/battery. If the shade is opened another way, a geometry fallback (SystemUI window
 covering ≥85 % of the display; the device reports it as `android.widget.FrameLayout`)
-sends exactly one BACK, waits up to 250 ms, then starts the panel with `extra_instant=true`.
+starts the panel immediately with `extra_instant=true` (so its first frame is under the
+shade) and sends at most one BACK after 120 ms if the shade is still visible. Without the
+strip the older BACK-first / 250 ms poll path is kept.
 With the service off nothing changes in the shade path. See
 `../evidence/actioncentre/SHADE-BRIDGE.md` for the overlay/flags, logcat lines, timing and
 rollback.
@@ -71,13 +76,22 @@ rollback.
 While `KeyguardManager.isKeyguardLocked()` is true, the service adds a full-screen
 opaque `TYPE_ACCESSIBILITY_OVERLAY` (AOSP layer 31, above the keyguard's
 notification-shade window at layer 17) and draws the ztMetro lock screen over it:
-92 sp Light clock, one 20 sp date line, up to five app icons + counts in the lower
+92 sp Light clock, two 30 sp date lines, up to five app icons + counts in the lower
 third, and `↑ СВАЙП ВВЕРХ`. No status row, no Material clock, no notification card,
 no rounded corners. The display window is
 `FLAG_NOT_FOCUSABLE|FLAG_NOT_TOUCHABLE|FLAG_LAYOUT_IN_SCREEN|FLAG_LAYOUT_NO_LIMITS`,
 `PixelFormat.OPAQUE`; the only touchable part is a transparent bottom strip
-(200–280 dp) whose swipe-up removes the overlay and reveals the stock keyguard
-(fingerprint/PIN are entered there — the app never unlocks anything itself).
+(200–280 dp).
+
+A swipe up keeps the black surface attached and starts the transparent
+`UnlockProxyActivity` (`showWhenLocked`, no animation, excluded from recents).
+A non-secure lock is dismissed with `KeyguardManager.requestDismissKeyguard`; a
+secure lock opens the system `createConfirmDeviceCredentialIntent` screen, which
+is not the stock lock screen. The overlay is removed only on `USER_PRESENT` or
+when the credential window is actually above it, so the stock lock screen is
+never deliberately revealed during the swipe. If either call is refused, the
+proxy reveals the stock keyguard and logs why. Timeline:
+`adb logcat -s UnlockTimeline LockOverlay UnlockProxy`.
 
 Same one-time setup as the shade gesture: **Settings → Accessibility → ztMetro
 Action Centre = ON**. The counts row additionally needs the notification listener.

@@ -126,18 +126,14 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
         touchSlop = ViewConfiguration.get(this).getScaledTouchSlop();
         closeFlingPxPerS = Math.round(CLOSE_FLING_DP_PER_S
                 * getResources().getDisplayMetrics().density);
-        // Our own 260 ms travel replaces the window animation, so it can follow
-        // Settings.Global.ANIMATOR_DURATION_SCALE and the handle drag.
-        suppressWindowAnimation();
+        // The panel is a window: open/close are real window animations
+        // (res/anim/ac_slide_up|down) so they follow the system animator scale
+        // and match the launcher's WP motion. A bridge-owned launch is already
+        // behind the closing shade and must not animate twice.
+        applyWindowAnimations();
         // The decor view does not exist before setContentView; hiding the bars earlier
         // throws NPE on this build (observed on LineageOS 23.2).
         hideSystemBars();
-        if (!launchedFromBridge) {
-            // Offscreen from the first frame: no flash of a fully open panel
-            // before the runnable gets its height.
-            root.setTranslationY(getResources().getDisplayMetrics().heightPixels);
-            root.post(openRunnable);
-        }
         findFlash();
         registerTorchCallback();
         ActionCentreListener.ensureRebind(this);
@@ -361,45 +357,39 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
     }
 
-    /** No window animation: the content slides itself (see {@link #openRunnable}). */
-    private void suppressWindowAnimation() {
+    /**
+     * Window animations: the panel slides up over 260 ms
+     * ({@code ztmetro.c:138} SHADE_MS) and down over 220 ms, the same travel
+     * the old in-content animation used, but as a window transition so it also
+     * follows {@code Settings.Global.ANIMATOR_DURATION_SCALE}. A launch from
+     * the shade bridge is already in place behind the closing shade, so it is
+     * explicitly kept instant.
+     */
+    private void applyWindowAnimations() {
         try {
             if (Build.VERSION.SDK_INT >= 34) {
-                overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0);
-                overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0);
-            } else {
+                if (launchedFromBridge) {
+                    overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0);
+                    overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0);
+                } else {
+                    overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN,
+                            R.anim.ac_slide_up, R.anim.ac_stay);
+                    overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE,
+                            R.anim.ac_stay, R.anim.ac_slide_down);
+                }
+            } else if (launchedFromBridge) {
                 overridePendingTransition(0, 0);
+            } else {
+                overridePendingTransition(R.anim.ac_slide_up, R.anim.ac_stay);
             }
         } catch (Throwable ignored) {
         }
     }
 
-    /** 260 ms up ({@code ztmetro.c:138} SHADE_MS), scaled by the animator scale. */
-    private final Runnable openRunnable = new Runnable() {
+    private final Runnable finishAfterDragRunnable = new Runnable() {
         @Override
         public void run() {
-            if (root == null || closing) {
-                return;
-            }
-            int height = panelHeight();
-            int duration = Motion.ms(ActionCentreActivity.this, Motion.SHADE_OPEN_MS);
-            root.animate().cancel();
-            if (duration <= 0) {
-                root.setTranslationY(0f);
-                return;
-            }
-            root.setTranslationY(height);
-            root.animate().translationY(0f)
-                    .setDuration(duration)
-                    .setInterpolator(Motion.WP_LOG)
-                    .start();
-        }
-    };
-
-    private final Runnable finishNowRunnable = new Runnable() {
-        @Override
-        public void run() {
-            finishNow();
+            finishNow(true);
         }
     };
 
@@ -409,26 +399,46 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
             return;
         }
         closing = true;
+        float offset = root != null ? root.getTranslationY() : 0f;
+        if (offset <= 0.5f) {
+            // Not dragged: the window's own close animation slides it down.
+            finishNow(false);
+            return;
+        }
+        // Dragged part-way down: finish the travel from the finger position and
+        // suppress the window close animation (it would add a second move).
         int duration = Motion.ms(this, Motion.SHADE_CLOSE_MS);
         if (root == null || duration <= 0) {
-            finishNow();
+            if (root != null) {
+                root.setTranslationY(panelHeight());
+            }
+            finishNow(true);
             return;
         }
         root.animate().cancel();
         root.animate().translationY(panelHeight())
                 .setDuration(duration)
                 .setInterpolator(Motion.WP_LOG)
-                .withEndAction(finishNowRunnable)
+                .withEndAction(finishAfterDragRunnable)
                 .start();
     }
 
-    private void finishNow() {
+    private void finishNow(boolean dragTravelOwnsClose) {
+        // finish() first: on API < 34 overridePendingTransition() is documented
+        // to be called immediately after finish(), not before it.
         super.finish();
         try {
             if (Build.VERSION.SDK_INT >= 34) {
-                overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0);
-            } else {
+                if (dragTravelOwnsClose) {
+                    overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0);
+                } else {
+                    overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE,
+                            R.anim.ac_stay, R.anim.ac_slide_down);
+                }
+            } else if (dragTravelOwnsClose) {
                 overridePendingTransition(0, 0);
+            } else {
+                overridePendingTransition(R.anim.ac_stay, R.anim.ac_slide_down);
             }
         } catch (Throwable ignored) {
         }
@@ -465,13 +475,13 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
         int duration = Motion.ms(this, Motion.SHADE_CLOSE_MS);
         if (duration <= 0) {
             root.setTranslationY(height);
-            finishNow();
+            finishNow(true);
             return;
         }
         root.animate().translationY(height)
                 .setDuration(duration)
                 .setInterpolator(Motion.WP_LOG)
-                .withEndAction(finishNowRunnable)
+                .withEndAction(finishAfterDragRunnable)
                 .start();
     }
 
@@ -643,7 +653,7 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.TOP);
-        row.setPadding(U.dp(this, 12), U.dp(this, 12), U.dp(this, 12), 0);
+        row.setPadding(U.dp(this, 12), U.dp(this, 8.5f), U.dp(this, 12), 0);
 
         TextView clear = link(getString(R.string.link_clear_all));
         clear.setText("\u00d7  " + clear.getText());
@@ -1081,9 +1091,20 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
     private boolean sendNotificationIntent(Notif notif, PendingIntent pendingIntent,
                                            String source) {
         try {
+            boolean immutable = false;
+            try {
+                // Android 16 notification intents are usually FLAG_IMMUTABLE:
+                // the fill-in intent's flags are then ignored by the platform
+                // (the base intent still launches). Log it so a device run can
+                // tell whether NEW_TASK was actually applied.
+                immutable = pendingIntent.isImmutable();
+            } catch (Throwable ignored) {
+            }
             pendingIntent.send(this, 0,
                     new Intent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-            Log.i(TAG, "tap key=" + notif.key + " via " + source + ": send ok");
+            Log.i(TAG, "tap key=" + notif.key + " via " + source
+                    + ": send ok (immutable=" + immutable
+                    + (immutable ? ", fill-in flags ignored by platform" : "") + ")");
             return true;
         } catch (PendingIntent.CanceledException e) {
             Log.w(TAG, "tap key=" + notif.key + " via " + source

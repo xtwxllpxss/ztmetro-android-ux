@@ -1,0 +1,13 @@
+turnstile out       128 ms  core/zrnmetrocore.c:50 ROW_OUT_MS
+turnstile in        180 ms  core/zrnmetrocore.c:51 ROW_IN_MS
+turnstile stagger   33 ms  core/zrnmetrocore.c:52 ROW_STAGGER_MS
+turnstile turn      out 50 deg, in 80 deg  core/zrnmetrocore.c:66-67
+tilt delay          80 ms  ztmetro.c:148 PRESS_DELAY_MS
+tilt in             90 ms  core/zrnmetrocore.h:35 ZMC_TILT_IN_MS
+tilt out            200 ms  core/zrnmetrocore.h:36 ZMC_TILT_OUT_MS
+tilt geometry       14 deg  core/zrnmetrocore.h:32 ZMC_TILT_DEG
+long press          450 ms  ztmetro.c:145 LONG_PRESS_MS
+press highlight     16 ms before the lean (one 60 Hz frame)
+scale               Settings.Global.ANIMATOR_DURATION_SCALE read at every motion start; 0 = instant
+frames at 60 Hz     out 7.7, in 10.8, stagger 2.0, tilt in 5.4, tilt out 12.0, press delay 4.8
+easing              (1 - pow(0.1, t)) / 0.9  core/zrnmetrocore.c:1628 (Log(10))

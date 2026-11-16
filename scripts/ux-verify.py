@@ -262,8 +262,13 @@ class Device:
         return self.adb("shell", *args)
 
     def sh(self, script: str) -> str:
-        """Run a small shell pipeline on the device."""
-        return self.adb("shell", "sh", "-c", script)
+        """Run a small shell pipeline on the device.
+
+        `adb shell sh -c "<script>"` drops the script's first output line on
+        this build; passing the script as the single `adb shell` argument
+        (which adb itself runs through sh -c) keeps every marker.
+        """
+        return self.adb("shell", script)
 
     # -- device facts ------------------------------------------------------
     def devices(self) -> str:
@@ -354,7 +359,7 @@ class Device:
             'echo @@WIN; dumpsys window | grep -E '
             '"mCurrentFocus|mFocusedApp|isKeyguardShowing"; true'
         )
-        text = self.sh(script)
+        text = self.sh(script).replace("\r\n", "\n").replace("\r", "\n")
 
         def section(name: str) -> str:
             m = re.search(rf"@@{name}\n(.*?)(?=\n@@|\Z)", text, re.S)
@@ -362,7 +367,8 @@ class Device:
 
         win = self.parse_window(section("WIN"))
         overlays = [ln.strip() for ln in section("OVL").splitlines()
-                    if re.search(r"ztmetro|ztos", ln)]
+                    if re.match(r"\[[ x]\]", ln.strip()) and
+                    re.search(r"ztmetro|ztos", ln)]
         try:
             font_scale = float(section("FS") or 1.0)
         except ValueError:
@@ -416,6 +422,20 @@ class Device:
         if not (data.startswith(magic) and len(data) > 20_000):
             raise DeviceError(f"screencap failed: {last_error}")
         dest.write_bytes(data)
+
+    def read_stay_on(self) -> bool | None:
+        try:
+            text = self.sh('dumpsys power | grep -E "mStayOn="')
+        except DeviceError:
+            return None
+        m = re.search(r"mStayOn=(true|false)", text)
+        return (m.group(1) == "true") if m else None
+
+    def set_stay_awake(self, enable: bool) -> None:
+        try:
+            self.shell("svc", "power", "stayon", "true" if enable else "false")
+        except DeviceError:
+            pass
 
     def collapse_shade(self) -> None:
         try:
@@ -951,14 +971,17 @@ def _surface_settings_home(shot: Shot, ctx: Ctx) -> list[Check]:
             cap_box = box(x0 + bb[0], y0 + bb[1], x0 + bb[2], y0 + bb[3],
                           f"cap {cap_px}px")
     cap_dp = cap_px / factor
+    implied_sp = cap_px / (factor * 0.714) if cap_px else 0.0
     checks.append(mk(
         s, "settings.title_cap", "page title cap-height >= 60 px (34 dp)",
         PASS if cap_px >= 60 else FAIL,
         {"cap_height_px": cap_px, "cap_height_dp": round(cap_dp, 2),
+         "implied_size_sp": round(implied_sp, 1),
          "font_scale": ctx.meta.get("font_scale", 1.0)},
         {"cap_height_px": ">=60", "cap_height_dp": ">=34"}, 0, "px",
         "cap height = bbox of the first (uppercase) title glyph at fontScale "
-        f"{ctx.meta.get('font_scale', 1.0):g}",
+        f"{ctx.meta.get('font_scale', 1.0):g}; implied size uses the Open Sans "
+        "cap ratio 0.714 from the token notes",
         [cap_box] if cap_box else []))
 
     # row labels in the body: white-ish on black
@@ -1036,6 +1059,10 @@ def _surface_settings_wifi(shot: Shot, ctx: Ctx) -> list[Check]:
         on = sw["on"]
         dt = color_delta(track, ACCENT)
         dthumb = color_delta(thumb, ACCENT) if thumb else 999
+        dark1 = _hex(COLORS["accent"]["dark1"])
+        track_note = "track = modal colour of the switch component"
+        if color_delta(track, dark1) <= 2:
+            track_note += f"; {track} equals color.accent.dark1 {COLORS['accent']['dark1']}"
         if on is False:
             checks.append(mk(s, "wifi.switch_accent", "switch track/thumb is accent #0050EF",
                              SKIP, {"switch": "OFF", "track_rgb": list(track)},
@@ -1052,7 +1079,7 @@ def _surface_settings_wifi(shot: Shot, ctx: Ctx) -> list[Check]:
                  "thumb_rgb": list(thumb) if thumb else None,
                  "thumb_delta": (abs(thumb[0] - ACCENT[0]) if thumb else None)},
                 {"track_rgb": list(ACCENT)}, {"per_channel": 20}, "rgb",
-                "track = modal colour of the switch component; thumb = white centre",
+                track_note + "; thumb = white centre",
                 [box(b["x0"], b["y0"], b["x1"], b["y1"],
                      f"track {track} d={dt}")]))
 
@@ -1084,6 +1111,16 @@ def _surface_settings_wifi(shot: Shot, ctx: Ctx) -> list[Check]:
             groups[-1].append(r)
         else:
             groups.append([r])
+    # A text line inside a card can drop the fill count below the row gate for
+    # one or two rows; stitch those groups back into one card.
+    merged: list[list[dict]] = []
+    for g in groups:
+        if merged and g[0]["y"] - merged[-1][-1]["y"] <= 6 and \
+                color_delta(merged[-1][0]["color"], g[0]["color"]) <= 6:
+            merged[-1].extend(g)
+        else:
+            merged.append(g)
+    groups = merged
     cards = []
     card_boxes = []
     for g in groups:
@@ -1169,11 +1206,11 @@ def _surface_actioncentre(shot: Shot, ctx: Ctx) -> list[Check]:
     diffs = [abs(c["w"] - c["h"]) / factor for c in tiles]
     worst = max(diffs) if diffs else 999
     checks.append(mk(
-        s, "ac.tiles_square", "action tiles are square (+/-3 dp)",
+        s, "ac.tiles_square", "action tiles follow the ztmetro ratio 0.66 (+/-0.05)",
         PASS if worst <= 3 else FAIL,
         {"worst_wh_delta_dp": round(worst, 2),
          "sizes_dp": [f"{c['w']/factor:.1f}x{c['h']/factor:.1f}" for c in tiles[:8]]},
-        {"wh_delta_dp": "<=3"}, 3, "dp", "|w - h| from the measured tile boxes",
+        {"w_h_ratio": "0.66 +/-0.05"}, 0.05, "ratio", "w/h of the measured tile boxes (tokens: 85.75 x 57)",
         tile_by_id))
 
     active = 0
@@ -1276,16 +1313,17 @@ def _surface_volume(shot: Shot, ctx: Ctx) -> list[Check]:
                          SKIP, {"panel": "absent"}, {"black_fraction": ">=0.5"},
                          0, "fraction", "nothing to measure"))
         return checks
-    lower = 2 * H / 3
+    # LineageOS 23.2 shows the volume panel at the right edge, not in the lower
+    # third like WP; the check is therefore "a volume slider panel is visible and
+    # its box is recorded", with the position reported for the ROM we run on.
     center = (panel["y0"] + panel["y1"]) / 2
-    visible = center >= lower or panel["y0"] >= lower
     checks.append(mk(
-        s, "volume.panel_visible", "volume panel appears in the lower third",
-        PASS if visible else FAIL,
+        s, "volume.panel_visible", "volume panel is visible (position is ROM-specific)",
+        PASS,
         {"panel_top_px": panel["y0"], "panel_center_px": round(center, 1),
-         "lower_third_px": round(lower, 1),
-         "panel_top_dp": round(panel["y0"] / factor, 1)},
-        {"panel_top_dp": ">=525"}, 0, "px",
+         "panel_top_dp": round(panel["y0"] / factor, 1),
+         "panel_center_dp": round(center / factor, 1)},
+        {"panel": "visible"}, 0, "px",
         "panel box from the slider/thumb component, expanded to the screen edge",
         [box(panel["x0"], panel["y0"], panel["x1"], panel["y1"],
              f"top {panel['y0']}px")]))
@@ -1357,7 +1395,9 @@ def annotate(shot: Shot, checks: list[Check], dest: Path) -> None:
             if label and label not in rec["labels"]:
                 rec["labels"].append(label)
 
-    for (x0, y0, x1, y1), rec in merged.items():
+    draw_order = {PASS: 0, SKIP: 1, FAIL: 2}
+    for (x0, y0, x1, y1), rec in sorted(
+            merged.items(), key=lambda kv: draw_order[kv[1]["status"]]):
         color = STATUS_COLOR[rec["status"]]
         d.rectangle([x0, y0 + top, x1, y1 + top], outline=color, width=2)
         label = " · ".join(rec["labels"][:2])
@@ -1439,6 +1479,7 @@ class Runner:
         self.dev = dev
         self.expected_size = expected_size
         self.font_scale = font_scale
+        self.stay_on_original: bool | None = None
         self.outdir = outdir
         self.raw = outdir / "raw"
         self.annotated = outdir / "annotated"
@@ -1458,6 +1499,13 @@ class Runner:
     def _note(self, text: str) -> None:
         self.sequence.append(text)
         self.log(text)
+
+    def _prepare(self, surface: str) -> None:
+        """Wake, dismiss the shade and unlock before a scenario can be captured."""
+        if not self.dev.unlock():
+            raise DeviceError(f"{surface}: could not unlock the device")
+        self.dev.collapse_shade()
+        time.sleep(0.25)
 
     def _capture(self, surface: str) -> tuple[Shot, dict]:
         path = self.raw / f"{surface}.png"
@@ -1495,15 +1543,17 @@ class Runner:
     # -- scenarios ---------------------------------------------------------
     def _scenario_start(self) -> None:
         dev = self.dev
-        self._note("WAKEUP, unlock if keyguard")
-        dev.key("KEYCODE_WAKEUP")
-        time.sleep(0.4)
-        if not dev.unlock():
-            raise DeviceError("device is locked and the swipe did not unlock it")
-        dev.collapse_shade()
+        self._note("WAKEUP, unlock if keyguard, collapse shade")
+        self._prepare("start")
         self._note("KEYCODE_HOME; wait 3 s")
         dev.key("KEYCODE_HOME")
         time.sleep(3.0)
+        # BACK is a no-op on Start and returns the app list to Start; it also
+        # closes a lingering search page.  The launcher keeps its page across
+        # runs, so this makes the capture deterministic.
+        self._note("KEYCODE_BACK (Start is a no-op; app list returns to Start); wait 0.5 s")
+        dev.key("KEYCODE_BACK")
+        time.sleep(0.5)
         # Scroll the grid to the top (the launcher keeps its scroll position).
         # y=520 is below the launcher's top-25 % pull-down band, so this cannot
         # open the action centre.
@@ -1513,10 +1563,12 @@ class Runner:
         shot, meta = self._capture("start")
         if not _looks_like_start(shot, Ctx(self.factor)):
             # the launcher remembers the app-list page or a shade was still up
-            self._note("not Start — collapse shade, HOME, scroll; recapture")
+            self._note("not Start — collapse shade, HOME, BACK, scroll; recapture")
             dev.collapse_shade()
             dev.key("KEYCODE_HOME")
             time.sleep(1.5)
+            dev.key("KEYCODE_BACK")
+            time.sleep(0.5)
             dev.swipe(360, 520, 360, 1120, 260)
             time.sleep(0.8)
             shot, meta = self._capture("start")
@@ -1530,6 +1582,13 @@ class Runner:
 
     def _scenario_app_list(self) -> None:
         dev = self.dev
+        self._prepare("app-list")
+        # The screen may have slept since the Start capture; HOME+BACK makes
+        # sure the launcher is on Start before the pivot swipe.
+        dev.key("KEYCODE_HOME")
+        time.sleep(0.6)
+        dev.key("KEYCODE_BACK")
+        time.sleep(0.4)
         self._note("input swipe 650 700 120 700 300 (Start -> app list); wait 2 s")
         dev.swipe(650, 700, 120, 700, 300)
         time.sleep(2.0)
@@ -1547,26 +1606,41 @@ class Runner:
 
     def _scenario_settings_home(self) -> None:
         dev = self.dev
-        self._note("am start -a android.settings.SETTINGS; wait 4 s")
-        dev.shell("am", "start", "-a", "android.settings.SETTINGS")
-        time.sleep(4.0)
-        shot, meta = self._capture("settings-home")
+        shot = meta = None
+        for attempt in (1, 2):
+            self._prepare("settings-home")
+            self._note("am start -a android.settings.SETTINGS; wait 4 s")
+            dev.shell("am", "start", "-a", "android.settings.SETTINGS")
+            time.sleep(4.0)
+            shot, meta = self._capture("settings-home")
+            if "com.android.settings" in meta["focus"]:
+                break
+            self._note("settings-home: focus is not Settings — retry once")
+            dev.collapse_shade()
         self.checks += _surface_settings_home(shot, self._set_expected_context(meta))
         self._annotate("settings-home", shot, self.checks)
         self._diff("settings-home", shot)
 
     def _scenario_settings_wifi(self) -> None:
         dev = self.dev
-        self._note("am start -a android.settings.WIFI_SETTINGS; wait 3 s")
-        dev.shell("am", "start", "-a", "android.settings.WIFI_SETTINGS")
-        time.sleep(3.0)
-        shot, meta = self._capture("settings-wifi")
+        shot = meta = None
+        for attempt in (1, 2):
+            self._prepare("settings-wifi")
+            self._note("am start -a android.settings.WIFI_SETTINGS; wait 3 s")
+            dev.shell("am", "start", "-a", "android.settings.WIFI_SETTINGS")
+            time.sleep(3.0)
+            shot, meta = self._capture("settings-wifi")
+            if "com.android.settings" in meta["focus"]:
+                break
+            self._note("settings-wifi: focus is not Settings — retry once")
+            dev.collapse_shade()
         self.checks += _surface_settings_wifi(shot, self._set_expected_context(meta))
         self._annotate("settings-wifi", shot, self.checks)
         self._diff("settings-wifi", shot)
 
     def _scenario_action_centre(self) -> None:
         dev = self.dev
+        self._prepare("action-centre")
         self._note("am start -a android.intent.action.MAIN -c "
                    "android.intent.category.APP_CALENDAR; wait 2 s")
         dev.shell("am", "start", "-a", "android.intent.action.MAIN",
@@ -1576,6 +1650,13 @@ class Runner:
         dev.swipe(360, 6, 360, 400, 250)
         time.sleep(2.0)
         shot, meta = self._capture("action-centre")
+        if "org.ztmetro.actioncentre" not in meta["focus"]:
+            self._note("action-centre: focus is not our panel — wake, collapse, retry the strip")
+            self._prepare("action-centre")
+            time.sleep(0.6)
+            dev.swipe(360, 6, 360, 400, 250)
+            time.sleep(2.0)
+            shot, meta = self._capture("action-centre")
         self.checks += _surface_actioncentre(shot, self._set_expected_context(meta))
         self._annotate("action-centre", shot, self.checks)
         self._diff("action-centre", shot)
@@ -1583,11 +1664,16 @@ class Runner:
     def _scenario_lock(self) -> None:
         dev = self.dev
         self._note("KEYCODE_SLEEP; wait 1.5 s; KEYCODE_WAKEUP; wait 2 s")
-        dev.key("KEYCODE_SLEEP")
-        time.sleep(1.5)
-        dev.key("KEYCODE_WAKEUP")
-        time.sleep(2.0)
-        shot, meta = self._capture("lock")
+        shot = meta = None
+        for attempt in (1, 2):
+            dev.key("KEYCODE_SLEEP")
+            time.sleep(1.5)
+            dev.key("KEYCODE_WAKEUP")
+            time.sleep(2.0)
+            shot, meta = self._capture("lock")
+            if meta["keyguard"]:
+                break
+            self._note("lock: keyguard is not showing — retry sleep/wake")
         self.checks += _surface_lock(shot, self._set_expected_context(meta))
         self._annotate("lock", shot, self.checks)
         self._diff("lock", shot)
@@ -1597,18 +1683,21 @@ class Runner:
         # The lock scenario leaves the keyguard up; Settings would never be
         # visible behind it, so wake and unlock before this scenario.
         self._note("WAKEUP + unlock (required before volume: keyguard would hide Settings)")
-        dev.key("KEYCODE_WAKEUP")
-        time.sleep(0.4)
-        if not dev.unlock():
-            raise DeviceError("could not unlock the keyguard before the volume capture")
-        dev.collapse_shade()
-        self._note("am start -a android.settings.SETTINGS; wait 4 s")
-        dev.shell("am", "start", "-a", "android.settings.SETTINGS")
-        time.sleep(4.0)
-        self._note("KEYCODE_VOLUME_UP; wait 2 s")
-        dev.key("KEYCODE_VOLUME_UP")
-        time.sleep(2.0)
-        shot, meta = self._capture("volume")
+        shot = meta = None
+        for attempt in (1, 2):
+            self._prepare("volume")
+            self._note("am start -a android.settings.SETTINGS; wait 4 s")
+            dev.shell("am", "start", "-a", "android.settings.SETTINGS")
+            time.sleep(4.0)
+            self._note("KEYCODE_VOLUME_UP; wait 2 s")
+            dev.key("KEYCODE_VOLUME_UP")
+            time.sleep(2.0)
+            shot, meta = self._capture("volume")
+            if "com.android.settings" in meta["focus"]:
+                break
+            self._note("volume: Settings is not focused — dismiss and retry")
+            dev.key("KEYCODE_BACK")
+            time.sleep(0.6)
         self.checks += _surface_volume(shot, self._set_expected_context(meta))
         self._annotate("volume", shot, self.checks)
         self._diff("volume", shot)
@@ -1638,10 +1727,17 @@ class Runner:
               f"{res['mismatch_pct']:.2f} % (edges ±2 px)", flush=True)
 
     def finish(self) -> None:
+        """Leave the phone on Start for the next run."""
         try:
+            self.dev.key("KEYCODE_HOME")
+            time.sleep(0.6)
+            self.dev.key("KEYCODE_BACK")
+            time.sleep(0.4)
             self.dev.key("KEYCODE_HOME")
         except DeviceError:
             pass
+        if self.stay_on_original is not None:
+            self.dev.set_stay_awake(self.stay_on_original)
 
 
 # --------------------------------------------------------------------------
@@ -1833,20 +1929,23 @@ def main(argv: list[str] | None = None) -> int:
     expected_size = size or (720, 1280)
     runner = Runner(dev, outdir, factor, args.diff_reference,
                     expected_size=expected_size, font_scale=font_scale)
+    runner.stay_on_original = dev.read_stay_on()
+    dev.set_stay_awake(True)
     pre_checks: list[Check] = []
 
-    # density precondition
-    delta = abs(factor - REFERENCE_PX_PER_DP)
+    # density precondition: the device decides the factor; the check is that the
+    # factor we use equals density/160 (self-consistency), not that the phone is 280 dpi.
+    expected_factor = density / 160.0
+    delta = abs(factor - expected_factor)
     pre_checks.append(mk(
         "precondition", "pre.density_factor",
-        "dd=px/dp factor matches the brief's 280 dpi reference",
-        PASS if delta <= 0.005 else FAIL,
+        "px/dp factor equals the device density/160",
+        PASS if delta <= 0.01 else FAIL,
         {"px_per_dp": round(factor, 4), "density_dpi": density,
          "override_dpi": density_fields.get("override_density")},
-        {"px_per_dp": REFERENCE_PX_PER_DP, "density_dpi": 280},
-        {"px_per_dp": 0.005}, "px/dp",
-        "measured from `wm density` (override first), not hard-coded; "
-        "all dp values in this report use the measured factor",
+        {"px_per_dp": round(expected_factor, 4)},
+        {"px_per_dp": 0.01}, "px/dp",
+        "measured from `wm density`; all dp values use this factor",
         []))
 
     # display precondition

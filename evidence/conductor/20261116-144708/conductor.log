@@ -1,0 +1,39 @@
+[14:47:08] ztMetro conductor 20261116-144708  (dry-run=0, factory=1)
+[14:47:08] repo:   /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo
+[14:47:08] build:  hermes-ubuntu:~/ztux/conductor/repo
+[14:47:08] stage:  hermes-ubuntu:~/android-root/conductor
+[14:47:08] logs:   /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-144708
+[14:47:08] 
+[14:47:08] ================ stage: build ================
+[14:47:08] syncing sources to hermes-ubuntu:~/ztux/conductor/repo (persistent build tree; keystores stay)
+[14:47:10] build overlays: scripts/build-overlay-module.sh
+[14:47:10] build ok: overlays
+[14:47:10] build launcher: scripts/build-launcher.sh
+[14:47:17] build ok: launcher
+[14:47:17] build actioncentre: scripts/build-actioncentre.sh
+[14:47:20] build FAILED: actioncentre (rc=1)
+[14:47:20] --- error tail (/Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-144708/build/actioncentre.log) ---
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+==> SDK   /home/denis/android-sdk
+==> tools /home/denis/android-sdk/build-tools/36.0.0
+==> JDK   /home/denis/android-jdk
+==> aapt2 compile + link
+==> javac (Java 8 bytecode against android-36)
+/home/denis/ztux/conductor/repo/actioncentre/app/src/main/java/org/ztmetro/actioncentre/UnlockProxyActivity.java:152: error: cannot find symbol
+            LockOverlayController.revealStockKeyguard(why);
+                                 ^
+  symbol:   method revealStockKeyguard(String)
+  location: class LockOverlayController
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+1 error
+[14:47:20] --- end error tail ---
+[14:47:20] ---------------- build: failed (12s) see build logs ----------------
+[14:47:20] 
+[14:47:20] ================ stage: report ================
+[14:47:20] report: /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-144708/report.md
+[14:47:20] run.json: /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-144708/run.json
+[14:47:20] ---------------- report: ok (0s)  ----------------
+[14:47:20] done: total 12s, exit=1

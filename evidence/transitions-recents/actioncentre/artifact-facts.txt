@@ -1,0 +1,15 @@
+apk:        actioncentre/build/out/ztmetro-actioncentre.apk
+evidence:   actioncentre-43/evidence/ztmetro-actioncentre.apk
+size:       345804 bytes
+sha256:     812fcae3b67a0b5b43c606c41b3941ea9b2455303b2decc60ac0fac97ca3d8bd
+package:    org.ztmetro.actioncentre
+version:    1 (1.0)
+min/target: 29 / 36
+build:      plain javac + aapt2 + d8 + apksigner (no Gradle, no AndroidX)
+bridge:     ShadeBridgeService (res/xml/shade_bridge.xml), BIND_ACCESSIBILITY_SERVICE; strip path starts the panel instantly, shade fallback = panel first + one BACK after 120 ms
+strip:      StatusStripService (res/xml/status_strip_service.xml), TYPE_ACCESSIBILITY_OVERLAY 28 dp, NOT_TOUCHABLE; READ_PHONE_STATE optional for live signal
+lock:       LockOverlayController: TYPE_ACCESSIBILITY_OVERLAY, NOT_FOCUSABLE|NOT_TOUCHABLE|LAYOUT_IN_SCREEN, bottom strip starts the unlock proxy
+unlock:     UnlockProxyActivity: requestDismissKeyguard (non-secure) or ConfirmDeviceCredential (secure); overlay stays until USER_PRESENT/credential on top
+fonts:      Open Sans Light/Regular/SemiBold from repo/fonts (OFL, bundled)
+built on:   Linux 7.0.0-38-generic x86_64
+jdk:        openjdk version "17.0.21" 2026-10-20

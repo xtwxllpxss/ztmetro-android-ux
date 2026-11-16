@@ -70,6 +70,7 @@ final class LockOverlayController {
 
     private static final String SYSTEMUI = "com.android.systemui";
     private static final String ANDROID = "android";
+    private static final String SETTINGS = "com.android.settings";
 
     /** Give the keyguard a moment at SCREEN_OFF before pre-adding the surface. */
     private static final long PREPARE_DELAY_MS = 250L;
@@ -81,6 +82,10 @@ final class LockOverlayController {
     private static final long EVENT_THROTTLE_MS = 150L;
     /** Window inspection while locked (IME detection, log evidence). */
     private static final long WINDOW_SCAN_MS = 1000L;
+    /** If the credential window event is missed, reveal it anyway after this. */
+    private static final long CREDENTIAL_REVEAL_TIMEOUT_MS = 2500L;
+    /** Ignore foreign-app events for this long after the surface appears. */
+    private static final long FOREIGN_GRACE_MS = 1500L;
     private static final float FULLSCREEN_FRACTION = 0.7f;
     /** A swipe of this many dp on the bottom strip reveals the keyguard. */
     private static final int SWIPE_UP_DP = 24;
@@ -106,12 +111,16 @@ final class LockOverlayController {
     private static final int FADE_OUT_MS = 120;
     private boolean started;
     private boolean receiverRegistered;
+    /** A swipe has started the proxy/credential flow; do not start a second. */
+    private boolean credentialFlow;
+    private static volatile LockOverlayController instance;
     private boolean addFailed;
     private boolean userRevealed;
     private boolean notificationsListening;
     private int unlockedChecks;
     private long lastEventAt;
     private long lastWindowScanAt;
+    private long overlayShownUptime;
     private String imePackages = "";
 
     private final NotificationRepository.Listener notificationsListener =
@@ -140,6 +149,7 @@ final class LockOverlayController {
                 (WindowManager) service.getSystemService(Context.WINDOW_SERVICE);
         this.content = new LockOverlayView(service);
         this.stripView = new SwipeStrip(service);
+        instance = this;
     }
 
     // ------------------------------------------------------------------ life
@@ -172,7 +182,11 @@ final class LockOverlayController {
             }
         } catch (Throwable ignored) {
         }
+        handler.removeCallbacks(credentialTimeoutRunnable);
         hide("service stopped");
+        if (instance == this) {
+            instance = null;
+        }
         try {
             content.release();
         } catch (Throwable ignored) {
@@ -213,6 +227,7 @@ final class LockOverlayController {
                 } else if (Intent.ACTION_SCREEN_ON.equals(action)) {
                     onScreenOn();
                 } else if (Intent.ACTION_USER_PRESENT.equals(action)) {
+                    UnlockTimeline.mark("user_present");
                     userRevealed = true;
                     hide("user present");
                 } else if (Intent.ACTION_TIME_CHANGED.equals(action)
@@ -232,6 +247,10 @@ final class LockOverlayController {
         handler.removeCallbacks(pollRunnable);
         handler.removeCallbacks(minuteRunnable);
         handler.removeCallbacks(prepareRunnable);
+        handler.removeCallbacks(credentialTimeoutRunnable);
+        UnlockTimeline.mark("screen_off");
+        UnlockTimeline.reset();
+        credentialFlow = false;
         userRevealed = false;
         if (attached && !isKeyguardLocked()) {
             hide("screen off without keyguard");
@@ -246,6 +265,10 @@ final class LockOverlayController {
         // One add attempt per wake, so a ROM that refuses the window logs once
         // rather than on every event.
         addFailed = false;
+        // The surface becomes visible now, even if it was pre-added while the
+        // display was off: the foreign-window grace is measured from wake, not
+        // from the pre-add.
+        overlayShownUptime = SystemClock.uptimeMillis();
         content.refreshClock();
         boolean locked = isKeyguardLocked();
         Log.i(TAG, "screen on: keyguard locked=" + locked + " attached=" + attached);
@@ -320,20 +343,47 @@ final class LockOverlayController {
                 return;
             }
 
+            boolean credentialWindow = isCredentialWindow(packageName, className)
+                    || (credentialFlow && SETTINGS.equals(packageName));
+            if (type == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+                    && credentialWindow) {
+                // The system credential screen is now on top of the keyguard but
+                // under our layer-31 surface: remove us so the PIN is visible.
+                UnlockTimeline.mark("credential_shown pkg=" + packageName
+                        + " cls=" + className);
+                userRevealed = true;
+                hide("credential on top: " + packageName + "/" + className);
+                return;
+            }
             if (type == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
                     && imePackages.contains(":" + packageName + ":")) {
+                UnlockTimeline.mark("ime_shown: " + packageName);
                 userRevealed = true;
                 hide("IME window-state: " + packageName);
                 return;
             }
             if (type == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
                     && isForeignApp(packageName)) {
-                userRevealed = true;
-                hide("app over keyguard: " + packageName + "/" + className);
+                // A window-state event does not mean the app is in front of the
+                // keyguard: Settings (and any last app) keeps its window behind
+                // it across screen-off/on. Decide by the accessibility window
+                // order/layer and only take the overlay away for a window that
+                // is actually above the keyguard.
+                ForeignWindowDecision decision = foreignWindowDecision(event);
+                Log.i(TAG, "foreign window decision: pkg=" + packageName
+                        + " cls=" + className + " aboveKeyguard=" + decision.above
+                        + " " + decision.detail);
+                UnlockTimeline.mark("foreign_window pkg=" + packageName
+                        + " above=" + decision.above);
+                if (decision.above) {
+                    userRevealed = true;
+                    hide("app above keyguard: " + packageName + "/" + className);
+                }
                 return;
             }
             if (type == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
                     && (isSecureInputClass(className) || isSystemDialogClass(className))) {
+                UnlockTimeline.mark("system_surface_shown: " + className);
                 userRevealed = true;
                 hide("system surface over keyguard: " + className);
                 return;
@@ -349,6 +399,141 @@ final class LockOverlayController {
             }
         } catch (Throwable t) {
             Log.w(TAG, "event ignored after error", t);
+        }
+    }
+
+    /** Result of the window-stack check for a foreign window-state event. */
+    private static final class ForeignWindowDecision {
+        final boolean above;
+        final String detail;
+
+        ForeignWindowDecision(boolean above, String detail) {
+            this.above = above;
+            this.detail = detail;
+        }
+    }
+
+    /**
+     * Is the event's window above the keyguard, or only behind it?
+     *
+     * <p>{@code getWindows()} is ordered by window layer, topmost first. The
+     * keyguard is the full-screen SystemUI window. If it is in the list and the
+     * event window comes later, the app is behind the keyguard (the ordinary
+     * Settings case after screen-off/on) and must not remove the overlay.
+     *
+     * <p>If the keyguard window is not listed (a showWhenLocked call/camera can
+     * hide it), treat a full-screen *focused* foreign window as above, but not
+     * during the first {@link #FOREIGN_GRACE_MS} after our surface appears: that
+     * is the screen-on window-state race that hid the overlay over Settings.
+     *
+     * <p>The returned detail is logged at info level and contains the window
+     * layer (API 30+), type, stack index and focus state actually used.
+     */
+    private ForeignWindowDecision foreignWindowDecision(AccessibilityEvent event) {
+        try {
+            List<AccessibilityWindowInfo> windows = service.getWindows();
+            if (windows == null || windows.isEmpty()) {
+                return new ForeignWindowDecision(false, "no accessible windows");
+            }
+            int eventId = event.getWindowId();
+            int eventIndex = -1;
+            int keyguardIndex = -1;
+            int eventLayer = -1;
+            int keyguardLayer = -1;
+            int eventType = -1;
+            boolean focused = false;
+            boolean active = false;
+            boolean fullscreen = false;
+            boolean keyguardFocused = false;
+            Rect display = displayBounds();
+            long displayArea = (long) display.width() * display.height();
+            for (int i = 0; i < windows.size(); i++) {
+                AccessibilityWindowInfo window = windows.get(i);
+                if (window == null) {
+                    continue;
+                }
+                int id;
+                try {
+                    id = window.getId();
+                } catch (Throwable t) {
+                    continue;
+                }
+                if (id == eventId) {
+                    eventIndex = i;
+                    eventType = window.getType();
+                    eventLayer = windowLayer(window);
+                    focused = window.isFocused();
+                    active = window.isActive();
+                    Rect bounds = new Rect();
+                    window.getBoundsInScreen(bounds);
+                    long area = (long) bounds.width() * bounds.height();
+                    fullscreen = displayArea > 0
+                            && area >= (long) (displayArea * FULLSCREEN_FRACTION);
+                }
+                if (keyguardIndex < 0 && isKeyguardWindow(window, display, displayArea)) {
+                    keyguardIndex = i;
+                    keyguardLayer = windowLayer(window);
+                    keyguardFocused = window.isFocused();
+                }
+            }
+            String base = "eventIndex=" + eventIndex + " keyguardIndex=" + keyguardIndex
+                    + " eventLayer=" + eventLayer + " keyguardLayer=" + keyguardLayer
+                    + " eventType=" + eventType + " focused=" + focused
+                    + " active=" + active + " fullscreen=" + fullscreen
+                    + " keyguardFocused=" + keyguardFocused;
+            if (eventIndex < 0) {
+                return new ForeignWindowDecision(false, base
+                        + " (event window not in the accessible list)");
+            }
+            if (keyguardIndex >= 0) {
+                // Ordered by layer, topmost first: a later index is behind.
+                boolean above = eventIndex < keyguardIndex;
+                long sinceShown = SystemClock.uptimeMillis() - overlayShownUptime;
+                // A showWhenLocked window can occlude the keyguard while the
+                // keyguard window is still listed above it. If our foreign
+                // window is the focused one and the keyguard is not, it is the
+                // active surface - but never during the screen-on race.
+                if (!above && focused && !keyguardFocused
+                        && sinceShown >= FOREIGN_GRACE_MS) {
+                    above = true;
+                }
+                return new ForeignWindowDecision(above, base
+                        + " sinceShown=" + sinceShown);
+            }
+            long sinceShown = SystemClock.uptimeMillis() - overlayShownUptime;
+            boolean above = focused && fullscreen && sinceShown >= FOREIGN_GRACE_MS;
+            return new ForeignWindowDecision(above, base + " sinceShown=" + sinceShown
+                    + " (keyguard window absent)");
+        } catch (Throwable t) {
+            return new ForeignWindowDecision(false, "window inspection failed: "
+                    + t.getClass().getSimpleName());
+        }
+    }
+
+    private boolean isKeyguardWindow(AccessibilityWindowInfo window, Rect display,
+                                     long displayArea) {
+        try {
+            Rect bounds = new Rect();
+            window.getBoundsInScreen(bounds);
+            long area = (long) bounds.width() * bounds.height();
+            if (displayArea <= 0 || area < (long) (displayArea * FULLSCREEN_FRACTION)) {
+                return false;
+            }
+            return SYSTEMUI.equals(windowPackage(window));
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /** Window layer for the log; {@code getLayer()} exists from API 30. */
+    private static int windowLayer(AccessibilityWindowInfo window) {
+        if (Build.VERSION.SDK_INT < 30) {
+            return -1;
+        }
+        try {
+            return window.getLayer();
+        } catch (Throwable ignored) {
+            return -1;
         }
     }
 
@@ -393,6 +578,17 @@ final class LockOverlayController {
                 || name.contains("powerdialog")
                 || name.contains("shutdown")
                 || name.contains("emergency");
+    }
+
+    /** The system confirm-credential activity (Settings) or a keyguard input. */
+    private static boolean isCredentialWindow(String packageName, String className) {
+        String name = className.toLowerCase(Locale.US);
+        if (name.contains("confirmdevicecredential")) {
+            return true;
+        }
+        return name.contains("credential")
+                && (SETTINGS.equals(packageName) || SYSTEMUI.equals(packageName)
+                    || ANDROID.equals(packageName));
     }
 
     private void refreshImePackages() {
@@ -483,6 +679,8 @@ final class LockOverlayController {
                     + " stripHeight=" + stripParams.height
                     + " preDraw=" + preDraw
                     + " " + snapshot.describe());
+            overlayShownUptime = SystemClock.uptimeMillis();
+            UnlockTimeline.mark("overlay_shown");
             return true;
         } catch (Throwable t) {
             addFailed = true;
@@ -552,9 +750,14 @@ final class LockOverlayController {
         handler.removeCallbacks(pollRunnable);
         handler.removeCallbacks(minuteRunnable);
         handler.removeCallbacks(prepareRunnable);
+        handler.removeCallbacks(credentialTimeoutRunnable);
+        credentialFlow = false;
         removeNotificationsListener();
         boolean hadWindow = attached || content.getParent() != null
                 || stripView.getParent() != null;
+        if (hadWindow) {
+            UnlockTimeline.mark("overlay_removed (" + reason + ")");
+        }
         attached = false;
         if (!hadWindow) {
             removeViewsQuietly();
@@ -647,10 +850,18 @@ final class LockOverlayController {
                     return;
                 }
                 if (!isKeyguardLocked()) {
-                    unlockedChecks++;
-                    if (unlockedChecks >= UNLOCKED_CONFIRMATIONS) {
-                        hide("keyguard dismissed");
-                        return;
+                    if (credentialFlow) {
+                        // The proxy is a showWhenLocked activity: it can occlude
+                        // the keyguard without dismissing it. Do not treat that
+                        // as an unlock; USER_PRESENT (or the 2.5 s net) ends it.
+                        unlockedChecks = 0;
+                    } else {
+                        unlockedChecks++;
+                        if (unlockedChecks >= UNLOCKED_CONFIRMATIONS) {
+                            UnlockTimeline.mark("keyguard_dismissed_poll");
+                            hide("keyguard dismissed");
+                            return;
+                        }
                     }
                 } else {
                     unlockedChecks = 0;
@@ -870,9 +1081,78 @@ final class LockOverlayController {
     }
 
     /**
+     * Bottom-strip swipe: keep this surface attached and hand the unlock to the
+     * transparent {@link UnlockProxyActivity}. It calls requestDismissKeyguard
+     * for a non-secure lock (our surface stays until USER_PRESENT) or opens the
+     * system credential confirmation for a secure one (we hide only when that
+     * activity reports itself on top).
+     */
+    private void startUnlockProxy() {
+        if (!attached) {
+            return;
+        }
+        if (credentialFlow) {
+            Log.i(TAG, "unlock already in flight; swipe ignored");
+            return;
+        }
+        credentialFlow = true;
+        UnlockTimeline.start("swipe_up");
+        UnlockTimeline.mark("proxy_launch_requested");
+        try {
+            Intent intent = new Intent(service, UnlockProxyActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_NO_ANIMATION
+                    | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
+                    | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            service.startActivity(intent);
+            UnlockTimeline.mark("proxy_started");
+        } catch (Throwable t) {
+            UnlockTimeline.mark("proxy_start_failed: "
+                    + t.getClass().getSimpleName() + ": " + t.getMessage());
+            revealStock("proxy start failed: " + t.getClass().getSimpleName());
+            return;
+        }
+        handler.removeCallbacks(credentialTimeoutRunnable);
+        handler.postDelayed(credentialTimeoutRunnable, CREDENTIAL_REVEAL_TIMEOUT_MS);
+    }
+
+    /**
+     * Safety net: if no credential window event arrives (unknown ROM class), do
+     * not leave the user behind an inert black surface. Reveal the stock
+     * keyguard after the timeout and log it.
+     */
+    private final Runnable credentialTimeoutRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!attached) {
+                return;
+            }
+            UnlockTimeline.mark("credential_timeout");
+            revealStock("no credential window within "
+                    + CREDENTIAL_REVEAL_TIMEOUT_MS + " ms");
+        }
+    };
+
+    private void revealStock(String reason) {
+        UnlockTimeline.mark("fallback_reveal_stock: " + reason);
+        userRevealed = true;
+        hide("unlock fallback: " + reason);
+    }
+
+    /** Called by the proxy when it cannot dismiss/confirm; old fail-safe path. */
+    static void revealStockKeyguard(String reason) {
+        LockOverlayController controller = instance;
+        if (controller == null) {
+            Log.w(TAG, "fallback reveal requested without a controller: " + reason);
+            return;
+        }
+        controller.revealStock(reason);
+    }
+
+    /**
      * The only touchable part of the overlay. It swallows taps (nothing else is
-     * interactive) and removes the overlay on a swipe up, revealing the stock
-     * keyguard. It never unlocks anything itself.
+     * interactive) and starts the unlock proxy on a swipe up. The overlay stays
+     * up until the keyguard/credential screen actually replaces it.
      */
     private final class SwipeStrip extends View {
         private float downY;
@@ -901,15 +1181,11 @@ final class LockOverlayController {
                         float dy = downY - event.getY();
                         float dx = Math.abs(event.getX() - downX);
                         if (dy >= dp(SWIPE_UP_DP) && dx < dy) {
-                            userRevealed = true;
-                            // Remove after this touch dispatch returns: never
-                            // detach the window from inside its own onTouchEvent.
-                            handler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    hide("swipe up: stock keyguard revealed");
-                                }
-                            });
+                            // Keep our surface up during the unlock: the proxy
+                            // dismisses a non-secure keyguard or opens the system
+                            // credential screen, and the overlay leaves only when
+                            // one of those is actually on top.
+                            startUnlockProxy();
                         }
                         return true;
                     case android.view.MotionEvent.ACTION_CANCEL:

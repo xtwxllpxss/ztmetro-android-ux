@@ -1,0 +1,16 @@
+Archive:  /home/denis/ztux/transition-ro/out/ZtMetroTransitions.apk
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+     1292  1980-01-01 00:00   AndroidManifest.xml
+     1332  1980-01-01 00:00   res/anim/task_close_enter.xml
+     1292  1980-01-01 00:00   res/anim/task_close_exit.xml
+     1332  1980-01-01 00:00   res/anim/task_open_enter.xml
+     1292  1980-01-01 00:00   res/anim/task_open_exit.xml
+     1076  1980-01-01 00:00   res/anim/wallpaper_open_enter.xml
+     1292  1980-01-01 00:00   res/anim/wallpaper_open_exit.xml
+     1008  1980-01-01 00:00   resources.arsc
+      938  1980-01-01 00:00   META-INF/ZT.SF
+     1223  1980-01-01 00:00   META-INF/ZT.RSA
+      811  1980-01-01 00:00   META-INF/MANIFEST.MF
+---------                     -------
+    12888                     11 files

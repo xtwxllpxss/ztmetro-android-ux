@@ -56,7 +56,7 @@ final class MetroTinter {
                 if (button.isEnabled()) {
                     // setTrackTintList/setThumbTintList live on Switch/SwitchCompat, not on
                     // the CompoundButton base class, and MaterialSwitch is a SwitchCompat.
-                    invokeTint(button, "setTrackTintList", withAlpha(ACCENT, 0x80));
+                    invokeTint(button, "setTrackTintList", ACCENT);
                     invokeTint(button, "setThumbTintList", Color.WHITE);
                 }
             }
