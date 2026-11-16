@@ -1,0 +1,126 @@
+## apksigner verify
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=ztMetro shade hook dev, OU=ztOS, O=ztOS, C=RU
+Signer #1 certificate SHA-256 digest: 3226ddd17fa5fcc26a7d09fff95787fbbf2fec86f58b19f12f2fc33872409877
+Signer #1 certificate SHA-1 digest: 1ebce0057e9b035e71d253fa0841833f362830fb
+Signer #1 certificate MD5 digest: a92f69e91ad2a516c67f5ba803a5e887
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 2048
+Signer #1 public key SHA-256 digest: 9a09eb74a520b458393ce9246e3fadd821178f9419661c145f4921a035c570c8
+Signer #1 public key SHA-1 digest: e7f3bef40fe82cc81821725c770a0ef9d9c10326
+Signer #1 public key MD5 digest: de1dde64f808c1aae91d61a91678635d
+
+## aapt2 dump badging
+package: name='org.ztmetro.shadehook' versionCode='1' versionName='1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+minSdkVersion:'29'
+targetSdkVersion:'36'
+application-label:'ztMetro Shade Hook'
+application: label='ztMetro Shade Hook' icon=''
+feature-group: label=''
+  uses-feature: name='android.hardware.faketouch'
+  uses-implied-feature: name='android.hardware.faketouch' reason='default feature for all apps'
+supports-screens: 'small' 'normal' 'large' 'xlarge'
+supports-any-density: 'true'
+locales: '--_--'
+densities: '160'
+
+## AndroidManifest xposed metadata
+    A: package="org.ztmetro.shadehook" (Raw: "org.ztmetro.shadehook")
+        A: http://schemas.android.com/apk/res/android:minSdkVersion(0x0101020c)=29
+        A: http://schemas.android.com/apk/res/android:targetSdkVersion(0x01010270)=36
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposedmodule" (Raw: "xposedmodule")
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposeddescription" (Raw: "xposeddescription")
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposedminversion" (Raw: "xposedminversion")
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposedscope" (Raw: "xposedscope")
+
+## module resources (scope array, label)
+    resource 0x7f010000 array/xposed_scope
+      () (array) size=1
+        ["com.android.systemui"]
+  type string id=02 entryCount=2
+    resource 0x7f020000 string/app_name
+      () "ztMetro Shade Hook"
+    resource 0x7f020001 string/xposed_description
+      () "Opens the Metro Action Centre (org.ztmetro.actioncentre) instead of the stock notification shade. Fail-safe: any error, the lock screen or a right-edge swipe leaves the stock shade untouched."
+
+## classes.dex
+Archive:  /home/denis/ztux/shadehook/repo/sysui/shade-hook/build/dist/ztmetro-shade-hook.apk
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+     1948  1980-01-01 00:00   AndroidManifest.xml
+     1020  1980-01-01 00:00   resources.arsc
+       34  1980-01-01 00:00   assets/xposed_init
+    12600  2026-11-16 12:42   classes.dex
+      502  2026-11-16 12:42   META-INF/ZTMETRO-.SF
+     1286  2026-11-16 12:42   META-INF/ZTMETRO-.RSA
+      375  2026-11-16 12:42   META-INF/MANIFEST.MF
+---------                     -------
+    17765                     7 files
+## hook target names referenced by classes.dex
+com.android.systemui.shade.NotificationPanelViewController
+com.android.systemui.shade.ShadeControllerImpl
+instantCollapseShade
+makeExpandedInvisible
+makeExpandedVisible
+onPanelStateChanged
+org.ztmetro.actioncentre
+org.ztmetro.actioncentre.ActionCentreActivity
+ztmetro_shade_hook
+Processing '/home/denis/ztux/shadehook/repo/sysui/shade-hook/build/classes.dex'...
+Opened '/home/denis/ztux/shadehook/repo/sysui/shade-hook/build/classes.dex', DEX version '039'
+DEX file header:
+magic               : 'dex\n039\0'
+checksum            : c546e6c2
+signature           : 8907...de77
+file_size           : 12600
+header_size         : 112
+link_size           : 0
+link_off            : 0 (0x000000)
+string_ids_size     : 241
+string_ids_off      : 112 (0x000070)
+type_ids_size       : 55
+type_ids_off        : 1076 (0x000434)
+proto_ids_size      : 44
+proto_ids_off       : 1296 (0x000510)
+field_ids_size      : 31
+field_ids_off       : 1824 (0x000720)
+method_ids_size     : 77
+method_ids_off      : 2072 (0x000818)
+class_defs_size     : 11
+class_defs_off      : 2688 (0x000a80)
+data_size           : 9560
+data_off            : 3040 (0x000be0)
+
+Class #0            -
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ModuleEntry;'
+  Access flags      : 0x0011 (PUBLIC FINAL)
+  Superclass        : 'Ljava/lang/Object;'
+  Interfaces        -
+    #0              : 'Lde/robv/android/xposed/IXposedHookLoadPackage;'
+  Static fields     -
+    #0              : (in Lorg/ztmetro/shadehook/ModuleEntry;)
+      name          : 'TAG'
+      type          : 'Ljava/lang/String;'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      value         : "ztmetro-shadehook"
+    #1              : (in Lorg/ztmetro/shadehook/ModuleEntry;)
+      name          : 'TARGET_PACKAGE'
+      type          : 'Ljava/lang/String;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ModuleEntry;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/R$array;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/R$string;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/R;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/SLog;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ShadeHooks$1;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ShadeHooks$2;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ShadeHooks$3;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ShadeHooks;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ShadeRouter$1;'
+  Class descriptor  : 'Lorg/ztmetro/shadehook/ShadeRouter;'

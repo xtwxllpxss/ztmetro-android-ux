@@ -18,8 +18,8 @@ those tokens unchanged.
 | | |
 |---|---|
 | APK | [`ztmetro-start.apk`](ztmetro-start.apk) |
-| size | **53 526 bytes** (52.3 KiB) < 3 MiB |
-| sha256 | `1fb9104bd3696076e0bbb2cdeba993b0d022ecadba15e0f422a7d9ab6db033ab` |
+| size | **57 622 bytes** (56.3 KiB) < 3 MiB |
+| sha256 | `00b7964e754ede48ed19ec2a22c7ec3fcea977305f05ac78c05c27209eb1ec1b` |
 | package | `org.ztmetro.start` (versionCode 3, versionName 3.0) |
 | min / target | 29 / **36** |
 | signing | v3, cert SHA-256 `5f05e8e4…6457831` — the v1/v2 key, so `-r` updates in place |
@@ -51,13 +51,27 @@ Static proof: [`aapt2-badging.txt`](aapt2-badging.txt),
   palette (cobalt default and weighted, plus lime/green/emerald/teal/cyan/magenta/
   crimson/red/brown/olive/steel), so cobalt is still the modal colour but a Start is
   not a single-colour grid. No Material pastels.
-- **Glyph**: `TileArt` renders the app icon to a bitmap, uses
-  `AdaptiveIconDrawable.getForeground()` (or the whole drawable when foreground is
-  null), converts alpha to a white mask with `SRC_IN`, and draws it at **44 % of the
-  tile's short side**, horizontally centred in the upper part. No white circle, no
-  adaptive-icon colour. An empty mask, or a near-solid one (an opaque legacy icon),
-  falls back to the app's first letter at 40 % of the tile height instead of a blank
-  white square. Small tiles are glyph-only, matching the ztmetro frame.
+- **Glyph pipeline (corrected after the `g0` screenshot):** `TileArt` now tries, in
+  order:
+  1. **API 33+ monochrome layer** — `AdaptiveIconDrawable.getMonochrome()`, tinted
+     white with `SRC_IN`. This is the layer designed for monochrome icons. A layer
+     that is near-solid (>55 %) or a tiny corner mark (<30 % of the box span) is
+     rejected, so the Browser corner-diamond case falls through to the system glyph.
+  2. **Fixed system packages** — our own white Path glyphs in `SystemGlyphs`: gear
+     (Settings / Action Centre), camera body, calendar grid, two-person (Contacts),
+     handset (Phone/Dialer), envelope (Messaging), globe (Browser), photo stack
+     (Gallery), clock face (Clock), musical note (Music), 2×2 grid (Action Centre).
+     These packages no longer get a full-bleed adaptive silhouette. If a system
+     package does have a usable monochrome layer, that wins (step 1).
+  3. **Everything else** — the original icon in **colour**, drawn at 44 % of the
+     tile's short side, horizontally centred. For an adaptive icon only the foreground
+     layer is drawn, so Chromium/Firefox show their brand mark, not a miniature app
+     tile. A legacy icon is drawn whole.
+  4. **Empty/transparent** — the app's first letter in white at 40 % of the tile
+     height.
+
+  No white circle, no alpha-silhouette blob. Small tiles are glyph-only, matching the
+  ztmetro frame.
 - **Label**: 13 sp white (`type.ramp.body`, system sans-serif → Selawik when the font
   module is on) at the lower-left, 8 dp in. No label on 1×1 tiles (the reference does
   not have one; 49 dp cannot fit readable text).
@@ -77,8 +91,9 @@ Static proof: [`aapt2-badging.txt`](aapt2-badging.txt),
   the bottom-strip magnifier both focus the field.
 - Section heads are **hollow accent 1.5 dp squares with the lowercase letter inside**
   (`a`, `b`, …), as in `refs/ztos-app-list.png`, not a text header/divider.
-- Rows: 56 dp, flat black, 45 dp accent square with the white silhouette, app name
-  20–22 sp white (22 sp `app_list_title`). No divider, no ripple.
+- Rows: 56 dp, flat black, 45 dp accent square with the white monochrome/system
+  glyph or the app's colour brand mark (letter fallback), app name 20–22 sp white
+  (22 sp `app_list_title`). No divider, no ripple.
 - Right-edge A–Z strip: tap or drag jumps; while dragging every letter stretches
   vertically (active letter the most) and the active letter is accent. A-Z letters are
   12 sp semibold.
@@ -131,9 +146,9 @@ No token number is hand-duplicated in Java; the v3 launcher extras are generated
 | build | `scripts/build-launcher.sh` exit 0 on hermes-ubuntu, JDK 17, SDK 36 |
 | badging | `org.ztmetro.start`, versionCode **3**, versionName **3.0**, label `ztmetro start`, HOME, notification-listener |
 | manifest | HOME/DEFAULT activity; listener service + `BIND_NOTIFICATION_LISTENER_SERVICE`; **0 `uses-permission`** |
-| dex | `classes.dex` 73 844 B; StartActivity, MetroTileView, MetroGridView, MetroPager, MetroCircleGlyphView, MetroSectionHeaderView, MetroListRowView, TileArt, TileStore, listener all present; **0 androidx** |
+| dex | `classes.dex` 81 144 B; StartActivity, MetroTileView, MetroGridView, MetroPager, MetroCircleGlyphView, MetroSectionHeaderView, MetroListRowView, SystemGlyphs, TileArt, TileStore, listener all present; **0 androidx** |
 | resources | `metro_tile_gap` 7 dp, `metro_start_margin` 14 dp, `metro_v3_arrow` 48 dp, `metro_v3_icon_fraction` 44%, palette colours and `TextAppearance.Metro.SectionHeader` compiled |
-| size | **53 526 B** < 3 MiB |
+| size | **57 622 B** < 3 MiB |
 | signature | `apksigner verify` passes; cert `5f05e8e4…6457831`, same as v1/v2 |
 
 Not verified: install, first-run seeding, swipe/tilt timing, glyph rendering on real
@@ -180,8 +195,10 @@ first.
    tiles start directly under the status strip at the 14 dp outer margin with 7 dp
    gutters; first row should be three 2×2 tiles; second row a 4×2 + 2×2; small 1×1
    block below; cobalt dominant, with steel `#647687` and crimson `#A20025`
-   samples likely on a normal app set; white monochrome silhouettes, 13 sp labels
-   bottom-left, right-edge circled arrow vertically centred.
+   samples likely on a normal app set; glyphs must read as Camera body, Contacts two
+   people, Music note, Gallery photo stack, Clock face, Settings gear, Action Centre
+   2×2 grid, Browser globe; Chromium/Firefox colour brand marks; no white blobs/dots;
+   13 sp labels bottom-left; right-edge circled arrow in its black pocket.
 2. **Pressed tile** (`pressed.png`). Press and hold a tile ~250 ms (before the 450 ms
    menu): it leans 14°, scales to 0.97, shifts its fill slightly, with no ripple and no
    shadow; release returns. On adb, `input motionevent DOWN x y` + screencap + `UP` if
@@ -189,7 +206,7 @@ first.
 3. **App list with jump strip** (`applications.png`). Tap the circled arrow or swipe
    left: `ZTMETRO` caps + 48 sp `applications`, circled search glyph + 1 dp accent
    underline, hollow accent squares with lowercase `a/b/c`, 56 dp rows with 45 dp
-   accent square + white silhouette + white name, right A–Z strip, bottom
+   accent square + readable glyph/brand mark + white name, right A–Z strip, bottom
    back/`ZRN`/search strip. Drag the A–Z strip: letters stretch vertically and the
    list jumps.
 4. **Long-press sheet** (`tile-menu.png`). Hold a tile ≥450 ms: white square-cornered
@@ -212,32 +229,39 @@ adb exec-out screencap -p > tile-menu.png
 
 ## Open risks
 
-1. **No device run yet.** Everything above is static/source-level; tile silhouettes,
-   swipe vs. system back gesture, and the 2 GB frame budget are unmeasured.
-2. **Silhouette quality.** The mask falls back to the first letter when it is empty
-   **or more than 85 % solid**, so an opaque legacy icon or a full-bleed adaptive
-   foreground becomes a letter rather than a white square. A genuine logo that fills
-   most of its box will therefore be a letter; that is the deliberate trade.
-3. **Palette is deterministic, not guaranteed.** A given installed app set can hash to
+1. **No device run yet.** Everything above is static/source-level; the new glyph
+   priority, swipe vs. system back gesture, and the 2 GB frame budget are unmeasured.
+2. **Monochrome quality is heuristic.** A monochrome layer covering more than 55 %
+   of the box or spanning less than 30 % is treated as a background/blob/corner mark
+   and falls through to the system glyph or colour brand mark. This is deliberately
+   conservative; a legitimate large filled monochrome logo would fall back to colour.
+3. **Glyph priority is heuristic.** The system-package match is a package-name token
+   (`settings`, `camera`/`snap`, `calendar`, `contacts`, `dialer`/`phone`,
+   `messaging`/`mms`/`sms`, `browser`/`jelly`, `gallery`, `clock`, `music`/`eleven`,
+   `org.ztmetro.actioncentre`); a third-party package containing one of those tokens
+   would get a white system glyph. A usable monochrome layer always wins over that.
+   Colour brand marks are deliberately not monochrome and may be low-contrast on some
+   palette tiles (white logos are the worst case).
+4. **Palette is deterministic, not guaranteed.** A given installed app set can hash to
    cobalt/other colours without a steel or crimson tile. The weighting makes steel and
    crimson likely (2/26 each) but the screenshots depend on the actual packages.
-4. **Small tiles have no label** (ztmetro reference); this is a deliberate deviation
+5. **Small tiles have no label** (ztmetro reference); this is a deliberate deviation
    from the literal "label on every tile" sentence in the brief.
-5. **The arrow pocket is fixed at rows 4–5.** On a much taller/scrollable grid the
+6. **The arrow pocket is fixed at rows 4–5.** On a much taller/scrollable grid the
    reserved black 2×2 cell scrolls with the content while the arrow is fixed; on the
    720×1280 target the seeded 10 rows fit without scrolling, so they align.
-6. **No live text.** The optional listener only drives the upper-right count; zero live
+7. **No live text.** The optional listener only drives the upper-right count; zero live
    content remains when notification access is not granted. Granting it still does not
    add WP live titles.
-7. **Start seed migration.** A v2 install keeps its pins; v3 tops the store up to 15
+8. **Start seed migration.** A v2 install keeps its pins; v3 tops the store up to 15
    tiles (four 1×1 + mediums) on first launch. That is a one-time data change, not a
    reset.
-8. **App-list header cost.** The 104 dp two-line header + search + 56 dp bottom strip
+9. **App-list header cost.** The 104 dp two-line header + search + 56 dp bottom strip
    leaves ~350 dp of list on the 640 dp screen; at font scale 1.3 `applications` may
    clip and should be checked.
-9. **Cache churn.** `TileArt` caps the silhouette cache at 96; a 300-app list plus 15
+10. **Cache churn.** `TileArt` caps the glyph cache at 96; a 300-app list plus 15
    tiles will evict and re-render icons while scrolling. Watch for first-scroll jank.
-10. **Key identity.** The evidence APK is installable over v1/v2 only because the v1/v2
+11. **Key identity.** The evidence APK is installable over v1/v2 only because the v1/v2
     keystore was reused. Rebuilding elsewhere creates a new key and requires uninstall.
 
 ## File map (v3)
@@ -248,9 +272,12 @@ launcher/app/src/main/java/org/ztmetro/start/
                               search, bottom strip, page slide, back, tile menus
   MetroPager.java             horizontal page swipe host
   MetroGridView.java          first-fit 6-unit grid, 1x1/2x2/4x2 packing
-  MetroTileView.java          flat WP tile, silhouette/letter/gear, tilt, long-press
-  TileArt.java                icon -> white alpha silhouette, ztmetro palette
-  MetroListRowView.java       56 dp row, 45 dp accent square + silhouette
+  MetroTileView.java          flat WP tile, white/colour/system/letter glyph, tilt,
+                              long-press
+  TileArt.java                monochrome -> system glyph -> colour brand -> letter,
+                              ztmetro palette
+  SystemGlyphs.java           white code-drawn Paths for the fixed system packages
+  MetroListRowView.java       56 dp row, 45 dp accent square + white/colour glyph
   MetroSectionHeaderView.java hollow accent square + lowercase letter
   MetroCircleGlyphView.java   48 dp circled arrow / search / plain back glyphs
   AppListView.java            sections, filtering, A-Z section map

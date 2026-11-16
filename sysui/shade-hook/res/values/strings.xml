@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings are resolved by LSPosed from the module APK; nothing here is
+     looked up from the SystemUI resource table. -->
+<resources>
+    <string name="app_name">ztMetro Shade Hook</string>
+    <string name="xposed_description">Opens the Metro Action Centre (org.ztmetro.actioncentre) instead of the stock notification shade. Fail-safe: any error, the lock screen or a right-edge swipe leaves the stock shade untouched.</string>
+</resources>

@@ -1,0 +1,11 @@
+apk=/home/denis/ztux/shadehook/repo/sysui/shade-hook/build/dist/ztmetro-shade-hook.apk
+size_bytes=16851
+sha256=180fa551929961eefbe0264bb80363ddedeb7636d788896c7ea00e144fcd3063
+min_sdk=29
+target_sdk=36
+package=org.ztmetro.shadehook
+xposed_api_jar=/home/denis/ztux/shadehook/repo/sysui/shade-hook/build/deps/xposed-api-82.jar
+xposed_api_sha256=f48c635f1c7469fdec0e00ad2ea0b7a6b2f5b55065784a35b7ca3a84615e8e25
+keystore=/home/denis/ztux/shadehook/repo/sysui/shade-hook/build/keystore/ztmetro-shadehook.jks
+build_tools=/home/denis/android-sdk/build-tools/36.0.0
+verify_log=/home/denis/ztux/shadehook/repo/sysui/shade-hook/build/verify.txt

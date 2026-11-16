@@ -56,7 +56,7 @@ final class TileArt {
     private static final Art NONE = new Art(TYPE_NONE, null, SystemGlyphs.NONE);
     private static final int CACHE_LIMIT = 96;
     private static final float INK_MIN_FRACTION = 0.008f;
-    private static final float INK_MAX_FRACTION = 0.85f;
+    private static final float INK_MAX_FRACTION = 0.55f;
 
     private final PackageManager pm;
     private final Paint whitePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -128,7 +128,7 @@ final class TileArt {
         if (Build.VERSION.SDK_INT >= 33 && original instanceof AdaptiveIconDrawable) {
             Drawable monochrome = null;
             try {
-                monochrome = ((AdaptiveIconDrawable) original).getMonochrome();
+                monochrome = Monochrome33.get((AdaptiveIconDrawable) original);
             } catch (Exception ignored) {
                 // Broken/vendor adaptive icon; fall through.
             }
@@ -240,15 +240,43 @@ final class TileArt {
         int[] pixels = new int[width * height];
         bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
         int visible = 0;
-        for (int i = 0; i < pixels.length; i += 2) {
-            if ((pixels[i] >>> 24) > 24) {
-                visible++;
+        int sampled = 0;
+        int minX = width;
+        int maxX = -1;
+        int minY = height;
+        int maxY = -1;
+        for (int y = 0; y < height; y += 2) {
+            int row = y * width;
+            for (int x = 0; x < width; x += 2) {
+                sampled++;
+                if ((pixels[row + x] >>> 24) > 24) {
+                    visible++;
+                    if (x < minX) {
+                        minX = x;
+                    }
+                    if (x > maxX) {
+                        maxX = x;
+                    }
+                    if (y < minY) {
+                        minY = y;
+                    }
+                    if (y > maxY) {
+                        maxY = y;
+                    }
+                }
             }
         }
-        int sampled = (pixels.length + 1) / 2;
-        return visible >= 2
-                && visible >= sampled * INK_MIN_FRACTION
-                && visible <= sampled * INK_MAX_FRACTION;
+        if (visible < 2 || sampled == 0
+                || visible < sampled * INK_MIN_FRACTION
+                || visible > sampled * INK_MAX_FRACTION) {
+            return false;
+        }
+        // A tiny diamond parked in a corner is not a tile glyph. Require the
+        // visible mask to occupy a reasonable part of the icon box; if it does
+        // not, the caller falls through to the system Path glyph / colour mark.
+        float spanX = (maxX - minX) / (float) width;
+        float spanY = (maxY - minY) / (float) height;
+        return spanX >= 0.30f && spanY >= 0.30f;
     }
 
     /** First visible character of a label, upper-cased; "?" when there is none. */
@@ -298,5 +326,12 @@ final class TileArt {
             }
         }
         return hash;
+    }
+
+    /** API 33+ call isolated so API 29-32 never resolves getMonochrome(). */
+    private static final class Monochrome33 {
+        static Drawable get(AdaptiveIconDrawable drawable) {
+            return drawable.getMonochrome();
+        }
     }
 }

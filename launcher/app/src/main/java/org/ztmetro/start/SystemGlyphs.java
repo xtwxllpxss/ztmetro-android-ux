@@ -62,7 +62,7 @@ final class SystemGlyphs {
             return NONE;
         }
         String pkg = packageName.toLowerCase(Locale.US);
-        if (pkg.equals("org.ztmetro.actioncentre")) {
+        if (pkg.equals("org.ztmetro.actioncentre") || pkg.equals("org.ztmetro.actioncenter")) {
             return GRID;
         }
         if (pkg.contains("settings")) {
@@ -168,13 +168,14 @@ final class SystemGlyphs {
 
     private static Glyph gear() {
         Glyph glyph = new Glyph();
+        // Winding union: overlap the teeth into the disk, then cut the centre
+        // hole with an opposite-direction circle. Even-odd would punch a hole at
+        // every tooth/disk overlap.
         Path path = new Path();
-        path.setFillType(Path.FillType.EVEN_ODD);
         path.addCircle(0.50f, 0.50f, 0.40f, Path.Direction.CW);
-        path.addCircle(0.50f, 0.50f, 0.15f, Path.Direction.CW);
         for (int i = 0; i < 8; i++) {
             Path tooth = new Path();
-            tooth.addRoundRect(new RectF(-0.065f, -0.50f, 0.065f, -0.40f),
+            tooth.addRoundRect(new RectF(-0.065f, -0.48f, 0.065f, -0.34f),
                     0.025f, 0.025f, Path.Direction.CW);
             Matrix matrix = new Matrix();
             matrix.setRotate(45f * i);
@@ -182,6 +183,7 @@ final class SystemGlyphs {
             tooth.transform(matrix);
             path.addPath(tooth);
         }
+        path.addCircle(0.50f, 0.50f, 0.15f, Path.Direction.CCW);
         glyph.fill = path;
         return glyph;
     }
@@ -214,8 +216,14 @@ final class SystemGlyphs {
                 0.02f, 0.02f, Path.Direction.CW);
         path.addRect(0.24f, 0.40f, 0.76f, 0.44f, Path.Direction.CW);
         path.addRect(0.24f, 0.56f, 0.76f, 0.60f, Path.Direction.CW);
-        path.addRect(0.38f, 0.36f, 0.42f, 0.72f, Path.Direction.CW);
-        path.addRect(0.58f, 0.36f, 0.62f, 0.72f, Path.Direction.CW);
+        // Split verticals at the horizontal rules: overlapping sub-paths would
+        // punch holes in an even-odd fill at every intersection.
+        path.addRect(0.38f, 0.36f, 0.42f, 0.40f, Path.Direction.CW);
+        path.addRect(0.38f, 0.44f, 0.42f, 0.56f, Path.Direction.CW);
+        path.addRect(0.38f, 0.60f, 0.42f, 0.72f, Path.Direction.CW);
+        path.addRect(0.58f, 0.36f, 0.62f, 0.40f, Path.Direction.CW);
+        path.addRect(0.58f, 0.44f, 0.62f, 0.56f, Path.Direction.CW);
+        path.addRect(0.58f, 0.60f, 0.62f, 0.72f, Path.Direction.CW);
         glyph.fill = path;
         return glyph;
     }
@@ -233,15 +241,28 @@ final class SystemGlyphs {
 
     private static Glyph handset() {
         Glyph glyph = new Glyph();
-        Path stroke = new Path();
-        stroke.moveTo(0.20f, 0.22f);
-        stroke.cubicTo(0.20f, 0.58f, 0.44f, 0.80f, 0.80f, 0.80f);
-        glyph.stroke = stroke;
-        glyph.strokeWidth = 0.15f;
-        Path fill = new Path();
-        fill.addCircle(0.20f, 0.22f, 0.10f, Path.Direction.CW);
-        fill.addCircle(0.80f, 0.80f, 0.10f, Path.Direction.CW);
-        glyph.fill = fill;
+        // A diagonal receiver: a rounded handle with a wider earpiece at each
+        // end. Winding union of three rounded rects, rotated -45 degrees.
+        Matrix matrix = new Matrix();
+        matrix.setRotate(-45f);
+        matrix.postTranslate(0.50f, 0.50f);
+        Path path = new Path();
+        Path handle = new Path();
+        handle.addRoundRect(new RectF(-0.24f, -0.055f, 0.24f, 0.055f),
+                0.05f, 0.05f, Path.Direction.CW);
+        handle.transform(matrix);
+        Path left = new Path();
+        left.addRoundRect(new RectF(-0.36f, -0.11f, -0.22f, 0.11f),
+                0.05f, 0.05f, Path.Direction.CW);
+        left.transform(matrix);
+        Path right = new Path();
+        right.addRoundRect(new RectF(0.22f, -0.11f, 0.36f, 0.11f),
+                0.05f, 0.05f, Path.Direction.CW);
+        right.transform(matrix);
+        path.addPath(handle);
+        path.addPath(left);
+        path.addPath(right);
+        glyph.fill = path;
         return glyph;
     }
 

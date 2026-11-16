@@ -1,0 +1,51 @@
+ztMetro shade hook — artifact facts
+===================================
+
+apk            repo/evidence/shade-hook/ztmetro-shade-hook.apk
+size_bytes     16851
+sha256         180fa551929961eefbe0264bb80363ddedeb7636d788896c7ea00e144fcd3063
+package        org.ztmetro.shadehook
+versionCode    1
+versionName    1.0
+min_sdk        29
+target_sdk     36
+compile_sdk    36
+signer         v3 only, 1 signer, RSA-2048 dev key
+               CN=ztMetro shade hook dev, OU=ztOS, O=ztOS, C=RU
+cert_sha256    3226ddd17fa5fcc26a7d09fff95787fbb2fec86f58b19f12f2fc33872409877
+xposed_api     api-82.jar (compile only), sha256
+               f48c635f1c7469fdec0e00ad2ea0b7a6b2f5b55065784a35b7ca3a84615e8e25
+xposed_min     93
+xposed_scope   com.android.systemui
+init           assets/xposed_init -> org.ztmetro.shadehook.ModuleEntry
+permissions    none
+components     none (no activity / service / receiver / provider)
+apk entries    AndroidManifest.xml, resources.arsc, assets/xposed_init,
+               classes.dex, META-INF/*
+dex classes    org.ztmetro.shadehook.ModuleEntry
+               org.ztmetro.shadehook.ShadeHooks
+               org.ztmetro.shadehook.ShadeRouter
+               org.ztmetro.shadehook.SLog
+dex strings    com.android.systemui.shade.NotificationPanelViewController
+               com.android.systemui.shade.ShadeControllerImpl
+               onPanelStateChanged
+               makeExpandedVisible
+               instantCollapseShade
+               makeExpandedInvisible
+               isExpandedVisible
+               mBarState
+               mDownX
+               mDownTime
+               mKeyguardStateController
+               isBouncerShowing
+               isShowing
+               org.ztmetro.actioncentre
+               org.ztmetro.actioncentre.ActionCentreActivity
+               ztmetro_shade_hook
+source_tree    repo/sysui/shade-hook/
+build_script   repo/scripts/build-shade-hook.sh
+build_host     hermes-ubuntu:~/ztux/shadehook/repo
+               android-sdk build-tools 36.0.0, JDK 17, --release 11
+build_log      repo/evidence/shade-hook/logs/build-verify.txt
+source_pin     LineageOS/android_frameworks_base lineage-23.2 @
+               797e43244b96c6a0dff5c81b21c4d4be665b082e

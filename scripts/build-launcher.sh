@@ -284,7 +284,7 @@ if grep -aq "androidx" "$BUILD/verify.dex"; then
 fi
 for symbol in StartNotificationListener MetroTileView MetroGridView \
               MetroListRowView MetroPager MetroCircleGlyphView \
-              MetroSectionHeaderView TileArt; do
+              MetroSectionHeaderView SystemGlyphs TileArt; do
     grep -aq "$symbol" "$BUILD/verify.dex" \
         || die "$symbol class missing from classes.dex"
 done
@@ -324,7 +324,7 @@ DEX_BYTES=$(wc -c < "$BUILD/verify.dex" | tr -d ' ')
     printf 'package classes:\n'
     for symbol in StartActivity MetroTileView MetroGridView MetroPager \
                   MetroCircleGlyphView MetroSectionHeaderView MetroListRowView \
-                  TileArt TileStore StartNotificationListener; do
+                  SystemGlyphs TileArt TileStore StartNotificationListener; do
         if grep -aq "$symbol" "$BUILD/verify.dex"; then
             printf '  %s: present\n' "$symbol"
         else

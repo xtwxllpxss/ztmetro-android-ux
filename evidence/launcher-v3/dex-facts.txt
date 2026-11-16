@@ -1,4 +1,4 @@
-classes.dex: 73844 bytes
+classes.dex: 81144 bytes
 androidx occurrences: 0 (build fails if any)
 uses-permission elements: 0 (build fails if any)
 package classes:
@@ -9,6 +9,7 @@ package classes:
   MetroCircleGlyphView: present
   MetroSectionHeaderView: present
   MetroListRowView: present
+  SystemGlyphs: present
   TileArt: present
   TileStore: present
   StartNotificationListener: present

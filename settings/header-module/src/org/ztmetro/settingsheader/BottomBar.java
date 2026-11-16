@@ -42,9 +42,47 @@ final class BottomBar {
     private BottomBar() {
     }
 
+    /**
+     * True when the device has hardware/capacitive navigation keys (the ugglite does:
+     * menu / home / back). On such a phone the ztmetro bottom bar would duplicate the
+     * physical keys, so it is never drawn. Detection uses the framework boolean that also
+     * decides whether the system shows a navigation bar.
+     */
+    private static boolean hasHardwareNavigationKeys(Activity activity) {
+        try {
+            int id = activity.getResources().getIdentifier(
+                    "config_showNavigationBar", "bool", "android");
+            if (id == 0) return false;
+            return !activity.getResources().getBoolean(id);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /** Removes a previously attached bar and the extra content padding. */
+    static void detach(Activity activity) {
+        try {
+            View decor = activity.getWindow().getDecorView();
+            if (decor instanceof FrameLayout) {
+                View bar = decor.findViewWithTag(BAR_TAG);
+                if (bar != null) ((FrameLayout) decor).removeView(bar);
+            }
+            View content = activity.findViewById(android.R.id.content);
+            if (content != null) content.setPadding(content.getPaddingLeft(),
+                    content.getPaddingTop(), content.getPaddingRight(), 0);
+        } catch (Throwable ignored) {
+            // cosmetic only
+        }
+    }
+
     static void attach(Activity activity) {
         try {
             if (activity == null || activity.getWindow() == null) {
+                return;
+            }
+            if (hasHardwareNavigationKeys(activity)) {
+                detach(activity);
+                Log.i(TAG, "hardware navigation keys present: bottom bar suppressed");
                 return;
             }
             View decor = activity.getWindow().getDecorView();
