@@ -72,7 +72,7 @@ text starts at 14.
 | | measured on the sheet | token / source | Δ and judgement |
 |---|---|---|---|
 | **Hierarchy** | Eye lands on the 92 Light clock — correct — but a second `21:47` sits 350 dp above it in the status strip, and the notification row (13 dp tall) is too small to be the second layer. | `draw_status` then, if locked, `draw_lock` (`:6217-6221`); `draw_lock` paints an opaque full-screen fade (`:6029-6035`), so **the lock covers the strip**. | **Two clocks, and the smaller one is not supposed to be visible.** The "Light = the one huge number on a screen" rule (docs/17 §6) is broken by the sheet, not by the C. |
-| **Grid / placement** | clock ink top 376.5, left ink 17.5; dates ink 479 and 500 (pitch 36); notes band 554–567; hint ink 616.5–623.5. | clock `height-268`, x 16, `display_large 92/300`; dates `height-156` and `height-120`, 30 Semilight, x 20; notes `height-100`, glyph 26, count 22 Semilight, x 22, row centre `height-120-LOCK_LIFT+64 = 571`. | Clock and date pitch **exact**. Notes row is **−38 % glyph (16 vs 26) and −36 % count (14 vs 22)**, 8 dp left of its x. |
+| **Grid / placement** | clock ink top 376.5, left ink 17.5; date line boxes at 466 and 500 (34 dp); notes band 554–567; hint ink 616.5–623.5. | clock `height-268` (372), x 16, `display_large 92/300`; dates `height-156` (484) and `height-120` (520) = 36 dp, 30 Semilight, x 20; notes `height-100`, glyph 26, count 22 Semilight, x 22, row centre `height-120-LOCK_LIFT+64 = 571`. | Clock within 4.5 dp of its anchor. Date pitch **34 vs 36 dp (−2)**. Notes row is **−38 % glyph (16 vs 26) and −36 % count (14 vs 22)**, 8 dp left of its x. |
 | **Type scale** | 92 Light ✓, 30 Semilight ✓ ×2, 14 counts ✗, hint 10/600 ✗. | ramp `display_large 92`, no 30 role, no 14, no 10; hint has no C counterpart at all. | 10 sp is below the ramp floor (`caption_caps 11.5`) — the smallest text on the sheet is off-scale. |
 | **Colour / contrast** | gradient `#000` → `#000b2a` at 62 % → `#002878`; endpoint exact. Hint `rgba(255,255,255,.55)` at the bottom → composite (140, 158, 194), **4.96:1**. | `color.accent.dark1 #002878` = accent × 0.5; fade is two stops, 0.25 black → 1.0 accent × 0.5 (`:6029-6035`). | **The extra 62 % stop darkens the mid-fade**: measured (0, 11, 43) where Cairo's linear ramp gives (0, 20, 59) — 45 % dark in G, 27 % in B. Endpoint is right, the bloom is late and steep. |
 | **Motion / affordance** | a text hint is the only affordance; no unlock wash, no wake lift. | swipe up; success wash `.4,1,.5`, failure `1,.5,.5` (`:10162-10163`); `LOCK_LIFT = NAV_H+16-43 = 13` (`:5925`). | **"СМАХНИТЕ ВВЕРХ" is invented** — no such element in `ztmetro.c`; Android already supplies a gesture affordance, and inventing a 10 sp label is the Android-ism this port is supposed to avoid. |
@@ -169,7 +169,7 @@ And the standing rule: a token-accurate render is a **proposal**, not a PASS on 
   the tokens and `ztmetro-shade.png` (whose links row lands on the same two pixels); app list 45 / 55
   rows and a 45 dp icon box.
 - **No Material.** Zero corner radius, zero elevation/shadow, zero gradient inside a tile, no FAB
-  component, no ripple, no Material icon set, no bottom-nav component: the tiles' edges land on whole
+  component, no ripple, no Material icon set, no Material bottom-navigation component: the tiles' edges land on whole
   pixels with pure `#000` gutters and no antialias haze [F]. That is the adapter's whole failure-signal
   list cleared.
 - **Colours are the tokens, not approximations.** `#0050EF` (the shade capture draws exactly
@@ -180,8 +180,8 @@ And the standing rule: a token-accurate render is a **proposal**, not a PASS on 
 - **The AC notification anatomy** reproduces `ztmetro.c:6356-6412`: 28 dp accent square, 22 Semilight
   name hanging at x 52, 14.5 Semibold title, 13.5 body at .62, right-aligned time — every size right,
   only the horizontal indent wrong (§2 #8). The links row lands on the reference's own two pixels.
-- **The lock composition** gets the hard part right: 92 Light at `height-268`, 30 Semilight at
-  `-156 / -120` (36 dp pitch), accent × 0.5 endpoint.
+- **The lock composition** gets the hard part right: 92 Light anchored near `height-268`, both 30
+  Semilight date lines within 2 dp of `-156 / -120`, accent × 0.5 endpoint exact.
 - **The review artefact itself**: 4-up contact sheet at 2× with a caption per surface naming what to
   check is the right shape for this review, and `render.py` regenerates it in one command.
 
