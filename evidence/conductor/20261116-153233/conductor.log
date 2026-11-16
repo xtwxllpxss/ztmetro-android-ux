@@ -1,0 +1,41 @@
+[15:32:33] ztMetro conductor 20261116-153233  (dry-run=0, factory=1)
+[15:32:33] repo:   /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo
+[15:32:33] snapshot: bb05aac17aec12e141a61308199aeca53c812ed1 (hermes-ubuntu:~/ztux/conductor/snapshots/bb05aac17aec)
+[15:32:33] state:    hermes-ubuntu:~/ztux/conductor/state (stable keystores)
+[15:32:33] stage:  hermes-ubuntu:~/android-root/conductor
+[15:32:33] logs:   /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-153233
+[15:32:33] 
+[15:32:33] ================ stage: build ================
+[15:32:33] snapshot: commit bb05aac17aec12e141a61308199aeca53c812ed1 (git archive; excluded 2 uncommitted path(s) from the working tree)
+[15:32:34] extracting git archive to hermes-ubuntu:~/ztux/conductor/snapshots/bb05aac17aec
+[15:32:42] build overlays: scripts/build-overlay-module.sh
+[15:32:43] build ok: overlays
+[15:32:43] build launcher: scripts/build-launcher.sh
+[15:32:48] build ok: launcher
+[15:32:48] build actioncentre: scripts/build-actioncentre.sh
+[15:32:54] build ok: actioncentre
+[15:32:54] build ime: scripts/build-ime.sh
+[15:32:58] build ok: ime
+[15:32:58] build header: scripts/build-header-module.sh
+[15:33:02] build ok: header
+[15:33:03] artifacts:
+  overlays        78142 B  ba32c4a60b9aa20d...  artifacts/ztmetro-overlays-1.0.0.zip
+  launcher        74155 B  40242fdc075fdacf...  launcher/build/out/ztmetro-start.apk
+  actioncentre   345804 B  93ceba73a179a956...  actioncentre/build/out/ztmetro-actioncentre.apk
+  ime             20817 B  f22250442df52fd1...  ime/build/out/ztmetro-ime.apk
+  header          37872 B  c67086288b2575a2...  settings/header-module/build/dist/ztmetro-settings-header.apk
+[15:33:03] ---------------- build: ok (30s)  ----------------
+[15:33:03] 
+[15:33:03] ================ stage: publish ================
+[15:33:05] artifacts published to hermes-ubuntu:~/android-root/conductor/
+[15:33:06] installing Magisk module ztmetro-overlays-1.0.0.zip (marker='')
+[15:33:10] install org.ztmetro.start (launcher)
+[15:33:10]   installed: /data/app/~~XuRLEhLHEPBCpIm9A5jCFQ==/org.ztmetro.start-9jgRHZ0LTi0CRbKVXAvgIw==/base.apk
+[15:33:13]   WARN could not compare signing certs (old='Signer #1 certificate SHA-256 digest: 5e2f74cee82449c24e0359aea392ce14676b721a814a6fa56c92429f0e5faaaf' new=''); using install -r
+[15:33:14] ---------------- publish: failed (11s) see publish logs ----------------
+[15:33:14] 
+[15:33:14] ================ stage: report ================
+[15:33:14] report: /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-153233/report.md
+[15:33:14] run.json: /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-153233/run.json
+[15:33:14] ---------------- report: ok (0s)  ----------------
+[15:33:14] done: total 41s, exit=1

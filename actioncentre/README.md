@@ -59,9 +59,12 @@ remote work directory (the Metro lock overlay run used `ztux/lock`), and
 
 The panel offers `ВКЛЮЧИТЬ ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ` under the links row. It opens
 `Настройки → Специальные возможности`; the user enables **ztMetro Action Centre**.
-The common path is a 24 dp transparent `TYPE_ACCESSIBILITY_OVERLAY` strip over the status
+The common path is a 32 dp transparent `TYPE_ACCESSIBILITY_OVERLAY` strip over the status
 bar: a top-edge swipe/tap is consumed there and opens the panel, so the stock shade never
-appears and there is no flicker. Taps on the status strip therefore no longer reach the
+appears and there is no flicker. The strip window is created touchable and is never created
+with `FLAG_NOT_TOUCHABLE`; that flag is added only while the keyguard is actually locked and
+removed on every `ACTION_USER_PRESENT` (plus the API 33 keyguard listener and a throttled
+getter safety net), with every change and every touch logged under the `ShadeTouch` tag. Taps on the status strip therefore no longer reach the
 clock/battery. If the shade is opened another way, a geometry fallback (SystemUI window
 covering ≥85 % of the display; the device reports it as `android.widget.FrameLayout`)
 starts the panel immediately with `extra_instant=true` (so its first frame is under the

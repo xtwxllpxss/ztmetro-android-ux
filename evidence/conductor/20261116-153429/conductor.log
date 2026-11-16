@@ -1,0 +1,51 @@
+[15:34:29] ztMetro conductor 20261116-153429  (dry-run=0, factory=1)
+[15:34:29] WARNING: --allow-deploy: deploying artifacts from an earlier snapshot; a changed module may reboot the phone
+[15:34:29] repo:   /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo
+[15:34:29] snapshot: bb05aac17aec12e141a61308199aeca53c812ed1 (hermes-ubuntu:~/ztux/conductor/snapshots/bb05aac17aec)
+[15:34:29] state:    hermes-ubuntu:~/ztux/conductor/state (stable keystores)
+[15:34:29] stage:  hermes-ubuntu:~/android-root/conductor
+[15:34:29] logs:   /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-153429
+[15:34:29] stage build skipped by flag
+[15:34:29] 
+[15:34:29] ================ stage: publish ================
+[15:34:29] artifact table empty; collecting existing build outputs from hermes-ubuntu
+[15:34:30] artifacts:
+  overlays        78142 B  ba32c4a60b9aa20d...  artifacts/ztmetro-overlays-1.0.0.zip
+  launcher        74155 B  40242fdc075fdacf...  launcher/build/out/ztmetro-start.apk
+  actioncentre   345804 B  93ceba73a179a956...  actioncentre/build/out/ztmetro-actioncentre.apk
+  ime             20817 B  f22250442df52fd1...  ime/build/out/ztmetro-ime.apk
+  header          37872 B  c67086288b2575a2...  settings/header-module/build/dist/ztmetro-settings-header.apk
+[15:34:34] artifacts published to hermes-ubuntu:~/android-root/conductor/
+[15:34:34] installing Magisk module ztmetro-overlays-1.0.0.zip (marker='')
+[15:34:38] install org.ztmetro.start (launcher)
+[15:34:38]   installed: /data/app/~~XuRLEhLHEPBCpIm9A5jCFQ==/org.ztmetro.start-9jgRHZ0LTi0CRbKVXAvgIw==/base.apk
+[15:34:42]   signing cert changed -> uninstall first
+[15:34:42]     old: Signer #1 certificate SHA-256 digest: 5e2f74cee82449c24e0359aea392ce14676b721a814a6fa56c92429f0e5faaaf
+[15:34:42]     new: Signer #1 certificate SHA-256 digest: 7ccb2029751fe9d1cd5a49e8a5f1f31096ec41d313fb99dfc626829410b3d858
+[15:34:46] install org.ztmetro.actioncentre (actioncentre)
+[15:34:46]   installed: /data/app/~~HNwnwXf7wgHQWw6IYPhwwQ==/org.ztmetro.actioncentre-5hqf2rrQFn8IASEp8EhfaA==/base.apk
+[15:34:50]   signing cert changed -> uninstall first
+[15:34:50]     old: Signer #1 certificate SHA-256 digest: 303ddd02a3458ea266cbd276a19a9bcd8967475ece67d2c69981b95f0e2e78ce
+[15:34:50]     new: Signer #1 certificate SHA-256 digest: c8f4b98a8aa01d281c304ac381725498dc623901d9c9e77cedc18b43583c8727
+[15:34:53] install org.ztmetro.ime (ime)
+[15:34:53]   installed: /data/app/~~_VoRi-1dEwEQNrNf4ZwbGA==/org.ztmetro.ime-0V9ZvJHDC5U_NCcNPeVOBw==/base.apk
+[15:34:55]   signing cert changed -> uninstall first
+[15:34:55]     old: Signer #1 certificate SHA-256 digest: b23ec446e20b6f18162a0583afb3a2c301ae19fbbdff8d4170dbd29b430f0b20
+[15:34:55]     new: Signer #1 certificate SHA-256 digest: a35a5e113516c3ad23f120cf9ac74b27df92a8d350ea77e78e1cc181b0cc5d90
+[15:34:58] install org.ztmetro.settingsheader (header)
+[15:34:58]   installed: /data/app/~~MWF3m12kKL5wV-s3Z049qQ==/org.ztmetro.settingsheader-wn_ykBdWf2Jf8KM28ac90Q==/base.apk
+[15:35:01]   signing cert changed -> uninstall first
+[15:35:01]     old: Signer #1 certificate SHA-256 digest: 3fa5c964261f1b34b6881bc8e3133dfd43d43bba3dc772cf2a1241916a34d273
+[15:35:01]     new: Signer #1 certificate SHA-256 digest: e98bc1203b09845b763dc8c4dbee1faf31b98fa835d62d901e8244a4466133e8
+[15:35:03] setting Start as HOME
+[15:35:07] manifest: /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-153429/ztmetro-manifest.json
+[15:35:08] module changed -> normal Android reboot to mount it
+[15:36:25] boot_completed=1, package manager ready (waited 20s)
+[15:36:26] could not write module marker after boot
+[15:36:26] ---------------- publish: failed (117s) see publish logs ----------------
+[15:36:26] 
+[15:36:26] ================ stage: report ================
+[15:36:26] report: /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-153429/report.md
+[15:36:26] run.json: /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-153429/run.json
+[15:36:26] ---------------- report: ok (0s)  ----------------
+[15:36:26] done: total 117s, exit=1

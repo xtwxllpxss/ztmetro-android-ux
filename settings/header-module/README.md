@@ -1,15 +1,19 @@
 # ztMetro Settings — LSPosed module
 
 Turns the **stock** `com.android.settings` on LineageOS 23.2 / Android 16 into the ztmetro
-Settings: flat black page header (`SETTINGS` caps label, 48 sp lowercase page title,
-subtitle), text-first icon-free home rows, flat preference rows instead of cards, and the
-signature 40 dp **back / ZRN / search** bottom bar — without touching the system APK.
+Settings: flat black page header (`SETTINGS` caps label at 15 sp / 0.08 tracking / #FFFFFF,
+58 sp lowercase page title), about-style two-line rows (15 sp grey label + 22 sp white
+value, no icon, no chevron, no card) and the signature 40 dp **back / ZRN / search** bottom
+bar — without touching the system APK.
 
 Reference frames: `repo/evidence/ux-compare/refs/ztos-about.png`,
 `ztos-networking.png` and the 3-way comparison `cmp-settings-3way.png`.  The container map
 is [`repo/design/settings-container-map.md`](../../design/settings-container-map.md); the
 hand-off, guard list and install commands are in
-[`repo/evidence/settings-header-ztmetro/REPORT.md`](../../evidence/settings-header-ztmetro/REPORT.md).
+[`repo/evidence/settings-rows/REPORT.md`](../../evidence/settings-rows/REPORT.md) (the
+about-style rows / one-pass build) and
+[`repo/evidence/settings-header-ztmetro/REPORT.md`](../../evidence/settings-header-ztmetro/REPORT.md)
+(the earlier header/container work).
 
 ## Build
 
@@ -38,17 +42,19 @@ table (pressed state of the bottom-bar buttons), so its resource assertion still
 | `assets/xposed_init` | legacy LSPosed entry point: `org.ztmetro.settingsheader.ModuleEntry` |
 | `src/.../ModuleEntry.java` | `IXposedHookLoadPackage`, filters `com.android.settings` |
 | `src/.../SettingsHeaderHooks.java` | the four hooks (`setContentView(int)`, `setTitle`, `onResume`, `SettingsHomepageActivity.onCreate`), each guarded |
-| `src/.../HeaderBinder.java` | index-0 insertion into `content_frame` / `homepage_container`, header height offset, stock chrome hiding, title sync |
+| `src/.../HeaderBinder.java` | index-0 insertion into `content_frame` / `homepage_container` (with fallback), header height offset, stock chrome hiding, title sync, home self-heal on resume |
 | `src/.../HeaderTitles.java` | title = lowercased `Activity.getTitle()` with ALL-CAPS tokens kept; subtitle = last distinct back-stack breadcrumb, else `ztMetro` |
 | `src/.../HeaderViewFactory.java` | inflate/bind the header and bottom bar from module resources |
 | `src/.../HeaderResources.java` | module `Resources` via createPackageContext → getResourcesForApplication → AssetManager |
 | `src/.../ModuleContext.java` | context wrapper so the inflater resolves module resources only |
 | `src/.../BottomBar.java` | 40 dp back/ZRN/search bar in the window decor + content padding so no row is covered |
-| `src/.../RowIcons.java` | hides dashboard row icons (`GONE`) on the home page only, keeps titles/chevrons/switches |
-| `src/.../FlatRows.java` | removes the card look from preference rows (black background, elevation 0, 24 dp page margin, card margins zeroed) |
-| `src/.../ScreenStyler.java` | black window chrome + coalesced re-apply passes at 0/200/700/1600 ms |
-| `src/.../Views.java` | shared id/class heuristics and the protected-container list |
-| `src/.../MetroTinter.java` | tints stock switches/sliders cobalt |
+| `src/.../ScreenPass.java` | **the one walk**: visits the content tree once per pass, dispatches per view (row / group / leaf), caches ids/classes, logs `pass n/2 …: N views, M applies` |
+| `src/.../RowType.java` | per-view row typography (no walk): 15 sp #999999 label, 22 sp #FFFFFF value, title-as-value when no summary |
+| `src/.../RowIcons.java` | per-view icon/chevron removal inside a row (no walk), switches exempt |
+| `src/.../FlatRows.java` | per-row/group flattening (no walk): black surface, elevation 0, 24 dp page margin, no chevron slot |
+| `src/.../ScreenStyler.java` | black window chrome + exactly two passes: `attach` and one `post-layout` at 150 ms, coalesced per Activity |
+| `src/.../Views.java` | allocation-free id/class classification, title counting, protected-container list |
+| `src/.../MetroTinter.java` | per-view switch tint (no walk): #0050EF opaque track, white thumb, cached reflection/colours |
 | `res/layout/metro_header.xml` | caps label + title + subtitle, flat black, tag `ztmetro_header` |
 | `res/layout/metro_bottom_bar.xml` | back arrow, centred `ZRN`, search glyph |
 | `res/drawable/metro_header_bg.xml` | flat black block (no cobalt) |
@@ -71,9 +77,9 @@ sourced module spec inside the generator) and re-run
   button: in that case the toolbar stays (painted black, title cleared) so the flow keeps
   working.  Back is always available in the bottom bar.
 - Logcat tag: `ztmetro-header`.  Relevant lines: `module resources via …`,
-  `header attached to …`, `bottom bar attached …`, `hid N dashboard row icons`,
-  `flat rows: N preference rows flattened`, and the failure lines `… (Settings stays
-  stock)` / `… (icons kept)` / `… (cards kept)`.
+  `header attached to …`, `bottom bar attached …`, the per-pass proof
+  `pass 1/2 attach: N views, M applies, T ms` / `pass 2/2 post-layout: …`, and the failure
+  lines `… (Settings stays stock)` / `… (stock rows kept)`.
 - The bottom bar's search glyph starts the stock Settings activity with
   `action=android.settings.SETTINGS` plus the boolean extra `search`; if nothing resolves
   the intent the click is a logged no-op.

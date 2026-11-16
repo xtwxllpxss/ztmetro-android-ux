@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -12,118 +13,121 @@ import java.lang.ref.WeakReference;
 import java.util.WeakHashMap;
 
 /**
- * Applies the ztmetro screen chrome after every attach/refresh:
+ * Applies the ztmetro screen chrome after every attach/refresh with exactly <b>two</b>
+ * passes:
  *
  * <ol>
- *   <li>flat black window/status/navigation background (no grey Material surfaces),</li>
- *   <li>the 40 dp bottom bar and its content padding ({@link BottomBar}),</li>
- *   <li>text-only dashboard rows on the home page ({@link RowIcons}),</li>
- *   <li>flat black preference rows everywhere ({@link FlatRows}).</li>
+ *   <li><b>pass 1/2 "attach"</b> — immediately after {@code setContentView}/header attach;</li>
+ *   <li><b>pass 2/2 "post-layout"</b> — one {@code postDelayed(150 ms)} run, after Settings
+ *       has inflated and laid out the fragment rows.</li>
  * </ol>
  *
- * <p>Settings inflates the dashboard/fragment rows after {@code setContentView} and again
- * after some fragment transactions, so each kick runs immediately and then at
- * +200/+700/+1600 ms.  A new kick for the same activity replaces the pending chain
- * (coalesced per Activity, never a permanent poller).  All work happens on the main
- * thread, is idempotent, and every stage is guarded: a failure only logs.
+ * <p>The old schedule ran at 0/150/600 ms and every pass contained four independent tree
+ * walks (MetroTinter, RowIcons, FlatRows, RowType): up to 12 traversals per screen, and
+ * more because {@code setTitle}/{@code onResume} kicked their own chains.  Now a pass is
+ * one {@link ScreenPass} walk, and a kick that arrives while the post-layout pass is still
+ * queued joins that pass instead of starting a third.  The chain is coalesced per Activity
+ * and never becomes a poller.
+ *
+ * <p>Each pass logs one line (tag {@code ztmetro-header}) with the number of views visited
+ * and applies, e.g. {@code pass 1/2 attach: 934 views, 61 applies, 7 ms}.
  */
 final class ScreenStyler {
 
     private static final String TAG = "ztmetro-header";
     private static final int BLACK = Color.BLACK;
-    private static final long[] DELAYS_MS = {150L, 600L};
+    private static final long POST_LAYOUT_DELAY_MS = 150L;
+    private static final int PASS_TOTAL = 2;
 
-    private static final WeakHashMap<Activity, Passes> PASSES = new WeakHashMap<>();
+    private static final WeakHashMap<Activity, Chain> CHAINS = new WeakHashMap<>();
 
     private ScreenStyler() {
     }
 
+    /** Black window chrome, one walk, content offset and the bottom bar; call on attach/refresh. */
     static void apply(Activity activity, boolean homepage) {
         if (activity == null) {
             return;
         }
-        try {
-            BottomBar.attach(activity);
-        } catch (Throwable t) {
-            Log.w(TAG, "bottom bar pass failed (Settings untouched)", t);
+        Chain chain = CHAINS.get(activity);
+        if (chain == null) {
+            chain = new Chain(activity);
+            CHAINS.put(activity, chain);
         }
-        Passes passes = PASSES.get(activity);
-        if (passes == null) {
-            passes = new Passes(activity, homepage);
-            PASSES.put(activity, passes);
-        }
-        passes.kick();
+        chain.kick(homepage);
     }
 
-    private static final class Passes {
-        // Weak on purpose: PASSES is a WeakHashMap keyed by the Activity, so the value
+    private static final class Chain {
+        // Weak on purpose: CHAINS is a WeakHashMap keyed by the Activity, so the value
         // must not keep the key alive (otherwise the entry can never be collected).
         private final WeakReference<Activity> activity;
-        private final boolean homepage;
         private final Handler handler = new Handler(Looper.getMainLooper());
-        private int generation;
+        private final Runnable postLayout = new Runnable() {
+            @Override
+            public void run() {
+                if (!queued) {
+                    return;
+                }
+                queued = false;
+                runPass(PASS_TOTAL, "post-layout");
+                lastPairEnd = SystemClock.uptimeMillis();
+            }
+        };
+        private boolean homepage;
+        private boolean queued;
+        private long lastPairEnd;
 
-        Passes(Activity activity, boolean homepage) {
+        Chain(Activity activity) {
             this.activity = new WeakReference<>(activity);
-            this.homepage = homepage;
         }
 
-        void kick() {
-            generation++;
-            final int current = generation;
-            handler.removeCallbacksAndMessages(null);
-            runPass();
-            for (final long delay : DELAYS_MS) {
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (current == generation) {
-                            runPass();
-                        }
-                    }
-                }, delay);
+        void kick(boolean home) {
+            homepage = home;
+            if (queued) {
+                // The queued post-layout pass will pick this screen state up; do not add
+                // a third walk for setTitle/onResume arriving inside the same window.
+                return;
             }
+            long now = SystemClock.uptimeMillis();
+            if (lastPairEnd != 0 && now - lastPairEnd < 250L) {
+                // onResume/setTitle arriving just after pass 2/2: the rows it would touch
+                // were already visited, so do not start a third/fourth walk.
+                return;
+            }
+            runPass(1, "attach");
+            queued = true;
+            handler.postDelayed(postLayout, POST_LAYOUT_DELAY_MS);
         }
 
-        private void runPass() {
+        private void runPass(int number, String phase) {
             Activity target = activity.get();
-            if (target != null) {
-                ScreenStyler.pass(target, homepage);
+            if (target == null) {
+                return;
             }
-        }
-    }
-
-    private static void pass(Activity activity, boolean homepage) {
-        try {
-            blackOut(activity);
-        } catch (Throwable t) {
-            Log.d(TAG, "black background skipped: " + t);
-        }
-        if (homepage) {
             try {
-                RowIcons.apply(activity);
+                blackOut(target);
             } catch (Throwable t) {
-                Log.w(TAG, "dashboard icon pass failed (icons kept)", t);
+                Log.d(TAG, "black background skipped: " + t);
             }
-        }
-        try {
-            FlatRows.apply(activity);
-        } catch (Throwable t) {
-            Log.w(TAG, "flat-row pass failed (cards kept)", t);
-        }
-        try {
-            // Title/white + summary/grey, and on the dashboard a 20 sp title with no
-            // summary line (docs/17 §6; ztmetro.c:6393).  Runs after the rows exist.
-            MetroTinter.apply(activity);
-            RowType.apply(activity, homepage);
-        } catch (Throwable t) {
-            Log.w(TAG, "row-type pass failed (stock type kept)", t);
-        }
-        try {
-            // Re-apply after Settings' own inset handling: the bar must never cover a row.
-            BottomBar.attach(activity);
-        } catch (Throwable t) {
-            Log.d(TAG, "bottom bar re-apply skipped: " + t);
+            try {
+                ScreenPass.run(target, homepage, number, PASS_TOTAL, phase);
+            } catch (Throwable t) {
+                Log.w(TAG, "row pass failed (stock rows kept)", t);
+            }
+            try {
+                // The header grows with the 58 sp title and the status-bar inset; the
+                // screen layout is pushed down by its measured height.
+                HeaderBinder.applyContentOffsets(target);
+            } catch (Throwable t) {
+                Log.d(TAG, "header offset not applied: " + t);
+            }
+            try {
+                // Re-apply after Settings' own inset handling: the bar must never cover a
+                // row.  No tree walk (tag/findViewById only); suppressed on hardware keys.
+                BottomBar.attach(target);
+            } catch (Throwable t) {
+                Log.d(TAG, "bottom bar re-apply skipped: " + t);
+            }
         }
     }
 

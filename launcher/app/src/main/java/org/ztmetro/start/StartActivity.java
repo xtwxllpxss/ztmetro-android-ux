@@ -2,9 +2,13 @@ package org.ztmetro.start;
 
 import android.app.Activity;
 import android.app.ActivityOptions;
+import android.app.KeyguardManager;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
@@ -13,6 +17,7 @@ import android.provider.Settings;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -46,6 +51,18 @@ public final class StartActivity extends Activity
 
     private static final int PAGE_START = 0;
     private static final int PAGE_APPS = 1;
+
+    /** One log tag for the two home-entrance facts the lead needs. */
+    private static final String MOTION_TAG = "ZtStartMotion";
+    /** Home entrance after the keyguard: alpha 0 -> 1, scale 0.985 -> 1. */
+    private static final int HOME_ENTER_MS = 180;
+    private static final float HOME_ENTER_SCALE = 0.985f;
+    /**
+     * A USER_PRESENT only arms the entrance for a resume that follows it
+     * closely. Otherwise unlocking straight into another app would leave the
+     * flag set and animate a much later, ordinary Home press.
+     */
+    private static final long KEYGUARD_RETURN_WINDOW_MS = 2500L;
 
     private static final int ACTION_OPEN = -2;
     private static final int ACTION_UNPIN = -1;
@@ -83,6 +100,14 @@ public final class StartActivity extends Activity
 
     private Object backCallback;
 
+    /** Keyguard-return detection: the entrance must never run on a plain resume. */
+    private KeyguardManager keyguardManager;
+    private BroadcastReceiver keyguardReceiver;
+    private boolean keyguardReturnPending;
+    private boolean keyguardSeenWhilePaused;
+    private boolean leftWithKeyguard;
+    private long keyguardDismissedAtUptime;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,6 +115,8 @@ public final class StartActivity extends Activity
         art = new TileArt(this);
         setupWindow();
         buildUi();
+        keyguardManager = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+        registerKeyguardReceiver();
 
         store = new TileStore(this);
         refreshData();
@@ -664,16 +691,135 @@ public final class StartActivity extends Activity
         if (pager != null) {
             pager.setSwipeEnabled(page == PAGE_START || search == null || !search.hasFocus());
         }
+        playHomeEntranceIfFromKeyguard();
     }
 
     @Override
     protected void onPause() {
         LiveTiles.unregister(this);
+        // Fallback for the "previous state was keyguard" flag; the reliable
+        // signals are USER_PRESENT and screen-on-with-keyguard in the receiver.
+        leftWithKeyguard = isKeyguardLocked();
         super.onPause();
+    }
+
+    // ------------------------------------------------------- home entrance
+
+    /**
+     * ztmetro Start entrance when the user unlocks: the launcher root
+     * (decor view, so the black window background fades too, not only the tile
+     * field) fades 0 -> 1 and scales 0.985 -> 1 over 180 ms, WP Log(10) easing.
+     * Duration goes through {@link Motion#ms}, so ANIMATOR_DURATION_SCALE
+     * scales it and 0 means instant. Ordinary resumes never animate and repair
+     * any interrupted entrance so the launcher cannot stay dimmed or scaled.
+     */
+    private void playHomeEntranceIfFromKeyguard() {
+        final View root = getWindow() == null ? null : getWindow().getDecorView();
+        if (root == null) {
+            return;
+        }
+        boolean lockedNow = isKeyguardLocked();
+        long now = android.os.SystemClock.uptimeMillis();
+        boolean freshDismiss = keyguardReturnPending
+                && keyguardDismissedAtUptime != 0
+                && now - keyguardDismissedAtUptime <= KEYGUARD_RETURN_WINDOW_MS;
+        // USER_PRESENT is definitive; the two flags cover a missed broadcast.
+        // Both require that we actually saw the keyguard, never a plain switch.
+        boolean fromKeyguard = freshDismiss
+                || (!lockedNow && (leftWithKeyguard || keyguardSeenWhilePaused));
+        keyguardReturnPending = false;
+        keyguardSeenWhilePaused = false;
+        leftWithKeyguard = false;
+
+        if (!fromKeyguard) {
+            if (root.getAlpha() != 1f || root.getScaleX() != 1f
+                    || root.getScaleY() != 1f) {
+                root.animate().cancel();
+                root.setAlpha(1f);
+                root.setScaleX(1f);
+                root.setScaleY(1f);
+            }
+            return;
+        }
+
+        int duration = Motion.ms(this, HOME_ENTER_MS);
+        root.animate().cancel();
+        if (duration <= 0) {
+            // Animator scale 0 or unreadable: apply the end state at once.
+            root.setAlpha(1f);
+            root.setScaleX(1f);
+            root.setScaleY(1f);
+            Log.i(MOTION_TAG, "home entrance: keyguard return, instant"
+                    + " (ANIMATOR_DURATION_SCALE=0)");
+            return;
+        }
+        root.setAlpha(0f);
+        root.setScaleX(HOME_ENTER_SCALE);
+        root.setScaleY(HOME_ENTER_SCALE);
+        root.animate().alpha(1f).scaleX(1f).scaleY(1f)
+                .setDuration(duration)
+                .setInterpolator(Motion.WP_LOG)
+                .start();
+        Log.i(MOTION_TAG, "home entrance: keyguard return, alpha 0.0->1.0, scale "
+                + HOME_ENTER_SCALE + "->1.0 over " + duration + " ms (base "
+                + HOME_ENTER_MS + " ms, animator scale " + Motion.scale(this) + ")");
+    }
+
+    private void registerKeyguardReceiver() {
+        keyguardReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                try {
+                    String action = intent == null ? "" : String.valueOf(intent.getAction());
+                    if (Intent.ACTION_USER_PRESENT.equals(action)) {
+                        keyguardReturnPending = true;
+                        keyguardDismissedAtUptime = android.os.SystemClock.uptimeMillis();
+                        keyguardSeenWhilePaused = false;
+                        Log.i(MOTION_TAG, "keyguard dismissed (ACTION_USER_PRESENT);"
+                                + " home entrance armed for the next resume");
+                    } else if (Intent.ACTION_SCREEN_ON.equals(action)
+                            && isKeyguardLocked()) {
+                        keyguardSeenWhilePaused = true;
+                        Log.i(MOTION_TAG, "screen on with the keyguard locked;"
+                                + " home entrance armed for the next resume");
+                    }
+                } catch (Throwable t) {
+                    Log.w(MOTION_TAG, "keyguard receiver failed", t);
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_USER_PRESENT);
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        try {
+            if (Build.VERSION.SDK_INT >= 33) {
+                registerReceiver(keyguardReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(keyguardReceiver, filter);
+            }
+        } catch (Throwable t) {
+            keyguardReceiver = null;
+            Log.w(MOTION_TAG, "keyguard receiver registration failed", t);
+        }
+    }
+
+    private boolean isKeyguardLocked() {
+        try {
+            return keyguardManager != null && keyguardManager.isKeyguardLocked();
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     @Override
     protected void onDestroy() {
+        if (keyguardReceiver != null) {
+            try {
+                unregisterReceiver(keyguardReceiver);
+            } catch (Throwable ignored) {
+            }
+            keyguardReceiver = null;
+        }
         if (turnstile != null) {
             turnstile.settleNow();
         }

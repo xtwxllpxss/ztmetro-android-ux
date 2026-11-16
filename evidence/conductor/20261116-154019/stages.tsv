@@ -1,0 +1,6 @@
+build	skipped	0	--skip-build
+publish	ok	21	
+apply	ok	36	
+verify	ok	58	PASS/FAIL summary in verify.log (FAILs present)
+factory	ok	170	
+report	ok	0	

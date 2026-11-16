@@ -126,6 +126,47 @@ def module_spec(tokens):
             "module spec: 24 dp back/search glyphs inside the 40 dp bar (Android "
             "minimum icon size; the whole 40x40 dp cell is the touch target)",
         ),
+        "header_label_alpha": (
+            1.0,
+            "deliverable 2026-11-16: the caps label is #FFFFFF like the target frame "
+            "(ztos-about.png measures a white label); the 0.70 white stays on the "
+            "unused subtitle, not on the page label",
+        ),
+        "row_label_sp": (
+            15,
+            "deliverable 2026-11-16: the grey row line of ztos-about.png (category/name) "
+            "is 15 sp; the frame's two-line rows replace the Material single-line title",
+        ),
+        "row_value_sp": (
+            22,
+            "deliverable 2026-11-16: the white row line of ztos-about.png (the actual "
+            "value) is 22 sp; a row without a summary uses this size for the title",
+        ),
+        "row_padding_h_dp": (
+            24,
+            "deliverable 2026-11-16: rows share the header's 24 dp page margin (the "
+            "frame's left inset; docs/17-wp-design-reference.md section 2)",
+        ),
+        "row_padding_v_dp": (
+            4,
+            "module spec: the about frame's two-line row is ~53 dp pitch; 4 dp above and "
+            "below the 15 sp + 22 sp lines reproduces that compact rhythm",
+        ),
+        "row_max_height_dp": (
+            220,
+            "module spec: a preference row is a short block; a taller ViewGroup is a "
+            "page/group container, never a row",
+        ),
+        "group_gap_limit_dp": (
+            40,
+            "module spec: Material preference-category gaps up to 40 dp are card "
+            "insets and are removed; anything larger is page structure",
+        ),
+        "row_inset_limit_dp": (
+            96,
+            "module spec: the stock icon cell and the disclosure-chevron slot are <= 96 "
+            "dp insets of the title; clearing them moves the label to the page margin",
+        ),
     }
 
 
@@ -147,6 +188,7 @@ def build(tokens):
     base = accent["base"].upper()
     white = neutrals["text_primary"].upper()
     black = neutrals["black"].upper()
+    secondary = neutrals["text_secondary"].upper()
     families = tokens["type"]["families"]["android_fallback"]
 
     spec = module_spec(tokens)
@@ -156,59 +198,88 @@ def build(tokens):
 
     faded = with_alpha(white, spec["subtitle_alpha"][0])
 
-    colors = MODULE_SECTION + (
-        "  <!-- color.neutrals.black -->\n"
-        '  <color name="metro_header_bg">%s</color>\n'
-        "  <!-- color.neutrals.text_primary -->\n"
-        '  <color name="metro_header_title">%s</color>\n'
-        "  <!-- color.neutrals.text_primary at %s alpha (%s) -->\n"
-        '  <color name="metro_header_label">%s</color>\n'
-        "  <!-- color.neutrals.text_primary at %s alpha (%s) -->\n"
-        '  <color name="metro_header_subtitle">%s</color>\n'
-        "  <!-- color.accent.base — kept for the pressed state of the bar buttons; "
-        "never used as a fill -->\n"
-        '  <color name="metro_accent">%s</color>\n'
-        "  <!-- color.accent.base at %s alpha (%s) -->\n"
-        '  <color name="metro_accent_pressed">%s</color>\n'
-        "  <!-- color.neutrals.black -->\n"
-        '  <color name="metro_bottom_bar_bg">%s</color>\n'
-        "  <!-- color.neutrals.text_primary -->\n"
-        '  <color name="metro_bottom_bar_text">%s</color>\n'
-        "</resources>\n"
-    ) % (black, white, num(spec["subtitle_alpha"][0]), spec["subtitle_alpha"][1],
-         faded, num(spec["subtitle_alpha"][0]), spec["subtitle_alpha"][1], faded,
-         base, num(spec["button_pressed_alpha"][0]), spec["button_pressed_alpha"][1],
-         with_alpha(base, spec["button_pressed_alpha"][0]), black, white)
+    def color_line(name, value, comment):
+        return ('  <!-- %s -->\n'
+                '  <color name="%s">%s</color>\n') % (comment, name, value)
 
-    dimens = MODULE_SECTION + (
-        "  <!-- %s -->\n"
-        '  <dimen name="metro_header_height">%sdp</dimen>\n'
-        "  <!-- %s -->\n"
-        '  <dimen name="metro_header_label_size">%ssp</dimen>\n'
-        "  <!-- %s -->\n"
-        '  <dimen name="metro_header_title_size">%ssp</dimen>\n'
-        "  <!-- %s -->\n"
-        '  <dimen name="metro_header_label_to_title">%sdp</dimen>\n'
-        "  <!-- %s -->\n"
-        '  <dimen name="metro_header_subtitle_size">%ssp</dimen>\n'
-        "  <!-- %s -->\n"
-        '  <dimen name="metro_header_padding_h">%sdp</dimen>\n'
-        "  <!-- %s -->\n"
-        '  <dimen name="metro_bottom_bar_height">%sdp</dimen>\n'
-        "  <!-- %s -->\n"
-        '  <dimen name="metro_bottom_bar_label_size">%ssp</dimen>\n'
-        "  <!-- %s -->\n"
-        '  <dimen name="metro_bottom_bar_glyph">%sdp</dimen>\n'
-        "</resources>\n"
-    ) % (spec["header_height_dp"][1], num(spec["header_height_dp"][0]),
-         spec["header_label_sp"][1], num(spec["header_label_sp"][0]),
-         spec["header_title_sp"][1], num(spec["header_title_sp"][0]),
-         spec["label_to_title_dp"][1], num(spec["label_to_title_dp"][0]),
-         spec["subtitle_sp"][1], num(spec["subtitle_sp"][0]),
-         spec["padding_h_dp"][1], num(spec["padding_h_dp"][0]),
-         spec["bottom_bar_height_dp"][1], num(spec["bottom_bar_height_dp"][0]),
-         spec["bottom_bar_label_sp"][1], num(spec["bottom_bar_label_sp"][0]),
-         spec["bottom_bar_glyph_dp"][1], num(spec["bottom_bar_glyph_dp"][0]))
+    def dimen_line(name, value, comment):
+        return ('  <!-- %s -->\n'
+                '  <dimen name="%s">%s</dimen>\n') % (comment, name, value)
+
+    colors = MODULE_SECTION
+    colors += color_line("metro_header_bg", black, "color.neutrals.black")
+    colors += color_line("metro_header_title", white, "color.neutrals.text_primary")
+    colors += color_line(
+        "metro_header_label", white,
+        "deliverable: caps label #FFFFFF on black (%s)"
+        % spec["header_label_alpha"][1])
+    colors += color_line(
+        "metro_header_subtitle", faded,
+        "color.neutrals.text_primary at %s alpha (%s)"
+        % (num(spec["subtitle_alpha"][0]), spec["subtitle_alpha"][1]))
+    colors += color_line("metro_accent", base,
+                         "color.accent.base — pressed state only; never a fill")
+    colors += color_line(
+        "metro_accent_pressed", with_alpha(base, spec["button_pressed_alpha"][0]),
+        "color.accent.base at %s alpha (%s)"
+        % (num(spec["button_pressed_alpha"][0]), spec["button_pressed_alpha"][1]))
+    colors += color_line("metro_row_bg", black,
+                         "color.neutrals.black — flat row surface, no card")
+    colors += color_line("metro_row_label", secondary,
+                         "color.neutrals.text_secondary — the grey 15 sp label line")
+    colors += color_line("metro_row_value", white,
+                         "color.neutrals.text_primary — the white 22 sp value line")
+    colors += color_line("metro_switch_track", base,
+                         "color.accent.base — switch track #0050EF, opaque")
+    colors += color_line("metro_switch_thumb", white,
+                         "color.neutrals.text_primary — switch thumb")
+    colors += color_line("metro_bottom_bar_bg", black, "color.neutrals.black")
+    colors += color_line("metro_bottom_bar_text", white, "color.neutrals.text_primary")
+    colors += "</resources>\n"
+
+    dimens = MODULE_SECTION
+    dimens += dimen_line("metro_header_height", num(spec["header_height_dp"][0]) + "dp",
+                         spec["header_height_dp"][1])
+    dimens += dimen_line("metro_header_label_size", num(spec["header_label_sp"][0]) + "sp",
+                         spec["header_label_sp"][1])
+    dimens += dimen_line("metro_header_title_size", num(spec["header_title_sp"][0]) + "sp",
+                         spec["header_title_sp"][1])
+    dimens += dimen_line("metro_header_label_to_title",
+                         num(spec["label_to_title_dp"][0]) + "dp",
+                         spec["label_to_title_dp"][1])
+    dimens += dimen_line("metro_header_subtitle_size",
+                         num(spec["subtitle_sp"][0]) + "sp", spec["subtitle_sp"][1])
+    dimens += dimen_line("metro_header_padding_h",
+                         num(spec["padding_h_dp"][0]) + "dp", spec["padding_h_dp"][1])
+    dimens += dimen_line("metro_row_label_size", num(spec["row_label_sp"][0]) + "sp",
+                         spec["row_label_sp"][1])
+    dimens += dimen_line("metro_row_value_size", num(spec["row_value_sp"][0]) + "sp",
+                         spec["row_value_sp"][1])
+    dimens += dimen_line("metro_row_padding_h",
+                         num(spec["row_padding_h_dp"][0]) + "dp",
+                         spec["row_padding_h_dp"][1])
+    dimens += dimen_line("metro_row_padding_v",
+                         num(spec["row_padding_v_dp"][0]) + "dp",
+                         spec["row_padding_v_dp"][1])
+    dimens += dimen_line("metro_row_max_height",
+                         num(spec["row_max_height_dp"][0]) + "dp",
+                         spec["row_max_height_dp"][1])
+    dimens += dimen_line("metro_group_gap_limit",
+                         num(spec["group_gap_limit_dp"][0]) + "dp",
+                         spec["group_gap_limit_dp"][1])
+    dimens += dimen_line("metro_row_inset_limit",
+                         num(spec["row_inset_limit_dp"][0]) + "dp",
+                         spec["row_inset_limit_dp"][1])
+    dimens += dimen_line("metro_bottom_bar_height",
+                         num(spec["bottom_bar_height_dp"][0]) + "dp",
+                         spec["bottom_bar_height_dp"][1])
+    dimens += dimen_line("metro_bottom_bar_label_size",
+                         num(spec["bottom_bar_label_sp"][0]) + "sp",
+                         spec["bottom_bar_label_sp"][1])
+    dimens += dimen_line("metro_bottom_bar_glyph",
+                         num(spec["bottom_bar_glyph_dp"][0]) + "dp",
+                         spec["bottom_bar_glyph_dp"][1])
+    dimens += "</resources>\n"
 
     # Type faces: the tokens map the Segoe stack onto the system families because no
     # font file is shipped (design/tokens/README.md, "No font files are shipped").

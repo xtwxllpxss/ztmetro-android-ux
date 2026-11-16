@@ -170,11 +170,11 @@ die() { log "FATAL: $*"; exit 1; }
 
 rssh() { # one remote command string; quiet, batch mode
   if [ "$DRY" = 1 ]; then log "DRY ssh $SSH_HOST: $1"; return 0; fi
-  ssh -q -o BatchMode=yes -o ConnectTimeout=20 "$SSH_HOST" "$1"
+  ssh -n -q -o BatchMode=yes -o ConnectTimeout=20 "$SSH_HOST" "$1"
 }
 
 rq() { # remote command whose stdout is captured
-  ssh -q -o BatchMode=yes -o ConnectTimeout=20 "$SSH_HOST" "$1"
+  ssh -n -q -o BatchMode=yes -o ConnectTimeout=20 "$SSH_HOST" "$1"
 }
 
 dev() { # full adb argument string (executed on hermes)
@@ -248,6 +248,26 @@ rel_for_label() { # label -> path relative to the remote build tree
   for i in "${!ART_LABELS[@]}"; do
     if [ "${ART_LABELS[$i]}" = "$1" ]; then printf '%s' "${ART_RELS[$i]}"; return 0; fi
   done
+  return 1
+}
+
+enable_adb_root() { # every device mutation runs through adbd as uid 0
+  local who
+  who=$(devq "shell id" 2>/dev/null | tr -d '\r\n')
+  case "$who" in
+    uid=0*) log "root: adb shell uid=0 ($(devq 'shell getenforce' 2>/dev/null | tr -d '\r\n'))"; return 0 ;;
+  esac
+  log "adbd is not root; running 'adb root'"
+  dev "root" >/dev/null 2>&1 || true
+  sleep 3
+  dev "wait-for-device" >/dev/null 2>&1 || true
+  sleep 1
+  who=$(devq "shell id" 2>/dev/null | tr -d '\r\n')
+  case "$who" in
+    uid=0*) log "root: adb shell uid=0 after adb root"; return 0 ;;
+  esac
+  log "ERROR: 'adb root' did not give uid 0 (adb shell id: '${who:-unreachable}')"
+  log "       This needs a LineageOS userdebug/eng build (adbd root).  Magisk su is not used."
   return 1
 }
 
@@ -429,8 +449,9 @@ stage_publish() {
     log "DRY ssh $SSH_HOST 'mkdir -p ~/$REMOTE_STAGE'"
     log "DRY ssh $SSH_HOST 'cp ~/$SNAPDIR/<artifact> ~/$REMOTE_STAGE/<basename>'   # x5 (scp within hermes)"
     log "DRY $ADB push ~/$REMOTE_STAGE/ztmetro-overlays-1.0.0.zip /sdcard/ztmetro-overlays-1.0.0.zip"
-    log "DRY $ADB shell su -c 'magisk --install-module /sdcard/ztmetro-overlays-1.0.0.zip'"
-    log "DRY $ADB shell su -c 'echo <sha256> > /data/adb/modules/ztmetro-overlays/.conductor-sha256'"
+    log "DRY $ADB root   # adbd restarted as uid 0"
+    log "DRY $ADB shell magisk --install-module /sdcard/ztmetro-overlays-1.0.0.zip"
+    log "DRY $ADB shell \"echo <sha256> > /data/adb/modules/ztmetro-overlays/.conductor-sha256\""
     log "DRY $ADB shell pm path <pkg>  # compare sha256 + apksigner certs, then install -r / uninstall+install"
     log "DRY $ADB shell cmd package set-home-activity org.ztmetro.start/.StartActivity"
     log "DRY $ADB push <manifest> /data/local/tmp/ztmetro-manifest.json"
@@ -440,6 +461,7 @@ stage_publish() {
 
   ensure_artifacts || return 1
   resolve_remote_tools
+  enable_adb_root || return 1
 
   rssh "mkdir -p ~/$REMOTE_STAGE" || return 1
   while IFS=$'\t' read -r label rel sha size; do
@@ -452,20 +474,18 @@ stage_publish() {
   log "artifacts published to $SSH_HOST:~/$REMOTE_STAGE/"
 
   module_sha=$(sha_for_label overlays)
-  module_marker=$(devq "shell su -c 'cat /data/adb/modules/ztmetro-overlays/.conductor-sha256 2>/dev/null'" 2>/dev/null | tr -d '\r\n')
+  module_fp=$(rq "cd ~/$SNAPDIR/modules/ztmetro-overlays && find . -type f | sort | xargs sha256sum | sha256sum | cut -d' ' -f1" | tr -d '\r\n')
+  [ -n "$module_fp" ] || { log "could not fingerprint the module payload"; return 1; }
+  module_marker=$(devq "shell cat /data/adb/modules/ztmetro-overlays/.conductor-sha256 2>/dev/null" 2>/dev/null | tr -d '\r\n')
   MODULE_CHANGED=0
-  if [ "$module_marker" = "$module_sha" ]; then
-    log "Magisk module already at sha256 ${module_sha:0:16}... -> skip install/reboot"
+  if [ "$module_marker" = "$module_fp" ]; then
+    log "Magisk module payload already at ${module_fp:0:16}... -> skip install/reboot"
   else
     modbase=$(basename "$(rel_for_label overlays)")
-    log "installing Magisk module $modbase (marker='${module_marker:0:16}')"
+    log "installing Magisk module $modbase (payload marker='${module_marker:0:16}')"
     dev "push $REMOTE_STAGE_ABS/$modbase /sdcard/$modbase" || return 1
-    dev "shell su -c 'magisk --install-module /sdcard/$modbase'" || {
+    dev "shell magisk --install-module /sdcard/$modbase" || {
       log "magisk --install-module failed"
-      return 1
-    }
-    dev "shell su -c 'echo $module_sha > /data/adb/modules/ztmetro-overlays/.conductor-sha256'" || {
-      log "could not write module marker"
       return 1
     }
     MODULE_CHANGED=1
@@ -488,6 +508,11 @@ stage_publish() {
       log "device did not reach boot_completed after reboot"
       return 1
     fi
+    enable_adb_root || return 1
+    dev "shell \"echo $module_fp > /data/adb/modules/ztmetro-overlays/.conductor-sha256\"" || {
+      log "could not write module marker after boot"
+      return 1
+    }
   else
     log "module unchanged -> no reboot needed"
   fi
@@ -517,7 +542,7 @@ write_manifest() {
     printf '  "snapshot": {"commit": "%s", "short": "%s", "source": "git archive HEAD; %s uncommitted path(s) excluded"},\n' "$SNAP_COMMIT" "$SNAP_SHORT" "$SNAP_DIRTY"
     printf '  "device": "%s",\n' "$(devq 'shell getprop ro.serialno' 2>/dev/null | tr -d '\r\n')"
     printf '  "home": "org.ztmetro.start/.StartActivity",\n'
-    printf '  "module": {"id": "ztmetro-overlays", "sha256": "%s"},\n' "$(sha_for_label overlays)"
+    printf '  "module": {"id": "ztmetro-overlays", "zip_sha256": "%s", "content_sha256": "%s"},\n' "$(sha_for_label overlays)" "${module_fp:-}"
     printf '  "packages": [\n%s\n  ]\n' "$rows"
     printf '}\n'
   } > "$manifest"
@@ -551,9 +576,9 @@ stage_apply() {
     log "DRY $ADB shell ls /data/adb/modules/ztmetro-overlays/system/product/overlay/*.apk"
     log "DRY for each module APK: $ADB pull <apk> /tmp/... && aapt2 dump badging  # package list"
     for pkg in $EXPECTED_OVERLAYS; do
-      log "DRY $ADB shell su -c 'cmd overlay enable --user 0 $pkg'   # if not already [x]"
+      log "DRY $ADB shell cmd overlay enable --user 0 $pkg   # if not already [x]"
     done
-    log "DRY $ADB shell su -c 'cmd overlay set-priority org.ztmetro.overlay.framework highest'"
+    log "DRY $ADB shell cmd overlay set-priority org.ztmetro.overlay.framework highest"
     log "DRY $ADB shell settings put secure enabled_accessibility_services '<union of both services>'"
     log "DRY $ADB shell settings put secure accessibility_enabled 1"
     log "DRY $ADB shell cmd notification allow_listener <listener>   # x2"
@@ -562,12 +587,14 @@ stage_apply() {
     log "DRY $ADB shell appops set org.ztmetro.actioncentre ACCESS_RESTRICTED_SETTINGS allow"
     log "DRY $ADB shell pm grant org.ztmetro.actioncentre android.permission.CAMERA"
     log "DRY $ADB shell pm grant org.ztmetro.actioncentre android.permission.READ_PHONE_STATE"
-    log "DRY $ADB shell su -c 'killall com.android.systemui'   # only if an overlay changed"
+    log "DRY $ADB shell ime enable org.ztmetro.ime/.ZtMetroIme && $ADB shell ime set org.ztmetro.ime/.ZtMetroIme"
+    log "DRY $ADB shell killall com.android.systemui   # only if an overlay changed"
     return 0
   fi
 
   resolve_remote_tools
   wait_for_boot || { log "device not booted"; return 1; }
+  enable_adb_root || return 1
 
   # --- 1. discover the overlay packages from the module APKs ---------------
   ovl_dir=/data/adb/modules/ztmetro-overlays/system/product/overlay
@@ -591,7 +618,7 @@ stage_apply() {
   log "overlay packages:$(printf '%s\n' $ovl_pkgs | sed 's/^/ /' | tr '\n' ' ')"
 
   # --- 2. enable overlays, log before/after --------------------------------
-  list_before=$(devq "shell su -c 'cmd overlay list'" | tr -d '\r')
+  list_before=$(devq "shell cmd overlay list" | tr -d '\r')
   for pkg in $ovl_pkgs; do
     line=$(printf '%s\n' "$list_before" | grep -F "$pkg" | head -1)
     if [ -z "$line" ]; then
@@ -603,7 +630,7 @@ stage_apply() {
       continue
     fi
     log "  enabling overlay: $pkg"
-    if ! dev "shell su -c 'cmd overlay enable --user 0 $pkg'" >/dev/null 2>&1; then
+    if ! dev "shell cmd overlay enable --user 0 $pkg" >/dev/null 2>&1; then
       log "  WARN enable failed for $pkg"
       continue
     fi
@@ -613,12 +640,12 @@ stage_apply() {
   if [ "$changed" -eq 1 ] || [ "$MODULE_CHANGED" -eq 1 ]; then
     changed=1
   fi
-  list_after=$(devq "shell su -c 'cmd overlay list'" | tr -d '\r')
+  list_after=$(devq "shell cmd overlay list" | tr -d '\r')
   log "overlay state after apply:"
   printf '%s\n' "$list_after" | grep -E '\[[ x]\] .*(ztmetro|ztos)' | sed 's/^/  /' | tee -a "$MAIN_LOG"
 
-  dev "shell su -c 'cmd overlay set-priority org.ztmetro.overlay.framework highest'" >/dev/null 2>&1 \
-    || log "WARN could not set framework overlay priority"
+  dev "shell cmd overlay set-priority org.ztmetro.overlay.framework highest" >/dev/null 2>&1 || true
+  log "framework overlay priority: $(devq 'shell cmd overlay dump org.ztmetro.overlay.framework' 2>/dev/null | grep -m1 'mPriority' | sed 's/^ *//')"
 
   # --- 3. accessibility services (union, never clobber) --------------------
   aa_before=$(devq "shell settings get secure enabled_accessibility_services" | tr -d '\r\n')
@@ -685,10 +712,18 @@ stage_apply() {
   log "actioncentre appops:"
   devq "shell appops get org.ztmetro.actioncentre" 2>/dev/null | sed 's/^/  /' | tee -a "$MAIN_LOG" || true
 
-  # --- 7. restart SystemUI only when an overlay changed --------------------
+  # --- 7. IME: enable + select the ztMetro keyboard ------------------------
+  log "default IME before: $(devq 'shell settings get secure default_input_method' | tr -d '\r\n')"
+  dev "shell ime enable org.ztmetro.ime/.ZtMetroIme" >/dev/null 2>&1 \
+    || log "WARN ime enable failed"
+  dev "shell ime set org.ztmetro.ime/.ZtMetroIme" >/dev/null 2>&1 \
+    || log "WARN ime set failed"
+  log "default IME after:  $(devq 'shell settings get secure default_input_method' | tr -d '\r\n')"
+
+  # --- 8. restart SystemUI only when an overlay changed --------------------
   if [ "$changed" -eq 1 ]; then
     log "an overlay changed -> restarting SystemUI"
-    dev "shell su -c 'killall com.android.systemui'" >/dev/null 2>&1 || log "WARN killall SystemUI failed"
+    dev "shell killall com.android.systemui" >/dev/null 2>&1 || log "WARN killall SystemUI failed"
     sleep 5
     log "SystemUI pid: $(devq 'shell pidof com.android.systemui' | tr -d '\r\n')"
   else
@@ -705,7 +740,7 @@ stage_apply() {
 # --------------------------------------------------------------------------
 verify_builtin() { # writes the same TOTAL line shape as ux-verify
   local pass=0 fail=0 line list aa nl home pkg
-  list=$(devq "shell su -c 'cmd overlay list'" | tr -d '\r')
+  list=$(devq "shell cmd overlay list" | tr -d '\r')
   for pkg in $EXPECTED_OVERLAYS; do
     if printf '%s\n' "$list" | grep -qE "^\[x\] +$pkg\$"; then
       printf 'PASS  overlay enabled: %s\n' "$pkg"; pass=$((pass + 1))
@@ -843,6 +878,7 @@ stage_factory() {
   fi
 
   resolve_remote_tools
+  enable_adb_root || return 1
   rssh "mkdir -p ~/$REMOTE_FACTORY/apk" || return 1
   : > "$EVID/factory/coverage.tsv"
 
@@ -859,7 +895,7 @@ stage_factory() {
     base="$pkg.apk"
     if ! dev "pull '$path' ~/$REMOTE_FACTORY/apk/$base" >/dev/null 2>&1; then
       # system apps are world-readable, but fall back to su + exec-out
-      if ! rssh "$ADB exec-out su -c 'cat $path' > ~/$REMOTE_FACTORY/apk/$base"; then
+      if ! rssh "$ADB exec-out cat $path > ~/$REMOTE_FACTORY/apk/$base"; then
         log "  could not pull $path -> skipped"
         printf '%s\t%s\t%s\t%s\t%s\n' "$pkg" "-" "-" "pull-failed" "0" >> "$EVID/factory/coverage.tsv"
         continue
@@ -934,29 +970,39 @@ PY
   rssh "printf 'id=ztmetro-factory\nname=ztMetro factory RROs\nversion=1.0.0\nversionCode=1\nauthor=ztmetro-conductor\ndescription=Theme-factory RROs for stock apps; generated by repo/scripts/ztmetro-conductor.sh.\n' > ~/$REMOTE_FACTORY/module/module.prop"
   rssh "cd ~/$REMOTE_FACTORY/module && rm -f ~/$REMOTE_FACTORY/ztmetro-factory-rros.zip && zip -qr -X ~/$REMOTE_FACTORY/ztmetro-factory-rros.zip ." || return 1
   sha=$(rq "sha256sum ~/$REMOTE_FACTORY/ztmetro-factory-rros.zip | cut -d' ' -f1" | tr -d '\r\n')
-  marker=$(devq "shell su -c 'cat /data/adb/modules/ztmetro-factory/.conductor-sha256 2>/dev/null'" 2>/dev/null | tr -d '\r\n')
-  if [ "$marker" = "$sha" ]; then
-    log "factory module already at $sha -> no reboot"
+  fac_fp=$(rq "cd ~/$REMOTE_FACTORY/module && find . -type f | sort | xargs sha256sum | sha256sum | cut -d' ' -f1" | tr -d '\r\n')
+  [ -n "$fac_fp" ] || { log "could not fingerprint the factory module payload"; return 1; }
+  marker=$(devq "shell cat /data/adb/modules/ztmetro-factory/.conductor-sha256 2>/dev/null" 2>/dev/null | tr -d '\r\n')
+  if [ "$marker" = "$fac_fp" ]; then
+    log "factory module payload already at ${fac_fp:0:16}... -> no reboot"
   else
     dev "push ~/$REMOTE_FACTORY/ztmetro-factory-rros.zip /sdcard/ztmetro-factory-rros.zip" || return 1
-    dev "shell su -c 'magisk --install-module /sdcard/ztmetro-factory-rros.zip'" || return 1
-    dev "shell su -c 'echo $sha > /data/adb/modules/ztmetro-factory/.conductor-sha256'" || return 1
+    dev "shell magisk --install-module /sdcard/ztmetro-factory-rros.zip" || return 1
     log "factory module installed; rebooting once so PackageManager scans the new RROs"
     dev "reboot" || true
     wait_for_boot || { log "device did not reach boot_completed after factory reboot"; return 1; }
+    enable_adb_root || return 1
+    dev "shell \"echo $fac_fp > /data/adb/modules/ztmetro-factory/.conductor-sha256\"" || return 1
   fi
 
-  local i=0 pkg ovl target
+  local pkg ovl attempt en_out enabled
   set -- $ok_ovls
   for ovl in "$@"; do
     pkg=""
     log "enable factory overlay $ovl"
-    dev "shell su -c 'cmd overlay enable --user 0 $ovl'" >/dev/null 2>&1 || log "  WARN enable failed"
-    if devq "shell su -c 'cmd overlay list'" | tr -d '\r' | grep -qE "^\[x\] +$ovl\$"; then
-      log "  enabled"
-    else
-      log "  WARN not listed as enabled"
-    fi
+    en_out=$(devq "shell cmd overlay enable --user 0 $ovl" 2>&1)
+    log "  cmd: ${en_out:-ok}"
+    enabled=0
+    attempt=0
+    while [ "$attempt" -lt 10 ]; do
+      if devq "shell cmd overlay list" | tr -d '\r' | grep -qE "^\[x\] +$ovl\$"; then
+        enabled=1
+        break
+      fi
+      sleep 1
+      attempt=$((attempt + 1))
+    done
+    if [ "$enabled" -eq 1 ]; then log "  enabled"; else log "  WARN not listed as enabled after 10s"; fi
   done
   # restart the affected apps so they re-read resources
   set -- $ok_targets
@@ -1018,6 +1064,7 @@ lines.append(f"# ztMetro conductor run {os.path.basename(evid)}")
 lines.append("")
 lines.append(f"- **command:** `{command}`")
 lines.append(f"- **snapshot:** `{snap_commit}` (git archive; {snap_dirty} uncommitted path(s) in the working tree excluded)")
+lines.append("- **root:** `adb root` (adbd uid=0, SELinux `u:r:su:s0`); Magisk `su` for adb shell is not used")
 lines.append(f"- **started:** {started.isoformat(timespec='seconds')}")
 lines.append(f"- **finished:** {finished.isoformat(timespec='seconds')}")
 lines.append(f"- **duration:** {t1 - t0} s")

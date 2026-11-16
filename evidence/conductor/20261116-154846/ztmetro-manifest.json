@@ -1,0 +1,16 @@
+{
+  "schema": "ztos.conductor.manifest/1",
+  "generated_at": "2026-11-16T12:49:43Z",
+  "run_id": "20261116-154846",
+  "snapshot": {"commit": "bb05aac17aec12e141a61308199aeca53c812ed1", "short": "bb05aac17aec", "source": "git archive HEAD; 25 uncommitted path(s) excluded"},
+  "device": "4f2b50b2",
+  "home": "org.ztmetro.start/.StartActivity",
+  "module": {"id": "ztmetro-overlays", "zip_sha256": "e86af1ae195404116ec0cca0d83e61213bc26a0f702d926b90d6d7807e49346f", "content_sha256": "b3feaa76261c7316fe3af5e7b2d5cd457ef0269b0e36eb141648908fb93841fa"},
+  "packages": [
+    {"artifact": "overlays", "package": "", "versionName": "", "versionCode": "", "sha256": "e86af1ae195404116ec0cca0d83e61213bc26a0f702d926b90d6d7807e49346f", "size": 78142, "file": "ztmetro-overlays-1.0.0.zip"},
+    {"artifact": "launcher", "package": "org.ztmetro.start", "versionName": "4.0", "versionCode": "4", "sha256": "40242fdc075fdacfaeda073b973d2ad43f75407f219a4b6eb393c01e3c1e439d", "size": 74155, "file": "ztmetro-start.apk"},
+    {"artifact": "actioncentre", "package": "org.ztmetro.actioncentre", "versionName": "1.0", "versionCode": "1", "sha256": "93ceba73a179a95615ece43435b5a2cd21cdf9c7c00e31aefa7b9fce1ec6f6b8", "size": 345804, "file": "ztmetro-actioncentre.apk"},
+    {"artifact": "ime", "package": "org.ztmetro.ime", "versionName": "1.1", "versionCode": "2", "sha256": "f22250442df52fd14a857a80dce88a513bec9486cab056150e08c4463ff58df4", "size": 20817, "file": "ztmetro-ime.apk"},
+    {"artifact": "header", "package": "org.ztmetro.settingsheader", "versionName": "1.1", "versionCode": "2", "sha256": "0520901932a99f2bd63c96f0832fa3fe04cbb9541c690a04272f75d5b3909c48", "size": 37872, "file": "ztmetro-settings-header.apk"}
+  ]
+}

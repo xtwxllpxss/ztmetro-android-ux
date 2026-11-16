@@ -208,7 +208,7 @@ VERIFY="$BUILD_DIR/verify.txt"
     echo
     echo "## module resources (must all live in the module APK, not in Settings)"
     "$AAPT2" dump resources "$APK" \
-        | grep -iE 'metro_header|MetroHeader|#ff0050ef|#b3ffffff' || true
+        | grep -iE 'metro_header|metro_row|metro_switch|MetroHeader|#ff0050ef|#ff999999|#ffffffff' || true
     echo
     echo "## classes.dex"
     unzip -l "$APK"
@@ -222,6 +222,9 @@ VERIFY="$BUILD_DIR/verify.txt"
         "$DEXDUMP" -d "$BUILD_DIR/classes.dex" \
             | grep -E "Class descriptor|name +: '(setContentView|setTitle|onResume|onCreate|handleLoadPackage|afterHookedMethod)'" \
             | sed -n '1,40p'
+        echo "## module classes in classes.dex (one-pass walker must be listed)"
+        "$DEXDUMP" -d "$BUILD_DIR/classes.dex" \
+            | grep -oE "Lorg/ztmetro/settingsheader/[A-Za-z]+;" | sort -u
     else
         echo "dexdump not available in $BUILD_TOOLS"
     fi
@@ -237,6 +240,12 @@ grep -q "assets/xposed_init" "$VERIFY" \
     || die "APK has no assets/xposed_init (legacy Xposed entry point)"
 grep -q "#ff0050ef" "$VERIFY" || die "accent colour #0050EF is not in module resources"
 grep -q "metro_header_height" "$VERIFY" || die "header dimens missing from module resources"
+grep -q "metro_row_label" "$VERIFY" || die "row label colour is not in module resources"
+grep -q "#ff999999" "$VERIFY" || die "row label #999999 is not in module resources"
+grep -q "metro_row_value" "$VERIFY" || die "row value colour is not in module resources"
+grep -q "metro_row_label_size" "$VERIFY" || die "row label 15 sp dimen missing"
+grep -q "metro_row_value_size" "$VERIFY" || die "row value 22 sp dimen missing"
+grep -q "metro_switch_track" "$VERIFY" || die "switch track colour missing"
 LC_ALL=C grep -a -q "setContentView" "$VERIFY" || die "dex does not reference setContentView"
 LC_ALL=C grep -a -q "onResume" "$VERIFY" || die "dex does not reference onResume"
 if [ -x "$DEXDUMP" ]; then
@@ -244,7 +253,14 @@ if [ -x "$DEXDUMP" ]; then
         || die "classes.dex does not contain SettingsHeaderHooks"
     grep -q 'Lorg/ztmetro/settingsheader/ModuleEntry;' "$VERIFY" \
         || die "classes.dex does not contain ModuleEntry"
+    grep -q 'Lorg/ztmetro/settingsheader/ScreenPass;' "$VERIFY" \
+        || die "classes.dex does not contain the single-pass walker (ScreenPass)"
 fi
+# The single per-pass proof line: "pass 1/2 attach: N views, M applies, T ms".
+LC_ALL=C grep -a -q ' views, ' "$BUILD_DIR/classes.dex" \
+    || die "classes.dex has no ' views, ' pass-log string"
+LC_ALL=C grep -a -q ' applies' "$BUILD_DIR/classes.dex" \
+    || die "classes.dex has no ' applies' pass-log string"
 
 SIZE=$(wc -c <"$APK" | tr -d ' ')
 SHA=$(sha256_of "$APK")

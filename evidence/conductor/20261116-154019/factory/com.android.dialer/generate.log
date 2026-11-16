@@ -1,0 +1,13 @@
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+== aapt2 compile
+== aapt2 link (target com.android.dialer)
+== apksigner sign
+
+== overlay       /home/denis/ztux/conductor/factory/com.android.dialer/overlay/ztmetro-com_android_dialer-rro.apk
+   sha256        0546e021afd20d0d75eba6aa2be537d750b0ac7eaab5e9cc3f2b2f24697cdc8d
+   size          41304 bytes, 416 entries
+   resource-only True | targetPackage True | missing 0
+   verify.sh     /home/denis/ztux/conductor/factory/com.android.dialer/overlay/verify.sh
+   apply         repo/scripts/theme-factory.sh apply --profile /home/denis/ztux/conductor/factory/com.android.dialer/profile.json --out /home/denis/ztux/conductor/factory/com.android.dialer/overlay

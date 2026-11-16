@@ -10,13 +10,14 @@ import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 /**
- * Installs the four Settings hooks on Android 16 (API 36):
+ * Installs the Settings hooks on Android 16 (API 36):
  *
  * <ul>
- *   <li>{@code SettingsBaseActivity.setContentView(int)} → header + bottom bar + flat rows,</li>
+ *   <li>{@code SettingsBaseActivity.setContentView(int)} → header + bottom bar + rows,</li>
  *   <li>{@code setTitle(CharSequence)} → re-bind the page title/subtitle,</li>
  *   <li>{@code onResume()} → re-apply the chrome (rows are inflated late),</li>
- *   <li>{@code SettingsHomepageActivity.onCreate(Bundle)} → the scrolling home header.</li>
+ *   <li>{@code SettingsHomepageActivity.onCreate(Bundle)} → the scrolling home header,</li>
+ *   <li>{@code SettingsHomepageActivity.onResume()} → self-heal the home header + chrome.</li>
  * </ul>
  *
  * <p>Every callback is an {@link XC_MethodHook} with an {@code afterHookedMethod} body that
@@ -86,6 +87,16 @@ public final class SettingsHeaderHooks {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) {
                             run("homepage.onCreate", param.thisObject, true);
+                        }
+                    });
+            // SettingsHomepageActivity extends FragmentActivity directly (not
+            // SettingsBaseActivity), so its resume is a separate hook: it re-attaches a
+            // header lost to an early attach and re-applies the two-pass chrome.
+            hook(homepage, "onResume", new Class<?>[0],
+                    new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) {
+                            run("homepage.onResume", param.thisObject, false);
                         }
                     });
         }

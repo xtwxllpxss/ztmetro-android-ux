@@ -3,8 +3,10 @@ package org.ztmetro.actioncentre;
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.KeyguardManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ServiceInfo;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
@@ -59,6 +61,14 @@ import java.util.List;
  */
 public class ShadeBridgeService extends AccessibilityService {
     static final String TAG = "ShadeBridge";
+    /**
+     * Separate tag for the top-edge strip only: every touch event and every
+     * touchable-flag change is logged here, so one filter proves the strip is
+     * receiving touches:
+     *
+     * <pre>adb logcat -s ShadeTouch ShadeBridge</pre>
+     */
+    static final String TOUCH_TAG = "ShadeTouch";
 
     private static final String SYSTEMUI_PACKAGE = "com.android.systemui";
     /** A window this large is the expanded shade, not the status bar. */
@@ -77,12 +87,24 @@ public class ShadeBridgeService extends AccessibilityService {
     private static final long BACK_AFTER_START_MS = 120L;
     /** How long the shade-gone timeline is followed after BACK #1 (log only). */
     private static final long SHADE_SETTLE_MAX_MS = 700L;
-    /** Transparent touch strip over the status bar (MetroWinLauncher's A1 trick). */
-    private static final int STRIP_HEIGHT_DP = 24;
+    /**
+     * Transparent touch strip over the status bar (MetroWinLauncher's A1 trick).
+     * 32 dp, not 24: the status bar itself is 24 dp, so the old window matched
+     * it exactly with no margin for the cutout inset/rounding, and the top few
+     * pixels of a top-edge swipe could still start in the SystemUI window. 32 dp
+     * covers the status bar plus the first 8 dp of the app window.
+     */
+    private static final int STRIP_HEIGHT_DP = 32;
     /** A downward drag further than this in the strip opens the panel. */
     private static final int STRIP_DRAG_DP = 24;
     /** Ignore strip touches while a panel launch is already in flight. */
     private static final long STRIP_OPEN_THROTTLE_MS = 600L;
+    /**
+     * Safety net for the touchable flag: even if a ROM drops both the
+     * keyguard listener and the USER_PRESENT broadcast, re-read the keyguard
+     * state on accessibility events, at most this often. Logs only changes.
+     */
+    private static final long STRIP_KEYGUARD_SYNC_MS = 500L;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private long lastTriggerUptime;
@@ -102,6 +124,20 @@ public class ShadeBridgeService extends AccessibilityService {
     private WindowManager.LayoutParams stripParams;
     private KeyguardManager stripKeyguardManager;
     private KeyguardManager.KeyguardLockedStateListener stripKeyguardListener;
+    /** USER_PRESENT / SCREEN_ON / SCREEN_OFF while the strip exists. */
+    private BroadcastReceiver stripReceiver;
+    private boolean stripReceiverRegistered;
+    /**
+     * Keyguard-locked state the strip acts on. Updated from explicit events
+     * (service connect, USER_PRESENT, keyguard listener) and from a throttled
+     * getter read; the device-observed bug is a keyguard getter that stays
+     * true after unlock, so a USER_PRESENT always wins and the getter is never
+     * allowed to re-lock the strip on its own.
+     */
+    private boolean stripKeyguardLocked;
+    /** Applied window flag state: true when FLAG_NOT_TOUCHABLE is absent. */
+    private boolean stripTouchable;
+    private long lastStripKeyguardSyncUptime;
     private long lastStripOpenUptime;
 
     /** ztMetro lock screen over the keyguard; its windows live in its own class. */
@@ -185,10 +221,19 @@ public class ShadeBridgeService extends AccessibilityService {
     // ---- top-edge strip: the common path, before SystemUI sees the gesture ----
 
     /**
-     * Adds a 24 dp full-width transparent window above the status bar. Because
+     * Adds a 32 dp full-width transparent window above the status bar. Because
      * TYPE_ACCESSIBILITY_OVERLAY stacks above TYPE_STATUS_BAR, the top-edge
      * swipe is delivered here instead of to SystemUI, so the stock shade never
      * opens for the common gesture.
+     *
+     * <p>The window is created touchable and is <b>never</b> created with
+     * FLAG_NOT_TOUCHABLE. That flag is owned by {@link #applyStripTouchable}:
+     * added only while the keyguard is actually locked (the lock overlay owns
+     * the screen then) and removed on every USER_PRESENT. The device-observed
+     * defect was the opposite - the flag was set at service bind while locked
+     * and the keyguard listener never brought it back, so the strip stayed
+     * NOT_TOUCHABLE for the rest of the boot and every top-edge swipe went to
+     * SystemUI first.
      */
     private void addStripOverlay() {
         try {
@@ -198,7 +243,10 @@ public class ShadeBridgeService extends AccessibilityService {
                 return;
             }
             View view = new View(this);
+            // Alpha-0 content: the strip exists only as an input surface. The
+            // window itself is not alpha-0, so its input region always exists.
             view.setBackgroundColor(Color.TRANSPARENT);
+            view.setAlpha(0f);
             WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                     WindowManager.LayoutParams.MATCH_PARENT,
                     dpToPx(STRIP_HEIGHT_DP),
@@ -208,9 +256,13 @@ public class ShadeBridgeService extends AccessibilityService {
                             | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                             | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                     PixelFormat.TRANSPARENT);
+            // No inherited NOT_TOUCHABLE: a fresh strip must be touchable, and
+            // only applyStripTouchable() may add the flag afterwards.
+            params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
             params.gravity = Gravity.TOP | Gravity.START;
             params.x = 0;
             params.y = 0;
+            params.alpha = 1f;
             if (Build.VERSION.SDK_INT >= 28) {
                 params.layoutInDisplayCutoutMode =
                         WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
@@ -220,22 +272,35 @@ public class ShadeBridgeService extends AccessibilityService {
             stripWindowManager.addView(view, params);
             stripView = view;
             stripParams = params;
+            stripTouchable = true;
+            // Sources of the locked state, in order of trust: USER_PRESENT /
+            // SCREEN_OFF / SCREEN_ON broadcast, the keyguard listener (API 33+),
+            // then a throttled getter read on accessibility events.
+            registerStripReceiver();
             watchStripKeyguard();
-            if (isKeyguardLocked()) {
-                setStripTouchable(false);
-            }
+            lastStripKeyguardSyncUptime = SystemClock.uptimeMillis();
+            stripKeyguardLocked = isKeyguardLocked();
+            Log.i(TOUCH_TAG, "strip overlay added: height=" + STRIP_HEIGHT_DP
+                    + "dp type=TYPE_ACCESSIBILITY_OVERLAY("
+                    + WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY + ")"
+                    + " alpha=0 content, flags=" + stripFlags(params)
+                    + " touchable=" + stripTouchable
+                    + " keyguardLocked=" + stripKeyguardLocked);
+            applyStripTouchable(!stripKeyguardLocked,
+                    "strip added; keyguard "
+                            + (stripKeyguardLocked ? "locked" : "unlocked"));
             stripActive = true;
-            Log.i(TAG, "strip overlay added: " + STRIP_HEIGHT_DP
-                    + " dp at top, TYPE_ACCESSIBILITY_OVERLAY");
         } catch (Throwable t) {
-            Log.w(TAG, "strip overlay not available", t);
+            Log.w(TOUCH_TAG, "strip overlay not available", t);
             stripView = null;
             stripParams = null;
+            stripTouchable = false;
             stripActive = false;
         }
     }
 
     private void removeStripOverlay() {
+        unregisterStripReceiver();
         try {
             if (stripKeyguardManager != null && stripKeyguardListener != null
                     && Build.VERSION.SDK_INT >= 33) {
@@ -253,10 +318,66 @@ public class ShadeBridgeService extends AccessibilityService {
         }
         stripView = null;
         stripParams = null;
+        stripTouchable = false;
         stripActive = false;
     }
 
-    /** The strip must not eat the lock screen's top edge. */
+    /** USER_PRESENT / SCREEN_ON / SCREEN_OFF are the event half of the flag lifecycle. */
+    private void registerStripReceiver() {
+        if (stripReceiverRegistered) {
+            return;
+        }
+        stripReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                try {
+                    String action = intent == null ? "" : String.valueOf(intent.getAction());
+                    if (Intent.ACTION_USER_PRESENT.equals(action)) {
+                        // Definitive: the user is on the unlocked side of the
+                        // keyguard. A getter stuck on true must not win here.
+                        applyStripKeyguardState(false, "ACTION_USER_PRESENT");
+                    } else if (Intent.ACTION_SCREEN_OFF.equals(action)) {
+                        // Screen off -> the lock overlay owns the top edge.
+                        applyStripKeyguardState(true, "ACTION_SCREEN_OFF");
+                    } else if (Intent.ACTION_SCREEN_ON.equals(action)) {
+                        applyStripKeyguardState(isKeyguardLocked(), "ACTION_SCREEN_ON");
+                    }
+                } catch (Throwable t) {
+                    Log.w(TOUCH_TAG, "strip receiver failed", t);
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_USER_PRESENT);
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        try {
+            if (Build.VERSION.SDK_INT >= 33) {
+                registerReceiver(stripReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(stripReceiver, filter);
+            }
+            stripReceiverRegistered = true;
+        } catch (Throwable t) {
+            stripReceiver = null;
+            stripReceiverRegistered = false;
+            Log.w(TOUCH_TAG, "strip receiver registration failed", t);
+        }
+    }
+
+    private void unregisterStripReceiver() {
+        if (!stripReceiverRegistered || stripReceiver == null) {
+            return;
+        }
+        try {
+            unregisterReceiver(stripReceiver);
+        } catch (Throwable ignored) {
+        }
+        stripReceiverRegistered = false;
+        stripReceiver = null;
+    }
+
+    /** The strip must not eat the lock screen's top edge; listener (API 33+). */
     private void watchStripKeyguard() {
         if (Build.VERSION.SDK_INT < 33) {
             return;
@@ -269,50 +390,94 @@ public class ShadeBridgeService extends AccessibilityService {
             }
             stripKeyguardListener = new KeyguardManager.KeyguardLockedStateListener() {
                 @Override
-                public void onKeyguardLockedStateChanged(boolean isKeyguardLocked) {
-                    setStripTouchable(!isKeyguardLocked);
+                public void onKeyguardLockedStateChanged(boolean lockedNow) {
+                    // Only a "locked" callback is cross-checked with the getter:
+                    // a getter stuck on true is the defect being worked around,
+                    // and it must never re-arm NOT_TOUCHABLE after an unlock.
+                    boolean locked = lockedNow && isKeyguardLocked();
+                    applyStripKeyguardState(locked,
+                            "keyguard listener (lockedNow=" + lockedNow + ")");
                 }
             };
             stripKeyguardManager.addKeyguardLockedStateListener(
                     getMainExecutor(), stripKeyguardListener);
         } catch (Throwable t) {
-            Log.w(TAG, "strip keyguard watcher failed", t);
+            Log.w(TOUCH_TAG, "strip keyguard watcher failed", t);
         }
     }
 
-    private void setStripTouchable(boolean touchable) {
+    /**
+     * The single owner of the strip's NOT_TOUCHABLE flag. Logs every transition
+     * with the reason that caused it (tag ShadeTouch), so logcat proves both the
+     * locked state and the unlock that brought the strip back.
+     */
+    private void applyStripTouchable(boolean touchable, String reason) {
         try {
             if (stripView == null || stripParams == null || stripWindowManager == null) {
                 return;
             }
             int flags = stripParams.flags;
+            boolean currentlyTouchable =
+                    (flags & WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE) == 0;
+            if (currentlyTouchable == touchable) {
+                return;
+            }
             int next = touchable
                     ? flags & ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
                     : flags | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
-            if (next != flags) {
-                stripParams.flags = next;
-                stripWindowManager.updateViewLayout(stripView, stripParams);
-                Log.i(TAG, "strip overlay " + (touchable
-                        ? "touchable" : "not touchable (keyguard)"));
-            }
+            stripParams.flags = next;
+            stripWindowManager.updateViewLayout(stripView, stripParams);
+            stripTouchable = touchable;
+            Log.i(TOUCH_TAG, "strip touchable " + (touchable ? "ON" : "OFF")
+                    + " reason=" + reason
+                    + " keyguardLocked=" + stripKeyguardLocked
+                    + " flags=" + stripFlags(stripParams));
         } catch (Throwable t) {
-            Log.w(TAG, "strip touchable update failed", t);
+            Log.w(TOUCH_TAG, "strip touchable update failed", t);
+        }
+    }
+
+    private void applyStripKeyguardState(boolean locked, String reason) {
+        stripKeyguardLocked = locked;
+        applyStripTouchable(!locked, reason + "; keyguard "
+                + (locked ? "locked" : "unlocked"));
+    }
+
+    /**
+     * Throttled safety net for a ROM that drops both the keyguard listener and
+     * the USER_PRESENT broadcast. The getter may only clear the locked state,
+     * never set it: setting it from the getter is exactly the stale-flag bug
+     * this code works around.
+     */
+    private void reconcileStripKeyguard() {
+        if (stripView == null) {
+            return;
+        }
+        long now = SystemClock.uptimeMillis();
+        if (now - lastStripKeyguardSyncUptime < STRIP_KEYGUARD_SYNC_MS) {
+            return;
+        }
+        lastStripKeyguardSyncUptime = now;
+        if (stripKeyguardLocked && !isKeyguardLocked()) {
+            applyStripKeyguardState(false,
+                    "keyguard getter reports unlocked (safety net)");
         }
     }
 
     private void openFromStrip(String gesture) {
         try {
-            if (isKeyguardLocked()) {
-                Log.d(TAG, "strip " + gesture + " ignored: keyguard locked");
+            if (stripKeyguardLocked) {
+                Log.i(TOUCH_TAG, "strip " + gesture + " ignored: keyguard locked");
                 return;
             }
             long now = SystemClock.uptimeMillis();
             if (now - lastStripOpenUptime < STRIP_OPEN_THROTTLE_MS) {
-                Log.d(TAG, "strip " + gesture + " ignored: open already in flight");
+                Log.i(TOUCH_TAG, "strip " + gesture + " ignored: open already in flight");
                 return;
             }
             if (isOwnPanelFocused()) {
-                Log.d(TAG, "strip " + gesture + " ignored: Action Centre already focused");
+                Log.i(TOUCH_TAG, "strip " + gesture
+                        + " ignored: Action Centre already focused");
                 return;
             }
             lastStripOpenUptime = now;
@@ -320,10 +485,12 @@ public class ShadeBridgeService extends AccessibilityService {
             detectedAtWall = System.currentTimeMillis();
             panelVisibleLogged = false;
             triggerLabel = "strip trigger";
-            Log.i(TAG, "strip " + gesture + ": opening Action Centre (instant)");
+            Log.i(TOUCH_TAG, "strip open " + gesture
+                    + " -> ActionCentreActivity (NEW_TASK, extra_instant=true);"
+                    + " gesture swallowed by the strip");
             startPanel("strip " + gesture);
         } catch (Throwable t) {
-            Log.w(TAG, "strip open failed", t);
+            Log.w(TOUCH_TAG, "strip open failed", t);
         }
     }
 
@@ -337,9 +504,34 @@ public class ShadeBridgeService extends AccessibilityService {
                 if (event == null) {
                     return false;
                 }
-                switch (event.getActionMasked()) {
+                int action = event.getActionMasked();
+                // Every delivered touch is logged with its coordinates: this is
+                // the proof that the strip, and not SystemUI, owns the gesture.
+                if (action == MotionEvent.ACTION_DOWN
+                        || action == MotionEvent.ACTION_MOVE
+                        || action == MotionEvent.ACTION_UP) {
+                    Log.i(TOUCH_TAG, actionName(action)
+                            + " x=" + Math.round(event.getX())
+                            + " y=" + Math.round(event.getY())
+                            + " rawX=" + Math.round(event.getRawX())
+                            + " rawY=" + Math.round(event.getRawY())
+                            + " touchable=" + stripTouchable
+                            + " keyguardLocked=" + stripKeyguardLocked);
+                }
+                switch (action) {
                     case MotionEvent.ACTION_DOWN:
-                        if (isKeyguardLocked() || isOwnPanelFocused()) {
+                        if (stripKeyguardLocked && !isKeyguardLocked()) {
+                            // A real unlock that no event reported yet.
+                            applyStripKeyguardState(false,
+                                    "ACTION_DOWN: getter reports unlocked");
+                        }
+                        if (stripKeyguardLocked) {
+                            Log.i(TOUCH_TAG, "strip DOWN ignored: keyguard locked");
+                            return false;
+                        }
+                        if (isOwnPanelFocused()) {
+                            Log.i(TOUCH_TAG,
+                                    "strip DOWN ignored: Action Centre already focused");
                             return false;
                         }
                         downY = event.getY();
@@ -351,7 +543,8 @@ public class ShadeBridgeService extends AccessibilityService {
                             if (dy > dpToPx(STRIP_DRAG_DP)) {
                                 opened = true;
                                 openFromStrip("drag "
-                                        + Math.round(dy / getResources().getDisplayMetrics().density)
+                                        + Math.round(dy / getResources()
+                                                .getDisplayMetrics().density)
                                         + " dp");
                             }
                         }
@@ -363,17 +556,51 @@ public class ShadeBridgeService extends AccessibilityService {
                         opened = false;
                         return true;
                     case MotionEvent.ACTION_CANCEL:
+                        Log.i(TOUCH_TAG, "CANCEL (opened=" + opened + ")");
                         opened = false;
                         return true;
                     default:
                         return true;
                 }
             } catch (Throwable t) {
-                Log.w(TAG, "strip touch failed", t);
+                Log.w(TOUCH_TAG, "strip touch failed", t);
                 return false;
             }
         }
     };
+
+    private static String actionName(int action) {
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                return "DOWN";
+            case MotionEvent.ACTION_MOVE:
+                return "MOVE";
+            case MotionEvent.ACTION_UP:
+                return "UP";
+            case MotionEvent.ACTION_CANCEL:
+                return "CANCEL";
+            default:
+                return "ACTION_" + action;
+        }
+    }
+
+    /** Readable flag set for the logcat proof. */
+    private static String stripFlags(WindowManager.LayoutParams params) {
+        int flags = params.flags;
+        StringBuilder builder = new StringBuilder("0x");
+        builder.append(Integer.toHexString(flags)).append(" (");
+        builder.append("NOT_FOCUSABLE=")
+                .append((flags & WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE) != 0);
+        builder.append(",NOT_TOUCH_MODAL=")
+                .append((flags & WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL) != 0);
+        builder.append(",LAYOUT_IN_SCREEN=")
+                .append((flags & WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN) != 0);
+        builder.append(",LAYOUT_NO_LIMITS=")
+                .append((flags & WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS) != 0);
+        builder.append(",NOT_TOUCHABLE=")
+                .append((flags & WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE) != 0);
+        return builder.append(')').toString();
+    }
 
     private int dpToPx(int dp) {
         return Math.max(1, Math.round(dp * getResources().getDisplayMetrics().density));
@@ -404,6 +631,11 @@ public class ShadeBridgeService extends AccessibilityService {
             if (lockOverlay != null) {
                 lockOverlay.onAccessibilityEvent(event);
             }
+            // Safety net for the strip's touchable flag: even when both the
+            // keyguard listener and USER_PRESENT are missing, a getter that
+            // reports "unlocked" turns the strip back on (throttled; silent
+            // unless the flag actually changes).
+            reconcileStripKeyguard();
             if (event == null
                     || event.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                 return;

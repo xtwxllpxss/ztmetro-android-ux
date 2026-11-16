@@ -1,0 +1,53 @@
+[15:48:46] ztMetro conductor 20261116-154846  (dry-run=0, factory=1)
+[15:48:46] repo:   /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo
+[15:48:46] snapshot: bb05aac17aec12e141a61308199aeca53c812ed1 (hermes-ubuntu:~/ztux/conductor/snapshots/bb05aac17aec)
+[15:48:46] state:    hermes-ubuntu:~/ztux/conductor/state (stable keystores)
+[15:48:46] stage:  hermes-ubuntu:~/android-root/conductor
+[15:48:46] logs:   /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-154846
+[15:48:46] 
+[15:48:46] ================ stage: build ================
+[15:48:46] snapshot: commit bb05aac17aec12e141a61308199aeca53c812ed1 (git archive; excluded 25 uncommitted path(s) from the working tree)
+[15:48:47] extracting git archive to hermes-ubuntu:~/ztux/conductor/snapshots/bb05aac17aec
+[15:48:54] build overlays: scripts/build-overlay-module.sh
+[15:48:55] build ok: overlays
+[15:48:55] build launcher: scripts/build-launcher.sh
+[15:49:01] build ok: launcher
+[15:49:01] build actioncentre: scripts/build-actioncentre.sh
+[15:49:07] build ok: actioncentre
+[15:49:07] build ime: scripts/build-ime.sh
+[15:49:12] build ok: ime
+[15:49:12] build header: scripts/build-header-module.sh
+[15:49:17] build ok: header
+[15:49:17] artifacts:
+  overlays        78142 B  e86af1ae19540411...  artifacts/ztmetro-overlays-1.0.0.zip
+  launcher        74155 B  40242fdc075fdacf...  launcher/build/out/ztmetro-start.apk
+  actioncentre   345804 B  93ceba73a179a956...  actioncentre/build/out/ztmetro-actioncentre.apk
+  ime             20817 B  f22250442df52fd1...  ime/build/out/ztmetro-ime.apk
+  header          37872 B  0520901932a99f2b...  settings/header-module/build/dist/ztmetro-settings-header.apk
+[15:49:17] ---------------- build: ok (31s)  ----------------
+[15:49:17] 
+[15:49:17] ================ stage: publish ================
+[15:49:20] root: adb shell uid=0 (Enforcing)
+[15:49:23] artifacts published to hermes-ubuntu:~/android-root/conductor/
+[15:49:24] installing Magisk module ztmetro-overlays-1.0.0.zip (payload marker='ba32c4a60b9aa20d')
+[15:49:27] install org.ztmetro.start (launcher)
+[15:49:27]   installed: /data/app/~~xVslsO5YSFXlQm73L55t2w==/org.ztmetro.start-W-rqOHzCz8Np1_pMBHbFhw==/base.apk
+[15:49:29]   identical sha256 -> already installed, nothing to do
+[15:49:30] install org.ztmetro.actioncentre (actioncentre)
+[15:49:30]   installed: /data/app/~~8znv4g9DH-1CGK_W__mmNQ==/org.ztmetro.actioncentre-FYQ9uju21_Pbn7eBSS1Cxg==/base.apk
+[15:49:32]   identical sha256 -> already installed, nothing to do
+[15:49:32] install org.ztmetro.ime (ime)
+[15:49:32]   installed: /data/app/~~3L601mRHh1gedz4u1zAxuw==/org.ztmetro.ime-TfQKHZhpBzrwzBM66qC7_A==/base.apk
+[15:49:33]   identical sha256 -> already installed, nothing to do
+[15:49:34] install org.ztmetro.settingsheader (header)
+[15:49:34]   installed: /data/app/~~7isIN_QaBYWCS44JEeUwdw==/org.ztmetro.settingsheader-nqoAJ2PazRc5K5qKOTKFUg==/base.apk
+[15:49:37]   same signing cert -> install -r
+[15:49:39] setting Start as HOME
+[15:49:44] manifest: /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-154846/ztmetro-manifest.json
+[15:49:45] module changed -> normal Android reboot to mount it
+[15:51:03] boot_completed=1, package manager ready (waited 20s)
+[15:51:04] adbd is not root; running 'adb root'
+[15:51:12] root: adb shell uid=0 after adb root
+[15:51:13] ---------------- publish: ok (116s)  ----------------
+[15:51:13] 
+[15:51:13] ================ stage: apply ================

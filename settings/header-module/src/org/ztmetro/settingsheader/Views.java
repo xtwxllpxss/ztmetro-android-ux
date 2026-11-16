@@ -1,49 +1,79 @@
 package org.ztmetro.settingsheader;
 
-import android.content.Context;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
+import java.util.HashMap;
 import java.util.Locale;
 
 /**
- * View-tree heuristics shared by {@link FlatRows} and {@link RowIcons}.
+ * Allocation-free view classification shared by the single-pass walker
+ * ({@link ScreenPass}) and its per-view helpers.
  *
- * <p>Everything here is conservative: a view is only treated as a preference row when it
- * carries AndroidX/SettingsLib's own {@code @android:id/title} id (the one id every
- * preference item layout has), when it is short, and when it is not one of the known
- * containers (fragment host, RecyclerView, scroll view, app bar).  The module never
- * touches {@code content_frame}, {@code main_content}, {@code homepage_container} or any
- * scrolling/list container, so the fragment layout is always left intact.
+ * <p>This class used to allocate on every view it looked at: {@code idName()} called
+ * {@code getResourceEntryName()} (a fresh String), {@code className()} lowercased a fresh
+ * String and several callers lowercased it again.  On a 2 GB phone a Settings screen with
+ * ~1,000 views × up to 12 walks made that the dominant cost.  Now:
+ *
+ * <ul>
+ *   <li>id → resource-entry-name is cached once per id in a {@link SparseArray} (no
+ *       boxing, no String per view);</li>
+ *   <li>class → flags is cached once per {@link Class};</li>
+ *   <li>the common title/summary ids are compared as {@code int} against
+ *       {@code android.R.id.title}/{@code android.R.id.summary}.</li>
+ * </ul>
+ *
+ * <p>The heuristics stay conservative: a preference row is a short {@link ViewGroup} with
+ * 1–8 children that contains <em>exactly one</em> title (a group of rows is not a row),
+ * and the protected containers (fragment host, app bar, list/scroll containers) are never
+ * restyled.
  */
 final class Views {
 
-    private static final int MAX_DEPTH = 3;
+    private static final String EMPTY = "";
+
+    /** id → resource entry name.  Values are lower-case by aapt convention. */
+    private static final SparseArray<String> ID_NAMES = new SparseArray<>();
+    /** class → FLAG_* bits; the class String is lowercased once per Class, not per view. */
+    private static final HashMap<Class<?>, Integer> CLASS_FLAGS = new HashMap<>();
+
+    private static final int FLAG_PROTECTED_CLASS = 1;
 
     private Views() {
     }
 
-    static int dp(Context context, float value) {
-        return Math.round(value * context.getResources().getDisplayMetrics().density);
-    }
-
     /** Resource entry name of the view id ("title", "icon", …) or "" when anonymous. */
     static String idName(View view) {
-        try {
-            int id = view.getId();
-            if (id == View.NO_ID || id == 0) {
-                return "";
-            }
-            return view.getResources().getResourceEntryName(id);
-        } catch (Throwable t) {
-            return "";
+        int id = view.getId();
+        if (id == View.NO_ID || id == 0) {
+            return EMPTY;
         }
+        String cached = ID_NAMES.get(id);
+        if (cached != null) {
+            return cached;
+        }
+        String name;
+        try {
+            name = view.getResources().getResourceEntryName(id);
+        } catch (Throwable t) {
+            // An id from a Resources the view does not know (or a renamed id): anonymous.
+            name = EMPTY;
+        }
+        ID_NAMES.put(id, name);
+        return name;
     }
 
-    static String className(View view) {
-        return view.getClass().getName().toLowerCase(Locale.ROOT);
+    static boolean isTitle(View view) {
+        return view instanceof TextView
+                && (view.getId() == android.R.id.title || "title".equals(idName(view)));
+    }
+
+    static boolean isSummary(View view) {
+        return view instanceof TextView
+                && (view.getId() == android.R.id.summary || "summary".equals(idName(view)));
     }
 
     /** A view inflated by this module (header, bottom bar, their children). */
@@ -52,8 +82,7 @@ final class Views {
         if (tag instanceof String && ((String) tag).startsWith("ztmetro_")) {
             return true;
         }
-        String id = idName(view).toLowerCase(Locale.ROOT);
-        return id.startsWith("metro_");
+        return idName(view).startsWith("metro_");
     }
 
     /**
@@ -61,7 +90,7 @@ final class Views {
      * the home scroll host, the app bar and every list/scroll view.
      */
     static boolean isProtected(View view) {
-        String id = idName(view).toLowerCase(Locale.ROOT);
+        String id = idName(view);
         switch (id) {
             case "content":
             case "content_parent":
@@ -84,80 +113,64 @@ final class Views {
             default:
                 break;
         }
-        String cls = className(view);
-        return cls.contains("recyclerview")
-                || cls.contains("scrollview")
-                || cls.contains("coordinatorlayout")
-                || cls.contains("toolbar")
-                || cls.contains("viewpager")
-                || cls.contains("tablayout")
-                || cls.contains("fragmentcontainer");
+        return (classFlags(view.getClass()) & FLAG_PROTECTED_CLASS) != 0;
     }
 
-    /** True when this group directly (depth {@code <= max}) contains a preference title. */
-    static boolean containsTitle(View view, int maxDepth) {
-        if (view == null || maxDepth < 0) {
-            return false;
+    private static int classFlags(Class<?> type) {
+        Integer cached = CLASS_FLAGS.get(type);
+        if (cached != null) {
+            return cached.intValue();
         }
-        if (view instanceof TextView && "title".equals(idName(view))) {
-            return true;
+        String name = type.getName().toLowerCase(Locale.ROOT);
+        int flags = 0;
+        if (name.contains("recyclerview")
+                || name.contains("scrollview")
+                || name.contains("coordinatorlayout")
+                || name.contains("toolbar")
+                || name.contains("viewpager")
+                || name.contains("tablayout")
+                || name.contains("fragmentcontainer")) {
+            flags |= FLAG_PROTECTED_CLASS;
         }
-        if (!(view instanceof ViewGroup)) {
-            return false;
-        }
-        ViewGroup group = (ViewGroup) view;
-        for (int i = 0; i < group.getChildCount(); i++) {
-            if (containsTitle(group.getChildAt(i), maxDepth - 1)) {
-                return true;
-            }
-        }
-        return false;
+        CLASS_FLAGS.put(type, Integer.valueOf(flags));
+        return flags;
     }
 
     /**
-     * A preference row: short {@link ViewGroup}, inside the screen (not a protected
-     * container), containing a preference title.  The class-name hint is accepted as an
-     * alternative signal but is not required — Settings ships several row layouts whose
-     * view class is a plain LinearLayout.
+     * Number of preference titles at or below {@code view}, capped at 2.  The cap is all
+     * the walker needs: 0 = no row content, 1 = a single row, 2 = a group of rows.
      */
-    static boolean looksLikePreferenceRow(View view) {
-        if (!(view instanceof ViewGroup) || isOurs(view) || isProtected(view)) {
-            return false;
+    static int titleCount(View view, int depth) {
+        if (view == null || depth < 0) {
+            return 0;
+        }
+        if (view instanceof TextView) {
+            return isTitle(view) ? 1 : 0;
+        }
+        if (!(view instanceof ViewGroup)) {
+            return 0;
         }
         ViewGroup group = (ViewGroup) view;
+        int count = 0;
         int children = group.getChildCount();
-        if (children < 1 || children > 8) {
-            return false;
+        for (int i = 0; i < children; i++) {
+            count += titleCount(group.getChildAt(i), depth - 1);
+            if (count > 1) {
+                return 2;
+            }
         }
-        int height = group.getHeight();
-        if (height > 0 && height > dp(group.getContext(), 220)) {
-            return false;   // a row is short; a page block is not
-        }
-        return containsTitle(group, MAX_DEPTH);
+        return count;
     }
 
     static boolean isInsideSwitch(View view) {
         View current = view;
         for (int i = 0; i < 5 && current != null; i++) {
-            String cls = className(current);
-            if (cls.contains("switch") || cls.contains("compoundbutton")) {
+            if (current instanceof CompoundButton) {
                 return true;
             }
             current = current.getParent() instanceof View ? (View) current.getParent() : null;
         }
         return false;
-    }
-
-    /** Nearest ancestor (up to {@code levels}) that looks like a preference row. */
-    static ViewGroup rowFor(View view, int levels) {
-        View current = view;
-        for (int i = 0; i < levels && current != null; i++) {
-            if (current instanceof ViewGroup && looksLikePreferenceRow(current)) {
-                return (ViewGroup) current;
-            }
-            current = current.getParent() instanceof View ? (View) current.getParent() : null;
-        }
-        return null;
     }
 
     static boolean isAncestor(View ancestor, View view) {
@@ -169,9 +182,5 @@ final class Views {
             current = current.getParent() instanceof View ? (View) current.getParent() : null;
         }
         return false;
-    }
-
-    static boolean isImageView(View view) {
-        return view instanceof ImageView;
     }
 }

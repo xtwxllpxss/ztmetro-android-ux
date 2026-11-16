@@ -42,12 +42,15 @@ import java.util.Locale;
  * Android 13+.
  *
  * <p><b>Flags.</b> Main surface: NOT_FOCUSABLE | NOT_TOUCHABLE | LAYOUT_IN_SCREEN
- * | LAYOUT_NO_LIMITS | HARDWARE_ACCELERATED, {@code PixelFormat.OPAQUE}, no
+ * | LAYOUT_NO_LIMITS | HARDWARE_ACCELERATED, {@code PixelFormat.TRANSLUCENT}, no
  * system-bar/cutout insets fitted. The only touchable window is a transparent
  * bottom strip (same type and layout flags plus NOT_TOUCH_MODAL) that consumes
  * the swipe up and removes the overlay, revealing the stock keyguard. The black
  * surface never receives touches, so the system's own unlock path is never
- * taken away.
+ * taken away. The surface is TRANSLUCENT, not OPAQUE: the reveal animation
+ * changes the root view's alpha and scale, and an opaque buffer would drop the
+ * alpha channel and turn both the 180 ms fade-in and the 160 ms fade/scale-out
+ * into an abrupt window removal.
  *
  * <p><b>When it is shown.</b> {@link KeyguardManager#isKeyguardLocked()} is the
  * authoritative signal, with {@link PowerManager#isInteractive()} and
@@ -106,9 +109,16 @@ final class LockOverlayController {
     private boolean attached;
     /** True while the 120 ms reveal fade still owns the window. */
     private boolean hiding;
-    /** ztmetro lock overlay: fade in on screen-on, fade out on reveal. */
+    /** ztmetro lock overlay: fade in on screen-on, fade/scale out on reveal. */
     private static final int FADE_IN_MS = 180;
-    private static final int FADE_OUT_MS = 120;
+    /**
+     * Unlock reveal: alpha 1 -> 0 and scale 1 -> 0.96 over 160 ms, then the
+     * window is removed. This build previously faded over 120 ms (and the root
+     * view was never scaled); 160 ms with the 0.96 scale is the final value.
+     */
+    private static final int FADE_OUT_MS = 160;
+    /** Root-view end scale of the unlock reveal (WP "step back" feel). */
+    private static final float FADE_OUT_SCALE = 0.96f;
     private boolean started;
     private boolean receiverRegistered;
     /** A swipe has started the proxy/credential flow; do not start a second. */
@@ -649,6 +659,10 @@ final class LockOverlayController {
             // Motion.ms). The window is opaque, so start fully transparent.
             int fadeIn = Motion.ms(service, FADE_IN_MS);
             content.setAlpha(fadeIn > 0 ? 0f : 1f);
+            // A previous reveal may have left the root view scaled; every show
+            // starts from the untransformed surface.
+            content.setScaleX(1f);
+            content.setScaleY(1f);
             windowManager.addView(content, overlayParams);
             if (fadeIn > 0) {
                 content.animate().alpha(1f).setDuration(fadeIn)
@@ -701,7 +715,9 @@ final class LockOverlayController {
                         | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                         | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
                         | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
-                PixelFormat.OPAQUE);
+                // TRANSLUCENT, not OPAQUE: the root view alpha/scale animation
+                // needs an alpha-capable buffer (see the class javadoc).
+                PixelFormat.TRANSLUCENT);
         params.gravity = Gravity.TOP | Gravity.START;
         params.x = 0;
         params.y = 0;
@@ -768,13 +784,20 @@ final class LockOverlayController {
         removeViewQuietly(stripView, "strip");
         int fadeOut = Motion.ms(service, FADE_OUT_MS);
         if (fadeOut <= 0 || content.getParent() == null) {
+            // Animator scale 0 or a surface already gone: instant, as Android's
+            // own "remove animations" setting demands.
             removeViewsQuietly();
-            Log.i(TAG, "hidden: " + reason);
+            Log.i(TAG, "hidden: " + reason + " (instant: animator scale 0)");
             return;
         }
         hiding = true;
         content.animate().cancel();
-        content.animate().alpha(0f).setDuration(fadeOut)
+        content.setScaleX(1f);
+        content.setScaleY(1f);
+        content.animate().alpha(0f)
+                .scaleX(FADE_OUT_SCALE)
+                .scaleY(FADE_OUT_SCALE)
+                .setDuration(fadeOut)
                 .setInterpolator(Motion.WP_LOG)
                 .withEndAction(new Runnable() {
                     @Override
@@ -784,7 +807,8 @@ final class LockOverlayController {
                     }
                 })
                 .start();
-        Log.i(TAG, "hidden: " + reason + " (fade " + fadeOut + " ms)");
+        Log.i(TAG, "hidden: " + reason + " (reveal: alpha 1.0->0.0, scale 1.0->"
+                + FADE_OUT_SCALE + " over " + fadeOut + " ms, then window removed)");
     }
 
     private void removeViewsQuietly() {

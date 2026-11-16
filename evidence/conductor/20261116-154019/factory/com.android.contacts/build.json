@@ -1,0 +1,24 @@
+{
+ "apk": "/home/denis/ztux/conductor/factory/com.android.contacts/overlay/ztmetro-com_android_contacts-rro.apk",
+ "apk_name": "ztmetro-com_android_contacts-rro.apk",
+ "sha256": "d200c56063c04ef59c8e201313fb7e375797880c96e45e9a8abc17cc960aa577",
+ "size": 37208,
+ "android_jar": "/home/denis/android-sdk/platforms/android-36/android.jar",
+ "entries": 381,
+ "overlay_package": "org.ztos.overlay.factory.com_android_contacts",
+ "target": "com.android.contacts",
+ "verify": {
+  "dex_files": [],
+  "is_resource_only": true,
+  "manifest_has_target": true,
+  "has_code_false": true,
+  "resource_entries": 374,
+  "missing_entries": [],
+  "badging_package": "org.ztos.overlay.factory.com_android_contacts",
+  "ok": true
+ },
+ "notes": [
+  "package forced past the registry (no registry entry)",
+  "registry has no sha256 pin for this package yet"
+ ]
+}

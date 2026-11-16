@@ -1,134 +1,77 @@
 package org.ztmetro.settingsheader;
 
-import android.app.Activity;
-import android.util.Log;
 import android.util.TypedValue;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.util.Locale;
-
 /**
- * Row typography: the ztmetro list reads as a white line of text on black, with one grey
- * line under it at most.
+ * Per-view row typography for the ztmetro "about" row — no walk of its own.
  *
- * <p>Reference numbers (docs/17-wp-design-reference.md §6, tokens in
- * {@code design/tokens/ztmetro.tokens.json}):
+ * <p>The reference frame (docs/17 §6, {@code ztos-about.png}) has two stacked lines with no
+ * icon, no chevron and no card:
  *
  * <ul>
- *   <li>{@code color.neutrals.text_primary} #FFFFFF for every row title,</li>
- *   <li>{@code color.neutrals.text_secondary} #999999 for summaries, breadcrumbs and
- *       captions ({@code core/zrnmetrocore.c:549-550} draws the detail line at 0.60 white,
- *       which composites to #999999 on black),</li>
- *   <li>the ztmetro hub row value is 20 sp ({@code ztmetro.c:6393}); the Settings
- *       dashboard uses it for its titles so the home list reads like a ztmetro page,</li>
- *   <li>no summary line on the dashboard (a ztmetro row is label + value, never three
- *       lines); sub-screens keep theirs.</li>
+ *   <li><b>label</b> — 15 sp, {@code #999999} ({@code color.neutrals.text_secondary}), the
+ *       category/name line;</li>
+ *   <li><b>value</b> — 22 sp, {@code #FFFFFF} ({@code color.neutrals.text_primary}), the
+ *       actual value line.</li>
  * </ul>
  *
- * <p>Same shape as {@link MetroTinter}: walk after every attach/refresh, touch only
- * TextViews whose id is AndroidX/SettingsLib's {@code title}/{@code summary}, guard every
- * call, and log a count instead of failing the screen.
+ * <p>Settings' {@code @android:id/title} becomes the grey label and its
+ * {@code @android:id/summary} the white value.  A row without a summary is a single white
+ * value line at 22 sp (no grey line), which is exactly what a ztmetro hub row does.
+ *
+ * <p>Sizes arrive as pixels (the generated {@code 15sp}/{@code 22sp} dimens converted with
+ * the live font scale), so a user font-scale change is picked up on the next pass and no
+ * TypedArray is involved.  Mutations are skipped when the value is already correct, so the
+ * post-layout pass logs very few applies.
  */
 final class RowType {
 
-    private static final String TAG = "ztmetro-header";
+    /** color.neutrals.text_secondary, ztos-about.png row label. */
+    private static final int FALLBACK_LABEL_COLOR = 0xFF999999;
+    /** color.neutrals.text_primary, ztos-about.png row value. */
+    private static final int FALLBACK_VALUE_COLOR = 0xFFFFFFFF;
 
-    /** color.neutrals.text_primary */
-    private static final int WHITE = 0xFFFFFFFF;
-    /** color.neutrals.text_secondary */
-    private static final int SECONDARY = 0xFF999999;
-    /** ztmetro hub row value, ztmetro.c:6393 */
-    private static final float DASHBOARD_TITLE_SP = 20f;
-
-    private static final int MAX_DEPTH = 24;
+    /** Fallbacks are only used if the module resources failed (the header would fail too). */
+    private static float sLabelPx = 60f;
+    private static float sValuePx = 88f;
+    private static int sLabelColor = FALLBACK_LABEL_COLOR;
+    private static int sValueColor = FALLBACK_VALUE_COLOR;
 
     private RowType() {
     }
 
-    /** @return number of rows restyled in this pass. */
-    static int apply(Activity activity, boolean homepage) {
-        View root = activity == null ? null : activity.findViewById(android.R.id.content);
-        if (root == null) {
-            return 0;
+    static void configure(float labelPx, float valuePx, int labelColor, int valueColor) {
+        if (labelPx > 0f) {
+            sLabelPx = labelPx;
+            sValuePx = valuePx;
         }
-        int[] count = new int[1];
-        walk(root, 0, homepage, count);
-        if (count[0] > 0) {
-            Log.i(TAG, "row type: " + count[0] + " rows"
-                    + (homepage ? " (dashboard: 20 sp titles, no summary)" : ""));
-        }
-        return count[0];
+        sLabelColor = labelColor;
+        sValueColor = valueColor;
     }
 
-    private static void walk(View view, int depth, boolean homepage, int[] count) {
-        if (view == null || depth > MAX_DEPTH) {
-            return;
-        }
-        if (Views.isOurs(view)) {
-            return;
-        }
-        if (view instanceof ViewGroup && Views.looksLikePreferenceRow(view)) {
-            if (style((ViewGroup) view, homepage)) {
-                count[0]++;
-            }
-            return;   // children are row content, never rows themselves
-        }
-        if (view instanceof ViewGroup) {
-            ViewGroup group = (ViewGroup) view;
-            for (int i = 0; i < group.getChildCount(); i++) {
-                walk(group.getChildAt(i), depth + 1, homepage, count);
-            }
-        }
+    /** Grey 15 sp label line (only used when the row has a value line below it). */
+    static boolean styleLabel(TextView title) {
+        return apply(title, sLabelPx, sLabelColor);
     }
 
-    private static boolean style(ViewGroup row, boolean homepage) {
-        try {
-            boolean changed = false;
-            TextView title = find(row, "title", 3);
-            if (title != null) {
-                title.setTextColor(WHITE);
-                if (homepage) {
-                    title.setTextSize(TypedValue.COMPLEX_UNIT_SP, DASHBOARD_TITLE_SP);
-                }
-                changed = true;
-            }
-            TextView summary = find(row, "summary", 3);
-            if (summary != null) {
-                summary.setTextColor(SECONDARY);
-                if (homepage && summary.getVisibility() != View.GONE) {
-                    summary.setVisibility(View.GONE);   // a ztmetro row is two lines, not three
-                }
-                changed = true;
-            }
-            return changed;
-        } catch (Throwable t) {
-            Log.d(TAG, "row type skipped for "
-                    + row.getClass().getSimpleName() + ": " + t);
-            return false;
-        }
+    /** White 22 sp value line (also the only line of a row without a summary). */
+    static boolean styleValue(TextView value) {
+        return apply(value, sValuePx, sValueColor);
     }
 
-    /** First TextView at {@code depth} whose resource entry name equals {@code name}. */
-    private static TextView find(View view, String name, int depth) {
-        if (view == null || depth < 0) {
-            return null;
+    private static boolean apply(TextView text, float sizePx, int color) {
+        boolean changed = false;
+        if (text.getCurrentTextColor() != color) {
+            text.setTextColor(color);
+            changed = true;
         }
-        if (view instanceof TextView
-                && name.equals(Views.idName(view).toLowerCase(Locale.ROOT))) {
-            return (TextView) view;
+        if (text.getTextSize() != sizePx) {
+            text.setTextSize(TypedValue.COMPLEX_UNIT_PX, sizePx);
+            // The frame's two lines are set solid: no extra font padding between them.
+            text.setIncludeFontPadding(false);
+            changed = true;
         }
-        if (!(view instanceof ViewGroup)) {
-            return null;
-        }
-        ViewGroup group = (ViewGroup) view;
-        for (int i = 0; i < group.getChildCount(); i++) {
-            TextView found = find(group.getChildAt(i), name, depth - 1);
-            if (found != null) {
-                return found;
-            }
-        }
-        return null;
+        return changed;
     }
 }

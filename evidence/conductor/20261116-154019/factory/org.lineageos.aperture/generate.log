@@ -1,0 +1,13 @@
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+== aapt2 compile
+== aapt2 link (target org.lineageos.aperture)
+== apksigner sign
+
+== overlay       /home/denis/ztux/conductor/factory/org.lineageos.aperture/overlay/ztmetro-org_lineageos_aperture-rro.apk
+   sha256        1a67ba589edb1a38909c6cd50a2a897c0dbc4331e54100c6a3f46947dc5c1fb1
+   size          24920 bytes, 252 entries
+   resource-only True | targetPackage True | missing 0
+   verify.sh     /home/denis/ztux/conductor/factory/org.lineageos.aperture/overlay/verify.sh
+   apply         repo/scripts/theme-factory.sh apply --profile /home/denis/ztux/conductor/factory/org.lineageos.aperture/profile.json --out /home/denis/ztux/conductor/factory/org.lineageos.aperture/overlay

@@ -28,8 +28,9 @@ import android.widget.LinearLayout;
  *
  * <p>Idempotent: any existing child tagged {@code ztmetro_header} is removed before the new
  * one is inserted, so repeated {@code setContentView()} / recreation never stacks headers.
- * The cobalt banner is gone: the header is flat black with the caps label, 48 sp title and
- * 12 sp subtitle from the reference frames.
+ * The header is flat black with the 15 sp {@code SETTINGS} caps label and the 58 sp
+ * sans-serif-light lowercase page title from the reference frame ({@code ztos-about.png},
+ * addressed at 24 dp from the left); it is attached on sub-screens as well as on home.
  */
 public final class HeaderBinder {
 
@@ -71,12 +72,26 @@ public final class HeaderBinder {
             boolean homepage = isHomepage(activity);
             View header = findHeader(activity);
             if (header == null) {
-                // Not one of the screens this module decorates (a dialog/helper
-                // FragmentActivity in the Settings process): leave it stock.
-                return;
+                if (!homepage) {
+                    // Not one of the screens this module decorates (a dialog/helper
+                    // FragmentActivity in the Settings process): leave it stock.
+                    return;
+                }
+                // The homepage header can be lost to an early attach; onResume/setTitle
+                // re-attaches it once instead of leaving the page without chrome.
+                attachHome(activity);
+                header = findHeader(activity);
+                if (header == null) {
+                    return;
+                }
             }
             Resources moduleResources = HeaderResources.get(activity);
             CharSequence title = HeaderTitles.title(activity);
+            if (title.length() == 0 && homepage) {
+                // The home activity has no title of its own; the reference still shows a
+                // page block, so fall back to the page name instead of an empty title.
+                title = "settings";
+            }
             HeaderViewFactory.bind(header, title,
                     HeaderTitles.subtitle(activity, moduleResources, title));
             hideStockChrome(activity, homepage);
@@ -96,7 +111,7 @@ public final class HeaderBinder {
             parent.removeView(existing);
         }
 
-        final View header = HeaderViewFactory.create(activity, moduleResources);
+        View header = HeaderViewFactory.create(activity, moduleResources);
         int statusBar = homepage ? statusBarHeightPx(activity) : 0;
         if (statusBar > 0) {
             // Black page block continues behind the status strip on the home page.
@@ -111,25 +126,16 @@ public final class HeaderBinder {
 
         parent.addView(header, 0, params);
 
-        if (!homepage) {
-            // Set the initial offset from the generated 104dp minimum, then correct it to
-            // the view's real measured height once layout has run (the 48sp title and
-            // fontScale decide the exact height; nothing is hard-coded twice).
-            applyContentOffsets(activity);
-            header.post(new Runnable() {
-                @Override
-                public void run() {
-                    applyContentOffsets(activity);
-                }
-            });
-        }
-
         hideStockChrome(activity, homepage);
-        MetroTinter.apply(activity);
 
         CharSequence title = HeaderTitles.title(activity);
+        if (title.length() == 0 && homepage) {
+            title = "settings";
+        }
         HeaderViewFactory.bind(header, title,
                 HeaderTitles.subtitle(activity, moduleResources, title));
+        // The only two styling passes: pass 1 applies the content offset with the
+        // generated height immediately, pass 2 corrects it to the measured height.
         ScreenStyler.apply(activity, homepage);
 
         Log.i(TAG, "header attached to " + parent.getClass().getSimpleName()
@@ -149,7 +155,7 @@ public final class HeaderBinder {
      * FrameLayout-style hosts (content_frame); the homepage header already sits in the
      * LinearLayout flow.  Safe to call repeatedly.
      */
-    private static void applyContentOffsets(Activity activity) {
+    static void applyContentOffsets(Activity activity) {
         try {
             View header = findHeader(activity);
             if (header == null || !(header.getParent() instanceof ViewGroup)) {
@@ -344,11 +350,59 @@ public final class HeaderBinder {
         int id = isContentFrame
                 ? resolveContentFrameId(activity)
                 : resolveHomepageContainerId(activity);
-        if (id == 0) {
+        if (id != 0) {
+            View view = activity.findViewById(id);
+            if (view instanceof ViewGroup) {
+                return (ViewGroup) view;
+            }
+        }
+        if (isContentFrame) {
             return null;
         }
-        View view = activity.findViewById(id);
-        return view instanceof ViewGroup ? (ViewGroup) view : null;
+        // Fallback for a Settings build that renamed homepage_container: the vertical
+        // LinearLayout inside the homepage CoordinatorLayout (the block that scrolls).
+        return findHomepageLinearLayout(activity);
+    }
+
+    /** First vertical LinearLayout with children inside the homepage scroll host. */
+    private static ViewGroup findHomepageLinearLayout(Activity activity) {
+        try {
+            int root = activity.getResources().getIdentifier(
+                    "settings_homepage_container", "id", TARGET_PACKAGE);
+            if (root == 0) {
+                return null;
+            }
+            View view = activity.findViewById(root);
+            return view instanceof ViewGroup
+                    ? firstLinearLayout((ViewGroup) view, 0, false) : null;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    private static ViewGroup firstLinearLayout(ViewGroup group, int depth, boolean inScroll) {
+        if (depth > 6) {
+            return null;
+        }
+        boolean scroll = inScroll || group.getClass().getName()
+                .toLowerCase(java.util.Locale.ROOT).contains("scrollview");
+        if (scroll && group instanceof LinearLayout) {
+            LinearLayout linear = (LinearLayout) group;
+            if (linear.getOrientation() == LinearLayout.VERTICAL
+                    && linear.getChildCount() > 0) {
+                return linear;
+            }
+        }
+        for (int i = 0; i < group.getChildCount(); i++) {
+            View child = group.getChildAt(i);
+            if (child instanceof ViewGroup) {
+                ViewGroup found = firstLinearLayout((ViewGroup) child, depth + 1, scroll);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 
     private static int resolveContentFrameId(Activity activity) {

@@ -455,6 +455,20 @@ for token in metro_motion_row_out_ms metro_motion_row_in_ms metro_motion_row_sta
         || die "$token missing from the compiled resources"
 done
 
+# Keyguard-return home entrance: only after a real keyguard dismissal, 180 ms,
+# alpha 0->1 and scale 0.985->1 through Motion.ms (animator scale respected).
+START_SRC="$APP/java/org/ztmetro/start/StartActivity.java"
+grep -q "HOME_ENTER_MS = 180" "$START_SRC" \
+    || die "home entrance duration 180 ms missing"
+grep -q "HOME_ENTER_SCALE = 0.985f" "$START_SRC" \
+    || die "home entrance scale 0.985 missing"
+grep -q "ACTION_USER_PRESENT" "$START_SRC" \
+    || die "home entrance is not gated on the keyguard dismissal"
+grep -q "playHomeEntranceIfFromKeyguard" "$START_SRC" \
+    || die "home entrance is not wired into onResume"
+grep -aq "ZtStartMotion" "$BUILD/verify.dex" \
+    || die "home entrance log tag missing from classes.dex"
+
 # Live tiles: the listener class is a real service in the dex (not just a
 # manifest entry), the model/mapping strings are compiled in, and the flip
 # duration is inside the brief's 220-260ms band.

@@ -1,0 +1,15 @@
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+== aapt2 dump resources /home/denis/ztux/conductor/factory/apk/com.android.contacts.apk
+   package com.android.contacts: 7547 resources, 1035 colour resources
+== framework names from /home/denis/android-sdk/platforms/android-36/android.jar
+   framework: 1485 attrs, 856 colours
+== aapt2 dump xmltree over 219 layouts
+
+== app-profile  /home/denis/ztux/conductor/factory/com.android.contacts/profile.json
+   package       com.android.contacts
+   sha256        b0ec22a742670e7e05bd7573c50dbdad11b2ba7dfa95d74677a358bdef110691
+   mappings      accent=64, destructive=10, radius=32, success=1, surface=105, surface_key=4, text=142, type=16
+   coverage      {"colour_resources_total": 1035, "colour_resources_used": 310, "colour_resources_mapped": 239, "mapped_ratio_of_used": 0.771, "layouts_scanned": 219}
+   contrast      137 check(s), 1 escalated

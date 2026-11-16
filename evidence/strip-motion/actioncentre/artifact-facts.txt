@@ -1,0 +1,17 @@
+apk:        actioncentre/build/out/ztmetro-actioncentre.apk
+evidence:   evidence/strip-motion/actioncentre/ztmetro-actioncentre.apk
+size:       345804 bytes
+sha256:     0b7cfa30a7a23a8b47ae4a9892accafa8920bc4fb6fb1620e53acedf92af1033
+package:    org.ztmetro.actioncentre
+version:    1 (1.0)
+min/target: 29 / 36
+build:      plain javac + aapt2 + d8 + apksigner (no Gradle, no AndroidX)
+bridge:     ShadeBridgeService (res/xml/shade_bridge.xml), BIND_ACCESSIBILITY_SERVICE; strip path starts the panel instantly, shade fallback = panel first + one BACK after 120 ms
+top strip:  32 dp TYPE_ACCESSIBILITY_OVERLAY window above the status bar, alpha-0 content; touchable flag owned by USER_PRESENT / keyguard listener / throttled getter, every change and every DOWN/MOVE/UP logged under ShadeTouch; tap or drag > 24 dp logs "strip open" and starts the panel
+reveal:     lock overlay reveal: alpha 1->0 + scale 1->0.96 over 160 ms (previous build: 120 ms, no scale), then the window is removed; surface TRANSLUCENT so the alpha composites
+strip:      StatusStripService (res/xml/status_strip_service.xml), TYPE_ACCESSIBILITY_OVERLAY 28 dp, NOT_TOUCHABLE; READ_PHONE_STATE optional for live signal
+lock:       LockOverlayController: TYPE_ACCESSIBILITY_OVERLAY, NOT_FOCUSABLE|NOT_TOUCHABLE|LAYOUT_IN_SCREEN, bottom strip starts the unlock proxy
+unlock:     UnlockProxyActivity: requestDismissKeyguard (non-secure) or ConfirmDeviceCredential (secure); overlay stays until USER_PRESENT/credential on top
+fonts:      Open Sans Light/Regular/SemiBold from repo/fonts (OFL, bundled)
+built on:   Linux 7.0.0-38-generic x86_64
+jdk:        openjdk version "17.0.21" 2026-10-20

@@ -1,0 +1,15 @@
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+== aapt2 dump resources /home/denis/ztux/conductor/factory/apk/com.android.dialer.apk
+   package com.android.dialer: 8515 resources, 1061 colour resources
+== framework names from /home/denis/android-sdk/platforms/android-36/android.jar
+   framework: 1485 attrs, 856 colours
+== aapt2 dump xmltree over 258 layouts
+
+== app-profile  /home/denis/ztux/conductor/factory/com.android.dialer/profile.json
+   package       com.android.dialer
+   sha256        d3daacf26aff94551ae321cfe1decc1fa1eb4352c5c29cb207d48facb8ad076a
+   mappings      accent=78, destructive=10, radius=35, success=5, surface=97, surface_key=4, text=137, type=26
+   coverage      {"colour_resources_total": 1061, "colour_resources_used": 301, "colour_resources_mapped": 222, "mapped_ratio_of_used": 0.738, "layouts_scanned": 258}
+   contrast      131 check(s), 1 escalated

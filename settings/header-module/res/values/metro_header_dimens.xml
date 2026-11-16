@@ -14,6 +14,20 @@
   <dimen name="metro_header_subtitle_size">12sp</dimen>
   <!-- module spec: 24 dp page margin for the header block and the flat preference rows (deliverable; note tokens.metrics.page_margin_dp is 16 dp for the C shell at 360 dp — the Settings page uses the wider Android margin so the 48 sp title is not edge-to-edge) -->
   <dimen name="metro_header_padding_h">24dp</dimen>
+  <!-- deliverable 2026-11-16: the grey row line of ztos-about.png (category/name) is 15 sp; the frame's two-line rows replace the Material single-line title -->
+  <dimen name="metro_row_label_size">15sp</dimen>
+  <!-- deliverable 2026-11-16: the white row line of ztos-about.png (the actual value) is 22 sp; a row without a summary uses this size for the title -->
+  <dimen name="metro_row_value_size">22sp</dimen>
+  <!-- deliverable 2026-11-16: rows share the header's 24 dp page margin (the frame's left inset; docs/17-wp-design-reference.md section 2) -->
+  <dimen name="metro_row_padding_h">24dp</dimen>
+  <!-- module spec: the about frame's two-line row is ~53 dp pitch; 4 dp above and below the 15 sp + 22 sp lines reproduces that compact rhythm -->
+  <dimen name="metro_row_padding_v">4dp</dimen>
+  <!-- module spec: a preference row is a short block; a taller ViewGroup is a page/group container, never a row -->
+  <dimen name="metro_row_max_height">220dp</dimen>
+  <!-- module spec: Material preference-category gaps up to 40 dp are card insets and are removed; anything larger is page structure -->
+  <dimen name="metro_group_gap_limit">40dp</dimen>
+  <!-- module spec: the stock icon cell and the disclosure-chevron slot are <= 96 dp insets of the title; clearing them moves the label to the page margin -->
+  <dimen name="metro_row_inset_limit">96dp</dimen>
   <!-- metrics.nav_bar_height_dp (40; ztmetro.c:130 NAV_BAR_H 40) -->
   <dimen name="metro_bottom_bar_height">40dp</dimen>
   <!-- module spec: 11 sp ALL-CAPS 'ZRN' in the 40 dp bar (README requirement; one step below type.ramp[caption_caps] 11.5 so it optically centres in 40 dp) -->

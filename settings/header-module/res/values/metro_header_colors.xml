@@ -6,14 +6,24 @@
   <color name="metro_header_bg">#000000</color>
   <!-- color.neutrals.text_primary -->
   <color name="metro_header_title">#FFFFFF</color>
-  <!-- color.neutrals.text_primary at 0.7 alpha (module spec: label and subtitle at 70% opacity (secondary text on black; the reference labels measure 0.70 white)) -->
-  <color name="metro_header_label">#B3FFFFFF</color>
+  <!-- deliverable: caps label #FFFFFF on black (deliverable 2026-11-16: the caps label is #FFFFFF like the target frame (ztos-about.png measures a white label); the 0.70 white stays on the unused subtitle, not on the page label) -->
+  <color name="metro_header_label">#FFFFFF</color>
   <!-- color.neutrals.text_primary at 0.7 alpha (module spec: label and subtitle at 70% opacity (secondary text on black; the reference labels measure 0.70 white)) -->
   <color name="metro_header_subtitle">#B3FFFFFF</color>
-  <!-- color.accent.base — kept for the pressed state of the bar buttons; never used as a fill -->
+  <!-- color.accent.base — pressed state only; never a fill -->
   <color name="metro_accent">#0050EF</color>
   <!-- color.accent.base at 0.24 alpha (module spec: pressed fill of the bottom-bar glyph buttons — 24% of color.accent.base (subtle Metro press state on black)) -->
   <color name="metro_accent_pressed">#3D0050EF</color>
+  <!-- color.neutrals.black — flat row surface, no card -->
+  <color name="metro_row_bg">#000000</color>
+  <!-- color.neutrals.text_secondary — the grey 15 sp label line -->
+  <color name="metro_row_label">#999999</color>
+  <!-- color.neutrals.text_primary — the white 22 sp value line -->
+  <color name="metro_row_value">#FFFFFF</color>
+  <!-- color.accent.base — switch track #0050EF, opaque -->
+  <color name="metro_switch_track">#0050EF</color>
+  <!-- color.neutrals.text_primary — switch thumb -->
+  <color name="metro_switch_thumb">#FFFFFF</color>
   <!-- color.neutrals.black -->
   <color name="metro_bottom_bar_bg">#000000</color>
   <!-- color.neutrals.text_primary -->

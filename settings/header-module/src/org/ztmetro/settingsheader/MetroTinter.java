@@ -1,86 +1,109 @@
 package org.ztmetro.settingsheader;
 
-import android.app.Activity;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.CompoundButton;
 
+import java.lang.reflect.Method;
+import java.util.HashMap;
+
 /**
- * Recolours the stock switches/sliders to the ztMetro accent at runtime.
+ * Per-view switch tint — no tree walk of its own any more: {@link ScreenPass} visits the
+ * row subtree once and hands every {@link CompoundButton} to {@link #tint(View)}.
  *
- * <p>Settings builds its Material3 switch from the Material library palette, where the tint
- * chain does not resolve to any resource we can override from a preinstalled RRO (the switch
- * style is merged into the Settings APK and reads theme attrs from the Material theme).
- * Walking the view tree after the screen is laid out and applying the tint directly is
- * deterministic and cannot crash Settings: every call is guarded and only touches
- * CompoundButton instances.
+ * <p>The expensive parts of the old implementation are cached process-wide:
+ *
+ * <ul>
+ *   <li>{@code view.getClass().getMethod(...)} is resolved once per class and stored in
+ *       {@link #METHODS}; the old code looked the two methods up on every walk of every
+ *       switch;</li>
+ *   <li>the two {@link ColorStateList} objects are created once per colour, not per view;</li>
+ *   <li>the reflective call reuses a static {@code Object[1]} argument array, so the
+ *       varargs array is not allocated per invocation.</li>
+ * </ul>
+ *
+ * <p>Track = {@code #0050EF} opaque, thumb = {@code #FFFFFF} (ztmetro accent / WP toggle).
  */
 final class MetroTinter {
 
-    private static final int ACCENT = 0xFF0050EF;
+    private static final HashMap<Class<?>, Method[]> METHODS = new HashMap<>();
+
+    private static final Object[] TRACK_ARGS = new Object[1];
+    private static final Object[] THUMB_ARGS = new Object[1];
+
+    private static ColorStateList sTrackList;
+    private static ColorStateList sThumbList;
+    private static int sTrackColor;
+    private static int sThumbColor;
 
     private MetroTinter() {
     }
 
-    /** Forces the window (and the content root) to pure black, like the ztmetro Settings. */
-    static void applyWindowBackground(Activity activity) {
-        try {
-            activity.getWindow().setBackgroundDrawable(
-                    new android.graphics.drawable.ColorDrawable(0xFF000000));
-            View content = activity.findViewById(android.R.id.content);
-            if (content != null) content.setBackgroundColor(0xFF000000);
-        } catch (Throwable ignored) {
-            // cosmetic only
+    /** Installs the pass colours once per pass; recreates the lists only on a colour change. */
+    static void configure(int trackColor, int thumbColor) {
+        if (sTrackList == null || sTrackColor != trackColor) {
+            sTrackColor = trackColor;
+            sTrackList = ColorStateList.valueOf(trackColor);
+            TRACK_ARGS[0] = sTrackList;
+        }
+        if (sThumbList == null || sThumbColor != thumbColor) {
+            sThumbColor = thumbColor;
+            sThumbList = ColorStateList.valueOf(thumbColor);
+            THUMB_ARGS[0] = sThumbList;
         }
     }
 
-    static void apply(Activity activity) {
-        try {
-            applyWindowBackground(activity);
-            View root = activity.findViewById(android.R.id.content);
-            if (root == null) return;
-            // ScreenStyler owns the pass schedule; this walk runs once per pass.
-            walk(root, 0);
-        } catch (Throwable ignored) {
-            // theming is cosmetic: never let it interfere with Settings
+    /** @return true when at least one tint was applied to this button. */
+    static boolean tint(View view) {
+        if (!(view instanceof CompoundButton)) {
+            return false;
         }
-    }
-
-    private static void walk(View view, int depth) {
-        if (view == null || depth > 24) return;
-        try {
-            if (view instanceof CompoundButton) {
-                CompoundButton button = (CompoundButton) view;
-                if (button.isEnabled()) {
-                    // setTrackTintList/setThumbTintList live on Switch/SwitchCompat, not on
-                    // the CompoundButton base class, and MaterialSwitch is a SwitchCompat.
-                    invokeTint(button, "setTrackTintList", ACCENT);
-                    invokeTint(button, "setThumbTintList", Color.WHITE);
-                }
+        CompoundButton button = (CompoundButton) view;
+        if (!button.isEnabled() || sTrackList == null) {
+            return false;
+        }
+        // setTrackTintList/setThumbTintList live on Switch/SwitchCompat, not on the
+        // CompoundButton base class, and MaterialSwitch is a SwitchCompat.
+        Method[] methods = methodsFor(button.getClass());
+        boolean applied = false;
+        if (methods[0] != null) {
+            try {
+                methods[0].invoke(button, TRACK_ARGS);
+                applied = true;
+            } catch (Throwable ignored) {
+                // view does not accept the tint: leave its stock colours
             }
-            if (view instanceof ViewGroup) {
-                ViewGroup group = (ViewGroup) view;
-                for (int i = 0; i < group.getChildCount(); i++) {
-                    walk(group.getChildAt(i), depth + 1);
-                }
+        }
+        if (methods[1] != null) {
+            try {
+                methods[1].invoke(button, THUMB_ARGS);
+                applied = true;
+            } catch (Throwable ignored) {
+                // same: cosmetic only
             }
-        } catch (Throwable ignored) {
-            // skip this node
         }
+        return applied;
     }
 
-    private static void invokeTint(View view, String method, int colour) {
+    private static Method[] methodsFor(Class<?> type) {
+        Method[] cached = METHODS.get(type);
+        if (cached != null) {
+            return cached;
+        }
+        Method track = null;
+        Method thumb = null;
         try {
-            view.getClass().getMethod(method, ColorStateList.class)
-                    .invoke(view, ColorStateList.valueOf(colour));
+            track = type.getMethod("setTrackTintList", ColorStateList.class);
         } catch (Throwable ignored) {
-            // view does not support this tint: leave its stock colours
+            // not a SwitchCompat/MaterialSwitch subclass
         }
-    }
-
-    private static int withAlpha(int colour, int alpha) {
-        return (colour & 0x00FFFFFF) | (alpha << 24);
+        try {
+            thumb = type.getMethod("setThumbTintList", ColorStateList.class);
+        } catch (Throwable ignored) {
+            // not a SwitchCompat/MaterialSwitch subclass
+        }
+        Method[] methods = {track, thumb};
+        METHODS.put(type, methods);
+        return methods;
     }
 }

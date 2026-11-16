@@ -174,7 +174,7 @@ merges in the two ztMetro components, writes it back only when it changed, then
 re-reads to prove it. It never writes a single-component list over an existing one.
 `icon_blacklist` is a fixed documented value and is set only when it differs.
 
-### 4.5 Verification
+### 4.5 Verification and the performance appendix
 
 `ux-verify.py --quick` drives Start → Settings home → Action Centre and measures
 tokens/geometry; its own `report.md` and screenshots live under
@@ -183,7 +183,11 @@ tokens/geometry; its own `report.md` and screenshots live under
 a finding about the running stack, not a conductor bug: the run still produces the
 report and exits `2` so CI notices. If `ux-verify.py` is absent, the built-in check
 covers the state the conductor itself owns (overlays enabled, services/listeners
-registered, HOME).
+registered, HOME). Immediately after the summary the conductor captures the lag
+baseline requested by the owner: `dumpsys meminfo` TOTAL PSS for SystemUI, Settings,
+Action Centre and Start; the `dumpsys gfxinfo com.android.settings` janky/percentile
+lines; and `/proc/pressure/memory`. They land in `perf/` and in the report's
+performance appendix, on the same boot as the verify pass.
 
 ### 4.6 Factory: contrast gate before install
 
@@ -214,6 +218,7 @@ repo/evidence/conductor/<YYYYmmdd-HHMMSS>/
 ├── verify-summary.txt       # ux-verify TOTAL line
 ├── verify.log               # full stdout of ux-verify (or builtin fallback)
 ├── verify/run/report.md     # ux-verify's own report + raw/annotated PNGs
+├── perf/                    # performance appendix: meminfo dumps/PSS, gfxinfo, pressure/memory
 ├── build/*.log              # five build logs (failure tail is copied to conductor.log)
 ├── factory/<pkg>/           # profile.json, analyse.log, generate.log, mapping-table.md
 ├── factory/coverage.tsv     # package, overlay, coverage JSON, status

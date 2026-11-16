@@ -386,6 +386,54 @@ verify_apk() {
         printf 'FAIL  strip uses TYPE_ACCESSIBILITY_OVERLAY\n' >> "$CHECKS"
         failed=1
     fi
+    # Top-edge strip (this task): 32 dp window created touchable, flag lifecycle
+    # owned by explicit events, every touch logged under ShadeTouch, and the
+    # "strip open" line the lead greps for.
+    if grep -q "STRIP_HEIGHT_DP = 32" "$SHADE_SRC"; then
+        printf 'PASS  touch strip is 32 dp\n' >> "$CHECKS"
+    else
+        printf 'FAIL  touch strip is not 32 dp\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "strip overlay added" "$SHADE_SRC" \
+            && grep -q "TOUCH_TAG = \"ShadeTouch\"" "$SHADE_SRC"; then
+        printf 'PASS  strip logs its creation and all touches under ShadeTouch\n' >> "$CHECKS"
+    else
+        printf 'FAIL  ShadeTouch logging missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "ACTION_USER_PRESENT" "$SHADE_SRC" \
+            && grep -q "keyguard listener" "$SHADE_SRC" \
+            && grep -q "reconcileStripKeyguard" "$SHADE_SRC"; then
+        printf 'PASS  strip touchable lifecycle: USER_PRESENT + keyguard listener + getter safety net\n' >> "$CHECKS"
+    else
+        printf 'FAIL  strip touchable lifecycle hooks missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "strip open " "$SHADE_SRC" \
+            && grep -q "ACTION_DOWN" "$SHADE_SRC" \
+            && grep -q "ACTION_MOVE" "$SHADE_SRC" \
+            && grep -q "ACTION_UP" "$SHADE_SRC"; then
+        printf 'PASS  strip opens on tap/drag>24dp and logs DOWN/MOVE/UP\n' >> "$CHECKS"
+    else
+        printf 'FAIL  strip gesture logging/open line missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    LOCK_CTRL="$APP/java/org/ztmetro/actioncentre/LockOverlayController.java"
+    if grep -q "FADE_OUT_MS = 160" "$LOCK_CTRL" \
+            && grep -q "FADE_OUT_SCALE = 0.96f" "$LOCK_CTRL" \
+            && grep -q "scaleX(FADE_OUT_SCALE)" "$LOCK_CTRL"; then
+        printf 'PASS  unlock reveal: alpha 1->0 + scale 1->0.96 over 160 ms\n' >> "$CHECKS"
+    else
+        printf 'FAIL  unlock reveal animation missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "PixelFormat.TRANSLUCENT" "$LOCK_CTRL"; then
+        printf 'PASS  lock surface format supports the alpha/scale reveal\n' >> "$CHECKS"
+    else
+        printf 'FAIL  lock surface is not TRANSLUCENT\n' >> "$CHECKS"
+        failed=1
+    fi
     # Lock overlay: its own class, the accessibility overlay type, the
     # NOT_FOCUSABLE|NOT_TOUCHABLE main surface, and the only touchable strip.
     if grep -qF "Lorg/ztmetro/actioncentre/LockOverlayController;" \
@@ -684,6 +732,8 @@ verify_apk() {
         printf 'min/target: %s / 36\n' "$MIN_API"
         printf 'build:      plain javac + aapt2 + d8 + apksigner (no Gradle, no AndroidX)\n'
         printf 'bridge:     ShadeBridgeService (res/xml/shade_bridge.xml), BIND_ACCESSIBILITY_SERVICE; strip path starts the panel instantly, shade fallback = panel first + one BACK after 120 ms\n'
+        printf 'top strip:  32 dp TYPE_ACCESSIBILITY_OVERLAY window above the status bar, alpha-0 content; touchable flag owned by USER_PRESENT / keyguard listener / throttled getter, every change and every DOWN/MOVE/UP logged under ShadeTouch; tap or drag > 24 dp logs "strip open" and starts the panel\n'
+        printf 'reveal:     lock overlay reveal: alpha 1->0 + scale 1->0.96 over 160 ms (previous build: 120 ms, no scale), then the window is removed; surface TRANSLUCENT so the alpha composites\n'
         printf 'strip:      StatusStripService (res/xml/status_strip_service.xml), TYPE_ACCESSIBILITY_OVERLAY 28 dp, NOT_TOUCHABLE; READ_PHONE_STATE optional for live signal\n'
         printf 'lock:       LockOverlayController: TYPE_ACCESSIBILITY_OVERLAY, NOT_FOCUSABLE|NOT_TOUCHABLE|LAYOUT_IN_SCREEN, bottom strip starts the unlock proxy\n'
         printf 'unlock:     UnlockProxyActivity: requestDismissKeyguard (non-secure) or ConfirmDeviceCredential (secure); overlay stays until USER_PRESENT/credential on top\n'
