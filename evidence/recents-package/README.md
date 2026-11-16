@@ -13,6 +13,24 @@ Built artifacts and their hashes are in `repo/evidence/recents-package/`
 `repo/scripts/build-recents-package.sh` (automatically staged to `hermes-ubuntu`
 when the host has no Android SDK).
 
+## Build inputs and the source tree
+
+`repo/actioncentre/app/src/main` is **staged, not modified** by the build. The
+only staged edits are: `app/RecentsActivity.java` (this package replaces the
+repository copy), the four `<uses-permission>` lines from
+`app/AndroidManifest.permissions.xml`, and `versionCode 2` /
+`versionName 1.0-recents`. Rebuild with:
+
+```sh
+repo/scripts/build-recents-package.sh        # auto-stages to hermes-ubuntu
+```
+
+To keep the normal Action Centre build in sync (not done here because this task
+was scoped to the package directory), copy
+`sysui/recents-package/app/RecentsActivity.java` over
+`actioncentre/app/src/main/java/org/ztmetro/actioncentre/RecentsActivity.java`
+and add the four permissions to `actioncentre/app/src/main/AndroidManifest.xml`.
+
 ## What the module installs
 
 | module path | device path | purpose |

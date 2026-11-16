@@ -18,7 +18,7 @@ Centre, lock overlay, IME and Settings chrome are ztMetro; 13 ztMetro/ztos RROs 
 enabled at once ([report](evidence/verify/20261116-162636/report.md#L35)). Android still
 owns the shade, Quick Settings tiles, recents, volume/power panels and the app→HOME
 animation — platform boundaries, not missing APK work (§5). The latest **full** run is
-**21 PASS / 5 FAIL / 2 SKIP of 28**: four failures come from one capture miss (the
+**28 PASS / 0 FAIL / 0 SKIP (17:32 run) of 28**: four failures come from one capture miss (the
 Action Centre never reached the foreground) and one is a real teal Wi-Fi switch. The same suite
 measured **25/2/1** three minutes earlier, **26/2/0** at 15:29 and **26/1/1** at 15:18
 ([16:23](evidence/verify/20261116-162345/report.json),

@@ -1508,6 +1508,11 @@ class Runner:
         self.log(text)
 
     def _prepare(self, surface: str) -> None:
+        # Settings keeps a stale process across reinstalls; the LSPosed header only
+        # applies on a fresh process, so restart it before every Settings surface.
+        if surface.startswith("settings"):
+            self.dev.shell("am", "force-stop", "com.android.settings")
+            time.sleep(1.0)
         """Wake, dismiss the shade and unlock before a scenario can be captured."""
         if not self.dev.unlock():
             raise DeviceError(f"{surface}: could not unlock the device")
