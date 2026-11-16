@@ -2,26 +2,26 @@ Processing '/home/denis/ztux/actbridge/build/verify.dex'...
 Opened '/home/denis/ztux/actbridge/build/verify.dex', DEX version '039'
 DEX file header:
 magic               : 'dex\n039\0'
-checksum            : e2145744
-signature           : 7680...9498
-file_size           : 51968
+checksum            : 8df20eeb
+signature           : e914...590e
+file_size           : 54100
 header_size         : 112
 link_size           : 0
 link_off            : 0 (0x000000)
-string_ids_size     : 809
+string_ids_size     : 836
 string_ids_off      : 112 (0x000070)
-type_ids_size       : 163
-type_ids_off        : 3348 (0x000d14)
-proto_ids_size      : 182
-proto_ids_off       : 4000 (0x000fa0)
-field_ids_size      : 184
-field_ids_off       : 6184 (0x001828)
-method_ids_size     : 509
-method_ids_off      : 7656 (0x001de8)
-class_defs_size     : 40
-class_defs_off      : 11728 (0x002dd0)
-data_size           : 38960
-data_off            : 13008 (0x0032d0)
+type_ids_size       : 164
+type_ids_off        : 3456 (0x000d80)
+proto_ids_size      : 188
+proto_ids_off       : 4112 (0x001010)
+field_ids_size      : 192
+field_ids_off       : 6368 (0x0018e0)
+method_ids_size     : 519
+method_ids_off      : 7904 (0x001ee0)
+class_defs_size     : 41
+class_defs_off      : 12056 (0x002f18)
+data_size           : 40732
+data_off            : 13368 (0x003438)
 
 Class #0            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$10;'
@@ -67,7 +67,7 @@ Class #0            -
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$10;
         0x0000 - 0x0006 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 29 (ActionCentreActivity.java)
+  source_file_idx   : 33 (ActionCentreActivity.java)
 
 Class #1            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRepository$Listener;'
@@ -83,7 +83,7 @@ Class #1            -
       type          : '()V'
       access        : 0x0401 (PUBLIC ABSTRACT)
       code          : (none)
-  source_file_idx   : 235 (NotificationRepository.java)
+  source_file_idx   : 244 (NotificationRepository.java)
 
 Class #2            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$1;'
@@ -128,7 +128,7 @@ Class #2            -
         0x0000 line=70
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$1;
-  source_file_idx   : 29 (ActionCentreActivity.java)
+  source_file_idx   : 33 (ActionCentreActivity.java)
 
 Class #3            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$2;'
@@ -174,7 +174,7 @@ Class #3            -
         0x0005 line=78
       locals        :
         0x0000 - 0x000b reg=1 this Lorg/ztmetro/actioncentre/ActionCentreActivity$2;
-  source_file_idx   : 29 (ActionCentreActivity.java)
+  source_file_idx   : 33 (ActionCentreActivity.java)
 
 Class #4            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$3;'
@@ -220,7 +220,7 @@ Class #4            -
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$3;
         0x0000 - 0x0006 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 29 (ActionCentreActivity.java)
+  source_file_idx   : 33 (ActionCentreActivity.java)
 
 Class #5            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$4;'
@@ -271,7 +271,7 @@ Class #5            -
       locals        :
         0x0000 - 0x0008 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$4;
         0x0000 - 0x0008 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 29 (ActionCentreActivity.java)
+  source_file_idx   : 33 (ActionCentreActivity.java)
 
 Class #6            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$5;'
@@ -317,7 +317,7 @@ Class #6            -
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$5;
         0x0000 - 0x0006 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 29 (ActionCentreActivity.java)
+  source_file_idx   : 33 (ActionCentreActivity.java)
 
 Class #7            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$6;'
@@ -363,7 +363,7 @@ Class #7            -
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$6;
         0x0000 - 0x0006 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 29 (ActionCentreActivity.java)
+  source_file_idx   : 33 (ActionCentreActivity.java)
 
 Class #8            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$7;'
@@ -409,7 +409,7 @@ Class #8            -
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity$7;
         0x0000 - 0x0006 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 29 (ActionCentreActivity.java)
+  source_file_idx   : 33 (ActionCentreActivity.java)
 
 Class #9            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$8;'
@@ -474,7 +474,7 @@ Class #9            -
       locals        :
         0x0000 - 0x001a reg=1 this Lorg/ztmetro/actioncentre/ActionCentreActivity$8;
         0x0000 - 0x001a reg=2 (null) Ljava/lang/String;
-  source_file_idx   : 29 (ActionCentreActivity.java)
+  source_file_idx   : 33 (ActionCentreActivity.java)
 
 Class #10            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity$9;'
@@ -524,7 +524,7 @@ Class #10            -
         0x0000 line=645
       locals        :
         0x0000 - 0x000d reg=2 this Lorg/ztmetro/actioncentre/ActionCentreActivity$9;
-  source_file_idx   : 29 (ActionCentreActivity.java)
+  source_file_idx   : 33 (ActionCentreActivity.java)
 
 Class #11            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRowView$Host;'
@@ -545,7 +545,7 @@ Class #11            -
       type          : '(Lorg/ztmetro/actioncentre/Notif;)V'
       access        : 0x0401 (PUBLIC ABSTRACT)
       code          : (none)
-  source_file_idx   : 236 (NotificationRowView.java)
+  source_file_idx   : 245 (NotificationRowView.java)
 
 Class #12            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreActivity;'
@@ -1651,7 +1651,7 @@ Class #12            -
       locals        :
         0x0000 - 0x0009 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreActivity;
         0x0000 - 0x0009 reg=1 (null) Z
-  source_file_idx   : 29 (ActionCentreActivity.java)
+  source_file_idx   : 33 (ActionCentreActivity.java)
 
 Class #13            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ActionCentreListener;'
@@ -1964,7 +1964,7 @@ Class #13            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/ActionCentreListener;
         0x0000 - 0x0004 reg=1 (null) Landroid/service/notification/StatusBarNotification;
-  source_file_idx   : 30 (ActionCentreListener.java)
+  source_file_idx   : 34 (ActionCentreListener.java)
 
 Class #14            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/DeviceState;'
@@ -2103,7 +2103,7 @@ Class #14            -
       locals        :
         0x0000 - 0x0021 reg=3 (null) Landroid/content/Context;
   Virtual methods   -
-  source_file_idx   : 33 (DeviceState.java)
+  source_file_idx   : 38 (DeviceState.java)
 
 Class #15            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/HandleView;'
@@ -2175,7 +2175,7 @@ Class #15            -
         0x0000 - 0x0012 reg=1 this Lorg/ztmetro/actioncentre/HandleView;
         0x0000 - 0x0012 reg=2 (null) I
         0x0000 - 0x0012 reg=3 (null) I
-  source_file_idx   : 45 (HandleView.java)
+  source_file_idx   : 50 (HandleView.java)
 
 Class #16            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/Notif;'
@@ -2248,7 +2248,7 @@ Class #16            -
         0x0000 - 0x0014 reg=7 (null) J
         0x0000 - 0x0014 reg=9 (null) Landroid/app/PendingIntent;
   Virtual methods   -
-  source_file_idx   : 234 (Notif.java)
+  source_file_idx   : 243 (Notif.java)
 
 Class #17            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRepository$1;'
@@ -2306,7 +2306,7 @@ Class #17            -
         0x0000 - 0x0009 reg=2 this Lorg/ztmetro/actioncentre/NotificationRepository$1;
         0x0000 - 0x0009 reg=3 (null) Lorg/ztmetro/actioncentre/Notif;
         0x0000 - 0x0009 reg=4 (null) Lorg/ztmetro/actioncentre/Notif;
-  source_file_idx   : 235 (NotificationRepository.java)
+  source_file_idx   : 244 (NotificationRepository.java)
 
 Class #18            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRepository$2;'
@@ -2349,7 +2349,7 @@ Class #18            -
         0x0014 line=125
       locals        :
         0x0000 - 0x0019 reg=1 this Lorg/ztmetro/actioncentre/NotificationRepository$2;
-  source_file_idx   : 235 (NotificationRepository.java)
+  source_file_idx   : 244 (NotificationRepository.java)
 
 Class #19            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRepository;'
@@ -2610,7 +2610,7 @@ Class #19            -
       locals        :
         0x0000 - 0x0036 reg=5 (null) Lorg/ztmetro/actioncentre/Notif;
   Virtual methods   -
-  source_file_idx   : 235 (NotificationRepository.java)
+  source_file_idx   : 244 (NotificationRepository.java)
 
 Class #20            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRowView$1;'
@@ -2656,7 +2656,7 @@ Class #20            -
       locals        :
         0x0000 - 0x0010 reg=0 this Lorg/ztmetro/actioncentre/NotificationRowView$1;
         0x0000 - 0x0010 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 236 (NotificationRowView.java)
+  source_file_idx   : 245 (NotificationRowView.java)
 
 Class #21            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRowView$2;'
@@ -2702,7 +2702,7 @@ Class #21            -
       locals        :
         0x0000 - 0x0010 reg=0 this Lorg/ztmetro/actioncentre/NotificationRowView$2;
         0x0000 - 0x0010 reg=1 (null) Landroid/view/View;
-  source_file_idx   : 236 (NotificationRowView.java)
+  source_file_idx   : 245 (NotificationRowView.java)
 
 Class #22            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRowView$3;'
@@ -2747,7 +2747,7 @@ Class #22            -
         0x0000 line=201
       locals        :
         0x0000 - 0x0010 reg=1 this Lorg/ztmetro/actioncentre/NotificationRowView$3;
-  source_file_idx   : 236 (NotificationRowView.java)
+  source_file_idx   : 245 (NotificationRowView.java)
 
 Class #23            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/NotificationRowView;'
@@ -2965,7 +2965,7 @@ Class #23            -
       locals        :
         0x0000 - 0x00e2 reg=7 this Lorg/ztmetro/actioncentre/NotificationRowView;
         0x0000 - 0x00e2 reg=8 (null) Landroid/view/MotionEvent;
-  source_file_idx   : 236 (NotificationRowView.java)
+  source_file_idx   : 245 (NotificationRowView.java)
 
 Class #24            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/QuickGrid;'
@@ -3062,7 +3062,7 @@ Class #24            -
         0x0000 - 0x0045 reg=2 this Lorg/ztmetro/actioncentre/QuickGrid;
         0x0000 - 0x0045 reg=3 (null) I
         0x0000 - 0x0045 reg=4 (null) I
-  source_file_idx   : 240 (QuickGrid.java)
+  source_file_idx   : 250 (QuickGrid.java)
 
 Class #25            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/QuickTile;'
@@ -3284,7 +3284,7 @@ Class #25            -
         0x0000 - 0x000b reg=0 this Lorg/ztmetro/actioncentre/QuickTile;
         0x0000 - 0x000b reg=1 (null) Z
         0x0000 - 0x000b reg=2 (null) Z
-  source_file_idx   : 241 (QuickTile.java)
+  source_file_idx   : 251 (QuickTile.java)
 
 Class #26            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/R$anim;'
@@ -3324,7 +3324,7 @@ Class #26            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/R$anim;
   Virtual methods   -
-  source_file_idx   : 242 (R.java)
+  source_file_idx   : 252 (R.java)
 
 Class #27            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/R$color;'
@@ -3394,7 +3394,7 @@ Class #27            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/R$color;
   Virtual methods   -
-  source_file_idx   : 242 (R.java)
+  source_file_idx   : 252 (R.java)
 
 Class #28            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/R$drawable;'
@@ -3469,7 +3469,7 @@ Class #28            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/R$drawable;
   Virtual methods   -
-  source_file_idx   : 242 (R.java)
+  source_file_idx   : 252 (R.java)
 
 Class #29            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/R$string;'
@@ -3649,7 +3649,7 @@ Class #29            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/R$string;
   Virtual methods   -
-  source_file_idx   : 242 (R.java)
+  source_file_idx   : 252 (R.java)
 
 Class #30            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/R$style;'
@@ -3684,7 +3684,7 @@ Class #30            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/R$style;
   Virtual methods   -
-  source_file_idx   : 242 (R.java)
+  source_file_idx   : 252 (R.java)
 
 Class #31            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/R$xml;'
@@ -3714,7 +3714,7 @@ Class #31            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/R$xml;
   Virtual methods   -
-  source_file_idx   : 242 (R.java)
+  source_file_idx   : 252 (R.java)
 
 Class #32            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/R;'
@@ -3739,7 +3739,7 @@ Class #32            -
       locals        :
         0x0000 - 0x0004 reg=0 this Lorg/ztmetro/actioncentre/R;
   Virtual methods   -
-  source_file_idx   : 242 (R.java)
+  source_file_idx   : 252 (R.java)
 
 Class #33            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ShadeBridgeService$1;'
@@ -3765,7 +3765,7 @@ Class #33            -
       insns size    : 6 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=63
+        0x0000 line=81
       locals        :
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ShadeBridgeService$1;
         0x0000 - 0x0006 reg=1 (null) Lorg/ztmetro/actioncentre/ShadeBridgeService;
@@ -3775,24 +3775,90 @@ Class #33            -
       type          : '()V'
       access        : 0x0001 (PUBLIC)
       code          -
-      registers     : 5
+      registers     : 12
       ins           : 1
-      outs          : 3
-      insns size    : 34 16-bit code units
-      catches       : 1
-        0x0002 - 0x001a
-          <any> -> 0x001b
+      outs          : 4
+      insns size    : 220 16-bit code units
+      catches       : 2
+        0x000a - 0x002a
+          <any> -> 0x00ce
+        0x002e - 0x00cd
+          <any> -> 0x00ce
       positions     :
-        0x0000 line=67
-        0x000d line=69
-        0x0010 line=71
-        0x0015 line=72
-        0x001c line=74
+        0x0000 line=85
+        0x0002 line=0
+        0x000a line=85
+        0x0014 line=88
+        0x001f line=89
+        0x002e line=90
+        0x0040 line=91
+        0x005b line=95
+        0x006d line=96
+        0x0088 line=99
+        0x0091 line=100
+        0x0096 line=101
+        0x009d line=102
+        0x00ac line=103
+        0x00bf line=102
+        0x00c2 line=105
+        0x00cf line=107
+        0x00d4 line=108
       locals        :
-        0x0000 - 0x0022 reg=4 this Lorg/ztmetro/actioncentre/ShadeBridgeService$1;
-  source_file_idx   : 251 (ShadeBridgeService.java)
+        0x0000 - 0x00dc reg=11 this Lorg/ztmetro/actioncentre/ShadeBridgeService$1;
+  source_file_idx   : 262 (ShadeBridgeService.java)
 
 Class #34            -
+  Class descriptor  : 'Lorg/ztmetro/actioncentre/ShadeBridgeService$2;'
+  Access flags      : 0x0000 ()
+  Superclass        : 'Ljava/lang/Object;'
+  Interfaces        -
+    #0              : 'Ljava/lang/Runnable;'
+  Static fields     -
+  Instance fields   -
+    #0              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService$2;)
+      name          : 'this$0'
+      type          : 'Lorg/ztmetro/actioncentre/ShadeBridgeService;'
+      access        : 0x1010 (FINAL SYNTHETIC)
+  Direct methods    -
+    #0              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService$2;)
+      name          : '<init>'
+      type          : '(Lorg/ztmetro/actioncentre/ShadeBridgeService;)V'
+      access        : 0x10000 (CONSTRUCTOR)
+      code          -
+      registers     : 2
+      ins           : 2
+      outs          : 1
+      insns size    : 6 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=114
+      locals        :
+        0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/ShadeBridgeService$2;
+        0x0000 - 0x0006 reg=1 (null) Lorg/ztmetro/actioncentre/ShadeBridgeService;
+  Virtual methods   -
+    #0              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService$2;)
+      name          : 'run'
+      type          : '()V'
+      access        : 0x0001 (PUBLIC)
+      code          -
+      registers     : 4
+      ins           : 1
+      outs          : 3
+      insns size    : 43 16-bit code units
+      catches       : 1
+        0x0002 - 0x0023
+          <any> -> 0x0024
+      positions     :
+        0x0000 line=118
+        0x000b line=121
+        0x0018 line=122
+        0x001e line=124
+        0x0025 line=127
+      locals        :
+        0x0000 - 0x002b reg=3 this Lorg/ztmetro/actioncentre/ShadeBridgeService$2;
+  source_file_idx   : 262 (ShadeBridgeService.java)
+
+Class #35            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ShadeBridgeService$ShadeWindow;'
   Access flags      : 0x0010 (FINAL)
   Superclass        : 'Ljava/lang/Object;'
@@ -3823,10 +3889,10 @@ Class #34            -
       insns size    : 10 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=399
-        0x0003 line=400
-        0x0005 line=401
-        0x0007 line=402
+        0x0000 line=484
+        0x0003 line=485
+        0x0005 line=486
+        0x0007 line=487
       locals        :
         0x0000 - 0x000a reg=0 this Lorg/ztmetro/actioncentre/ShadeBridgeService$ShadeWindow;
         0x0000 - 0x000a reg=1 (null) I
@@ -3844,60 +3910,91 @@ Class #34            -
       insns size    : 72 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=406
-        0x0024 line=407
-        0x0030 line=408
+        0x0000 line=491
+        0x0024 line=492
+        0x0030 line=493
       locals        :
         0x0000 - 0x0048 reg=2 this Lorg/ztmetro/actioncentre/ShadeBridgeService$ShadeWindow;
         0x0000 - 0x0048 reg=3 (null) Landroid/graphics/Rect;
-  source_file_idx   : 251 (ShadeBridgeService.java)
+  source_file_idx   : 262 (ShadeBridgeService.java)
 
-Class #35            -
+Class #36            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/ShadeBridgeService;'
   Access flags      : 0x0001 (PUBLIC)
   Superclass        : 'Landroid/accessibilityservice/AccessibilityService;'
   Interfaces        -
   Static fields     -
     #0              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
-      name          : 'PANEL_START_DELAY_MS'
+      name          : 'COLLAPSE_TIMEOUT_MS'
       type          : 'J'
       access        : 0x001a (PRIVATE STATIC FINAL)
-      value         : 100
+      value         : 600
     #1              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'POLL_INTERVAL_MS'
+      type          : 'J'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      value         : 50
+    #2              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'POST_START_CHECK_MS'
+      type          : 'J'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      value         : 400
+    #3              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'SECOND_BACK_AFTER_MS'
+      type          : 'J'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      value         : 200
+    #4              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'SHADE_MIN_SCREEN_FRACTION'
       type          : 'F'
       access        : 0x001a (PRIVATE STATIC FINAL)
       value         : 0.85
-    #2              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+    #5              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'SYSTEMUI_PACKAGE'
       type          : 'Ljava/lang/String;'
       access        : 0x001a (PRIVATE STATIC FINAL)
       value         : "com.android.systemui"
-    #3              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+    #6              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'TAG'
       type          : 'Ljava/lang/String;'
       access        : 0x0018 (STATIC FINAL)
       value         : "ShadeBridge"
-    #4              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+    #7              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'THROTTLE_MS'
       type          : 'J'
       access        : 0x001a (PRIVATE STATIC FINAL)
       value         : 1500
   Instance fields   -
     #0              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'backCount'
+      type          : 'I'
+      access        : 0x0002 (PRIVATE)
+    #1              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'collapseDisplay'
+      type          : 'Landroid/graphics/Rect;'
+      access        : 0x0002 (PRIVATE)
+    #2              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'collapsePoll'
+      type          : 'Ljava/lang/Runnable;'
+      access        : 0x0012 (PRIVATE FINAL)
+    #3              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'collapseStartedAt'
+      type          : 'J'
+      access        : 0x0002 (PRIVATE)
+    #4              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'handler'
       type          : 'Landroid/os/Handler;'
       access        : 0x0012 (PRIVATE FINAL)
-    #1              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+    #5              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'lastForegroundPackage'
       type          : 'Ljava/lang/String;'
       access        : 0x0042 (PRIVATE VOLATILE)
-    #2              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+    #6              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'lastTriggerUptime'
       type          : 'J'
       access        : 0x0002 (PRIVATE)
-    #3              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
-      name          : 'startPanel'
+    #7              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'postStartCheck'
       type          : 'Ljava/lang/Runnable;'
       access        : 0x0012 (PRIVATE FINAL)
   Direct methods    -
@@ -3909,16 +4006,118 @@ Class #35            -
       registers     : 3
       ins           : 1
       outs          : 2
-      insns size    : 26 16-bit code units
+      insns size    : 33 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=43
-        0x0003 line=54
-        0x000e line=61
-        0x0012 line=63
+        0x0000 line=45
+        0x0003 line=62
+        0x000e line=69
+        0x0012 line=81
+        0x0019 line=114
       locals        :
-        0x0000 - 0x001a reg=2 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
+        0x0000 - 0x0021 reg=2 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
     #1              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'access$000'
+      type          : '(Lorg/ztmetro/actioncentre/ShadeBridgeService;)Landroid/graphics/Rect;'
+      access        : 0x1008 (STATIC SYNTHETIC)
+      code          -
+      registers     : 1
+      ins           : 1
+      outs          : 0
+      insns size    : 3 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=45
+      locals        :
+        0x0000 - 0x0003 reg=0 (null) Lorg/ztmetro/actioncentre/ShadeBridgeService;
+    #2              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'access$100'
+      type          : '(Lorg/ztmetro/actioncentre/ShadeBridgeService;)J'
+      access        : 0x1008 (STATIC SYNTHETIC)
+      code          -
+      registers     : 3
+      ins           : 1
+      outs          : 0
+      insns size    : 3 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=45
+      locals        :
+        0x0000 - 0x0003 reg=2 (null) Lorg/ztmetro/actioncentre/ShadeBridgeService;
+    #3              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'access$200'
+      type          : '(Lorg/ztmetro/actioncentre/ShadeBridgeService;Landroid/graphics/Rect;Z)Lorg/ztmetro/actioncentre/ShadeBridgeService$ShadeWindow;'
+      access        : 0x1008 (STATIC SYNTHETIC)
+      code          -
+      registers     : 3
+      ins           : 3
+      outs          : 3
+      insns size    : 5 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=45
+      locals        :
+        0x0000 - 0x0005 reg=0 (null) Lorg/ztmetro/actioncentre/ShadeBridgeService;
+        0x0000 - 0x0005 reg=1 (null) Landroid/graphics/Rect;
+        0x0000 - 0x0005 reg=2 (null) Z
+    #4              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'access$300'
+      type          : '(Lorg/ztmetro/actioncentre/ShadeBridgeService;Ljava/lang/String;)V'
+      access        : 0x1008 (STATIC SYNTHETIC)
+      code          -
+      registers     : 2
+      ins           : 2
+      outs          : 2
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=45
+      locals        :
+        0x0000 - 0x0004 reg=0 (null) Lorg/ztmetro/actioncentre/ShadeBridgeService;
+        0x0000 - 0x0004 reg=1 (null) Ljava/lang/String;
+    #5              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'access$400'
+      type          : '(Lorg/ztmetro/actioncentre/ShadeBridgeService;)I'
+      access        : 0x1008 (STATIC SYNTHETIC)
+      code          -
+      registers     : 1
+      ins           : 1
+      outs          : 0
+      insns size    : 3 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=45
+      locals        :
+        0x0000 - 0x0003 reg=0 (null) Lorg/ztmetro/actioncentre/ShadeBridgeService;
+    #6              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'access$408'
+      type          : '(Lorg/ztmetro/actioncentre/ShadeBridgeService;)I'
+      access        : 0x1008 (STATIC SYNTHETIC)
+      code          -
+      registers     : 3
+      ins           : 1
+      outs          : 0
+      insns size    : 7 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=45
+      locals        :
+        0x0000 - 0x0007 reg=2 (null) Lorg/ztmetro/actioncentre/ShadeBridgeService;
+    #7              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'access$500'
+      type          : '(Lorg/ztmetro/actioncentre/ShadeBridgeService;)Landroid/os/Handler;'
+      access        : 0x1008 (STATIC SYNTHETIC)
+      code          -
+      registers     : 1
+      ins           : 1
+      outs          : 0
+      insns size    : 3 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=45
+      locals        :
+        0x0000 - 0x0003 reg=0 (null) Lorg/ztmetro/actioncentre/ShadeBridgeService;
+    #8              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'asString'
       type          : '(Ljava/lang/CharSequence;)Ljava/lang/String;'
       access        : 0x000a (PRIVATE STATIC)
@@ -3929,10 +4128,10 @@ Class #35            -
       insns size    : 10 16-bit code units
       catches       : (none)
       positions     :
-        0x0002 line=329
+        0x0002 line=411
       locals        :
         0x0000 - 0x000a reg=0 (null) Ljava/lang/CharSequence;
-    #2              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+    #9              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'displayBounds'
       type          : '()Landroid/graphics/Rect;'
       access        : 0x0002 (PRIVATE)
@@ -3945,104 +4144,107 @@ Class #35            -
         0x0000 - 0x0048
           <any> -> 0x0049
       positions     :
-        0x0000 line=238
-        0x000a line=240
-        0x0010 line=241
-        0x0018 line=242
-        0x0024 line=243
-        0x002a line=246
-        0x002f line=247
-        0x0036 line=248
-        0x003e line=249
-        0x004a line=253
+        0x0000 line=320
+        0x000a line=322
+        0x0010 line=323
+        0x0018 line=324
+        0x0024 line=325
+        0x002a line=328
+        0x002f line=329
+        0x0036 line=330
+        0x003e line=331
+        0x004a line=335
       locals        :
         0x0000 - 0x0053 reg=3 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
-    #3              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+    #10              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'findFullscreenSystemUiWindow'
-      type          : '(Landroid/graphics/Rect;)Lorg/ztmetro/actioncentre/ShadeBridgeService$ShadeWindow;'
+      type          : '(Landroid/graphics/Rect;Z)Lorg/ztmetro/actioncentre/ShadeBridgeService$ShadeWindow;'
       access        : 0x0002 (PRIVATE)
       code          -
-      registers     : 18
-      ins           : 2
+      registers     : 19
+      ins           : 3
       outs          : 4
-      insns size    : 297 16-bit code units
+      insns size    : 314 16-bit code units
       catches       : 4
-        0x0005 - 0x006f
-          <any> -> 0x0121
-        0x006f - 0x007a
-          <any> -> 0x0063
-        0x0081 - 0x0099
-          <any> -> 0x0121
-        0x00a1 - 0x011e
-          <any> -> 0x011f
+        0x0005 - 0x0071
+          <any> -> 0x012a
+        0x0071 - 0x007c
+          <any> -> 0x0065
+        0x0083 - 0x009b
+          <any> -> 0x012a
+        0x00a5 - 0x0126
+          <any> -> 0x0127
       positions     :
-        0x0000 line=161
+        0x0000 line=233
         0x0002 line=0
-        0x0005 line=161
-        0x000b line=162
-        0x0013 line=166
-        0x0024 line=167
-        0x003b line=166
-        0x003e line=168
-        0x0050 line=174
-        0x006a line=179
-        0x006f line=182
-        0x0073 line=183
-        0x0076 line=184
-        0x0081 line=192
-        0x0090 line=195
-        0x00a1 line=197
-        0x00b3 line=198
-        0x00ce line=199
-        0x00d9 line=197
-        0x00e7 line=201
-        0x00f8 line=206
-        0x0104 line=207
-        0x0114 line=206
-        0x0119 line=163
-        0x0123 line=211
+        0x0005 line=233
+        0x000b line=234
+        0x0015 line=241
+        0x0026 line=242
+        0x003d line=241
+        0x0040 line=244
+        0x0052 line=250
+        0x006c line=255
+        0x0071 line=258
+        0x0075 line=259
+        0x0078 line=260
+        0x0083 line=268
+        0x0092 line=271
+        0x00a5 line=274
+        0x00b7 line=275
+        0x00d2 line=276
+        0x00dd line=274
+        0x00eb line=279
+        0x00fe line=284
+        0x010a line=285
+        0x011a line=284
+        0x0121 line=236
+        0x012e line=290
+        0x0134 line=292
       locals        :
-        0x0000 - 0x0129 reg=16 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
-        0x0000 - 0x0129 reg=17 (null) Landroid/graphics/Rect;
-    #4              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+        0x0000 - 0x013a reg=16 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
+        0x0000 - 0x013a reg=17 (null) Landroid/graphics/Rect;
+        0x0000 - 0x013a reg=18 (null) Z
+    #11              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'handleSystemUiWindowState'
       type          : '()V'
       access        : 0x0002 (PRIVATE)
       code          -
-      registers     : 10
+      registers     : 9
       ins           : 1
       outs          : 4
-      insns size    : 245 16-bit code units
+      insns size    : 256 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=114
-        0x0004 line=115
-        0x0008 line=116
-        0x000e line=119
-        0x0015 line=124
-        0x0019 line=125
-        0x0029 line=126
-        0x003b line=127
-        0x0046 line=126
-        0x004a line=130
-        0x0050 line=131
-        0x0066 line=134
-        0x006c line=135
-        0x0073 line=136
-        0x007e line=135
-        0x0082 line=139
-        0x0088 line=140
-        0x0099 line=141
-        0x00a4 line=140
-        0x00a8 line=145
-        0x00aa line=146
-        0x00cf line=148
-        0x00d3 line=149
-        0x00e4 line=150
-        0x00eb line=151
+        0x0000 line=183
+        0x0004 line=184
+        0x0016 line=185
+        0x0030 line=189
+        0x0036 line=191
+        0x003d line=194
+        0x0044 line=198
+        0x004a line=199
+        0x0060 line=202
+        0x0066 line=203
+        0x006d line=204
+        0x0078 line=203
+        0x007c line=207
+        0x0082 line=208
+        0x0093 line=209
+        0x009e line=208
+        0x00a2 line=213
+        0x00a4 line=214
+        0x00ab line=215
+        0x00ad line=216
+        0x00af line=217
+        0x00d3 line=219
+        0x00d7 line=220
+        0x00e8 line=221
+        0x00ef line=222
+        0x00f6 line=223
       locals        :
-        0x0000 - 0x00f5 reg=9 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
-    #5              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+        0x0000 - 0x0100 reg=8 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
+    #12              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'hasVisibleOwnWindow'
       type          : '()Z'
       access        : 0x0002 (PRIVATE)
@@ -4055,16 +4257,16 @@ Class #35            -
         0x0001 - 0x0043
           <any> -> 0x0046
       positions     :
-        0x0001 line=306
-        0x0008 line=310
-        0x001a line=311
-        0x0022 line=314
-        0x0027 line=315
-        0x002a line=316
-        0x0037 line=319
+        0x0001 line=388
+        0x0008 line=392
+        0x001a line=393
+        0x0022 line=396
+        0x0027 line=397
+        0x002a line=398
+        0x0037 line=401
       locals        :
         0x0000 - 0x0047 reg=6 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
-    #6              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+    #13              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'isEnabled'
       type          : '(Landroid/content/Context;)Z'
       access        : 0x0008 (STATIC)
@@ -4077,19 +4279,19 @@ Class #35            -
         0x0001 - 0x0053
           <any> -> 0x0057
       positions     :
-        0x0001 line=365
-        0x0003 line=366
-        0x000d line=371
-        0x0014 line=376
-        0x001a line=377
-        0x002c line=378
-        0x0032 line=379
-        0x003b line=382
-        0x0041 line=383
-        0x004f line=384
+        0x0001 line=450
+        0x0003 line=451
+        0x000d line=456
+        0x0014 line=461
+        0x001a line=462
+        0x002c line=463
+        0x0032 line=464
+        0x003b line=467
+        0x0041 line=468
+        0x004f line=469
       locals        :
         0x0000 - 0x0058 reg=6 (null) Landroid/content/Context;
-    #7              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+    #14              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'isKeyguardLocked'
       type          : '()Z'
       access        : 0x0002 (PRIVATE)
@@ -4102,12 +4304,12 @@ Class #35            -
         0x0001 - 0x000f
           <any> -> 0x0014
       positions     :
-        0x0001 line=260
-        0x0003 line=261
-        0x000b line=262
+        0x0001 line=342
+        0x0003 line=343
+        0x000b line=344
       locals        :
         0x0000 - 0x0015 reg=2 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
-    #8              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+    #15              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'isOwnPanelFocused'
       type          : '()Z'
       access        : 0x0002 (PRIVATE)
@@ -4120,14 +4322,40 @@ Class #35            -
         0x0001 - 0x002d
           <any> -> 0x002e
       positions     :
-        0x0001 line=275
-        0x0008 line=279
-        0x001a line=280
-        0x0021 line=283
-        0x002f line=286
+        0x0001 line=357
+        0x0008 line=361
+        0x001a line=362
+        0x0021 line=365
+        0x002f line=368
       locals        :
         0x0000 - 0x0037 reg=4 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
-    #9              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+    #16              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+      name          : 'startPanel'
+      type          : '(Ljava/lang/String;)V'
+      access        : 0x0002 (PRIVATE)
+      code          -
+      registers     : 6
+      ins           : 2
+      outs          : 4
+      insns size    : 70 16-bit code units
+      catches       : 1
+        0x000b - 0x003e
+          <any> -> 0x003f
+      positions     :
+        0x0000 line=133
+        0x0002 line=0
+        0x0004 line=133
+        0x000b line=135
+        0x0014 line=137
+        0x0017 line=139
+        0x001a line=140
+        0x002e line=141
+        0x0035 line=142
+        0x0040 line=144
+      locals        :
+        0x0000 - 0x0046 reg=4 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
+        0x0000 - 0x0046 reg=5 (null) Ljava/lang/String;
+    #17              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'wasOwnPanelPreviouslyForeground'
       type          : '()Z'
       access        : 0x0002 (PRIVATE)
@@ -4138,11 +4366,11 @@ Class #35            -
       insns size    : 19 16-bit code units
       catches       : (none)
       positions     :
-        0x0000 line=298
-        0x000e line=301
+        0x0000 line=380
+        0x000e line=383
       locals        :
         0x0000 - 0x0013 reg=2 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
-    #10              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
+    #18              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'windowPackage'
       type          : '(Landroid/view/accessibility/AccessibilityWindowInfo;)Ljava/lang/String;'
       access        : 0x0002 (PRIVATE)
@@ -4157,12 +4385,12 @@ Class #35            -
         0x000e - 0x0019
           <any> -> 0x0020
       positions     :
-        0x0000 line=218
-        0x0002 line=220
-        0x000a line=230
-        0x000e line=224
-        0x0015 line=225
-        0x001b line=230
+        0x0000 line=300
+        0x0002 line=302
+        0x000a line=312
+        0x000e line=306
+        0x0015 line=307
+        0x001b line=312
       locals        :
         0x0000 - 0x0026 reg=1 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
         0x0000 - 0x0026 reg=2 (null) Landroid/view/accessibility/AccessibilityWindowInfo;
@@ -4180,13 +4408,13 @@ Class #35            -
         0x0002 - 0x0028
           <any> -> 0x0029
       positions     :
-        0x0002 line=94
-        0x000b line=97
-        0x0013 line=98
-        0x001a line=101
-        0x0022 line=103
-        0x0025 line=106
-        0x002a line=109
+        0x0002 line=163
+        0x000b line=166
+        0x0013 line=167
+        0x001a line=170
+        0x0022 line=172
+        0x0025 line=175
+        0x002a line=178
       locals        :
         0x0000 - 0x0032 reg=2 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
         0x0000 - 0x0032 reg=3 (null) Landroid/view/accessibility/AccessibilityEvent;
@@ -4198,31 +4426,33 @@ Class #35            -
       registers     : 3
       ins           : 1
       outs          : 2
-      insns size    : 11 16-bit code units
+      insns size    : 18 16-bit code units
       catches       : 1
-        0x0000 - 0x0007
-          <any> -> 0x0007
+        0x0000 - 0x000e
+          <any> -> 0x000e
       positions     :
-        0x0000 line=353
-        0x0007 line=356
+        0x0000 line=437
+        0x0007 line=438
+        0x000e line=441
       locals        :
-        0x0000 - 0x000b reg=2 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
+        0x0000 - 0x0012 reg=2 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
     #2              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'onInterrupt'
       type          : '()V'
       access        : 0x0001 (PUBLIC)
       code          -
-      registers     : 2
+      registers     : 3
       ins           : 1
       outs          : 2
-      insns size    : 8 16-bit code units
+      insns size    : 15 16-bit code units
       catches       : 1
-        0x0000 - 0x0007
-          <any> -> 0x0007
+        0x0000 - 0x000e
+          <any> -> 0x000e
       positions     :
-        0x0000 line=335
+        0x0000 line=417
+        0x0007 line=418
       locals        :
-        0x0000 - 0x0008 reg=1 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
+        0x0000 - 0x000f reg=2 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
     #3              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
       name          : 'onServiceConnected'
       type          : '()V'
@@ -4236,9 +4466,9 @@ Class #35            -
         0x0002 - 0x000a
           <any> -> 0x000b
       positions     :
-        0x0000 line=82
-        0x0005 line=83
-        0x000c line=86
+        0x0000 line=151
+        0x0005 line=152
+        0x000c line=155
       locals        :
         0x0000 - 0x0012 reg=2 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
     #4              : (in Lorg/ztmetro/actioncentre/ShadeBridgeService;)
@@ -4249,20 +4479,21 @@ Class #35            -
       registers     : 4
       ins           : 2
       outs          : 2
-      insns size    : 19 16-bit code units
+      insns size    : 26 16-bit code units
       catches       : 1
-        0x0000 - 0x000e
-          <any> -> 0x000e
+        0x0000 - 0x0015
+          <any> -> 0x0015
       positions     :
-        0x0000 line=343
-        0x0007 line=344
-        0x000e line=347
+        0x0000 line=426
+        0x0007 line=427
+        0x000e line=428
+        0x0015 line=431
       locals        :
-        0x0000 - 0x0013 reg=2 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
-        0x0000 - 0x0013 reg=3 (null) Landroid/content/Intent;
-  source_file_idx   : 251 (ShadeBridgeService.java)
+        0x0000 - 0x001a reg=2 this Lorg/ztmetro/actioncentre/ShadeBridgeService;
+        0x0000 - 0x001a reg=3 (null) Landroid/content/Intent;
+  source_file_idx   : 262 (ShadeBridgeService.java)
 
-Class #36            -
+Class #37            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripView$1;'
   Access flags      : 0x0000 ()
   Superclass        : 'Ljava/lang/Object;'
@@ -4307,9 +4538,9 @@ Class #36            -
         0x000a line=35
       locals        :
         0x0000 - 0x0016 reg=3 this Lorg/ztmetro/actioncentre/StatusStripView$1;
-  source_file_idx   : 253 (StatusStripView.java)
+  source_file_idx   : 264 (StatusStripView.java)
 
-Class #37            -
+Class #38            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripView$2;'
   Access flags      : 0x0000 ()
   Superclass        : 'Landroid/content/BroadcastReceiver;'
@@ -4353,9 +4584,9 @@ Class #37            -
         0x0000 - 0x0006 reg=0 this Lorg/ztmetro/actioncentre/StatusStripView$2;
         0x0000 - 0x0006 reg=1 (null) Landroid/content/Context;
         0x0000 - 0x0006 reg=2 (null) Landroid/content/Intent;
-  source_file_idx   : 253 (StatusStripView.java)
+  source_file_idx   : 264 (StatusStripView.java)
 
-Class #38            -
+Class #39            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/StatusStripView;'
   Access flags      : 0x0010 (FINAL)
   Superclass        : 'Landroid/view/View;'
@@ -4621,9 +4852,9 @@ Class #38            -
         0x0000 - 0x0012 reg=1 this Lorg/ztmetro/actioncentre/StatusStripView;
         0x0000 - 0x0012 reg=2 (null) I
         0x0000 - 0x0012 reg=3 (null) I
-  source_file_idx   : 253 (StatusStripView.java)
+  source_file_idx   : 264 (StatusStripView.java)
 
-Class #39            -
+Class #40            -
   Class descriptor  : 'Lorg/ztmetro/actioncentre/U;'
   Access flags      : 0x0010 (FINAL)
   Superclass        : 'Ljava/lang/Object;'
@@ -4819,5 +5050,5 @@ Class #39            -
         0x0000 - 0x000e reg=1 (null) Landroid/content/Context;
         0x0000 - 0x000e reg=2 (null) F
   Virtual methods   -
-  source_file_idx   : 265 (U.java)
+  source_file_idx   : 276 (U.java)
 

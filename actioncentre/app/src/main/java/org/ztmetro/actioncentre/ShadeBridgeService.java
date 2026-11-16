@@ -33,8 +33,10 @@ import java.util.List;
  * bar is the small SystemUI window and is ignored.
  *
  * <p>On a hit the service collapses the stock shade with
- * {@link #GLOBAL_ACTION_BACK} and starts {@link ActionCentreActivity} 100 ms
- * later, so the two panels do not animate over each other.
+ * {@link #GLOBAL_ACTION_BACK}, polls the window list every 50 ms until no
+ * full-screen SystemUI window remains (a second BACK after 200 ms, 600 ms cap)
+ * and only then starts {@link ActionCentreActivity}. Starting earlier lets the
+ * still-closing shade end up drawn on top of the panel.
  *
  * <p>Fail-safe: with the service disabled the app has no running code path that
  * touches the shade, so the stock shade behaves exactly as before. Every
@@ -48,8 +50,14 @@ public class ShadeBridgeService extends AccessibilityService {
     private static final float SHADE_MIN_SCREEN_FRACTION = 0.85f;
     /** Ignore repeat shade events for this long after a successful trigger. */
     private static final long THROTTLE_MS = 1500L;
-    /** Let the BACK collapse start before our slide-up covers the screen. */
-    private static final long PANEL_START_DELAY_MS = 100L;
+    /** How often the collapse sequence checks whether the shade window is gone. */
+    private static final long POLL_INTERVAL_MS = 50L;
+    /** If the shade is still up after this long, send a second BACK (max 2). */
+    private static final long SECOND_BACK_AFTER_MS = 200L;
+    /** Give up waiting for the shade and start the panel regardless. */
+    private static final long COLLAPSE_TIMEOUT_MS = 600L;
+    /** Probe once after the panel starts; a visible shade here is a race. */
+    private static final long POST_START_CHECK_MS = 400L;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private long lastTriggerUptime;
@@ -60,21 +68,82 @@ public class ShadeBridgeService extends AccessibilityService {
      */
     private volatile String lastForegroundPackage = "";
 
-    private final Runnable startPanel = new Runnable() {
+    /** Display bounds captured when the collapse sequence starts. */
+    private Rect collapseDisplay;
+    private long collapseStartedAt;
+    private int backCount;
+
+    /**
+     * Polls the window list after BACK #1. The panel must not start while a
+     * full-screen SystemUI window still exists, otherwise the still-closing
+     * shade ends up drawn on top of it.
+     */
+    private final Runnable collapsePoll = new Runnable() {
         @Override
         public void run() {
             try {
-                Intent intent = new Intent(ShadeBridgeService.this,
-                        ActionCentreActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                        | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                Log.i(TAG, "Action Centre started (" + PANEL_START_DELAY_MS + " ms after BACK)");
+                if (collapseDisplay == null) {
+                    return;
+                }
+                long elapsed = SystemClock.uptimeMillis() - collapseStartedAt;
+                if (findFullscreenSystemUiWindow(collapseDisplay, false) == null) {
+                    Log.i(TAG, "shade gone after " + elapsed + " ms");
+                    startPanel("shade gone after " + elapsed + " ms");
+                    return;
+                }
+                if (elapsed >= COLLAPSE_TIMEOUT_MS) {
+                    Log.i(TAG, "shade still visible, starting anyway after " + elapsed + " ms");
+                    startPanel("timeout after " + elapsed + " ms");
+                    return;
+                }
+                if (elapsed >= SECOND_BACK_AFTER_MS && backCount < 2) {
+                    backCount++;
+                    boolean collapsed = performGlobalAction(GLOBAL_ACTION_BACK);
+                    Log.i(TAG, "shade still visible after " + elapsed + " ms; GLOBAL_ACTION_BACK #"
+                            + backCount + " returned " + collapsed);
+                }
+                handler.postDelayed(this, POLL_INTERVAL_MS);
             } catch (Throwable t) {
-                Log.w(TAG, "starting Action Centre failed", t);
+                Log.w(TAG, "collapse poll failed", t);
+                startPanel("poll error");
             }
         }
     };
+
+    /** Diagnostic only: reports a shade window that is visible after our panel started. */
+    private final Runnable postStartCheck = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                if (collapseDisplay == null) {
+                    return;
+                }
+                if (findFullscreenSystemUiWindow(collapseDisplay, false) != null) {
+                    Log.w(TAG, "race: fullscreen SystemUI shade visible after Action Centre start");
+                } else {
+                    Log.d(TAG, "post-start check: no systemui shade visible");
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "post-start check failed", t);
+            }
+        }
+    };
+
+    private void startPanel(String reason) {
+        handler.removeCallbacks(collapsePoll);
+        try {
+            Intent intent = new Intent(ShadeBridgeService.this,
+                    ActionCentreActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            Log.i(TAG, "Action Centre started (" + reason + ")");
+            handler.removeCallbacks(postStartCheck);
+            handler.postDelayed(postStartCheck, POST_START_CHECK_MS);
+        } catch (Throwable t) {
+            Log.w(TAG, "starting Action Centre failed", t);
+        }
+    }
 
     @Override
     protected void onServiceConnected() {
@@ -111,20 +180,19 @@ public class ShadeBridgeService extends AccessibilityService {
     }
 
     private void handleSystemUiWindowState() {
+        long now = SystemClock.uptimeMillis();
+        if (lastTriggerUptime != 0 && now - lastTriggerUptime < THROTTLE_MS) {
+            Log.i(TAG, "skip: throttled (" + (now - lastTriggerUptime) + " ms < "
+                    + THROTTLE_MS + " ms)");
+            return;
+        }
         Rect display = displayBounds();
         if (display == null) {
             Log.w(TAG, "skip: display bounds unavailable");
             return;
         }
-        ShadeWindow shade = findFullscreenSystemUiWindow(display);
+        ShadeWindow shade = findFullscreenSystemUiWindow(display, true);
         if (shade == null) {
-            return;
-        }
-
-        long now = SystemClock.uptimeMillis();
-        if (lastTriggerUptime != 0 && now - lastTriggerUptime < THROTTLE_MS) {
-            Log.i(TAG, "skip: throttled (" + (now - lastTriggerUptime) + " ms < "
-                    + THROTTLE_MS + " ms) shade=" + shade.describe(display));
             return;
         }
         if (isKeyguardLocked()) {
@@ -143,12 +211,16 @@ public class ShadeBridgeService extends AccessibilityService {
         }
 
         lastTriggerUptime = now;
+        collapseDisplay = new Rect(display);
+        collapseStartedAt = now;
+        backCount = 1;
         Log.i(TAG, "shade detected: " + shade.describe(display)
                 + " last=" + lastForegroundPackage + "; collapsing with GLOBAL_ACTION_BACK");
         boolean collapsed = performGlobalAction(GLOBAL_ACTION_BACK);
-        Log.i(TAG, "GLOBAL_ACTION_BACK returned " + collapsed);
-        handler.removeCallbacks(startPanel);
-        handler.postDelayed(startPanel, PANEL_START_DELAY_MS);
+        Log.i(TAG, "GLOBAL_ACTION_BACK #1 returned " + collapsed);
+        handler.removeCallbacks(collapsePoll);
+        handler.removeCallbacks(postStartCheck);
+        handler.postDelayed(collapsePoll, POLL_INTERVAL_MS);
     }
 
     /**
@@ -156,15 +228,19 @@ public class ShadeBridgeService extends AccessibilityService {
      * type SYSTEM or APPLICATION covering at least 85 % of the display. Small
      * SystemUI windows (status bar, volume dialog, status icons) never qualify.
      */
-    private ShadeWindow findFullscreenSystemUiWindow(Rect display) {
+    private ShadeWindow findFullscreenSystemUiWindow(Rect display, boolean verbose) {
         try {
             List<AccessibilityWindowInfo> windows = getWindows();
             if (windows == null || windows.isEmpty()) {
-                Log.d(TAG, "skip: no interactive windows reported");
+                if (verbose) {
+                    Log.d(TAG, "skip: no interactive windows reported");
+                }
                 return null;
             }
-            Log.d(TAG, "systemui window-state; inspecting " + windows.size()
-                    + " window(s), display=" + display.width() + "x" + display.height());
+            if (verbose) {
+                Log.d(TAG, "systemui window-state; inspecting " + windows.size()
+                        + " window(s), display=" + display.width() + "x" + display.height());
+            }
             long displayArea = (long) display.width() * display.height();
             if (displayArea <= 0) {
                 return null;
@@ -194,21 +270,27 @@ public class ShadeBridgeService extends AccessibilityService {
                 }
                 long area = (long) bounds.width() * bounds.height();
                 float fraction = (float) area / (float) displayArea;
-                Log.d(TAG, "systemui window type=" + type + " bounds="
-                        + bounds.toShortString() + " " + Math.round(fraction * 100)
-                        + "% of display title=" + asString(title));
+                if (verbose) {
+                    Log.d(TAG, "systemui window type=" + type + " bounds="
+                            + bounds.toShortString() + " " + Math.round(fraction * 100)
+                            + "% of display title=" + asString(title));
+                }
                 if (fraction >= SHADE_MIN_SCREEN_FRACTION && area > bestArea) {
                     best = new ShadeWindow(type, bounds, fraction);
                     bestArea = area;
                 }
             }
-            if (best == null) {
+            if (best == null && verbose) {
                 Log.d(TAG, "skip: no SystemUI window covers >= "
                         + Math.round(SHADE_MIN_SCREEN_FRACTION * 100) + "% of the display");
             }
             return best;
         } catch (Throwable t) {
-            Log.w(TAG, "window inspection failed", t);
+            if (verbose) {
+                Log.w(TAG, "window inspection failed", t);
+            } else {
+                Log.w(TAG, "window inspection failed during collapse poll", t);
+            }
             return null;
         }
     }
@@ -332,7 +414,8 @@ public class ShadeBridgeService extends AccessibilityService {
     @Override
     public void onInterrupt() {
         try {
-            handler.removeCallbacks(startPanel);
+            handler.removeCallbacks(collapsePoll);
+            handler.removeCallbacks(postStartCheck);
         } catch (Throwable ignored) {
         }
     }
@@ -340,7 +423,8 @@ public class ShadeBridgeService extends AccessibilityService {
     @Override
     public boolean onUnbind(Intent intent) {
         try {
-            handler.removeCallbacks(startPanel);
+            handler.removeCallbacks(collapsePoll);
+            handler.removeCallbacks(postStartCheck);
             Log.i(TAG, "service unbound");
         } catch (Throwable ignored) {
         }
@@ -350,7 +434,8 @@ public class ShadeBridgeService extends AccessibilityService {
     @Override
     public void onDestroy() {
         try {
-            handler.removeCallbacks(startPanel);
+            handler.removeCallbacks(collapsePoll);
+            handler.removeCallbacks(postStartCheck);
         } catch (Throwable ignored) {
         }
         super.onDestroy();

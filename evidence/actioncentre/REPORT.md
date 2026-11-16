@@ -10,7 +10,7 @@ Android 16, 720x1280 @ 320 dpi (360x640 dp) · Package: `org.ztmetro.actioncentr
 |---|---|
 | APK | `repo/evidence/actioncentre/ztmetro-actioncentre.apk` (build output: `repo/actioncentre/build/out/ztmetro-actioncentre.apk`) |
 | size | **300 525 bytes (293.5 KiB)** — limit 2 MiB |
-| sha256 | `ecf690478b7dc22e3936844f613489fcda0dc91d12f56e81589ce61699c6a778` |
+| sha256 | `54897ba7f050b3c5549447faab259ad8eb5f37f59ee02b3c9ec97fa29154f500` |
 | package / version | `org.ztmetro.actioncentre`, versionCode 1 / versionName 1.0 |
 | SDK | minSdk 29, targetSdk 36, compileSdk 36 |
 | signer | v3 signature, throwaway RSA-2048 key generated under `actioncentre/build/keystore/` (gitignored) |
@@ -219,11 +219,14 @@ the panel afterwards — `requestRebind` runs on start/resume.
    window as `android.widget.FrameLayout`, so the class-name filter was replaced by
    geometry: the SystemUI window covering ≥85 % of the display is treated as the shade,
    small status-bar windows are ignored, and non-SystemUI window-state events are used
-   only to remember the previous foreground package. A full-screen non-shade SystemUI
-   surface could pass the test; the window title is logged for diagnosis. The 100 ms
-   window and background activity start still need `adb logcat -s ShadeBridge:V`.
-   Expected flicker 100–300 ms; a single BACK could reach the underlying app if the shade
-   is already gone. See [`SHADE-BRIDGE.md`](SHADE-BRIDGE.md) §4–6.
+   only to remember the previous foreground package. The first device run then showed the
+   panel starting while the shade was still opening, so the fixed 100 ms delay was
+   replaced by a poll: after BACK #1 the service checks every 50 ms, sends BACK #2 at
+   ~200 ms if the full-screen shade is still there (max two BACKs), and starts the panel
+   only when that window is gone or at the 600 ms cap, then probes once for a race. A
+   full-screen non-shade SystemUI surface could pass the geometry test; the window title
+   is logged for diagnosis. This sequencing still needs device confirmation with
+   `adb logcat -s ShadeBridge:V`. See [`SHADE-BRIDGE.md`](SHADE-BRIDGE.md) §4–6.
 10. **Gesture row is a new visual element** under the WP8.1 links row. It was not in
     the reference frame; if it reads as chrome at acceptance, hide it when the bridge
     is on (it already dims to 50 % white and changes label).

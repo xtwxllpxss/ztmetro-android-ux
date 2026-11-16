@@ -53,10 +53,11 @@ The panel offers `ВКЛЮЧИТЬ ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ` under
 `Настройки → Специальные возможности`; the user enables **ztMetro Action Centre**.
 Detection is by geometry, not class name: the SystemUI window covering ≥85 % of the
 display is the shade (the device reports it as `android.widget.FrameLayout`); the small
-status-bar window is ignored. The service then sends BACK and starts this panel 100 ms
-later. With the service off nothing changes in the shade path. See
+status-bar window is ignored. After BACK the service polls until that window is gone
+(second BACK at ~200 ms if needed, 600 ms cap) and only then starts this panel. With the
+service off nothing changes in the shade path. See
 `../evidence/actioncentre/SHADE-BRIDGE.md` for the exact filter, logcat lines, the
-expected 100–300 ms flicker and the rollback.
+expected collapse wait and the rollback.
 
 ## Honest capability boundary
 
