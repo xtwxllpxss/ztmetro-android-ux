@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Accessibility configuration for ShadeBridgeService.
+
+  Window-state events only, and only from SystemUI: the service must not see
+  other apps' windows. flagRetrieveInteractiveWindows is needed to tell whether
+  our own panel is focused; flagReportViewIds is requested per spec (no view
+  ids are read). canRetrieveWindowContent is required by getWindows().getRoot()
+  for that focus check.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows|flagReportViewIds"
+    android:canRetrieveWindowContent="true"
+    android:description="@string/shade_bridge_description"
+    android:notificationTimeout="100"
+    android:packageNames="com.android.systemui" />

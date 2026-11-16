@@ -1,11 +1,12 @@
 apk:        actioncentre/build/out/ztmetro-actioncentre.apk
 evidence:   evidence/actioncentre/ztmetro-actioncentre.apk
-size:       296359 bytes
-sha256:     2466ddbe8601528432b3353725069f5c126b385dac8ff4b9dcb6d3b5a54dd673
+size:       300525 bytes
+sha256:     a21e4ab0750660f93fee8ea7582682f540f24f5d4478d3e6f2bd948467f952bf
 package:    org.ztmetro.actioncentre
 version:    1 (1.0)
 min/target: 29 / 36
 build:      plain javac + aapt2 + d8 + apksigner (no Gradle, no AndroidX)
+bridge:     ShadeBridgeService (res/xml/shade_bridge.xml), BIND_ACCESSIBILITY_SERVICE, no new permissions
 fonts:      Open Sans Light/Regular/SemiBold from repo/fonts (OFL, bundled)
 built on:   Linux 7.0.0-38-generic x86_64
 jdk:        openjdk version "17.0.21" 2026-10-20

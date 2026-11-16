@@ -201,7 +201,7 @@
 
 
     <!-- type.header.gap -->
-    <dimen name="metro_header_gap">10dp</dimen>
+    <dimen name="metro_header_gap">29dp</dimen>
     <!-- color.chrome.scrim_alpha -->
     <fraction name="metro_scrim_alpha">72%</fraction>
 

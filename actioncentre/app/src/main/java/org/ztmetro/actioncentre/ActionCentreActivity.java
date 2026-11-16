@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -55,6 +56,7 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
     private QuickGrid grid;
     private ScrollView scroll;
     private LinearLayout notificationList;
+    private TextView gestureLink;
     private CameraManager cameraManager;
     private CameraManager.TorchCallback torchCallback;
     private boolean torchCallbackRegistered;
@@ -106,6 +108,7 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
         super.onResume();
         hideSystemBars();
         refreshTiles();
+        refreshGestureRow();
         ActionCentreListener.ensureRebind(this);
     }
 
@@ -214,6 +217,12 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
         content.addView(buildLinksRow(), new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, U.dp(this, 36)));
 
+        // One tap to the system Accessibility page where the shade bridge is
+        // switched on. With the service off this row is the only change and the
+        // stock shade keeps working untouched.
+        content.addView(buildGestureRow(), new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, U.dp(this, 36)));
+
         notificationList = new LinearLayout(this);
         notificationList.setOrientation(LinearLayout.VERTICAL);
         notificationList.setPadding(0, 0, 0, U.dp(this, 8));
@@ -319,6 +328,62 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
         return row;
+    }
+
+    /**
+     * One-tap entry to Settings > Accessibility, where the user switches on
+     * "ztMetro Action Centre". No permission is requested here; opening the
+     * page is all a non-privileged app can do.
+     */
+    private View buildGestureRow() {
+        gestureLink = new TextView(this);
+        gestureLink.setTextSize(10);
+        gestureLink.setTypeface(U.semibold(this));
+        gestureLink.setLetterSpacing(0.08f);
+        gestureLink.setGravity(Gravity.CENTER_VERTICAL);
+        gestureLink.setPadding(U.dp(this, 12), 0, U.dp(this, 12), 0);
+        gestureLink.setSingleLine(true);
+        gestureLink.setEllipsize(TextUtils.TruncateAt.END);
+        gestureLink.setClickable(true);
+        gestureLink.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openAccessibilitySettings();
+            }
+        });
+        refreshGestureRow();
+        return gestureLink;
+    }
+
+    /** Label follows the live switch state; refreshed on every resume. */
+    private void refreshGestureRow() {
+        if (gestureLink == null) {
+            return;
+        }
+        boolean enabled;
+        try {
+            enabled = ShadeBridgeService.isEnabled(this);
+        } catch (Throwable ignored) {
+            enabled = false;
+        }
+        gestureLink.setText(enabled ? R.string.gesture_enabled : R.string.gesture_enable);
+        gestureLink.setContentDescription(getString(
+                enabled ? R.string.gesture_enabled : R.string.gesture_enable)
+                + ". " + getString(R.string.gesture_enable_hint));
+        gestureLink.setTextColor(new ColorStateList(
+                new int[][]{new int[]{android.R.attr.state_pressed}, new int[]{}},
+                enabled ? new int[]{U.WHITE_70, U.WHITE_50}
+                        : new int[]{U.WHITE, U.ACCENT}));
+    }
+
+    private void openAccessibilitySettings() {
+        try {
+            startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+        } catch (ActivityNotFoundException e) {
+            startActivitySafely(new Intent(Settings.ACTION_SETTINGS));
+        } catch (Throwable ignored) {
+            startActivitySafely(new Intent(Settings.ACTION_SETTINGS));
+        }
     }
 
     private TextView link(String text) {

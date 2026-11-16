@@ -9,32 +9,40 @@ Android 16, 720x1280 @ 320 dpi (360x640 dp) · Package: `org.ztmetro.actioncentr
 | field | value |
 |---|---|
 | APK | `repo/evidence/actioncentre/ztmetro-actioncentre.apk` (build output: `repo/actioncentre/build/out/ztmetro-actioncentre.apk`) |
-| size | **296 359 bytes (289.4 KiB)** — limit 2 MiB |
-| sha256 | `2466ddbe8601528432b3353725069f5c126b385dac8ff4b9dcb6d3b5a54dd673` |
+| size | **300 525 bytes (293.5 KiB)** — limit 2 MiB |
+| sha256 | `a21e4ab0750660f93fee8ea7582682f540f24f5d4478d3e6f2bd948467f952bf` |
 | package / version | `org.ztmetro.actioncentre`, versionCode 1 / versionName 1.0 |
 | SDK | minSdk 29, targetSdk 36, compileSdk 36 |
 | signer | v3 signature, throwaway RSA-2048 key generated under `actioncentre/build/keystore/` (gitignored) |
-| build | `repo/scripts/build-actioncentre.sh`: rsync to `hermes-ubuntu:~/ztux/actioncentre`, then plain `aapt2` + `javac` (Java 8 bytecode, JDK 17) + `d8 --min-api 29` + `zipalign` + `apksigner`. No Gradle, no AndroidX, no network. |
+| build | `repo/scripts/build-actioncentre.sh`: rsync to `hermes-ubuntu` (this run: `~/ztux/actbridge`), then plain `aapt2` + `javac` (Java 8 bytecode, JDK 17) + `d8 --min-api 29` + `zipalign` + `apksigner`. No Gradle, no AndroidX, no network. |
 
-Static checks that passed (full log: `verify.txt`):
+Static checks that passed (full log: `verify.txt`, 42 PASS / 0 FAIL):
 
 - package name, application label `Центр действий`, launcher activity
   `org.ztmetro.actioncentre.ActionCentreActivity`, minSdk 29 / targetSdk 36;
 - listener service `.ActionCentreListener` with
   `android.permission.BIND_NOTIFICATION_LISTENER_SERVICE` and the
   `android.service.notification.NotificationListenerService` action;
+- **accessibility bridge** `.ShadeBridgeService` with
+  `android.permission.BIND_ACCESSIBILITY_SERVICE`, the
+  `android.accessibilityservice.AccessibilityService` action and the
+  `res/xml/shade_bridge.xml` config (window-state events only, SystemUI only,
+  `flagRetrieveInteractiveWindows|flagReportViewIds`); see
+  [`SHADE-BRIDGE.md`](SHADE-BRIDGE.md);
 - `.TileAlias` activity-alias present and exported;
 - permissions: `CAMERA`, `WRITE_SETTINGS`, `ACCESS_WIFI_STATE`,
   `ACCESS_NETWORK_STATE` only; **no** `BLUETOOTH_CONNECT`, no location, no
   `READ_PHONE_STATE`, no `SYSTEM_ALERT_WINDOW`;
-- **no `androidx`** string/classes in `classes.dex`; all six app classes present;
+- **no `androidx`** string/classes in `classes.dex`; all checked app classes present,
+  and `dexdump -f` additionally lists `.ShadeBridgeService` and `onAccessibilityEvent`;
 - `ac_slide_up` / `ac_slide_down` animation resources in the compiled table;
 - launcher activity is **not** `HOME`;
 - APK < 2 MiB; `apksigner verify` reports v3, one signer.
 
 Evidence files: `aapt2-badging.txt`, `aapt2-manifest.xmltree.txt`,
-`aapt2-resources.txt`, `apksigner-verify.txt`, `verify.txt`,
-`artifact-facts.txt`, `ztmetro-actioncentre.apk.sha256`.
+`aapt2-resources.txt`, `aapt2-xmltree-shade_bridge.txt`, `dexdump-classes.txt`,
+`apksigner-verify.txt`, `verify.txt`, `artifact-facts.txt`,
+`ztmetro-actioncentre.apk.sha256`, `SHADE-BRIDGE.md`.
 
 ## 2. Reference frame and its condition
 
@@ -63,6 +71,7 @@ implementation at 360 dp panel width (720 px @ 320 dpi).
 | tile label | small caps at lower left | 10 sp SemiBold caps, left x=7 dp, baseline h−8 dp, 70 % white (white on accent); falls back to 9 sp when it would overflow | `QuickTile.onDraw()` |
 | tiles | 8 actions | Wi-Fi, mobile data, Bluetooth, airplane, rotation lock, flashlight, brightness (label shows current %), all settings | `ActionCentreActivity.buildTiles()` |
 | links row | `CLEAR ALL` left, `ALL SETTINGS` right | 36 dp row; 12 sp SemiBold caps, 0.08 letter-spacing, 70 % white, pressed accent; `CLEAR ALL` has the × prefix from the frame | `buildLinksRow()` |
+| gesture link | — (new row, no WP8.1 equivalent) | 36 dp row under the links row; 10 sp SemiBold caps, 0.08 letter-spacing, ellipsized; accent when the bridge is off, 50 % white when on; tap opens Settings > Accessibility | `ActionCentreActivity.buildGestureRow()` |
 | notifications | flat rows on black, light type, app grouping | rows: 12/9/4/9 dp padding; sender 13 sp Regular white + time 11 sp 50 %; title 13 sp Light white; body 12 sp Light 70 %, 2 lines; app label 10 sp SemiBold accent caps above each group | `NotificationRowView.java`, `addAppLabel()` |
 | dismiss | per-row close / swipe | per-row `×` 20 sp; horizontal swipe reveals and cancels past 64 dp; both call `cancelNotification(key)` | `NotificationRowView.onTouchEvent()` |
 | empty state | `No notifications` in light type | **`Нет уведомлений`**, 17 sp Open Sans Light, 70 % white, 16 dp left, 22 dp top; second 11 sp line only when access is missing/connecting | `addEmptyState()` |
@@ -98,8 +107,24 @@ system service the user must enable; the app cannot enable it itself.
 # 1. install (host path; adjust if you copy the APK elsewhere)
 adb install -r repo/evidence/actioncentre/ztmetro-actioncentre.apk
 
-# 2. notification-listener access (Android 11+; the clean way)
-adb shell cmd notification allow_listener \
+# 1b. shade bridge: preferred enable path is the UI, in the panel tap
+#     "ВКЛЮЧИТЬ ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ" ->
+#     Настройки -> Специальные возможности -> ztMetro Action Centre -> on.
+#     Android 13+ sideload guard: if the toggle is greyed out as "Restricted
+#     setting", allow it once in Настройки -> Приложения -> Центр действий ->
+#     ⋮ -> Разрешить ограниченные настройки, or:
+adb shell appops set org.ztmetro.actioncentre ACCESS_RESTRICTED_SETTINGS allow
+#     adb alternative (REPLACES the list; read it first and keep existing
+#     entries colon-separated):
+adb shell settings get secure enabled_accessibility_services
+adb shell settings put secure enabled_accessibility_services \
+  "org.ztmetro.actioncentre/org.ztmetro.actioncentre.ShadeBridgeService"
+adb shell settings put secure accessibility_enabled 1
+
+# 1c. watch the bridge (tag is exactly ShadeBridge)
+adb logcat -s ShadeBridge:V
+
+# 2. notification-listener access (Android 11+; the clean way)adb shell cmd notification allow_listener \
   org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreListener
 
 # 2b. fallback if the cmd is unavailable — never clobber other listeners:
@@ -123,10 +148,11 @@ adb shell am start -n org.ztmetro.actioncentre/.TileAlias
 
 # checks
 adb shell settings get secure enabled_notification_listeners
+adb shell settings get secure enabled_accessibility_services
 adb shell appops get org.ztmetro.actioncentre WRITE_SETTINGS
 adb shell dumpsys package org.ztmetro.actioncentre | grep -E 'versionName|granted=true'
 
-# undo
+# undo (shade bridge: switch it off in Settings > Accessibility first)
 adb shell cmd notification disallow_listener \
   org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreListener
 adb shell appops set org.ztmetro.actioncentre WRITE_SETTINGS default
@@ -145,11 +171,12 @@ the panel afterwards — `requestRebind` runs on start/resume.
   and airplane-mode writes are privileged or removed; reflection into hidden
   APIs is unstable and would still require system/root. The tiles open the
   matching system panel/page and show the state the platform exposes.
-- **Being the shade**: this is a task activity, not SystemUI. It cannot be
-  pulled down from the status bar over another app, it is not the lock-screen
-  shade, and the stock shade remains the fallback. A real pull-down hook needs
-  an LSPosed/SystemUI fork (level C/D in `design/components/action-centre.md`),
-  not this APK.
+- **Being the shade**: this is a task activity, not SystemUI. With the accessibility
+  bridge enabled the system shade gesture is converted into this panel (see
+  [`SHADE-BRIDGE.md`](SHADE-BRIDGE.md)), but the stock shade still paints for the
+  100–300 ms it takes to collapse it, it is not the lock-screen shade, and with the
+  bridge off the stock shade is the fallback. Zero-flicker needs a SystemUI hook
+  (level C/D in `design/components/action-centre.md`), not this APK.
 - **Self-granting the listener**: `BIND_NOTIFICATION_LISTENER_SERVICE` is held by
   the system; only the user (or adb/shell on a debuggable build) can enable it.
 - **Reading Bluetooth state reliably**: `BLUETOOTH_CONNECT` is dangerous and was
@@ -185,3 +212,12 @@ the panel afterwards — `requestRebind` runs on start/resume.
    rebuild re-signs with a new key (fine for sideload, not for Play updates).
 8. **No new tests** were added (per project rules); this report is build +
    static-manifest evidence, not a runtime acceptance.
+9. **Shade bridge is unproven on device.** The event filter is grounded in the live
+   SystemUI APK (`com.android.systemui.shade.NotificationShadeWindowView`), but the
+   actual event delivery, the 100 ms window and background activity start must be
+   confirmed with `adb logcat -s ShadeBridge:V`. Expected flicker 100–300 ms; a single
+   BACK could reach the underlying app if the shade is already gone. See
+   [`SHADE-BRIDGE.md`](SHADE-BRIDGE.md) §5–6.
+10. **Gesture row is a new visual element** under the WP8.1 links row. It was not in
+    the reference frame; if it reads as chrome at acceptance, hide it when the bridge
+    is on (it already dims to 50 % white and changes label).

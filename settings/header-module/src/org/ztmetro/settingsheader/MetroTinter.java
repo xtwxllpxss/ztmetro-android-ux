@@ -41,16 +41,8 @@ final class MetroTinter {
             applyWindowBackground(activity);
             final View root = activity.findViewById(android.R.id.content);
             if (root == null) return;
-            // Settings inflates its preference views after setContentView, so walk now and
-            // again shortly after layout, when the switches actually exist.
             walk(root, 0);
-            for (long delay : new long[]{200L, 600L, 1500L}) {
-                root.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            walk(root, 0);
-                        } catch (Throwable ignored) {
+        } catch (Throwable ignored) {
                             // cosmetic only
                         }
                     }

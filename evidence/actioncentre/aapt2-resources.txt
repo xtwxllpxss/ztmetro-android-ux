@@ -47,58 +47,68 @@ Package name=org.ztmetro.actioncentre id=7f
       () (file) res/drawable/ic_tile.xml type=XML
     resource 0x7f030009 drawable/ic_wifi
       () (file) res/drawable/ic_wifi.xml type=XML
-  type string id=04 entryCount=26
+  type string id=04 entryCount=31
     resource 0x7f040000 string/app_name
       () "Центр действий"
     resource 0x7f040001 string/close
       () "Закрыть"
     resource 0x7f040002 string/empty_notifications
       () "Нет уведомлений"
-    resource 0x7f040003 string/link_all_settings
+    resource 0x7f040003 string/gesture_enable
+      () "ВКЛЮЧИТЬ ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ"
+    resource 0x7f040004 string/gesture_enable_hint
+      () "Специальные возможности → ztMetro Action Centre"
+    resource 0x7f040005 string/gesture_enabled
+      () "ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ ВКЛЮЧЁН"
+    resource 0x7f040006 string/link_all_settings
       () "ALL SETTINGS"
-    resource 0x7f040004 string/link_clear_all
+    resource 0x7f040007 string/link_clear_all
       () "CLEAR ALL"
-    resource 0x7f040005 string/listener_connecting
+    resource 0x7f040008 string/listener_connecting
       () "Служба уведомлений подключается…"
-    resource 0x7f040006 string/listener_missing
+    resource 0x7f040009 string/listener_missing
       () "Доступ к уведомлениям не выдан"
-    resource 0x7f040007 string/listener_missing_action
+    resource 0x7f04000a string/listener_missing_action
       () "Нажмите, чтобы открыть настройки доступа"
-    resource 0x7f040008 string/listener_name
+    resource 0x7f04000b string/listener_name
       () "Центр действий: уведомления"
-    resource 0x7f040009 string/tile_airplane
+    resource 0x7f04000c string/shade_bridge_description
+      () "Заменяет системную шторку панелью Центра действий: при появлении шторки сворачивает её и открывает панель. Служба видит только окна системного интерфейса и нажимает «Назад»; данные не покидают устройство."
+    resource 0x7f04000d string/shade_bridge_name
+      () "ztMetro Action Centre"
+    resource 0x7f04000e string/tile_airplane
       () "АВИАРЕЖИМ"
-    resource 0x7f04000a string/tile_bluetooth
+    resource 0x7f04000f string/tile_bluetooth
       () "BLUETOOTH"
-    resource 0x7f04000b string/tile_brightness
+    resource 0x7f040010 string/tile_brightness
       () "ЯРКОСТЬ %1$d%%"
-    resource 0x7f04000c string/tile_brightness_plain
+    resource 0x7f040011 string/tile_brightness_plain
       () "ЯРКОСТЬ"
-    resource 0x7f04000d string/tile_data
+    resource 0x7f040012 string/tile_data
       () "МОБ. ДАННЫЕ"
-    resource 0x7f04000e string/tile_flashlight
+    resource 0x7f040013 string/tile_flashlight
       () "ФОНАРИК"
-    resource 0x7f04000f string/tile_name
+    resource 0x7f040014 string/tile_name
       () "Центр действий"
-    resource 0x7f040010 string/tile_rotation
+    resource 0x7f040015 string/tile_rotation
       () "АВТОПОВОРОТ"
-    resource 0x7f040011 string/tile_settings
+    resource 0x7f040016 string/tile_settings
       () "НАСТРОЙКИ"
-    resource 0x7f040012 string/tile_wifi
+    resource 0x7f040017 string/tile_wifi
       () "WI-FI"
-    resource 0x7f040013 string/toast_brightness
+    resource 0x7f040018 string/toast_brightness
       () "Яркость: %1$d%%"
-    resource 0x7f040014 string/toast_camera_busy
+    resource 0x7f040019 string/toast_camera_busy
       () "Фонарик занят камерой"
-    resource 0x7f040015 string/toast_camera_denied
+    resource 0x7f04001a string/toast_camera_denied
       () "Без разрешения камеры фонарик не включить"
-    resource 0x7f040016 string/toast_listener_missing
+    resource 0x7f04001b string/toast_listener_missing
       () "Нет доступа к уведомлениям: включите службу в настройках"
-    resource 0x7f040017 string/toast_no_flash
+    resource 0x7f04001c string/toast_no_flash
       () "Фонарик недоступен на этом устройстве"
-    resource 0x7f040018 string/toast_settings_missing
+    resource 0x7f04001d string/toast_settings_missing
       () "Системные настройки не найдены"
-    resource 0x7f040019 string/toast_write_settings
+    resource 0x7f04001e string/toast_write_settings
       () "Разрешите изменение системных настроек"
   type style id=05 entryCount=2
     resource 0x7f050000 style/Animation.ActionCentre
@@ -122,3 +132,6 @@ Package name=org.ztmetro.actioncentre id=7f
         0x010104e0=false
         0x0101056c=false
         0x01010586=1
+  type xml id=06 entryCount=1
+    resource 0x7f060000 xml/shade_bridge
+      () (file) res/xml/shade_bridge.xml type=XML

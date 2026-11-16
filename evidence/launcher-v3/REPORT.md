@@ -4,6 +4,13 @@
 device** (adb is owned by the lead). This is one APK with the same package and the
 **same v1/v2 signing key**, so the normal update path is `adb install -r`.
 
+**Rebuild 2026-11-16 (design-critique pass).** The app list now puts the icon
+column where `ztmetro.c` does: the 45 dp accent square starts at `LIST_LEFT`
+x = 80 dp (not the 16 dp page margin) with a 25 dp white glyph inside it, and the
+app name starts at 80 + 45 + 13 = 138 dp (`ztmetro.c:162-164, 4519-4525`). The
+section-head square moved to the same column. APK rebuilt from these sources; the
+sha256 above is the new artifact.
+
 The start page was corrected after the lead compared the v1/v2 chrome with the real
 ztmetro frame ([`refs/ztos-start.png`](../ux-compare/refs/ztos-start.png)) and the WP
 8.1 reference ([`cmp-start.png`](../ux-compare/cmp-start.png)): **Start has no page
@@ -19,7 +26,7 @@ those tokens unchanged.
 |---|---|
 | APK | [`ztmetro-start.apk`](ztmetro-start.apk) |
 | size | **57 622 bytes** (56.3 KiB) < 3 MiB |
-| sha256 | `00b7964e754ede48ed19ec2a22c7ec3fcea977305f05ac78c05c27209eb1ec1b` |
+| sha256 | `5f4b08b113ac8823938323815ee2292641687a5f4598a228aa651f0d1911ea3c` |
 | package | `org.ztmetro.start` (versionCode 3, versionName 3.0) |
 | min / target | 29 / **36** |
 | signing | v3, cert SHA-256 `5f05e8e4…6457831` — the v1/v2 key, so `-r` updates in place |
@@ -98,15 +105,22 @@ Static proof: [`aapt2-badging.txt`](aapt2-badging.txt),
   vertically (active letter the most) and the active letter is accent. A-Z letters are
   12 sp semibold.
 - Bottom strip: 56 dp, back arrow / `ZRN` / search magnifier, matching the ztmetro
-  app-list frame. Back returns to Start; search focuses the field.
+  app-list frame — **only when the device has an on-screen navigation bar**. On the
+  ugglite (`config_showNavigationBar=false`, capacitive keys) the strip is skipped and
+  the list gets the extra height. Back returns to Start; search focuses the field.
 
 ### Motion / pages
 
 `MetroPager` is the page host: Start and the app list are full pages; a change is a
 horizontal **slide + fade of the whole page** (300 ms arrival / 120 ms exit gap,
 decelerate), never a Material cross-fade. Vertical drags stay with the ScrollView /
-ListView; only a clear horizontal drag (touch slop, 1.4× vertical travel) becomes a
-page swipe. Predictive back is unchanged (app list → Start; back on Start is consumed).
+ListView except for one reserved gesture: a pull-down that starts in the **top 25 % of
+the page content** and travels **≥80 dp** opens
+`org.ztmetro.actioncentre/.ActionCentreActivity` (explicit component,
+`NEW_TASK | SINGLE_TOP`, `resolveActivity` guard; a missing/disabled Action Centre is
+a silent no-op). Horizontal wins when the drag is ambiguous, so the pivot swipe and
+the shade pull do not fight. Predictive back is unchanged (app list → Start; back on
+Start is consumed).
 
 ## What is inherited from v1/v2
 
@@ -146,7 +160,7 @@ No token number is hand-duplicated in Java; the v3 launcher extras are generated
 | build | `scripts/build-launcher.sh` exit 0 on hermes-ubuntu, JDK 17, SDK 36 |
 | badging | `org.ztmetro.start`, versionCode **3**, versionName **3.0**, label `ztmetro start`, HOME, notification-listener |
 | manifest | HOME/DEFAULT activity; listener service + `BIND_NOTIFICATION_LISTENER_SERVICE`; **0 `uses-permission`** |
-| dex | `classes.dex` 81 144 B; StartActivity, MetroTileView, MetroGridView, MetroPager, MetroCircleGlyphView, MetroSectionHeaderView, MetroListRowView, SystemGlyphs, TileArt, TileStore, listener all present; **0 androidx** |
+| dex | `classes.dex` 82 616 B; StartActivity, MetroTileView, MetroGridView, MetroPager, MetroCircleGlyphView, MetroSectionHeaderView, MetroListRowView, SystemGlyphs, TileArt, TileStore, listener all present; **0 androidx** |
 | resources | `metro_tile_gap` 7 dp, `metro_start_margin` 14 dp, `metro_v3_arrow` 48 dp, `metro_v3_icon_fraction` 44%, palette colours and `TextAppearance.Metro.SectionHeader` compiled |
 | size | **57 622 B** < 3 MiB |
 | signature | `apksigner verify` passes; cert `5f05e8e4…6457831`, same as v1/v2 |
@@ -207,8 +221,11 @@ first.
    left: `ZTMETRO` caps + 48 sp `applications`, circled search glyph + 1 dp accent
    underline, hollow accent squares with lowercase `a/b/c`, 56 dp rows with 45 dp
    accent square + readable glyph/brand mark + white name, right A–Z strip, bottom
-   back/`ZRN`/search strip. Drag the A–Z strip: letters stretch vertically and the
-   list jumps.
+   back/`ZRN`/search strip — on the ugglite this strip is correctly absent because
+   `config_showNavigationBar` is false; the system back key returns to Start. Pull down
+   from the top quarter (≥80 dp) to test the Action Centre launch; a missing
+   `org.ztmetro.actioncentre` must do nothing. Drag the A–Z strip: letters stretch
+   vertically and the list jumps.
 4. **Long-press sheet** (`tile-menu.png`). Hold a tile ≥450 ms: white square-cornered
    panel over the 72% scrim with `open`, resize choices (make small/medium/wide) and
    `unpin from start`; no app launch after release. Long-press an app-list row for
@@ -256,12 +273,16 @@ adb exec-out screencap -p > tile-menu.png
 8. **Start seed migration.** A v2 install keeps its pins; v3 tops the store up to 15
    tiles (four 1×1 + mediums) on first launch. That is a one-time data change, not a
    reset.
-9. **App-list header cost.** The 104 dp two-line header + search + 56 dp bottom strip
-   leaves ~350 dp of list on the 640 dp screen; at font scale 1.3 `applications` may
-   clip and should be checked.
-10. **Cache churn.** `TileArt` caps the glyph cache at 96; a 300-app list plus 15
+9. **App-list header cost.** The 104 dp two-line header + search leaves ~350 dp of
+   list on the 640 dp screen; with an on-screen nav bar the 56 dp ZRN strip removes
+   another row. At font scale 1.3 `applications` may clip and should be checked.
+10. **Action Centre target is external.** The pull-down launches an explicit
+    `org.ztmetro.actioncentre/.ActionCentreActivity`; if that APK is absent, renamed,
+    not exported or blocked by package visibility, the gesture is a silent no-op. The
+    manifest carries a `<package>` query for it so `resolveActivity` works on API 30+.
+11. **Cache churn.** `TileArt` caps the glyph cache at 96; a 300-app list plus 15
    tiles will evict and re-render icons while scrolling. Watch for first-scroll jank.
-11. **Key identity.** The evidence APK is installable over v1/v2 only because the v1/v2
+12. **Key identity.** The evidence APK is installable over v1/v2 only because the v1/v2
     keystore was reused. Rebuilding elsewhere creates a new key and requires uninstall.
 
 ## File map (v3)
@@ -269,16 +290,18 @@ adb exec-out screencap -p > tile-menu.png
 ```
 launcher/app/src/main/java/org/ztmetro/start/
   StartActivity.java          no-Start-header pages, Start arrow, app-list header,
-                              search, bottom strip, page slide, back, tile menus
-  MetroPager.java             horizontal page swipe host
+                              search, conditional bottom strip, Action Centre pull,
+                              page slide, back, tile menus
+  MetroPager.java             horizontal page swipe + top-quarter pull-down host
   MetroGridView.java          first-fit 6-unit grid, 1x1/2x2/4x2 packing
   MetroTileView.java          flat WP tile, white/colour/system/letter glyph, tilt,
                               long-press
   TileArt.java                monochrome -> system glyph -> colour brand -> letter,
                               ztmetro palette
   SystemGlyphs.java           white code-drawn Paths for the fixed system packages
-  MetroListRowView.java       56 dp row, 45 dp accent square + white/colour glyph
-  MetroSectionHeaderView.java hollow accent square + lowercase letter
+  MetroListRowView.java       56 dp row, 45 dp accent square at x 80 dp, 25 dp glyph,
+                              name at x 138 dp
+  MetroSectionHeaderView.java hollow accent square in the same 80 dp icon column
   MetroCircleGlyphView.java   48 dp circled arrow / search / plain back glyphs
   AppListView.java            sections, filtering, A-Z section map
   AlphabetIndexView.java      right-edge tap/drag strip with stretch

@@ -147,14 +147,16 @@ build_apk() {
 
 verify_apk() {
     say "static verification"
-    local badging xmltree resources size sha failed=0
+    local badging xmltree resources shade_xml size sha failed=0
     badging=$("$BT/aapt2" dump badging "$APK")
     xmltree=$("$BT/aapt2" dump xmltree --file AndroidManifest.xml "$APK")
     resources=$("$BT/aapt2" dump resources "$APK")
+    shade_xml=$("$BT/aapt2" dump xmltree --file res/xml/shade_bridge.xml "$APK" 2>/dev/null || true)
 
     printf '%s\n' "$badging" > "$EVID/aapt2-badging.txt"
     printf '%s\n' "$xmltree" > "$EVID/aapt2-manifest.xmltree.txt"
     printf '%s\n' "$resources" > "$EVID/aapt2-resources.txt"
+    printf '%s\n' "$shade_xml" > "$EVID/aapt2-xmltree-shade_bridge.txt"
     "$BT/apksigner" verify --min-sdk-version "$MIN_API" --verbose --print-certs \
         "$APK" > "$EVID/apksigner-verify.txt" 2>&1 || failed=1
 
@@ -162,6 +164,14 @@ verify_apk() {
     : > "$CHECKS"
     check() { # description haystack needle
         if printf '%s\n' "$2" | grep -qF -- "$3"; then
+            printf 'PASS  %s\n' "$1" >> "$CHECKS"
+        else
+            printf 'FAIL  %s\n' "$1" >> "$CHECKS"
+            failed=1
+        fi
+    }
+    check_re() { # description haystack extended-regex
+        if printf '%s\n' "$2" | grep -qE -- "$3"; then
             printf 'PASS  %s\n' "$1" >> "$CHECKS"
         else
             printf 'FAIL  %s\n' "$1" >> "$CHECKS"
@@ -180,11 +190,41 @@ verify_apk() {
     check "listener service registered" "$xmltree" ".ActionCentreListener"
     check "listener intent action" "$xmltree" \
         "android.service.notification.NotificationListenerService"
+    check "shade bridge service registered" "$xmltree" ".ShadeBridgeService"
+    check "shade bridge bind permission" "$xmltree" \
+        "android.permission.BIND_ACCESSIBILITY_SERVICE"
+    check "shade bridge intent action" "$xmltree" \
+        "android.accessibilityservice.AccessibilityService"
+    check "shade bridge config meta-data" "$xmltree" \
+        "android.accessibilityservice"
+    check "shade bridge config resource in table" "$resources" "xml/shade_bridge"
+    check "gesture settings row strings" "$resources" "gesture_enable"
     check "tile activity alias" "$xmltree" ".TileAlias"
     check "CAMERA permission" "$xmltree" "android.permission.CAMERA"
     check "WRITE_SETTINGS appop permission" "$xmltree" "android.permission.WRITE_SETTINGS"
     check "slide-up animation resource" "$resources" "ac_slide_up"
     check "slide-down animation resource" "$resources" "ac_slide_down"
+
+    # The accessibility config is binary XML; aapt2 prints packed flag values.
+    # typeWindowStateChanged = 0x20, feedbackGeneric = 0x10,
+    # flagDefault|flagReportViewIds|flagRetrieveInteractiveWindows = 0x51.
+    [ -n "$shade_xml" ] || { printf 'FAIL  accessibility config XML readable\n' >> "$CHECKS"; failed=1; }
+    check "accessibility config packaged" "$(unzip -l "$APK")" \
+        "res/xml/shade_bridge.xml"
+    check_re "accessibility config: TYPE_WINDOW_STATE_CHANGED only" "$shade_xml" \
+        "accessibilityEventTypes[^=]*=0x0*20([[:space:]]|$)"
+    check_re "accessibility config: generic feedback" "$shade_xml" \
+        "accessibilityFeedbackType[^=]*=0x0*10([[:space:]]|$)"
+    check_re "accessibility config: retrieve windows + report view ids" "$shade_xml" \
+        "accessibilityFlags[^=]*=0x0*51([[:space:]]|$)"
+    check_re "accessibility config: can retrieve window content" "$shade_xml" \
+        "canRetrieveWindowContent[^=]*=true([[:space:]]|$)"
+    check "accessibility config: SystemUI package filter" "$shade_xml" \
+        '"com.android.systemui"'
+    check "accessibility config: human description reference" "$shade_xml" \
+        "description(0x01010020)=@0x7f"
+    check "accessibility description string" "$resources" "shade_bridge_description"
+
     if printf '%s\n' "$xmltree" | grep -qF "android.intent.category.HOME"; then
         printf 'FAIL  launcher is not HOME\n' >> "$CHECKS"
         failed=1
@@ -199,6 +239,20 @@ verify_apk() {
     fi
 
     unzip -p "$APK" classes.dex > "$BUILD/verify.dex"
+    "$BT/dexdump" -f "$BUILD/verify.dex" > "$EVID/dexdump-classes.txt" 2>&1 || true
+    if grep -qF "Lorg/ztmetro/actioncentre/ShadeBridgeService;" \
+            "$EVID/dexdump-classes.txt"; then
+        printf 'PASS  dexdump lists ShadeBridgeService\n' >> "$CHECKS"
+    else
+        printf 'FAIL  dexdump lists ShadeBridgeService\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -qF "onAccessibilityEvent" "$EVID/dexdump-classes.txt"; then
+        printf 'PASS  dexdump lists onAccessibilityEvent callback\n' >> "$CHECKS"
+    else
+        printf 'FAIL  dexdump lists onAccessibilityEvent callback\n' >> "$CHECKS"
+        failed=1
+    fi
     if grep -aq "androidx" "$BUILD/verify.dex"; then
         printf 'FAIL  AndroidX classes found in dex\n' >> "$CHECKS"
         failed=1
@@ -206,8 +260,8 @@ verify_apk() {
         printf 'PASS  no androidx in classes.dex\n' >> "$CHECKS"
     fi
     local symbol
-    for symbol in ActionCentreActivity ActionCentreListener QuickTile QuickGrid \
-                  NotificationRowView StatusStripView; do
+    for symbol in ActionCentreActivity ActionCentreListener ShadeBridgeService \
+                  QuickTile QuickGrid NotificationRowView StatusStripView; do
         if grep -aq "$symbol" "$BUILD/verify.dex"; then
             printf 'PASS  class %s in dex\n' "$symbol" >> "$CHECKS"
         else
@@ -248,6 +302,7 @@ verify_apk() {
         printf 'version:    1 (1.0)\n'
         printf 'min/target: %s / 36\n' "$MIN_API"
         printf 'build:      plain javac + aapt2 + d8 + apksigner (no Gradle, no AndroidX)\n'
+        printf 'bridge:     ShadeBridgeService (res/xml/shade_bridge.xml), BIND_ACCESSIBILITY_SERVICE, no new permissions\n'
         printf 'fonts:      Open Sans Light/Regular/SemiBold from repo/fonts (OFL, bundled)\n'
         printf 'built on:   %s\n' "$(uname -srm)"
         printf 'jdk:        %s\n' "$("$JDK/bin/java" -version 2>&1 | head -n 1)"
@@ -263,7 +318,8 @@ collect_local() {
     mkdir -p "$EVIDENCE"
     cp "$APK" "$EVIDENCE/$APK_NAME"
     cp "$EVID/aapt2-badging.txt" "$EVID/aapt2-manifest.xmltree.txt" \
-       "$EVID/aapt2-resources.txt" "$EVID/apksigner-verify.txt" \
+       "$EVID/aapt2-resources.txt" "$EVID/aapt2-xmltree-shade_bridge.txt" \
+       "$EVID/dexdump-classes.txt" "$EVID/apksigner-verify.txt" \
        "$EVID/artifact-facts.txt" "$EVID/verify.txt" \
        "$EVID/$APK_NAME.sha256" "$EVIDENCE/"
 }

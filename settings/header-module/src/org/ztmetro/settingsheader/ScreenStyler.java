@@ -31,7 +31,7 @@ final class ScreenStyler {
 
     private static final String TAG = "ztmetro-header";
     private static final int BLACK = Color.BLACK;
-    private static final long[] DELAYS_MS = {200L, 700L, 1600L};
+    private static final long[] DELAYS_MS = {150L, 600L};
 
     private static final WeakHashMap<Activity, Passes> PASSES = new WeakHashMap<>();
 
@@ -114,6 +114,7 @@ final class ScreenStyler {
         try {
             // Title/white + summary/grey, and on the dashboard a 20 sp title with no
             // summary line (docs/17 §6; ztmetro.c:6393).  Runs after the rows exist.
+            MetroTinter.apply(activity);
             RowType.apply(activity, homepage);
         } catch (Throwable t) {
             Log.w(TAG, "row-type pass failed (stock type kept)", t);

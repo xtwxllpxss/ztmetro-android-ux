@@ -17,6 +17,7 @@ final class MetroSectionHeaderView extends View {
     private final Paint stroke = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final TextPaint letterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private final int sidePad;
+    private final int squareLeft;
     private final int squarePx;
     private final int rowPx;
     private final int insetPx;
@@ -25,6 +26,8 @@ final class MetroSectionHeaderView extends View {
     MetroSectionHeaderView(Context context) {
         super(context);
         sidePad = MetroUi.dimen(context, R.dimen.metro_page_margin);
+        /* the letter square stands in the app list's icon column (LIST_LEFT 80dp) */
+        squareLeft = MetroUi.dimen(context, R.dimen.metro_list_left);
         squarePx = MetroUi.dimen(context, R.dimen.metro_list_icon);
         rowPx = MetroUi.dimen(context, R.dimen.metro_v3_list_row);
         insetPx = Math.max(1, Math.round(4f * context.getResources()
@@ -57,8 +60,8 @@ final class MetroSectionHeaderView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         float top = (getHeight() - squarePx) / 2f;
-        canvas.drawRect(sidePad, top, sidePad + squarePx, top + squarePx, stroke);
+        canvas.drawRect(squareLeft, top, squareLeft + squarePx, top + squarePx, stroke);
         float baseline = top + squarePx - insetPx;
-        canvas.drawText(letter, sidePad + insetPx, baseline, letterPaint);
+        canvas.drawText(letter, squareLeft + insetPx, baseline, letterPaint);
     }
 }

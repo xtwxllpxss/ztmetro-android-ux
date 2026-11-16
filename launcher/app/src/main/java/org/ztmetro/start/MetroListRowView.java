@@ -12,9 +12,10 @@ import android.view.View;
 
 /**
  * One app-list row, redrawn as a WP letterboard row: a flat 45dp accent square
- * with the white app silhouette, then the app name in 22sp Semilight. 56dp
- * tall on black, no divider, no Material background. Pressed is a flat #1F1F1F
- * fill, not a ripple.
+ * in the icon column at x = LIST_LEFT (80dp), a 25dp white glyph inside it, then
+ * the app name in 22sp Semilight at 80 + 45 + 13 = 138dp (ztmetro.c:162-164,
+ * 4519-4525). 56dp tall on black, no divider, no Material background. Pressed
+ * is a flat #1F1F1F fill, not a ripple.
  */
 final class MetroListRowView extends View {
 
@@ -30,6 +31,7 @@ final class MetroListRowView extends View {
     private final RectF glyphBox = new RectF();
 
     private final int sidePad;
+    private final int squareLeft;
     private final int iconPx;
     private final int labelGap;
     private final int rowPx;
@@ -49,11 +51,14 @@ final class MetroListRowView extends View {
         this.art = art;
         this.rightReserve = rightReserve;
         sidePad = MetroUi.dimen(context, R.dimen.metro_page_margin);
+        squareLeft = MetroUi.dimen(context, R.dimen.metro_list_left);
         iconPx = MetroUi.dimen(context, R.dimen.metro_list_icon);
         labelGap = MetroUi.dimen(context, R.dimen.metro_v3_list_gap);
         rowPx = MetroUi.dimen(context, R.dimen.metro_v3_list_row);
         accent = context.getResources().getColor(R.color.metro_accent, null);
-        glyphPx = Math.max(1, Math.round(iconPx * 0.64f));
+        /* draw_glyph(..., LIST_ICON / 2, LIST_ICON / 2, 25): the square is
+         * 45dp, the white glyph inside it 25dp (ztmetro.c:4523-4525). */
+        glyphPx = Math.max(1, Math.round(iconPx * 25f / 45f));
         pressPaint.setColor(context.getResources().getColor(
                 R.color.metro_surface_off, null));
 
@@ -82,9 +87,9 @@ final class MetroListRowView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        labelX = sidePad + iconPx + labelGap;
+        labelX = squareLeft + iconPx + labelGap;
         squareTop = Math.max(0, (h - iconPx) / 2);
-        float glyphLeft = sidePad + (iconPx - glyphPx) / 2f;
+        float glyphLeft = squareLeft + (iconPx - glyphPx) / 2f;
         float glyphTop = squareTop + (iconPx - glyphPx) / 2f;
         glyphBox.set(glyphLeft, glyphTop, glyphLeft + glyphPx, glyphTop + glyphPx);
         Paint.FontMetrics metrics = labelPaint.getFontMetrics();
@@ -127,7 +132,7 @@ final class MetroListRowView extends View {
         if (isPressed()) {
             canvas.drawRect(0f, 0f, getWidth(), getHeight(), pressPaint);
         }
-        canvas.drawRect(sidePad, squareTop, sidePad + iconPx, squareTop + iconPx,
+        canvas.drawRect(squareLeft, squareTop, squareLeft + iconPx, squareTop + iconPx,
                 squarePaint);
         if (glyph != null && glyph.type == TileArt.TYPE_WHITE) {
             canvas.drawBitmap(glyph.bitmap, null, glyphBox, glyphPaint);
@@ -140,7 +145,7 @@ final class MetroListRowView extends View {
             float centerY = squareTop + iconPx / 2f;
             float baseline = centerY - (metrics.ascent + metrics.descent) / 2f;
             canvas.drawText(TileArt.firstLetter(app.label),
-                    sidePad + iconPx / 2f, baseline, letterPaint);
+                    squareLeft + iconPx / 2f, baseline, letterPaint);
         }
         canvas.drawText(label, 0, label.length(), labelX, baseline, labelPaint);
     }

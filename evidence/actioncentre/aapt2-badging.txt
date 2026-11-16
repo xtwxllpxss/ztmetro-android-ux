@@ -18,6 +18,7 @@ feature-group: label=''
   uses-implied-feature: name='android.hardware.screen.portrait' reason='one or more activities have specified a portrait orientation'
   uses-feature: name='android.hardware.wifi'
   uses-implied-feature: name='android.hardware.wifi' reason='requested android.permission.ACCESS_WIFI_STATE permission'
+provides-component:'accessibility'
 provides-component:'notification-listener'
 main
 supports-screens: 'small' 'normal' 'large' 'xlarge'

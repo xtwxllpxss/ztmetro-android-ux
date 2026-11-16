@@ -50,6 +50,10 @@ public final class StartActivity extends Activity
     private static final int ACTION_OPEN = -2;
     private static final int ACTION_UNPIN = -1;
 
+    private static final String ACTION_CENTRE_PACKAGE = "org.ztmetro.actioncentre";
+    private static final String ACTION_CENTRE_CLASS =
+            "org.ztmetro.actioncentre.ActionCentreActivity";
+
     private final DecelerateInterpolator decelerate = new DecelerateInterpolator();
 
     private TileStore store;
@@ -131,6 +135,11 @@ public final class StartActivity extends Activity
                 if (page == PAGE_APPS && !search.hasFocus()) {
                     selectPage(PAGE_START, true);
                 }
+            }
+
+            @Override
+            public void onSwipeDown() {
+                openActionCentre();
             }
         });
 
@@ -329,45 +338,76 @@ public final class StartActivity extends Activity
         appsPage.addView(listFrame, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
-        LinearLayout bottom = new LinearLayout(this);
-        bottom.setOrientation(LinearLayout.HORIZONTAL);
-        bottom.setGravity(Gravity.CENTER_VERTICAL);
-        bottom.setPadding(sidePad, 0, sidePad, 0);
-        bottom.setBackgroundColor(Color.BLACK);
+        // The ugglite has hardware/capacitive keys (config_showNavigationBar
+        // is false), so the on-screen ZRN strip is omitted there; devices with
+        // an on-screen nav bar keep it.
+        if (hasOnScreenNavigationBar()) {
+            LinearLayout bottom = new LinearLayout(this);
+            bottom.setOrientation(LinearLayout.HORIZONTAL);
+            bottom.setGravity(Gravity.CENTER_VERTICAL);
+            bottom.setPadding(sidePad, 0, sidePad, 0);
+            bottom.setBackgroundColor(Color.BLACK);
 
-        MetroCircleGlyphView back = new MetroCircleGlyphView(
-                this, MetroCircleGlyphView.ARROW_LEFT, false);
-        back.setContentDescription(getString(R.string.cd_back));
-        back.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                selectPage(PAGE_START, true);
-            }
-        });
-        bottom.addView(back, new LinearLayout.LayoutParams(glyphPx, glyphPx));
+            MetroCircleGlyphView back = new MetroCircleGlyphView(
+                    this, MetroCircleGlyphView.ARROW_LEFT, false);
+            back.setContentDescription(getString(R.string.cd_back));
+            back.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    selectPage(PAGE_START, true);
+                }
+            });
+            bottom.addView(back, new LinearLayout.LayoutParams(glyphPx, glyphPx));
 
-        TextView brand = new TextView(this);
-        brand.setTextAppearance(R.style.TextAppearance_Metro_Subtitle);
-        brand.setTextColor(getResources().getColor(R.color.metro_text_primary, getTheme()));
-        brand.setText(R.string.brand_short);
-        brand.setGravity(Gravity.CENTER);
-        brand.setIncludeFontPadding(false);
-        bottom.addView(brand, new LinearLayout.LayoutParams(
-                0, ViewGroup.LayoutParams.MATCH_PARENT, 1f));
+            TextView brand = new TextView(this);
+            brand.setTextAppearance(R.style.TextAppearance_Metro_Subtitle);
+            brand.setTextColor(getResources().getColor(R.color.metro_text_primary, getTheme()));
+            brand.setText(R.string.brand_short);
+            brand.setGravity(Gravity.CENTER);
+            brand.setIncludeFontPadding(false);
+            bottom.addView(brand, new LinearLayout.LayoutParams(
+                    0, ViewGroup.LayoutParams.MATCH_PARENT, 1f));
 
-        MetroCircleGlyphView bottomSearch = new MetroCircleGlyphView(
-                this, MetroCircleGlyphView.SEARCH, false);
-        bottomSearch.setContentDescription(getString(R.string.cd_search));
-        bottomSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                focusSearch();
-            }
-        });
-        bottom.addView(bottomSearch, new LinearLayout.LayoutParams(glyphPx, glyphPx));
-        appsPage.addView(bottom, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                MetroUi.dimen(this, R.dimen.metro_v3_bottom_bar)));
+            MetroCircleGlyphView bottomSearch = new MetroCircleGlyphView(
+                    this, MetroCircleGlyphView.SEARCH, false);
+            bottomSearch.setContentDescription(getString(R.string.cd_search));
+            bottomSearch.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    focusSearch();
+                }
+            });
+            bottom.addView(bottomSearch, new LinearLayout.LayoutParams(glyphPx, glyphPx));
+            appsPage.addView(bottom, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    MetroUi.dimen(this, R.dimen.metro_v3_bottom_bar)));
+        }
+    }
+
+    private boolean hasOnScreenNavigationBar() {
+        int id = getResources().getIdentifier("config_showNavigationBar", "bool", "android");
+        return id == 0 || getResources().getBoolean(id);
+    }
+
+    /**
+     * WP pull-down shade gesture. It launches the standalone Metro Action
+     * Centre APK if it is installed; a missing/disabled package is a silent
+     * no-op (no toast, no crash).
+     */
+    private void openActionCentre() {
+        Intent intent = new Intent();
+        intent.setComponent(new ComponentName(ACTION_CENTRE_PACKAGE, ACTION_CENTRE_CLASS));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        if (intent.resolveActivity(getPackageManager()) == null) {
+            return;
+        }
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException ignored) {
+            // Package disappeared between resolve and start.
+        } catch (SecurityException ignored) {
+            // Component is present but not exported for this launcher.
+        }
     }
 
     private void refreshData() {

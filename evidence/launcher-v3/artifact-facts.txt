@@ -1,6 +1,6 @@
 apk:      launcher/build/out/ztmetro-start.apk (evidence/launcher-v3/ztmetro-start.apk)
 size:     57622 bytes
-sha256:   00b7964e754ede48ed19ec2a22c7ec3fcea977305f05ac78c05c27209eb1ec1b
+sha256:   5f4b08b113ac8823938323815ee2292641687a5f4598a228aa651f0d1911ea3c
 package:  org.ztmetro.start
 version:  3 (3.0)
 min/target: 29 / 36

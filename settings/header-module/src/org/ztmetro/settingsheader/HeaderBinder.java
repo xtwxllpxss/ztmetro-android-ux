@@ -81,7 +81,6 @@ public final class HeaderBinder {
                     HeaderTitles.subtitle(activity, moduleResources, title));
             hideStockChrome(activity, homepage);
             applyContentOffsets(activity);
-            MetroTinter.apply(activity);
             ScreenStyler.apply(activity, homepage);
         } catch (Throwable t) {
             Log.w(TAG, "refresh failed (header left as-is)", t);

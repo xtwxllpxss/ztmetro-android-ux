@@ -37,6 +37,7 @@ Set `ACTIONCENTRE_REMOTE` to use another build host. On a Linux host that has
 | path | role |
 |---|---|
 | `ActionCentreActivity.java` | full-screen panel, tile wiring, settings intents, permission flows, slide transitions |
+| `ShadeBridgeService.java` | optional accessibility service: system shade → BACK → this panel (`res/xml/shade_bridge.xml` config) |
 | `QuickGrid.java` / `QuickTile.java` | 4-column square tile grid, custom flat drawing (no ripple, no elevation) |
 | `StatusStripView.java` | our 30 dp operator/battery/clock/date strip |
 | `NotificationRowView.java` | flat notification row, tap-to-open, swipe-left/X dismiss |
@@ -45,6 +46,15 @@ Set `ACTIONCENTRE_REMOTE` to use another build host. On a Linux host that has
 | `HandleView.java` | 16 dp accent bottom handle with 28x3 white grip |
 | `DeviceState.java` | best-effort read-only state probes |
 | `assets/fonts/` | Open Sans Light/Regular/SemiBold (OFL; licence bundled) |
+
+## Shade gesture (optional accessibility bridge)
+
+The panel offers `ВКЛЮЧИТЬ ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ` under the links row. It opens
+`Настройки → Специальные возможности`; the user enables **ztMetro Action Centre**.
+The service sees only SystemUI window-state events; when the shade appears it sends
+BACK and starts this panel 100 ms later. With the service off nothing changes in the
+shade path. See `../evidence/actioncentre/SHADE-BRIDGE.md` for the exact filter,
+logcat lines, the expected 100–300 ms flicker and the rollback.
 
 ## Honest capability boundary
 

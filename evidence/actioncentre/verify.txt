@@ -6,20 +6,37 @@ PASS  targetSdk 36
 PASS  notification listener bind permission
 PASS  listener service registered
 PASS  listener intent action
+PASS  shade bridge service registered
+PASS  shade bridge bind permission
+PASS  shade bridge intent action
+PASS  shade bridge config meta-data
+PASS  shade bridge config resource in table
+PASS  gesture settings row strings
 PASS  tile activity alias
 PASS  CAMERA permission
 PASS  WRITE_SETTINGS appop permission
 PASS  slide-up animation resource
 PASS  slide-down animation resource
+PASS  accessibility config packaged
+PASS  accessibility config: TYPE_WINDOW_STATE_CHANGED only
+PASS  accessibility config: generic feedback
+PASS  accessibility config: retrieve windows + report view ids
+PASS  accessibility config: can retrieve window content
+PASS  accessibility config: SystemUI package filter
+PASS  accessibility config: human description reference
+PASS  accessibility description string
 PASS  launcher is not HOME
 PASS  no BLUETOOTH_CONNECT (dangerous) requested
+PASS  dexdump lists ShadeBridgeService
+PASS  dexdump lists onAccessibilityEvent callback
 PASS  no androidx in classes.dex
 PASS  class ActionCentreActivity in dex
 PASS  class ActionCentreListener in dex
+PASS  class ShadeBridgeService in dex
 PASS  class QuickTile in dex
 PASS  class QuickGrid in dex
 PASS  class NotificationRowView in dex
 PASS  class StatusStripView in dex
 PASS  bundled Open Sans Light asset in APK
 PASS  classes.dex packaged
-PASS  APK smaller than 2 MB (296359 bytes)
+PASS  APK smaller than 2 MB (300525 bytes)
