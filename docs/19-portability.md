@@ -502,3 +502,39 @@ module is dead weight until the class names are updated.
 | `docs/18-coverage-and-build.md` | current build/install/verify commands and on-device status |
 | `docs/10b-overlay-and-hook-facts.md` | overlayable policy, shade facts, hook seam |
 | `design/systemui-resource-map.json` | SystemUI names + consumer lines at `797e4324…` |
+
+## Automated portability check (2026-11-16)
+
+`scripts/check-portability.sh` fails when the active sources fall back to this
+device or its screen. It scans `launcher/`, `actioncentre/`, `ime/`, `settings/`
+and `scripts/` (build outputs excluded) and reports:
+
+| rule | result |
+|---|---|
+| device-name literals in code (comments allowed) | **PASS** — only comment lines mention ugglite; the conductor's generated doc line is whitelisted |
+| `720`/`1280` screen literals in functional code | **PASS** |
+| raw `px` in layouts (dp/sp only) | **PASS** (0) |
+| design tokens present (`design/tokens/*`) | **PASS** |
+| scripts must not hardcode a serial or LAN IP | **PASS** |
+
+Two real hardcodes were found and removed in this pass:
+
+- `ShadeBridgeService` used `return 1280` as the last-resort display height;
+  now `Resources.getSystem().getDisplayMetrics().heightPixels`.
+- `LockOverlayController` used `new Rect(0, 0, 720, 1280)` as the last-resort
+  display bounds; now the same system metrics.
+
+Everything else is already ratio-based: Start is a six-unit grid driven by
+`design/ztmetro.tokens.json`, the Action Centre tiles are `85.75 x 57 dp`,
+the status strip is `28 dp`, the lock clock is `92 sp`, the strip gesture
+window is `40 %` of the display height. None of those need a resolution.
+
+Run it before publishing a build:
+
+```sh
+repo/scripts/check-portability.sh   # exit 0 = portable
+```
+
+The remaining device coupling is documented and intentional: the bottom bar is
+suppressed on devices with hardware keys (`config_showNavigationBar == false`),
+and the emulator/device transport lives only in the scripts that talk to adb.

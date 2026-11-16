@@ -462,8 +462,12 @@ public class ShadeBridgeService extends AccessibilityService {
         } catch (Throwable t) {
             Log.w(TOUCH_TAG, "reading display height failed", t);
         }
-        // Last resort: 40 % of 1280 px is 512 px; never leave the strip at 0.
-        return 1280;
+        // Last resort: the system display metrics (device independent, never 0).
+        try {
+            return android.content.res.Resources.getSystem().getDisplayMetrics().heightPixels;
+        } catch (Throwable ignored) {
+            return 1;
+        }
     }
 
     /**

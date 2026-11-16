@@ -1294,7 +1294,12 @@ final class LockOverlayController {
         } catch (Throwable t) {
             Log.w(TAG, "display bounds failed", t);
         }
-        return new Rect(0, 0, 720, 1280);
+        try {
+            DisplayMetrics system = android.content.res.Resources.getSystem().getDisplayMetrics();
+            return new Rect(0, 0, system.widthPixels, system.heightPixels);
+        } catch (Throwable ignored) {
+            return new Rect(0, 0, 1, 1);
+        }
     }
 
     private int stripHeightPx(Rect display) {
