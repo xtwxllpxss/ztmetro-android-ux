@@ -1,0 +1,19 @@
+#!/bin/bash
+# fake `ime`
+state=${FAKE_STATE:?FAKE_STATE unset}
+case "$1" in
+  list)
+    case " $* " in *" -s "*) : ;; esac
+    [ -f "$state/ime_installed" ] && cat "$state/ime_installed"
+    exit 0
+    ;;
+  enable)
+    echo "$2" >> "$state/ime_enabled"
+    exit 0
+    ;;
+  set)
+    echo "$2" > "$state/secure/default_input_method"
+    exit 0
+    ;;
+  *) exit 1 ;;
+esac

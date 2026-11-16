@@ -1,0 +1,30 @@
+2026-11-16 16:44:22 service: hook fired, waiting for sys.boot_completed
+2026-11-16 16:44:26 service: boot_completed=1 after 3s wait
+2026-11-16 16:44:26 service: overlay-service-ready after 0s
+2026-11-16 16:44:26 apply: start uid=0 pid=61582 boot_completed=1
+2026-11-16 16:44:26 apply: packages=6 visible
+2026-11-16 16:44:26 apply:   overlay enabled: org.ztmetro.overlay.framework
+2026-11-16 16:44:26 apply:   overlay enabled: org.ztos.overlay.framework.extra
+2026-11-16 16:44:26 apply:   overlay enabled: org.ztos.overlay.systemui
+2026-11-16 16:44:26 apply:   overlay enabled: org.ztos.overlay.settings
+2026-11-16 16:44:26 apply:   overlay enabled: org.ztos.overlay.status.framework
+2026-11-16 16:44:26 apply:   overlay enabled: org.ztos.overlay.status.systemui
+2026-11-16 16:44:26 apply:   overlay enabled: org.ztos.overlay.statusbaricons
+2026-11-16 16:44:26 apply:   overlay enabled: org.ztos.overlay.systemui.extra
+2026-11-16 16:44:26 apply:   overlay enabled: org.ztos.overlay.factory.org_lineageos_etar
+2026-11-16 16:44:26 apply:   overlay enabled: org.ztos.overlay.factory.ws_xsoh_etar
+2026-11-16 16:44:26 apply:   monet overlay disabled: com.android.systemui:accent
+2026-11-16 16:44:26 apply:   monet overlay disabled: com.android.systemui:dynamic
+2026-11-16 16:44:26 apply: overlays=10 enabled (10/10 handled)
+2026-11-16 16:44:26 apply: accessibility=2/2 enabled (was 0/2) services=org.ztmetro.actioncentre/.ShadeBridgeService:org.ztmetro.actioncentre/.StatusStripService
+2026-11-16 16:44:26 apply: a11y_enabled=1 (was 'unset')
+2026-11-16 16:44:26 apply:   allow_listener ok: org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreListener
+2026-11-16 16:44:26 apply:   allow_listener ok: org.ztmetro.start/org.ztmetro.start.StartNotificationListener
+2026-11-16 16:44:26 apply: listeners=2/2 enabled (changed)
+2026-11-16 16:44:26 apply: icon_blacklist=clock,battery,wifi,mobile,stacked_mobile,rotate,headset (was '')
+2026-11-16 16:44:26 apply: home=ok (org.ztmetro.start/.StartActivity, was 'No activity found')
+2026-11-16 16:44:26 apply: ime=org.ztmetro.ime/.ZtMetroIme (was 'com.android.inputmethod.latin/.LatinIME')
+2026-11-16 16:44:26 apply: appops=WRITE_SETTINGS,READ_PHONE_STATE,ACCESS_RESTRICTED_SETTINGS allow
+2026-11-16 16:44:29 apply: systemui=restarted (overlay changed)
+2026-11-16 16:44:29 apply: done changes=18 warnings=0
+2026-11-16 16:44:29 service: apply finished rc=0

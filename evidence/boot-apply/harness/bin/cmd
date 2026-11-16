@@ -1,0 +1,55 @@
+#!/bin/bash
+# fake `cmd`: the overlay / notification / package subcommands the applier uses
+state=${FAKE_STATE:?FAKE_STATE unset}
+ovl_known() { grep -qE "^\[[ x]\] +$1\$" "$state/overlays"; }
+ovl_set() { # $1 = pkg, $2 = "[x]"|"[ ]"
+  awk -v p="$1" -v m="$2" '
+    $0 ~ "^\\[[ x]\\] +" p "$" { print m " " p; next }
+    { print }
+  ' "$state/overlays" > "$state/overlays.new" && mv "$state/overlays.new" "$state/overlays"
+}
+
+case "$1" in
+  overlay)
+    op=$2
+    shift 2
+    case "$op" in
+      list) cat "$state/overlays"; exit 0 ;;
+      enable|disable)
+        pkg=""
+        while [ $# -gt 0 ]; do
+          case "$1" in --user) shift 2 ;; *) pkg=$1; shift ;; esac
+        done
+        ovl_known "$pkg" || { echo "Error: Unknown overlay $pkg" >&2; exit 1; }
+        if [ "$op" = "enable" ]; then ovl_set "$pkg" "[x]"; else ovl_set "$pkg" "[ ]"; fi
+        exit 0
+        ;;
+      set-priority) echo "$1 $2" >> "$state/priority"; exit 0 ;;
+      dump) echo "  mPriority=9999 (fake)"; exit 0 ;;
+      *) exit 1 ;;
+    esac
+    ;;
+  notification)
+    [ "$2" = "allow_listener" ] || exit 1
+    grep -qxF "$3" "$state/listeners" 2>/dev/null || echo "$3" >> "$state/listeners"
+    exit 0
+    ;;
+  package)
+    case "$2" in
+      set-home-activity)
+        echo "$3" > "$state/home"
+        grep -qx "${3%%/*}" "$state/packages" || echo "${3%%/*}" >> "$state/packages"
+        exit 0
+        ;;
+      resolve-activity)
+        if [ -s "$state/home" ]; then cat "$state/home"; else echo "No activity found"; exit 1; fi
+        ;;
+      query-services)
+        [ -f "$state/a11y_services" ] && cat "$state/a11y_services"
+        exit 0
+        ;;
+      *) exit 1 ;;
+    esac
+    ;;
+  *) exit 1 ;;
+esac

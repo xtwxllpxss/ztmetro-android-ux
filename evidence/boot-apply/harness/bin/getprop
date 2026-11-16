@@ -1,0 +1,11 @@
+#!/bin/bash
+# fake `getprop`: sys.boot_completed comes from the harness state file (default 1)
+if [ "${1:-}" = "sys.boot_completed" ]; then
+  if [ -n "${FAKE_STATE:-}" ] && [ -f "$FAKE_STATE/boot_completed" ]; then
+    cat "$FAKE_STATE/boot_completed"
+  else
+    echo 1
+  fi
+  exit 0
+fi
+exit 0

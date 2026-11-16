@@ -1,0 +1,24 @@
+PASS  run1-post-reinstall.log: apply: accessibility=2/2 enabled (was 0/2)
+PASS  run1-post-reinstall.log: apply: a11y_enabled=1
+PASS  run1-post-reinstall.log: apply: listeners=2/2 enabled (changed)
+PASS  run1-post-reinstall.log: apply: icon_blacklist=clock,battery,wifi,mobile,stacked_mobile,rotate,headset
+PASS  run1-post-reinstall.log: apply: home=ok (org.ztmetro.start/.StartActivity
+PASS  run1-post-reinstall.log: apply: ime=org.ztmetro.ime/.ZtMetroIme
+PASS  run1-post-reinstall.log: apply: appops=WRITE_SETTINGS,READ_PHONE_STATE,ACCESS_RESTRICTED_SETTINGS allow
+PASS  run1-post-reinstall.log: apply: overlays=10 enabled
+PASS  run1-post-reinstall.log: apply: done changes=
+PASS  run2-after-wipe.log: apply: accessibility=2/2 enabled (was 0/2)
+PASS  run2-after-wipe.log: apply: overlays=10 enabled
+PASS  run3-noop.log: apply: done changes=0 warnings=0
+PASS  run3-noop.log: apply: accessibility=2/2 enabled (unchanged)
+PASS  run3-noop.log: apply: systemui=left running (no overlay change)
+PASS  run4-new-service.log: apply: accessibility=3/3 enabled
+PASS  service-sh.log: service: boot_completed=1 after
+PASS  service-sh.log: apply: overlays=10 enabled
+PASS  service-sh.log: apply: accessibility=2/2 enabled (was 0/2)
+PASS  service-sh.log: service: apply finished rc=0
+PASS  service.sh ran the applier after the boot wait
+PASS  run1-post-reinstall.log: no 'WARN'
+PASS  all log lines timestamped
+PASS  run3 wrote nothing
+TOTAL PASS=23 FAIL=0

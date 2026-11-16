@@ -1,0 +1,33 @@
+== state-after-run4
+-- secure settings:
+   enabled_accessibility_services=org.ztmetro.actioncentre/.ShadeBridgeService:org.ztmetro.actioncentre/.StatusStripService:org.ztmetro.actioncentre/.ThirdService
+   accessibility_enabled=1
+   enabled_notification_listeners=org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreListener:org.ztmetro.start/org.ztmetro.start.StartNotificationListener
+   icon_blacklist=clock,battery,wifi,mobile,stacked_mobile,rotate,headset
+   default_input_method=org.ztmetro.ime/.ZtMetroIme
+-- home: org.ztmetro.start/.StartActivity
+-- enabled zt overlays (10 total):
+   [x] org.ztmetro.overlay.framework
+   [x] org.ztos.overlay.framework.extra
+   [x] org.ztos.overlay.systemui
+   [x] org.ztos.overlay.settings
+   [x] org.ztos.overlay.status.framework
+   [x] org.ztos.overlay.status.systemui
+   [x] org.ztos.overlay.statusbaricons
+   [x] org.ztos.overlay.systemui.extra
+   [x] org.ztos.overlay.factory.org_lineageos_etar
+   [x] org.ztos.overlay.factory.ws_xsoh_etar
+-- notification listeners:
+   org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreListener
+   org.ztmetro.start/org.ztmetro.start.StartNotificationListener
+-- appops:
+   org.ztmetro.actioncentre WRITE_SETTINGS allow
+   org.ztmetro.actioncentre READ_PHONE_STATE allow
+   org.ztmetro.actioncentre ACCESS_RESTRICTED_SETTINGS allow
+   org.ztmetro.actioncentre WRITE_SETTINGS allow
+   org.ztmetro.actioncentre READ_PHONE_STATE allow
+   org.ztmetro.actioncentre ACCESS_RESTRICTED_SETTINGS allow
+   org.ztmetro.actioncentre WRITE_SETTINGS allow
+   org.ztmetro.actioncentre READ_PHONE_STATE allow
+   org.ztmetro.actioncentre ACCESS_RESTRICTED_SETTINGS allow
+-- systemui kills: 1

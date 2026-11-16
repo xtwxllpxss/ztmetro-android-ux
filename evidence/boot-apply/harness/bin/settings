@@ -1,0 +1,18 @@
+#!/bin/bash
+# fake `settings`: get/put/delete secure KEY [VALUE]
+state=${FAKE_STATE:?FAKE_STATE unset}
+args=()
+skip=0
+for a in "$@"; do
+  if [ "$skip" = 1 ]; then skip=0; continue; fi
+  case "$a" in --user) skip=1 ;; *) args+=("$a") ;; esac
+done
+op=${args[0]:-} key=${args[2]:-} val=${args[3]:-}
+dir=$state/secure
+mkdir -p "$dir"
+case "$op" in
+  get) if [ -f "$dir/$key" ]; then cat "$dir/$key"; else echo null; fi ;;
+  put) printf '%s' "$val" > "$dir/$key" ;;
+  delete) rm -f "$dir/$key" ;;
+  *) echo "usage: settings get|put|delete" >&2; exit 1 ;;
+esac

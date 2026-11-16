@@ -1,0 +1,14 @@
+2026-11-16 16:44:22 apply: start uid=0 pid=60842 boot_completed=1
+2026-11-16 16:44:22 apply: packages=6 visible
+2026-11-16 16:44:22 apply: overlays=10 enabled (10/10 handled)
+2026-11-16 16:44:22 apply: accessibility=2/2 enabled (was 0/2) services=org.ztmetro.actioncentre/.ShadeBridgeService:org.ztmetro.actioncentre/.StatusStripService
+2026-11-16 16:44:22 apply: a11y_enabled=1 (was 'unset')
+2026-11-16 16:44:22 apply:   allow_listener ok: org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreListener
+2026-11-16 16:44:22 apply:   allow_listener ok: org.ztmetro.start/org.ztmetro.start.StartNotificationListener
+2026-11-16 16:44:22 apply: listeners=2/2 enabled (changed)
+2026-11-16 16:44:22 apply: icon_blacklist=clock,battery,wifi,mobile,stacked_mobile,rotate,headset (was '')
+2026-11-16 16:44:22 apply: home=ok (org.ztmetro.start/.StartActivity, was 'No activity found')
+2026-11-16 16:44:22 apply: ime=org.ztmetro.ime/.ZtMetroIme (was 'com.android.inputmethod.latin/.LatinIME')
+2026-11-16 16:44:22 apply: appops=WRITE_SETTINGS,READ_PHONE_STATE,ACCESS_RESTRICTED_SETTINGS allow
+2026-11-16 16:44:22 apply: systemui=left running (no overlay change)
+2026-11-16 16:44:22 apply: done changes=6 warnings=0

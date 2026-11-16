@@ -1,0 +1,40 @@
+# module zip — 2026-11-16 16:44:37 +0300
+
+zip:      artifacts/ztmetro-overlays-1.0.0.zip
+size:     82989 bytes
+sha256:   2728e18d01dd1cd0e7df62e8e93b2674a7fcb5832933c6bf78a1e5f557f28ea5
+
+## entries (unzip -Z1)
+  module.prop
+  service.sh
+  system/
+  system/product/
+  system/product/overlay/
+  system/product/overlay/ztmetro-ws_xsoh_etar-rro.apk
+  system/product/overlay/ztmetro-statusbar-icons-rro.apk
+  system/product/overlay/ztmetro-status-systemui-rro.apk
+  system/product/overlay/ztmetro-framework-extra-rro.apk
+  system/product/overlay/ztmetro-org_lineageos_etar-rro.apk
+  system/product/overlay/ztmetro-systemui-rro.apk
+  system/product/overlay/ztmetro-settings-rro.apk
+  system/product/overlay/ztmetro-systemui-extra-rro.apk
+  system/product/overlay/ZtMetroFramework.apk
+  system/product/overlay/ztmetro-status-framework-rro.apk
+  ztmetro-apply-settings.sh
+
+## shipped scripts: permissions and bytes inside the zip
+  -rwxr-xr-x  3.0 unx     2937 t- defN 26-Nov-16 16:44 service.sh
+  -rwxr-xr-x  3.0 unx    13663 t- defN 26-Nov-16 16:44 ztmetro-apply-settings.sh
+
+## the shipped applier is byte-identical to scripts/ztmetro-apply-settings.sh
+  zip entry:    049f9a38fc83bd7ac70e3085cd3d6711d3802d26c727b016d1bd534953f0afd6
+  repo source:  049f9a38fc83bd7ac70e3085cd3d6711d3802d26c727b016d1bd534953f0afd6
+  service.sh zip: 61f4dc8bf80da90ace853a1d78ca3648a76ec2e99ae899fafe12d9650415dc96
+  service.sh src: 61f4dc8bf80da90ace853a1d78ca3648a76ec2e99ae899fafe12d9650415dc96
+
+## installs as
+  /data/adb/modules/ztmetro-overlays/service.sh
+  /data/adb/modules/ztmetro-overlays/ztmetro-apply-settings.sh
+
+## archive integrity
+  No errors detected in compressed data of artifacts/ztmetro-overlays-1.0.0.zip.

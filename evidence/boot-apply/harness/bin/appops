@@ -1,0 +1,5 @@
+#!/bin/bash
+state=${FAKE_STATE:?FAKE_STATE unset}
+[ "$1" = "set" ] || exit 1
+echo "$2 $3 $4" >> "$state/appops"
+exit 0

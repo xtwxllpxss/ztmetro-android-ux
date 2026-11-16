@@ -1,0 +1,17 @@
+#!/bin/bash
+# fake `pm` for the ztmetro boot-apply harness (host-only evidence)
+state=${FAKE_STATE:?FAKE_STATE unset}
+case "$1" in
+  list)
+    [ "${2:-}" = "packages" ] || exit 1
+    if [ -n "${3:-}" ]; then
+      grep -E "^package:$3" "$state/packages"
+    else
+      sed 's/^/package:/' "$state/packages"
+    fi
+    ;;
+  grant)
+    echo "$*" >> "$state/pm-grant"
+    ;;
+  *) exit 1 ;;
+esac

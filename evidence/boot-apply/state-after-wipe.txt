@@ -1,0 +1,22 @@
+== state-after-wipe
+-- secure settings:
+   enabled_accessibility_services=<unset>
+   accessibility_enabled=<unset>
+   enabled_notification_listeners=<unset>
+   icon_blacklist=<unset>
+   default_input_method=com.android.inputmethod.latin/.LatinIME
+-- home: <unset>
+-- enabled zt overlays (10 total):
+   [x] org.ztmetro.overlay.framework
+   [x] org.ztos.overlay.framework.extra
+   [x] org.ztos.overlay.systemui
+   [x] org.ztos.overlay.settings
+   [x] org.ztos.overlay.status.framework
+   [x] org.ztos.overlay.status.systemui
+   [x] org.ztos.overlay.statusbaricons
+   [x] org.ztos.overlay.systemui.extra
+   [x] org.ztos.overlay.factory.org_lineageos_etar
+   [x] org.ztos.overlay.factory.ws_xsoh_etar
+-- notification listeners:
+-- appops:
+-- systemui kills: 1

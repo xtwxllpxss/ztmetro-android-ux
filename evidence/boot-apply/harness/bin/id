@@ -1,0 +1,2 @@
+#!/bin/bash
+[ "${1:-}" = "-u" ] && echo 0 || echo "uid=0(root) gid=0(root)"

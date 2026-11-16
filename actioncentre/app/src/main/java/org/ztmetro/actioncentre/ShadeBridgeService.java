@@ -93,8 +93,33 @@ public class ShadeBridgeService extends AccessibilityService {
      * it exactly with no margin for the cutout inset/rounding, and the top few
      * pixels of a top-edge swipe could still start in the SystemUI window. 32 dp
      * covers the status bar plus the first 8 dp of the app window.
+     *
+     * <p>This is the <b>rest</b> height and the only place a gesture may start:
+     * the window at rest is exactly the top 32 dp, so a touch that starts in the
+     * app content below the strip is never taken from the app.
      */
     private static final int STRIP_HEIGHT_DP = 32;
+    /**
+     * Height of the strip window while it owns a top-edge gesture, as a
+     * fraction of the display height: 40 % = 512 px on the 720x1280 / 320 dpi
+     * panel. A 32 dp window cannot contain a downward swipe, and the device
+     * proof for the previous build was <code>ACTION_DOWN</code> + a few
+     * <code>ACTION_MOVE</code> events followed by <code>ACTION_CANCEL</code>
+     * when the pointer left the window, after which SystemUI saw the rest of
+     * the gesture and the stock shade flashed. Growing the window for the
+     * duration of the gesture keeps the whole swipe inside this window, so that
+     * bounds-exit cancel cannot happen and SystemUI never receives it.
+     *
+     * <p>The height is derived from the display metrics at creation time, not
+     * hardcoded: 512 px is the number for this panel only.
+     */
+    private static final float STRIP_GESTURE_SCREEN_FRACTION = 0.40f;
+    /**
+     * Safety net: if the end of the gesture (UP/CANCEL) is ever lost, the tall
+     * window must not stay over the app. The window is only tall while a
+     * top-edge gesture is in flight, normally well under a second.
+     */
+    private static final long STRIP_GESTURE_HOLD_MAX_MS = 1500L;
     /** A downward drag further than this in the strip opens the panel. */
     private static final int STRIP_DRAG_DP = 24;
     /** Ignore strip touches while a panel launch is already in flight. */
@@ -139,6 +164,25 @@ public class ShadeBridgeService extends AccessibilityService {
     private boolean stripTouchable;
     private long lastStripKeyguardSyncUptime;
     private long lastStripOpenUptime;
+
+    /** Strip height at rest: the top 32 dp gesture start region, in pixels. */
+    private int stripRestHeightPx;
+    /** Strip height while a gesture is in flight: 40 % of the display, in pixels. */
+    private int stripGestureHeightPx;
+    /** Display height the gesture height was derived from (for the log proof). */
+    private int stripDisplayHeightPx;
+    /** True while the window is at {@link #stripGestureHeightPx}. */
+    private boolean stripTall;
+    /** True while the strip's touch view is attached to the window manager. */
+    private boolean stripViewAttached;
+    /** True while a gesture that started in the strip is being swallowed. */
+    private boolean stripGestureActive;
+    /** True once the current gesture has opened the panel. */
+    private boolean stripOpened;
+    private long stripDownUptime;
+    private int stripDownRawY;
+    private int stripMoveCount;
+    private int stripMaxDyPx;
 
     /** ztMetro lock screen over the keyguard; its windows live in its own class. */
     private LockOverlayController lockOverlay;
@@ -247,9 +291,16 @@ public class ShadeBridgeService extends AccessibilityService {
             // window itself is not alpha-0, so its input region always exists.
             view.setBackgroundColor(Color.TRANSPARENT);
             view.setAlpha(0f);
+            stripRestHeightPx = dpToPx(STRIP_HEIGHT_DP);
+            stripDisplayHeightPx = displayHeightPx();
+            stripGestureHeightPx = Math.max(stripRestHeightPx,
+                    Math.round(stripDisplayHeightPx * STRIP_GESTURE_SCREEN_FRACTION));
+            // The window is created at the rest height (top 32 dp) and only
+            // grows during a gesture. A permanent 40 %-tall touchable window was
+            // rejected: it would eat every touch over the top 40 % of every app.
             WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                     WindowManager.LayoutParams.MATCH_PARENT,
-                    dpToPx(STRIP_HEIGHT_DP),
+                    stripRestHeightPx,
                     WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                             | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
@@ -536,6 +587,10 @@ public class ShadeBridgeService extends AccessibilityService {
                         }
                         downY = event.getY();
                         opened = false;
+                        // The strip window is only 32 dp tall, so a long drag would leave
+                        // its bounds and be cancelled by the system. Open on DOWN: a swipe
+                        // and a tap on the top edge both mean "show the panel" in WP.
+                        openFromStrip("down");
                         return true;
                     case MotionEvent.ACTION_MOVE:
                         if (!opened) {

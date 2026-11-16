@@ -1,0 +1,47 @@
+# Expected /data/local/tmp/ztmetro-apply.log after rebooting with the rebuilt
+# module (first boot after a reinstall / ROM reset).  <...> = device-specific.
+# Source of the shape: evidence/boot-apply/run1-post-reinstall.log, produced by
+# running the real scripts against fake device services (no adb in this track).
+#
+# Read it with:
+#   su -c 'tail -n 40 /data/local/tmp/ztmetro-apply.log'
+# and the short form with:
+#   su -c 'grep -E "apply: (accessibility|home|overlays|listeners|ime)|done" /data/local/tmp/ztmetro-apply.log | tail -n 8'
+
+service: hook fired, waiting for sys.boot_completed
+service: boot_completed=1 after <n>s wait
+service: overlay-service-ready after <n>s
+apply: start uid=0 pid=<pid> boot_completed=1
+apply: packages=<n> visible
+apply:   overlay enabled: org.ztmetro.overlay.framework          # one line per RRO that was off
+apply:   overlay enabled: org.ztos.overlay.systemui
+apply:   overlay enabled: ...
+apply: overlays=10 enabled (10/10 handled)
+apply: accessibility=2/2 enabled (was 0/2) services=org.ztmetro.actioncentre/.ShadeBridgeService:org.ztmetro.actioncentre/.StatusStripService
+apply: a11y_enabled=1 (was 'unset')
+apply:   allow_listener ok: org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreListener
+apply:   allow_listener ok: org.ztmetro.start/org.ztmetro.start.StartNotificationListener
+apply: listeners=2/2 enabled (changed)
+apply: icon_blacklist=clock,battery,wifi,mobile,stacked_mobile,rotate,headset (was '')
+apply: home=ok (org.ztmetro.start/.StartActivity, was 'No activity found')
+apply: ime=org.ztmetro.ime/.ZtMetroIme (was 'com.android.inputmethod.latin/.LatinIME')
+apply: appops=WRITE_SETTINGS,READ_PHONE_STATE,ACCESS_RESTRICTED_SETTINGS allow
+apply: systemui=restarted (overlay changed)     # ONLY when an RRO was just enabled
+apply: done changes=<n> warnings=0
+service: apply finished rc=0
+
+# Second and every later boot on healthy state MUST be:
+#   apply: overlays=10 enabled (10/10 handled)
+#   apply: accessibility=2/2 enabled (unchanged)
+#   apply: a11y_enabled=1 (unchanged)
+#   apply: listeners=2/2 enabled (unchanged)
+#   apply: icon_blacklist=clock,battery,wifi,mobile,stacked_mobile,rotate,headset (unchanged)
+#   apply: home=ok (org.ztmetro.start/.StartActivity, unchanged)
+#   apply: ime=org.ztmetro.ime/.ZtMetroIme (unchanged)
+#   apply: systemui=left running (no overlay change)
+#   apply: done changes=0 warnings=0
+#   service: apply finished rc=0
+#
+# warnings>0 means one guarded step failed; the WARN line above it names it.
+# No "service: hook fired" line at all means Magisk did not run service.sh
+# (module disabled/removed, safe mode) - see docs/27-boot-apply.md section 8.
