@@ -104,6 +104,11 @@ build (which never touches the phone).
 * **Magisk** (Zygisk on) + **LSPosed/Vector** installed. The conductor installs
   Magisk *modules* and *APKs*, but it cannot enable an LSPosed module or select its
   scope (GUI-only; see §7).
+* **adbd root** must work (`adb root` → `adb shell id` = `uid=0(root)`,
+  context `u:r:su:s0`). This is the LineageOS userdebug/eng default. The conductor
+  deliberately does **not** use Magisk `su`: on this device the Magisk policy
+  rejects UID 2000 (`su: request rejected (2000)`), while adbd root works. If
+  `adb root` is unavailable, the run stops before touching the phone.
 * `hermes-ubuntu` reachable by SSH key, with `~/android-sdk` (android-36,
   build-tools 36.0.0), `~/android-jdk` (JDK 17), `tar`, `zip`, `unzip`, `curl`.
   The header build downloads the pinned Xposed API 82 jar once, then reuses it
@@ -199,7 +204,9 @@ The factory never applies an overlay it cannot justify:
 * `generate` must exit 0 and `build.json.verify.ok` must be true;
 * only then is the RRO copied into the `ztmetro-factory` Magisk module. A new RRO
   or a changed module needs one reboot so PackageManager scans `/product/overlay`;
-  unchanged content is skipped by the module hash.
+  unchanged content is skipped by a content fingerprint (file sha256s, not the
+  zip sha, because zip timestamps change on every rebuild). The same fingerprint
+  rule applies to the main overlays module.
 
 Packages outside `tools/theme-factory/registry.json` are built with
 `--force-package` and that fact is recorded in the report. An app that declares
@@ -264,9 +271,13 @@ artifacts and skip the reboot; `--dry-run` proves that without touching anything
 1. **LSPosed/Vector module activation and scope selection.** The Settings header
    and the keyguard module are Xposed modules. The conductor installs the APK, but
    enabling the module and setting its scope (`com.android.settings` only /
-   `com.android.systemui` only) is a GUI action in the LSPosed manager. On a cert
-   change the uninstall/reinstall can also reset that scope. The run reports the
-   installed APK but cannot prove the hook is active.
+   `com.android.systemui` only) is a GUI action in the LSPosed manager. The
+   worked run shows the consequence: the first deploy used a new throwaway key, so
+   the four APKs were uninstalled/reinstalled and the header module came back
+   **disabled**
+   (`vector-cli modules ls` → `org.ztmetro.settingsheader disabled`). The four
+   `settings.*` verify checks fail until it is re-enabled in the manager. The
+   conductor reports the APK but does not guess at LSPosed state.
 2. **Human visual acceptance of the full 7-surface suite.** `ux-verify --quick`
    measures Start, Settings home and the Action Centre; the lock screen, volume
    panel, app list and shade still need the full suite or eyes, and “does it look
@@ -287,8 +298,35 @@ documented list.
 
 ## 8. Worked run
 
-See the latest run under [`evidence/conductor/`](../evidence/conductor/) — the
-`report.md` there contains the exact command line, stage durations, artifact hash
-table, verify summary and factory coverage for that run. A failed build is also
-recorded there with the failing stage and the error tail, so a red run is
-diagnosable without re-reading the terminal.
+Canonical run [`evidence/conductor/20261116-155813/`](../evidence/conductor/20261116-155813/):
+`./scripts/ztmetro-conductor.sh --with-factory`, snapshot `1c6a7f1fdd97`, **421 s**.
+
+| stage | status | duration |
+|---|---|---:|
+| build | ok | 31 s |
+| publish | ok | 32 s |
+| apply | ok | 35 s |
+| verify | ok (13 PASS / 4 FAIL) | 66 s |
+| factory | ok | 257 s |
+| report | ok | 1 s |
+
+Artifacts: overlays `ea89a894…` (78 142 B), launcher `00247799…` (74 155 B),
+action centre `91db93d7…` (345 804 B), IME `f2225044…` (20 817 B), header
+`adcab355…` (41 968 B). The four FAILs are all `settings.*` and are the direct
+consequence of limitation 1 (header hook disabled after the cert-change
+reinstall); Start and the Action Centre pass 10/10.
+
+Performance appendix from the same boot: SystemUI **150 043 KB** PSS, Settings
+**41 792 KB**, Action Centre **29 210 KB**, Start **25 745 KB**; Settings
+`dumpsys gfxinfo` **8 janky frames (12.31 %)**, 50th 25 ms, 90th 38 ms, 95th 61 ms,
+99th 450 ms; `/proc/pressure/memory` `some avg10=0.58 avg60=1.03 avg300=0.97`,
+`full avg10=0.22 avg60=0.23 avg300=0.17`. These are the lag baseline, not a
+pass/fail target.
+
+Factory: four RROs generated and enabled (`deskclock` 75.0 %, `contacts` 77.1 %,
+`dialer` 73.8 %, `aperture` 74.9 % of the colour resources the app actually uses),
+all `verify.ok`, no contrast refusal.
+
+A failed build is also recorded under `evidence/conductor/` with the failing stage
+and the exact error tail, so a red run is diagnosable without re-reading the
+terminal.

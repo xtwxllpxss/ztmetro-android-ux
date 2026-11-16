@@ -1,0 +1,6 @@
+build	ok	31	
+publish	ok	32	
+apply	ok	35	
+verify	ok	66	PASS/FAIL summary in verify.log (FAILs present)
+factory	ok	257	
+report	ok	1	

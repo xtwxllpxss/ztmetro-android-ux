@@ -1,0 +1,24 @@
+{
+ "apk": "/home/denis/ztux/conductor/factory/org.lineageos.aperture/overlay/ztmetro-org_lineageos_aperture-rro.apk",
+ "apk_name": "ztmetro-org_lineageos_aperture-rro.apk",
+ "sha256": "1a67ba589edb1a38909c6cd50a2a897c0dbc4331e54100c6a3f46947dc5c1fb1",
+ "size": 24920,
+ "android_jar": "/home/denis/android-sdk/platforms/android-36/android.jar",
+ "entries": 252,
+ "overlay_package": "org.ztos.overlay.factory.org_lineageos_aperture",
+ "target": "org.lineageos.aperture",
+ "verify": {
+  "dex_files": [],
+  "is_resource_only": true,
+  "manifest_has_target": true,
+  "has_code_false": true,
+  "resource_entries": 248,
+  "missing_entries": [],
+  "badging_package": "org.ztos.overlay.factory.org_lineageos_aperture",
+  "ok": true
+ },
+ "notes": [
+  "package forced past the registry (no registry entry)",
+  "registry has no sha256 pin for this package yet"
+ ]
+}

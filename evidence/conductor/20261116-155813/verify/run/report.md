@@ -1,0 +1,111 @@
+# ztmetro UX verification — automated report
+
+Run: `2026-11-16T15:59:56+03:00` → `2026-11-16T16:00:49+03:00` (53.5 s), mode **quick**.
+
+Evidence: `/Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-155813/verify/run`  ·  `report.json` + `annotated/*.png`
+
+## Summary
+
+| PASS | FAIL | SKIP | total |
+|---:|---:|---:|---:|
+| 13 | 4 | 0 | 17 |
+
+### Failing checks
+
+- **settings.bg_black** — background is #000000 (>=70% of pixels): `black_fraction=0.03` (expected `fraction=>=0.70`, tol `0` fraction)
+- **settings.title_cap** — title glyph band >= 46 px (lowercase Cyrillic, 58 sp): `band_px=0 band_dp=0 implied_size_sp=0 font_scale=1` (expected `band_px=>=46 band_dp=>=28`, tol `0` px)
+- **settings.rows_white** — rows are #E6E6E6..FFFFFF on black: `median_text_rgb=[221, 231, 233] fraction_>=E6=0.27 black_fraction=0` (expected `median_text_rgb=#E6E6E6..FFFFFF black_fraction=>=0.70`, tol `fraction_>=E6=0.75` fraction)
+- **settings.single_title** — exactly one large title text block: `large_title_blocks=0 blocks=[]` (expected `large_title_blocks=1`, tol `0` blocks)
+
+## Device
+
+| field | value |
+|---|---|
+| transport | `ssh hermes-ubuntu '~/android-sdk/platform-tools/adb ...'` |
+| serial | `4f2b50b2` |
+| sdk | `36` |
+| wm size | `[720, 1280]` |
+| wm density | `260` |
+| density override (dpi) | `None` |
+| px per dp (measured) | `1.625` |
+| px per dp (brief) | `1.75` |
+| font scale | `1.0` |
+| systemui pid | `4493` |
+| enabled ztmetro/ztos overlays | `13` |
+
+dp = px / **1.625** (the live density). The brief's reference is **1.75 px/dp** (280 dpi); `pre.density_factor` records whether they agree.
+
+## Captures
+
+| surface | png | focus | sdk | systemui | overlays | keyguard |
+|---|---|---|---|---|---|---|
+| start | `raw/start.png` | `org.ztmetro.start/org.ztmetro.start.StartActivity}` | 36 | 4493 | 13 | False |
+| settings-home | `raw/settings-home.png` | `com.android.settings/com.android.settings.homepage.SettingsHomepageActivity}` | 36 | 4493 | 13 | False |
+| action-centre | `raw/action-centre.png` | `org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreActivity}` | 36 | 4493 | 13 | False |
+
+## Checks
+
+### start
+
+| check | status | measured | expected | tolerance |
+|---|---|---|---|---|
+| `start.no_header` — no page header text in the top 100 dp | **PASS** | `glyph_px_on_black=0 px` | `glyph_px_on_black=0` | `max_glyph_px=30 px` |
+| `start.palette` — >=3 distinct ztmetro palette fills and cobalt | **PASS** | `distinct_palette_fills=6 fills={'cobalt': 1, 'teal': 1, 'green': 1, 'brown': 1, 'crimson': 1, 'red': 1} cobalt_px=243631 px` | `distinct_palette_fills=>=3 cobalt_px=>0` | `distinct_palette_fills=0 cobalt_px=0 px` |
+| `start.grid_metrics` — tile gutter ~7 dp and page margins ~14 dp | **PASS** | `gutter_dp=6.77 left_margin_dp=14.15 right_margin_dp=12.92 tiles=12 dp` | `gutter_dp=7 margin_dp=14` | `gutter_dp=2 margin_dp=2 dp` |
+| `start.tile_glyphs` — white glyph pixels inside >= 3 tiles | **PASS** | `tiles_with_white_glyph=11 glyph_px=[4220, 1455, 3468, 3591, 522, 4069, 1932, 1271] tiles` | `tiles_with_white_glyph=>=3` | `0 tiles` |
+| `start.square_corners` — tile corners are fill, not black gap | **PASS** | `tiles_all_4_corners_fill=12 tiles_checked=12 fraction=1 fraction` | `fraction=>=0.9` | `0.10 fraction` |
+
+- `start.no_header`: status strip excluded (y < 28 dp); tile labels sit on saturated fill and are not counted
+- `start.palette`: fills clustered from saturated pixels, count >= 2000 px at 1/4 area
+- `start.grid_metrics`: gaps from 5 adjacent tile pairs
+- `start.tile_glyphs`: white = min(R,G,B) >= 200, >= 40 px per tile
+- `start.square_corners`: corner sampled 2 px inside the measured tile bbox
+
+### settings-home
+
+| check | status | measured | expected | tolerance |
+|---|---|---|---|---|
+| `settings.bg_black` — background is #000000 (>=70% of pixels) | **FAIL** | `black_fraction=0.03 fraction` | `fraction=>=0.70` | `0 fraction` |
+| `settings.no_banner` — no cobalt banner in the top 100 dp | **PASS** | `cobalt_px=0 saturated_px=0 px` | `cobalt_px=0 saturated_px=0` | `max=20 px` |
+| `settings.title_cap` — title glyph band >= 46 px (lowercase Cyrillic, 58 sp) | **FAIL** | `band_px=0 band_dp=0 implied_size_sp=0 font_scale=1 px` | `band_px=>=46 band_dp=>=28` | `0 px` |
+| `settings.rows_white` — rows are #E6E6E6..FFFFFF on black | **FAIL** | `median_text_rgb=[221, 231, 233] fraction_>=E6=0.27 black_fraction=0 fraction` | `median_text_rgb=#E6E6E6..FFFFFF black_fraction=>=0.70` | `fraction_>=E6=0.75 fraction` |
+| `settings.single_title` — exactly one large title text block | **FAIL** | `large_title_blocks=0 blocks=[] blocks` | `large_title_blocks=1` | `0 blocks` |
+
+- `settings.bg_black`: max(R,G,B) <= 12
+- `settings.no_banner`: the top band may contain only black, white caps and the title glyphs
+- `settings.title_cap`: bbox of the first title glyph run at fontScale 1; lowercase Cyrillic has no caps, so the x-height ratio 0.53 is used for the implied size
+- `settings.rows_white`: white pixels of the body row labels
+- `settings.single_title`: large = ink band height >= 40 px and width >= 80 px in the top 200 dp
+
+### action-centre
+
+| check | status | measured | expected | tolerance |
+|---|---|---|---|---|
+| `ac.focus` — panel is our activity (window focus) | **PASS** | `focus=Window{326a83 u0 org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreActivity}` | `focus=org.ztmetro.actioncentre` | `0` |
+| `ac.status_row` — top 50 dp status row has non-black pixels | **PASS** | `nonblack_px=2422 px` | `nonblack_px=>=100` | `0 px` |
+| `ac.tiles_4x2` — exactly 8 action tiles in a 4x2 grid | **PASS** | `tiles=8 columns=4 rows=2 tiles` | `tiles=8 columns=4 rows=2` | `0 tiles` |
+| `ac.tiles_square` — action tiles follow the ztmetro ratio 1.50 (+/-0.06) (85.75 x 57 dp) | **PASS** | `worst_ratio=1.51 worst_ratio_delta=0.01 sizes_dp=['105.8x70.2', '105.8x70.2', '105.8x70.2', '105.8x70.2', '105.8x70.2', '105.8x70.2', '105.8x70.2', '105.8x70.2'] ratio` | `w_h_ratio=1.50 +/-0.06` | `0.05 ratio` |
+| `ac.tile_active_fill` — active tile fill is #0050EF | **PASS** | `active_tiles=4 active_rgb=[[0, 80, 239], [0, 80, 239], [0, 80, 239], [0, 80, 239]] tiles` | `active_tiles=>=1 rgb=[0, 80, 239]` | `per_channel=10 tiles` |
+
+- `ac.focus`: dumpsys window mCurrentFocus at capture time
+- `ac.status_row`: tile pixels inside the band are excluded
+- `ac.tiles_4x2`: accent #0050EF or off #1F1F1F fills, w/h >= 100 px
+- `ac.tiles_square`: w/h of the measured tile boxes (tokens: 85.75 x 57)
+- `ac.tile_active_fill`: modal fill per tile
+
+## Sequence
+
+- WAKEUP, unlock if keyguard, collapse shade
+- KEYCODE_HOME; wait 3 s
+- KEYCODE_BACK (Start is a no-op; app list returns to Start); wait 0.5 s
+- swipe 360 520 -> 360 1120 (scroll Start to the top); wait 0.6 s
+- am start -a android.settings.SETTINGS; wait 4 s
+- am start -a android.intent.action.MAIN -c android.intent.category.APP_CALENDAR; wait 2 s
+- input swipe 360 6 360 400 250 (top-edge strip); wait 2 s
+
+## Re-run
+
+```sh
+/Library/Frameworks/Python.framework/Versions/3.11/bin/python3 /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/scripts/ux-verify.py --quick
+```
+

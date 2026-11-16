@@ -1,0 +1,207 @@
+[15:58:13] ztMetro conductor 20261116-155813  (dry-run=0, factory=1)
+[15:58:13] repo:   /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo
+[15:58:13] snapshot: 1c6a7f1fdd9729e50a0ce6815b774e44f2aca51b (hermes-ubuntu:~/ztux/conductor/snapshots/1c6a7f1fdd97)
+[15:58:13] state:    hermes-ubuntu:~/ztux/conductor/state (stable keystores)
+[15:58:13] stage:  hermes-ubuntu:~/android-root/conductor
+[15:58:13] logs:   /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-155813
+[15:58:13] 
+[15:58:13] ================ stage: build ================
+[15:58:13] snapshot: commit 1c6a7f1fdd9729e50a0ce6815b774e44f2aca51b (git archive; excluded 11 uncommitted path(s) from the working tree)
+[15:58:14] extracting git archive to hermes-ubuntu:~/ztux/conductor/snapshots/1c6a7f1fdd97
+[15:58:23] build overlays: scripts/build-overlay-module.sh
+[15:58:23] build ok: overlays
+[15:58:23] build launcher: scripts/build-launcher.sh
+[15:58:29] build ok: launcher
+[15:58:29] build actioncentre: scripts/build-actioncentre.sh
+[15:58:35] build ok: actioncentre
+[15:58:35] build ime: scripts/build-ime.sh
+[15:58:39] build ok: ime
+[15:58:39] build header: scripts/build-header-module.sh
+[15:58:43] build ok: header
+[15:58:44] artifacts:
+  overlays        78142 B  ea89a8941457363e...  artifacts/ztmetro-overlays-1.0.0.zip
+  launcher        74155 B  00247799ab4a19a5...  launcher/build/out/ztmetro-start.apk
+  actioncentre   345804 B  91db93d7c0744381...  actioncentre/build/out/ztmetro-actioncentre.apk
+  ime             20817 B  f22250442df52fd1...  ime/build/out/ztmetro-ime.apk
+  header          41968 B  adcab3556e9b9086...  settings/header-module/build/dist/ztmetro-settings-header.apk
+[15:58:44] ---------------- build: ok (31s)  ----------------
+[15:58:44] 
+[15:58:44] ================ stage: publish ================
+[15:58:46] root: adb shell uid=0 (Enforcing)
+[15:58:49] artifacts published to hermes-ubuntu:~/android-root/conductor/
+[15:58:51] Magisk module payload already at b3feaa76261c7316... -> skip install/reboot
+[15:58:51] install org.ztmetro.start (launcher)
+[15:58:51]   installed: /data/app/~~xVslsO5YSFXlQm73L55t2w==/org.ztmetro.start-W-rqOHzCz8Np1_pMBHbFhw==/base.apk
+[15:58:54]   same signing cert -> install -r
+[15:58:57] install org.ztmetro.actioncentre (actioncentre)
+[15:58:58]   installed: /data/app/~~8znv4g9DH-1CGK_W__mmNQ==/org.ztmetro.actioncentre-FYQ9uju21_Pbn7eBSS1Cxg==/base.apk
+[15:59:01]   same signing cert -> install -r
+[15:59:03] install org.ztmetro.ime (ime)
+[15:59:03]   installed: /data/app/~~3L601mRHh1gedz4u1zAxuw==/org.ztmetro.ime-TfQKHZhpBzrwzBM66qC7_A==/base.apk
+[15:59:06]   identical sha256 -> already installed, nothing to do
+[15:59:07] install org.ztmetro.settingsheader (header)
+[15:59:07]   installed: /data/app/~~iZSt5w4v72kDszS1T5B4lA==/org.ztmetro.settingsheader-jy1e1YQkzv8TNE-8uSNs7w==/base.apk
+[15:59:10]   same signing cert -> install -r
+[15:59:11] setting Start as HOME
+[15:59:15] manifest: /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-155813/ztmetro-manifest.json
+[15:59:16] module unchanged -> no reboot needed
+[15:59:16] ---------------- publish: ok (32s)  ----------------
+[15:59:16] 
+[15:59:16] ================ stage: apply ================
+[15:59:18] boot_completed=1, package manager ready (waited 0s)
+[15:59:19] root: adb shell uid=0 (Enforcing)
+[15:59:32] overlay packages: org.ztmetro.overlay.framework  org.ztos.overlay.framework.extra  org.ztos.overlay.factory.org_lineageos_etar  org.ztos.overlay.settings  org.ztos.overlay.statusbaricons  org.ztos.overlay.status.framework  org.ztos.overlay.status.systemui  org.ztos.overlay.systemui.extra  org.ztos.overlay.systemui  org.ztos.overlay.factory.ws_xsoh_etar 
+[15:59:33]   overlay already enabled: org.ztmetro.overlay.framework
+[15:59:33]   overlay already enabled: org.ztos.overlay.framework.extra
+[15:59:33]   overlay already enabled: org.ztos.overlay.factory.org_lineageos_etar
+[15:59:33]   overlay already enabled: org.ztos.overlay.settings
+[15:59:33]   overlay already enabled: org.ztos.overlay.statusbaricons
+[15:59:33]   overlay already enabled: org.ztos.overlay.status.framework
+[15:59:33]   overlay already enabled: org.ztos.overlay.status.systemui
+[15:59:33]   overlay already enabled: org.ztos.overlay.systemui.extra
+[15:59:33]   overlay already enabled: org.ztos.overlay.systemui
+[15:59:33]   enabling overlay: org.ztos.overlay.factory.ws_xsoh_etar
+[15:59:34] overlay state after apply:
+  [x] org.ztmetro.overlay.framework
+  [x] org.ztos.overlay.framework.extra
+  [x] org.ztos.overlay.status.framework
+  [x] org.ztos.overlay.factory.com_android_contacts
+  [x] org.ztos.overlay.factory.com_android_dialer
+  [x] org.ztos.overlay.factory.org_lineageos_etar
+  [x] org.ztos.overlay.factory.org_lineageos_aperture
+  [x] org.ztos.overlay.settings
+  [x] org.ztos.overlay.factory.com_android_deskclock
+  [x] org.ztos.overlay.systemui
+  [x] org.ztos.overlay.status.systemui
+  [x] org.ztos.overlay.statusbaricons
+  [x] org.ztos.overlay.systemui.extra
+[15:59:35] framework overlay priority: mPriority..............: 21
+[15:59:36] accessibility services: before='org.ztmetro.actioncentre/.ShadeBridgeService:org.ztmetro.actioncentre/.StatusStripService'
+[15:59:36] accessibility services: already contain both
+[15:59:37] notification listeners: before='org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreListener:org.ztmetro.start/org.ztmetro.start.StartNotificationListener'
+[15:59:37]   already enabled: org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreListener
+[15:59:37]   already enabled: org.ztmetro.start/org.ztmetro.start.StartNotificationListener
+[15:59:39] notification listeners: after='org.ztmetro.actioncentre/org.ztmetro.actioncentre.ActionCentreListener:org.ztmetro.start/org.ztmetro.start.StartNotificationListener'
+[15:59:39] icon_blacklist already 'clock,battery,wifi,mobile,stacked_mobile,rotate,headset'
+[15:59:40] granted android.permission.CAMERA
+[15:59:41] granted android.permission.READ_PHONE_STATE
+[15:59:41] actioncentre appops:
+  Uid mode: COARSE_LOCATION: ignore
+  FINE_LOCATION: ignore
+  READ_CONTACTS: ignore
+  WRITE_CONTACTS: ignore
+  READ_CALL_LOG: ignore
+  WRITE_CALL_LOG: ignore
+  READ_CALENDAR: ignore
+  WRITE_CALENDAR: ignore
+  POST_NOTIFICATION: ignore
+  CALL_PHONE: ignore
+  READ_SMS: ignore
+  RECEIVE_SMS: ignore
+  RECEIVE_MMS: ignore
+  RECEIVE_WAP_PUSH: ignore
+  SEND_SMS: ignore
+  CAMERA: foreground
+  RECORD_AUDIO: ignore
+  ADD_VOICEMAIL: ignore
+  USE_SIP: ignore
+  PROCESS_OUTGOING_CALLS: ignore
+  BODY_SENSORS: ignore
+  READ_CELL_BROADCASTS: ignore
+  READ_EXTERNAL_STORAGE: ignore
+  WRITE_EXTERNAL_STORAGE: ignore
+  GET_ACCOUNTS: ignore
+  READ_PHONE_NUMBERS: ignore
+  ANSWER_PHONE_CALLS: ignore
+  ACCEPT_HANDOVER: ignore
+  BLUETOOTH_SCAN: ignore
+  ACTIVITY_RECOGNITION: ignore
+  READ_MEDIA_AUDIO: ignore
+  READ_MEDIA_VIDEO: ignore
+  READ_MEDIA_IMAGES: ignore
+  ACCESS_MEDIA_LOCATION: ignore
+  BLUETOOTH_CONNECT: ignore
+  UWB_RANGING: ignore
+  BLUETOOTH_ADVERTISE: ignore
+  NEARBY_WIFI_DEVICES: ignore
+  READ_MEDIA_VISUAL_USER_SELECTED: ignore
+  READ_HEART_RATE: ignore
+  READ_SKIN_TEMPERATURE: ignore
+  RANGING: ignore
+  READ_OXYGEN_SATURATION: ignore
+  WRITE_SETTINGS: allow
+  BIND_ACCESSIBILITY_SERVICE: allow; time=+30s524ms ago
+  ACCESS_ACCESSIBILITY: allow; time=+22s751ms ago
+  ACCESS_RESTRICTED_SETTINGS: allow
+  CREATE_ACCESSIBILITY_OVERLAY: allow; time=+38s557ms ago (running)
+  RECEIVE_SENSITIVE_NOTIFICATIONS: ignore; rejectTime=+38s732ms ago
+[15:59:42] default IME before: org.ztmetro.ime/.ZtMetroIme
+[15:59:44] default IME after:  org.ztmetro.ime/.ZtMetroIme
+[15:59:44] an overlay changed -> restarting SystemUI
+[15:59:51] SystemUI pid: 4493
+[15:59:51] ---------------- apply: ok (35s)  ----------------
+[15:59:51] 
+[15:59:51] ================ stage: verify ================
+[15:59:51] settling 5s for accessibility bind / SystemUI restart
+[15:59:56] running ux-verify.py --quick
+[16:00:50] verify: TOTAL  PASS 13  FAIL 4  SKIP 0  / 17 checks
+[16:00:57] performance baseline:
+  com.android.systemui	150043
+  com.android.settings	41792
+  org.ztmetro.actioncentre	29210
+  org.ztmetro.start	25745
+  Janky frames: 8 (12.31%)
+  Janky frames (legacy): 28 (43.08%)
+  50th percentile: 25ms
+  90th percentile: 38ms
+  95th percentile: 61ms
+  99th percentile: 450ms
+  50th gpu percentile: 12ms
+  90th gpu percentile: 18ms
+  95th gpu percentile: 20ms
+  99th gpu percentile: 21ms
+  some avg10=0.58 avg60=1.03 avg300=0.97 total=6830396
+  full avg10=0.22 avg60=0.23 avg300=0.17 total=1624053
+[16:00:57] verify reported FAIL checks (run continues; exit code will be 2)
+[16:00:57] ---------------- verify: ok (66s) PASS/FAIL summary in verify.log (FAILs present) ----------------
+[16:00:57] 
+[16:00:57] ================ stage: factory ================
+[16:00:59] root: adb shell uid=0 (Enforcing)
+[16:00:59] factory: com.android.deskclock
+[16:01:01]   analyse
+[16:01:09]   generate
+[16:01:12]   RRO: org.ztos.overlay.factory.com_android_deskclock (/home/denis/ztux/conductor/factory/com.android.deskclock/overlay/ztmetro-com_android_deskclock-rro.apk)
+[16:01:12] factory: com.android.contacts
+[16:01:14]   analyse
+[16:01:28]   generate
+[16:01:31]   RRO: org.ztos.overlay.factory.com_android_contacts (/home/denis/ztux/conductor/factory/com.android.contacts/overlay/ztmetro-com_android_contacts-rro.apk)
+[16:01:31] factory: com.android.dialer
+[16:01:33]   analyse
+[16:01:55]   generate
+[16:01:58]   RRO: org.ztos.overlay.factory.com_android_dialer (/home/denis/ztux/conductor/factory/com.android.dialer/overlay/ztmetro-com_android_dialer-rro.apk)
+[16:01:58] factory: org.lineageos.aperture
+[16:01:59]   analyse
+[16:02:04]   generate
+[16:02:07]   RRO: org.ztos.overlay.factory.org_lineageos_aperture (/home/denis/ztux/conductor/factory/org.lineageos.aperture/overlay/ztmetro-org_lineageos_aperture-rro.apk)
+[16:02:07] building ztmetro-factory module for: com.android.deskclock com.android.contacts com.android.dialer org.lineageos.aperture
+[16:02:12] factory module payload already at b8f1ad68914de9b0... -> no reboot
+[16:02:12] enable factory overlay org.ztos.overlay.factory.com_android_deskclock
+[16:02:13]   enabled
+[16:02:13] enable factory overlay org.ztos.overlay.factory.com_android_contacts
+[16:03:12]   WARN not listed as enabled after 30s
+[16:03:12] enable factory overlay org.ztos.overlay.factory.com_android_dialer
+[16:04:12]   WARN not listed as enabled after 30s
+[16:04:12] enable factory overlay org.ztos.overlay.factory.org_lineageos_aperture
+[16:05:12]   WARN not listed as enabled after 30s
+[16:05:14] factory coverage:
+  com.android.deskclock	org.ztos.overlay.factory.com_android_deskclock	{"colour_resources_mapped": 174, "colour_resources_total": 492, "colour_resources_used": 232, "layouts_scanned": 110, "mapped_ratio_of_used": 0.75}	ok	0
+  com.android.contacts	org.ztos.overlay.factory.com_android_contacts	{"colour_resources_mapped": 239, "colour_resources_total": 1035, "colour_resources_used": 310, "layouts_scanned": 219, "mapped_ratio_of_used": 0.771}	ok	0
+  com.android.dialer	org.ztos.overlay.factory.com_android_dialer	{"colour_resources_mapped": 222, "colour_resources_total": 1061, "colour_resources_used": 301, "layouts_scanned": 258, "mapped_ratio_of_used": 0.738}	ok	0
+  org.lineageos.aperture	org.ztos.overlay.factory.org_lineageos_aperture	{"colour_resources_mapped": 173, "colour_resources_total": 493, "colour_resources_used": 231, "layouts_scanned": 80, "mapped_ratio_of_used": 0.749}	ok	0
+[16:05:14] ---------------- factory: ok (257s)  ----------------
+[16:05:14] 
+[16:05:14] ================ stage: report ================
+[16:05:15] report: /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-155813/report.md
+[16:05:15] run.json: /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-155813/run.json
+[16:05:15] ---------------- report: ok (1s)  ----------------
+[16:05:15] done: total 422s, exit=2

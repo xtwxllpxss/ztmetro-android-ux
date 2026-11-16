@@ -1,0 +1,70 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 379131 Realtime: 379131
+
+** MEMINFO in pid 4493 [com.android.systemui] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap    26441    26308      112     2996    27336    40948    28593     8035
+  Dalvik Heap    26996    26908       64      141    27940    33550    25358     8192
+ Dalvik Other     9527     9100       40      428    10176                           
+        Stack     1580     1580        0       20     1584                           
+       Ashmem      109       72        0        0     1568                           
+      Gfx dev     1696     1696        0        0     1696                           
+    Other dev       92       20       64        0      396                           
+     .so mmap     6782      356     3484       38    35812                           
+    .jar mmap     4836        0     1276        0    34744                           
+    .apk mmap    23301        0    21680        0    27404                           
+    .ttf mmap     1104        0      776        0     1564                           
+    .dex mmap    37745       36    37692        0    38448                           
+    .oat mmap      751        0       48        0    10784                           
+    .art mmap     2994     1540      764      228    21900                           
+   Other mmap      434       32      292        0     1428                           
+   EGL mtrack      408      408        0        0      408                           
+      Unknown     1381     1216      160       15     1900                           
+        TOTAL   150043    69272    66452     3866   245088    74498    53951    16227
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    29212                          49840
+         Native Heap:    26308                          27336
+                Code:    65388                         149556
+               Stack:     1580                           1584
+            Graphics:     2104                           2104
+       Private Other:    11132
+              System:    14319
+             Unknown:                                   14668
+ 
+           TOTAL PSS:   150043            TOTAL RSS:   245088       TOTAL SWAP PSS:     3866
+ 
+ Objects
+               Views:     1036         ViewRootImpl:        6
+         AppContexts:       34           Activities:        0
+              Assets:       46        AssetManagers:        0
+       Local Binders:      463        Proxy Binders:      193
+       Parcel memory:       34         Parcel count:      134
+    Death Recipients:       13             WebViews:        0
+ 
+ Native Allocations
+                         Count                       Total(kB)
+                        ------                         ------
+    Other (malloced):     3769                            359
+ Other (nonmalloced):      756                            438
+   Bitmap (malloced):       20                            175
+Bitmap (nonmalloced):        2                             11
+ 
+ SQL
+         MEMORY_USED:      182
+  PAGECACHE_OVERFLOW:       50          MALLOC_SIZE:       46
+ 
+ DATABASES
+      pgsz     dbsz   Lookaside(b) cache hits cache misses cache size  Dbname
+PER CONNECTION STATS
+         4       32             25     2    38     3  /data/user_de/0/com.android.systemui/databases/communal_db
+         4        8                    0     0     0    (attached) temp
+         4       32             58     3    21     4  /data/user_de/0/com.android.systemui/databases/communal_db (1)
+POOL STATS
+     cache hits  cache misses    cache size  Dbname
+              5            63             7  /data/user_de/0/com.android.systemui/databases/communal_db
+ 

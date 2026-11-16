@@ -524,6 +524,7 @@ write_manifest() {
   local rows="" sep=""
   for i in "${!ART_LABELS[@]}"; do
     label=${ART_LABELS[$i]}
+    [ "$label" = "overlays" ] && continue   # Magisk zip, not an APK
     rel=$(rel_for_label "$label")
     base=$(basename "$rel")
     badging=$(rq "$PENV '$AAPT2' dump badging $REMOTE_STAGE_ABS/$base 2>/dev/null | head -1")
@@ -810,6 +811,8 @@ stage_verify() {
     return 0
   fi
   if [ -f "$REPO/scripts/ux-verify.py" ]; then
+    log "settling 5s for accessibility bind / SystemUI restart"
+    sleep 5
     log "running ux-verify.py --quick"
     python3 "$REPO/scripts/ux-verify.py" --quick --out "$EVID/verify" --timestamp run 2>&1 | tee "$logf"
     rc=${PIPESTATUS[0]}
@@ -828,6 +831,7 @@ stage_verify() {
   [ -n "$summary" ] || { log "verification produced no summary"; return 1; }
   printf '%s\n' "$summary" > "$VERIFY_SUMMARY"
   log "verify: $summary"
+  capture_performance || log "WARN performance capture incomplete"
   if printf '%s' "$summary" | grep -qE 'FAIL [1-9]'; then
     log "verify reported FAIL checks (run continues; exit code will be 2)"
     VERIFY_FAILS=1
@@ -990,11 +994,11 @@ PY
   for ovl in "$@"; do
     pkg=""
     log "enable factory overlay $ovl"
-    en_out=$(devq "shell cmd overlay enable --user 0 $ovl" 2>&1)
-    log "  cmd: ${en_out:-ok}"
+    en_out=$(devq "shell cmd overlay enable --user 0 $ovl" 2>&1 | grep -v '^\*\*' | tr -d '\r')
+    [ -n "$en_out" ] && log "  cmd: $en_out"
     enabled=0
     attempt=0
-    while [ "$attempt" -lt 10 ]; do
+    while [ "$attempt" -lt 30 ]; do
       if devq "shell cmd overlay list" | tr -d '\r' | grep -qE "^\[x\] +$ovl\$"; then
         enabled=1
         break
@@ -1002,7 +1006,7 @@ PY
       sleep 1
       attempt=$((attempt + 1))
     done
-    if [ "$enabled" -eq 1 ]; then log "  enabled"; else log "  WARN not listed as enabled after 10s"; fi
+    if [ "$enabled" -eq 1 ]; then log "  enabled"; else log "  WARN not listed as enabled after 30s"; fi
   done
   # restart the affected apps so they re-read resources
   set -- $ok_targets

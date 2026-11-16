@@ -1,0 +1,5 @@
+overlays	artifacts/ztmetro-overlays-1.0.0.zip	ea89a8941457363e7d0342046a7f96c730c6668b39db498325e040e1959fa5e5	78142
+launcher	launcher/build/out/ztmetro-start.apk	00247799ab4a19a5c57f63129c3d4943ea015c9d030ec57a2e0ffbe5f3ce1443	74155
+actioncentre	actioncentre/build/out/ztmetro-actioncentre.apk	91db93d7c074438112ed18f05987ab59a0e2ddbb147e5f56b373c7bbb5338010	345804
+ime	ime/build/out/ztmetro-ime.apk	f22250442df52fd14a857a80dce88a513bec9486cab056150e08c4463ff58df4	20817
+header	settings/header-module/build/dist/ztmetro-settings-header.apk	adcab3556e9b908654c8489a13f55242039af2335797aba1f7da69629fea6d6f	41968

@@ -1,0 +1,13 @@
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+== aapt2 compile
+== aapt2 link (target com.android.deskclock)
+== apksigner sign
+
+== overlay       /home/denis/ztux/conductor/factory/com.android.deskclock/overlay/ztmetro-com_android_deskclock-rro.apk
+   sha256        e854c531c328b77fc14574e86c8dcc3880ecb83b937cdc69a7d561cc4242ac94
+   size          29016 bytes, 265 entries
+   resource-only True | targetPackage True | missing 0
+   verify.sh     /home/denis/ztux/conductor/factory/com.android.deskclock/overlay/verify.sh
+   apply         repo/scripts/theme-factory.sh apply --profile /home/denis/ztux/conductor/factory/com.android.deskclock/profile.json --out /home/denis/ztux/conductor/factory/com.android.deskclock/overlay

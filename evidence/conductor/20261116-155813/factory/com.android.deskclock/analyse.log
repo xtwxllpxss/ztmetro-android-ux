@@ -1,0 +1,15 @@
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+== aapt2 dump resources /home/denis/ztux/conductor/factory/apk/com.android.deskclock.apk
+   package com.android.deskclock: 5312 resources, 492 colour resources
+== framework names from /home/denis/android-sdk/platforms/android-36/android.jar
+   framework: 1485 attrs, 856 colours
+== aapt2 dump xmltree over 110 layouts
+
+== app-profile  /home/denis/ztux/conductor/factory/com.android.deskclock/profile.json
+   package       com.android.deskclock
+   sha256        70480ff10bf09545080b401d1519568eba99f59a51bee03872ea7b4cc600f2f3
+   mappings      accent=53, destructive=9, radius=23, surface=64, surface_key=4, text=90, type=10
+   coverage      {"colour_resources_total": 492, "colour_resources_used": 232, "colour_resources_mapped": 174, "mapped_ratio_of_used": 0.75, "layouts_scanned": 110}
+   contrast      88 check(s), 0 escalated

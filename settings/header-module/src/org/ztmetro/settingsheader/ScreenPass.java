@@ -51,6 +51,8 @@ final class ScreenPass {
 
     /** Main walk stack (view + depth), grown on demand and reused across passes. */
     private static View[] sStack = new View[256];
+    /** Recycler views seen in the last pass; their rows are styled as they attach. */
+    private static final java.util.ArrayList<View> sRecyclers = new java.util.ArrayList<>();
     private static int[] sStackDepth = new int[256];
     /** Row subtree stack, reused across rows. */
     private static View[] sRowStack = new View[128];
@@ -110,11 +112,111 @@ final class ScreenPass {
         sVisited = 0;
         sApplies = 0;
         long started = SystemClock.uptimeMillis();
+        if (passNumber == 1) {
+            sRecyclers.clear();
+        }
         walk(root);
+        if (passNumber == passTotal) {
+            scheduleRowPass(root);
+        }
         long elapsed = SystemClock.uptimeMillis() - started;
         Log.i(TAG, "pass " + passNumber + "/" + passTotal + " " + phase + ": "
                 + sVisited + " views, " + sApplies + " applies, " + elapsed + " ms"
                 + (homepage ? " (home)" : ""));
+    }
+
+    /** Styles rows of the recyclers found in the walk, as they attach (no full tree walk). */
+    private static void scheduleRowPass(final View root) {
+        if (root == null) {
+            return;
+        }
+        root.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                styleRecyclerRows();
+            }
+        }, 250L);
+        root.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                styleRecyclerRows();
+            }
+        }, 700L);
+    }
+
+    private static void styleRecyclerRows() {
+        int styled = 0;
+        for (int i = 0; i < sRecyclers.size(); i++) {
+            View v = sRecyclers.get(i);
+            if (!(v instanceof ViewGroup)) {
+                continue;
+            }
+            ViewGroup g = (ViewGroup) v;
+            for (int c = 0; c < g.getChildCount(); c++) {
+                View child = g.getChildAt(c);
+                if (!(child instanceof ViewGroup)) {
+                    continue;
+                }
+                ViewGroup row = (ViewGroup) child;
+                if (Views.titleCount(row, 3) == 1 && isRowCandidate(row)) {
+                    lightRow(row);
+                    styled++;
+                }
+            }
+        }
+        Log.i(TAG, "row pass: " + styled + " recycler rows styled, " + sRecyclers.size() + " recycler(s)");
+    }
+
+    /** Minimal row styling without layout changes (safe inside a RecyclerView pass). */
+    private static void lightRow(ViewGroup row) {
+        int styled = 0;
+        row.setBackgroundColor(0xFF000000);
+        flattenCard(row);
+        java.util.ArrayDeque<View> queue = new java.util.ArrayDeque<>();
+        queue.add(row);
+        int guard = 0;
+        while (!queue.isEmpty() && guard++ < 200) {
+            View view = queue.poll();
+            if (view instanceof TextView) {
+                TextView text = (TextView) view;
+                if (Views.isTitle(text)) {
+                    RowType.styleLabel(text);
+                    styled++;
+                } else if (Views.isSummary(text) && text.getVisibility() == View.VISIBLE) {
+                    RowType.styleValue(text);
+                    styled++;
+                }
+            } else if (view instanceof ImageView) {
+                RowIcons.hide(view);
+            } else if (view instanceof ViewGroup) {
+                ViewGroup group = (ViewGroup) view;
+                flattenCard(group);
+                for (int i = 0; i < group.getChildCount() && i < 12; i++) {
+                    View child = group.getChildAt(i);
+                    if (!Views.isOurs(child)) {
+                        queue.add(child);
+                    }
+                }
+            }
+        }
+        // one line per row is too noisy; the aggregate line is logged by styleRecyclerRows
+    }
+
+    /** CardView/MaterialCardView: black fill, zero radius (no reflection failure noise). */
+    private static void flattenCard(View view) {
+        String name = view.getClass().getSimpleName();
+        if (name.contains("Card")) {
+            try {
+                view.getClass().getMethod("setCardBackgroundColor", int.class)
+                        .invoke(view, 0xFF000000);
+                view.getClass().getMethod("setRadius", float.class).invoke(view, 0f);
+            } catch (Throwable ignored) {
+                // plain view: fall through to the background colour
+            }
+        }
+        if (view.getBackground() != null) {
+            view.setBackgroundColor(0xFF000000);
+        }
     }
 
     // ---------------------------------------------------------------- configuration
@@ -220,6 +322,11 @@ final class ScreenPass {
                 continue;
             }
             sVisited++;
+            if (view instanceof ViewGroup
+                    && view.getClass().getSimpleName().endsWith("RecyclerView")
+                    && !sRecyclers.contains(view)) {
+                sRecyclers.add(view);
+            }
             if (Views.isOurs(view)) {
                 continue;
             }

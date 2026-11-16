@@ -1,0 +1,38 @@
+ztmetro UX verify · run · mode=quick · out=/Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-155813/verify/run
+device: 720x1280 px, density 260 dpi => 1.6250 px/dp, fontScale 1, sdk 36
+
+[start]
+  · WAKEUP, unlock if keyguard, collapse shade
+  · KEYCODE_HOME; wait 3 s
+  · KEYCODE_BACK (Start is a no-op; app list returns to Start); wait 0.5 s
+  · swipe 360 520 -> 360 1120 (scroll Start to the top); wait 0.6 s
+  · start: 720x1280, focus=Window{adeda3d
+
+[settings-home]
+  · am start -a android.settings.SETTINGS; wait 4 s
+  · settings-home: 720x1280, focus=Window{2933a81
+
+[action-centre]
+  · am start -a android.intent.action.MAIN -c android.intent.category.APP_CALENDAR; wait 2 s
+  · input swipe 360 6 360 400 250 (top-edge strip); wait 2 s
+  · action-centre: 720x1280, focus=Window{326a83
+
+==============================================================================
+precondition   PASS  2  FAIL  0  SKIP  0
+start          PASS  5  FAIL  0  SKIP  0
+settings-home  PASS  1  FAIL  4  SKIP  0
+    [FAIL] settings.bg_black: background is #000000 (>=70% of pixels)
+           measured black_fraction=0.03; expected fraction=>=0.70; tol 0 fraction
+    [FAIL] settings.title_cap: title glyph band >= 46 px (lowercase Cyrillic, 58 sp)
+           measured band_px=0 band_dp=0 implied_size_sp=0 font_scale=1; expected band_px=>=46 band_dp=>=28; tol 0 px
+    [FAIL] settings.rows_white: rows are #E6E6E6..FFFFFF on black
+           measured median_text_rgb=[221, 231, 233] fraction_>=E6=0.27 black_fraction=0; expected median_text_rgb=#E6E6E6..FFFFFF black_fraction=>=0.70; tol fraction_>=E6=0.75 fraction
+    [FAIL] settings.single_title: exactly one large title text block
+           measured large_title_blocks=0 blocks=[]; expected large_title_blocks=1; tol 0 blocks
+action-centre  PASS  5  FAIL  0  SKIP  0
+==============================================================================
+TOTAL  PASS 13  FAIL 4  SKIP 0  / 17 checks
+report:   /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-155813/verify/run/report.md
+json:     /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-155813/verify/run/report.json
+raw:      /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-155813/verify/run/raw
+annotated:/Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/conductor/20261116-155813/verify/run/annotated

@@ -1,0 +1,24 @@
+{
+ "apk": "/home/denis/ztux/conductor/factory/com.android.dialer/overlay/ztmetro-com_android_dialer-rro.apk",
+ "apk_name": "ztmetro-com_android_dialer-rro.apk",
+ "sha256": "0546e021afd20d0d75eba6aa2be537d750b0ac7eaab5e9cc3f2b2f24697cdc8d",
+ "size": 41304,
+ "android_jar": "/home/denis/android-sdk/platforms/android-36/android.jar",
+ "entries": 416,
+ "overlay_package": "org.ztos.overlay.factory.com_android_dialer",
+ "target": "com.android.dialer",
+ "verify": {
+  "dex_files": [],
+  "is_resource_only": true,
+  "manifest_has_target": true,
+  "has_code_false": true,
+  "resource_entries": 392,
+  "missing_entries": [],
+  "badging_package": "org.ztos.overlay.factory.com_android_dialer",
+  "ok": true
+ },
+ "notes": [
+  "package forced past the registry (no registry entry)",
+  "registry has no sha256 pin for this package yet"
+ ]
+}

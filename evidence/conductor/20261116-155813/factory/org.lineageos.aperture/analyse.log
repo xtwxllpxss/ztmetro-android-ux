@@ -1,0 +1,15 @@
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+== aapt2 dump resources /home/denis/ztux/conductor/factory/apk/org.lineageos.aperture.apk
+   package org.lineageos.aperture: 4854 resources, 493 colour resources
+== framework names from /home/denis/android-sdk/platforms/android-36/android.jar
+   framework: 1485 attrs, 856 colours
+== aapt2 dump xmltree over 80 layouts
+
+== app-profile  /home/denis/ztux/conductor/factory/org.lineageos.aperture/profile.json
+   package       org.lineageos.aperture
+   sha256        b539164fdd5b88c65358e94e5c257dd4a70fb1f705ca3620a18986e407212ebc
+   mappings      accent=55, destructive=9, radius=20, surface=71, surface_key=4, text=86, type=3
+   coverage      {"colour_resources_total": 493, "colour_resources_used": 231, "colour_resources_mapped": 173, "mapped_ratio_of_used": 0.749, "layouts_scanned": 80}
+   contrast      84 check(s), 0 escalated

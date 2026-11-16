@@ -1,0 +1,13 @@
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+== aapt2 compile
+== aapt2 link (target com.android.contacts)
+== apksigner sign
+
+== overlay       /home/denis/ztux/conductor/factory/com.android.contacts/overlay/ztmetro-com_android_contacts-rro.apk
+   sha256        d200c56063c04ef59c8e201313fb7e375797880c96e45e9a8abc17cc960aa577
+   size          37208 bytes, 381 entries
+   resource-only True | targetPackage True | missing 0
+   verify.sh     /home/denis/ztux/conductor/factory/com.android.contacts/overlay/verify.sh
+   apply         repo/scripts/theme-factory.sh apply --profile /home/denis/ztux/conductor/factory/com.android.contacts/profile.json --out /home/denis/ztux/conductor/factory/com.android.contacts/overlay

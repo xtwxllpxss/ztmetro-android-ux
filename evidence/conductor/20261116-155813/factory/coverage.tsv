@@ -1,0 +1,4 @@
+com.android.deskclock	org.ztos.overlay.factory.com_android_deskclock	{"colour_resources_mapped": 174, "colour_resources_total": 492, "colour_resources_used": 232, "layouts_scanned": 110, "mapped_ratio_of_used": 0.75}	ok	0
+com.android.contacts	org.ztos.overlay.factory.com_android_contacts	{"colour_resources_mapped": 239, "colour_resources_total": 1035, "colour_resources_used": 310, "layouts_scanned": 219, "mapped_ratio_of_used": 0.771}	ok	0
+com.android.dialer	org.ztos.overlay.factory.com_android_dialer	{"colour_resources_mapped": 222, "colour_resources_total": 1061, "colour_resources_used": 301, "layouts_scanned": 258, "mapped_ratio_of_used": 0.738}	ok	0
+org.lineageos.aperture	org.ztos.overlay.factory.org_lineageos_aperture	{"colour_resources_mapped": 173, "colour_resources_total": 493, "colour_resources_used": 231, "layouts_scanned": 80, "mapped_ratio_of_used": 0.749}	ok	0
