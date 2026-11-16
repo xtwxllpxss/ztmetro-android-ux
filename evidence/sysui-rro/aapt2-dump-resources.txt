@@ -1,0 +1,91 @@
+Binary APK
+Package name=org.ztos.overlay.systemui id=7f
+  type color id=01 entryCount=6
+    resource 0x7f010000 color/notification_legacy_background_color
+      () #ff1f1f1f
+      (night) #ff1f1f1f
+    resource 0x7f010001 color/notification_scrim_base
+      () #ff000000
+      (night) #ff000000
+    resource 0x7f010002 color/notification_scrim_fallback
+      () #ff000000
+      (night) #ff000000
+    resource 0x7f010003 color/shade_header_text_color
+      () #ffffffff
+      (night) #ffffffff
+    resource 0x7f010004 color/shade_header_text_color_bg
+      () #ff000000
+      (night) #ff000000
+    resource 0x7f010005 color/shade_panel_fallback
+      () #ff000000
+      (night) #ff000000
+  type dimen id=02 entryCount=11
+    resource 0x7f020000 dimen/aux_spacing_overlay_panel_shape_radius
+      () 0.000000dp
+    resource 0x7f020001 dimen/notification_corner_radius
+      () 0.000000dp
+    resource 0x7f020002 dimen/notification_corner_radius_small
+      () 0.000000dp
+    resource 0x7f020003 dimen/overlay_shade_panel_shape_radius
+      () 0.000000dp
+    resource 0x7f020004 dimen/qs_corner_radius
+      () 0.000000dp
+    resource 0x7f020005 dimen/qs_tile_height
+      () 68.000000dp
+    resource 0x7f020006 dimen/qs_tile_margin_horizontal
+      () 4.000000dp
+    resource 0x7f020007 dimen/qs_tile_margin_vertical
+      () 4.000000dp
+    resource 0x7f020008 dimen/qs_tile_padding
+      () 10.000000dp
+    resource 0x7f020009 dimen/qs_tile_start_padding
+      () 12.000000dp
+    resource 0x7f02000a dimen/qs_tile_text_size
+      () 13.000000sp
+  type drawable id=03 entryCount=1
+    resource 0x7f030000 drawable/qs_tile_background_shape
+      () (file) res/drawable/qs_tile_background_shape.xml type=XML
+  type style id=04 entryCount=7
+    resource 0x7f040000 style/TextAppearance.QS.Status
+      () (style) size=5
+        0x01010095=20.000000sp
+        0x01010098=@color/shade_header_text_color
+        0x010103ac="sans-serif-light"
+        0x010104b6=0.000000e+00
+        0x0101057f=27.000000sp
+    resource 0x7f040001 style/TextAppearance.QS.Status.Build
+      () (style) size=3 parent=style/TextAppearance.QS.Status (0x7f040000)
+        0x01010095=11.000000sp
+        0x01010098=#ff9e9e9e
+        0x010104b6=0.000000e+00
+    resource 0x7f040002 style/TextAppearance.QS.Status.Clock
+      () (style) size=3 parent=style/TextAppearance.QS.Status (0x7f040000)
+        0x01010095=30.000000sp
+        0x010103ac="sans-serif-light"
+        0x010104b6=-0.02
+    resource 0x7f040003 style/TextAppearance.QS.TileLabel
+      () (style) size=5
+        0x01010095=13.000000sp
+        0x0101038c=false
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00
+        0x0101057f=18.000000sp
+    resource 0x7f040004 style/TextAppearance.QS.TileLabel.Secondary
+      () (style) size=3 parent=style/TextAppearance.QS.TileLabel (0x7f040003)
+        0x01010095=10.000000sp
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00
+    resource 0x7f040005 style/TextAppearance.StatusBar.Expanded.Clock
+      () (style) size=5
+        0x01010095=28.000000sp
+        0x01010097=0x00000000
+        0x01010098=?0x01010036
+        0x010103ac="sans-serif-light"
+        0x010104b6=-0.02
+    resource 0x7f040006 style/TextAppearance.StatusBar.Expanded.Date
+      () (style) size=5
+        0x01010095=14.000000sp
+        0x01010097=0x00000000
+        0x01010098=?0x01010036
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00

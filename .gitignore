@@ -1,0 +1,12 @@
+# build outputs
+**/build/
+**/out/
+__pycache__/
+*.pyc
+# signing material (generated per build, never committed)
+*.jks
+*.keystore
+*.pk8
+*.pem
+# OS noise
+.DS_Store

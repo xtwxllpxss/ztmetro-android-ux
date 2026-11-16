@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Night-mode twins. The target ships night variants of every colour we override
+  (packages/SystemUI/res/values-night/colors.xml:26,27,31,135,138,139); an RRO value
+  only replaces the configuration it declares, so without this file dark mode would
+  keep the stock lavender/grey scrims. Metro Action Centre is black in both modes.
+-->
+<resources>
+
+    <color name="shade_panel_fallback">#FF000000</color>
+    <color name="notification_scrim_fallback">#FF000000</color>
+    <color name="notification_scrim_base">#FF000000</color>
+
+    <color name="notification_legacy_background_color">#FF1F1F1F</color>
+
+    <color name="shade_header_text_color">#FFFFFFFF</color>
+    <color name="shade_header_text_color_bg">#FF000000</color>
+
+</resources>

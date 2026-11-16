@@ -1,0 +1,47 @@
+== no local aapt2/android.jar: building on hermes-ubuntu (~/ztux/status) ==
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+== [framework] compile ==
+== [framework] link ==
+== [framework] align ==
+== [framework] sign (throwaway key: /home/denis/.ztmetro-overlay-debug.keystore) ==
+== [framework] verify ==
+Signer #1 certificate DN: CN=ztmetro overlay (throwaway)
+Signer #1 certificate SHA-256 digest: 16e91082631bef535eba7ebe3a62ff3b01f47b95acd1415db151c92addcb8d3e
+Signer #1 certificate SHA-1 digest: efc3661d8294c0c47dabd1a392a7350ec23d8bd8
+Signer #1 certificate MD5 digest: 9d262864bd433272b746998161cb3c96
+package: name='org.ztos.overlay.status.framework' versionCode='1' versionName='1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+application-label:'ztos status strip (framework)'
+application: label='ztos status strip (framework)' icon=''
+overlay: targetPackage='android' priority='20' isStatic='true'
+entries:      3951                     5 files
+== [systemui] compile ==
+== [systemui] link ==
+== [systemui] align ==
+== [systemui] sign (throwaway key: /home/denis/.ztmetro-overlay-debug.keystore) ==
+== [systemui] verify ==
+Signer #1 certificate DN: CN=ztmetro overlay (throwaway)
+Signer #1 certificate SHA-256 digest: 16e91082631bef535eba7ebe3a62ff3b01f47b95acd1415db151c92addcb8d3e
+Signer #1 certificate SHA-1 digest: efc3661d8294c0c47dabd1a392a7350ec23d8bd8
+Signer #1 certificate MD5 digest: 9d262864bd433272b746998161cb3c96
+package: name='org.ztos.overlay.status.systemui' versionCode='1' versionName='1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+application-label:'ztos status strip (SystemUI)'
+application: label='ztos status strip (SystemUI)' icon=''
+overlay: targetPackage='com.android.systemui' priority='20' isStatic='false'
+entries:      4399                     5 files
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+
+== APKs ==
+APK    /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/status-strip/ztmetro-status-framework-rro.apk
+sha256 7a3016a05ece55be4214f2acc9b0b1d85748d3269796f1b7963bb569a12b7161
+APK    /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/status-strip/ztmetro-status-systemui-rro.apk
+sha256 ea9bde64b4b078f959f5b2606762801b7a8fff38a38b1d39c20206c3e4b155bf

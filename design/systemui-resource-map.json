@@ -1,0 +1,173 @@
+{
+  "_meta": {
+    "target": "LineageOS/android_frameworks_base @ lineage-23.2",
+    "commit": "797e43244b96c6a0dff5c81b21c4d4be665b082e",
+    "systemui_tree_sha": "c8a86627d717c4219db76b61444e42a2a27da243",
+    "fetched": "2026-11-16",
+    "paths_are_relative_to": "packages/SystemUI/ unless prefixed with core/",
+    "labels": "F=verified in source, E=estimate, ?=unverified"
+  },
+  "resources": [
+    {
+      "resource": "shadeActive / shadeInactive (theme attrs)",
+      "type": "attr (color reference)",
+      "file": "res/values/attrs.xml:125-131",
+      "styles_what": "QS tile ACTIVE / INACTIVE fill color, resolved in theme Theme.SystemUI.QuickSettings (res/values/styles.xml:553-554) to @androidprv:color/customColorShadeActive / customColorShadeInactive [F]",
+      "metro_target": "Flat Metro tile: active = accent (cyan #0078D7-class), inactive = neutral #E6E6E6/#1F1F1F instead of tonal Material surfaces"
+    },
+    {
+      "resource": "onShadeActive / onShadeInactive / onShadeActiveVariant / onShadeInactiveVariant",
+      "type": "attr (color reference)",
+      "file": "res/values/attrs.xml:126-130",
+      "styles_what": "Foreground (icon/label) color on active and inactive tiles; consumed by qs_tile_label secondary label and tile icon tint [F]",
+      "metro_target": "High-contrast label/icon: white on accent, near-black on light inactive — Metro avoids tonal contrast"
+    },
+    {
+      "resource": "qs_tile_background",
+      "type": "drawable (ripple + layer-list)",
+      "file": "res/drawable/qs_tile_background.xml",
+      "styles_what": "The whole tile chrome: ripple color, mask, base layer + overlay layer, all pointing at qs_tile_background_shape [F]",
+      "metro_target": "Replace with square gradient-free rect (radius 0 or 2dp), no ripple ring; single flat fill"
+    },
+    {
+      "resource": "qs_tile_background_shape",
+      "type": "drawable (shape)",
+      "file": "res/drawable/qs_tile_background_shape.xml",
+      "styles_what": "<corners android:radius=\"@dimen/qs_corner_radius\"/> + solid #FFFFFF tinted at runtime by setColor() in QSTileViewImpl [F]",
+      "metro_target": "THE single best tile-shape hook: set radius to 0dp → all tiles become Metro squares without touching code"
+    },
+    {
+      "resource": "qs_corner_radius",
+      "type": "dimen",
+      "file": "res/values/dimens.xml:726",
+      "styles_what": "28dp — corner radius of every QS tile, referenced by qs_tile_background_shape [F]",
+      "metro_target": "0dp (square) or 2dp (slight Metro bevel)"
+    },
+    {
+      "resource": "qs_tile_height / qs_tile_padding / qs_tile_start_padding / qs_tile_margin_horizontal",
+      "type": "dimen",
+      "file": "res/values/dimens.xml:727, 728, 758, 759",
+      "styles_what": "80dp tile height, 12dp inner padding, 16dp start padding, 8dp horizontal gap — read in QSTileViewImpl.kt:238-242,279-292 [F]",
+      "metro_target": "Metro tiles are wider/shorter: height 64dp, gap 4dp, padding 8dp"
+    },
+    {
+      "resource": "TextAppearance.QS.TileLabel",
+      "type": "style",
+      "file": "res/values/styles.xml:164-169",
+      "styles_what": "textSize @dimen/qs_tile_text_size (14sp, dimens.xml:767), letterSpacing .01, lineHeight 20sp, fontFamily config_bodyFontFamilyMedium [F]",
+      "metro_target": "Metro Segoe-like: textSize 12sp, letterSpacing 0, fontFamily = injected Metro font, textAllCaps=false, single line"
+    },
+    {
+      "resource": "TextAppearance.QS.TileLabel.Secondary",
+      "type": "style",
+      "file": "res/values/styles.xml:171-173",
+      "styles_what": "Secondary (app) label under tile label, regular weight, color ?attr/onShadeInactive (qs_tile_label.xml:56) [F]",
+      "metro_target": "Hide (visibility gone) or 10sp grey — Metro tiles have no secondary line"
+    },
+    {
+      "resource": "qs_tile_label",
+      "type": "layout",
+      "file": "res/layout/qs_tile_label.xml",
+      "styles_what": "The label column inflated by QSTileViewImpl.kt:305: IgnorableChildLinearLayout containing @id/tile_label and @id/app_label with textAppearance [F]",
+      "metro_target": "Restyle in place (padding/margins); Metro wants label bottom-left, icon top-left"
+    },
+    {
+      "resource": "notification_corner_radius / notification_corner_radius_small",
+      "type": "dimen",
+      "file": "res/values/dimens.xml:348, 357",
+      "styles_what": "28dp / 4dp — radius used when NotificationBackgroundView draws the card background [F: dimens; E: exact consumer line]",
+      "metro_target": "0dp — Metro notification cards are square with a 1dp border, not rounded"
+    },
+    {
+      "resource": "notification_legacy_background_color",
+      "type": "color",
+      "file": "res/values/colors.xml:84",
+      "styles_what": "#ff1a1a1a — opaque fallback card fill when no themed background is set [F]",
+      "metro_target": "Light #FFFFFF / dark #1F1F1F card + 1dp #CCCCCC border (Metro 'tile' look)"
+    },
+    {
+      "resource": "notification_scrim_base / shade_panel_fallback / notification_scrim_fallback",
+      "type": "color",
+      "file": "res/values/colors.xml:40, 43, 44",
+      "styles_what": "Colors painted by ScrimView (super_notification_shade.xml: scrim_behind, scrim_notifications) to form the shade/panel background — there is no single 'shade background drawable' [F]",
+      "metro_target": "Metro shade = solid dark #1F1F1F (or accent) fully opaque, zero blur: this is the panel-background hook"
+    },
+    {
+      "resource": "overlay_shade_panel_shape_radius / aux_spacing_overlay_panel_shape_radius",
+      "type": "dimen",
+      "file": "res/values/shade_dimens.xml:30-36",
+      "styles_what": "46dp rounded corners of the floating shade panel (lineage-23.2 shade is the 2025 surface design) [F]",
+      "metro_target": "0dp — Metro has no rounded panel"
+    },
+    {
+      "resource": "shade_panel_width / shade_panel_margin_horizontal",
+      "type": "dimen",
+      "file": "res/values/shade_dimens.xml:24-28",
+      "styles_what": "600dp max width / 0dp side margin for the floating shade on wide screens [F]",
+      "metro_target": "Full-bleed panel (600dp → match_parent) for the Metro 'everything is a plane' look"
+    },
+    {
+      "resource": "TextAppearance.StatusBar.Expanded.Clock",
+      "type": "style",
+      "file": "res/values/styles.xml:37-42",
+      "styles_what": "Expanded-shade clock: textSize @dimen/qs_time_expanded_size (14sp, dimens.xml:966), config_headlineFontFamilyMedium, textColorPrimary [F]",
+      "metro_target": "Metro header clock is thin-large: 28sp, fontFamily config_bodyFontFamily (light), letterSpacing -0.02"
+    },
+    {
+      "resource": "TextAppearance.QS.Status / .Clock / .Build",
+      "type": "style",
+      "file": "res/values/styles.xml:180-196",
+      "styles_what": "Shade header typography (status/build/clock) with feature-flag font families ('variable-display-small-emphasized'), color @color/shade_header_text_color [F]",
+      "metro_target": "Pin all three to the injected Metro font + fixed sizes, bypassing the variable-font feature flags"
+    },
+    {
+      "resource": "status_bar_shade_header_text_size_sp / status_bar_clock_size",
+      "type": "dimen",
+      "file": "res/values/dimens.xml:1921, 178",
+      "styles_what": "14sp shade header text, 14sp status-bar clock [F]",
+      "metro_target": "Metro: 12sp status clock, 16sp header meta text"
+    },
+    {
+      "resource": "qs_header_row_min_height / shade_header_system_icons_height / qs_header_system_icons_area_height",
+      "type": "dimen",
+      "file": "res/values/dimens.xml:784, 619, 558",
+      "styles_what": "Header row min height chains to @dimen/status_bar_height (784); system-icons row height (619) [F]",
+      "metro_target": "Compact Metro header: 48dp row, icons right-aligned"
+    },
+    {
+      "resource": "status_bar_height / status_bar_height_portrait / quick_qs_offset_height",
+      "type": "dimen (framework-res)",
+      "file": "core/res/res/values/dimens.xml:44-60",
+      "styles_what": "24dp (AOSP android-16.0.0_r3); SystemUI's status_bar_padding_start/top (res/values/dimens.xml:463, 469) add the insets [F]",
+      "metro_target": "Status bar stays 24dp; Metro look comes from typography + icon set, not height — changing height shifts all insets and is the riskiest dimension to overlay"
+    },
+    {
+      "resource": "qs_header_stub / notification_panel / qs_pager",
+      "type": "layout ids",
+      "file": "res/layout/status_bar_expanded.xml:23, 46, 64; res/layout/qs_paged_tile_layout.xml",
+      "styles_what": "notification_panel background is @android:color/transparent (line 26) — the visible shade is painted by the ScrimViews behind it [F]",
+      "metro_target": "Restyle the scrim colors, do not try to overlay a 'panel background' that does not exist"
+    },
+    {
+      "resource": "super_notification_shade",
+      "type": "layout",
+      "file": "res/layout/super_notification_shade.xml",
+      "styles_what": "Shade window root (NotificationShadeWindowView): communal_ui_stub, scrim_behind, scrim_notifications, status_bar_expanded, light_reveal_scrim, keyguard_root_view, shared_notification_container [F]",
+      "metro_target": "Do NOT overlay this layout — it is the window root; restyle children/colors instead"
+    },
+    {
+      "resource": "keyguard_status_bar / keyguard_bottom_area / multi_shade",
+      "type": "layout",
+      "file": "res/layout/keyguard_status_bar.xml, res/layout/keyguard_bottom_area.xml, res/layout/multi_shade.xml",
+      "styles_what": "Keyguard top bar, bottom shortcut/indication area, and the AOSP multi-shade container [F: files exist]",
+      "metro_target": "Metro lock screen: keep layout, restyle the clock (TextAppearance.StatusBar.Expanded.Clock) and bottom areas"
+    },
+    {
+      "resource": "res-keyguard/layout/* (bouncer + keyguard_*)",
+      "type": "layout directory",
+      "file": "res-keyguard/layout/ — 26 files, e.g. keyguard_pin_view.xml, keyguard_pattern_view.xml, keyguard_password_view.xml, keyguard_security_container_view.xml, alternate_bouncer.xml, analog_clock.xml, bubble_clock.xml",
+      "styles_what": "Separate res-keyguard source set merged into SystemUI; keyguard/bouncer views [F]",
+      "metro_target": "PIN pad is the highest-value keyguard Metro target (keyguard_num_pad_key.xml + keyguard_pin_view.xml); treat as phase 2"
+    }
+  ]
+}

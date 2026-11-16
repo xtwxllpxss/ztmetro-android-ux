@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ztMetro: Settings/SettingsLib shared tokens.
+     These are the *base components* Settings inherits from its own theme and from
+     SettingsLib (not framework-res): surface colours and the category/body type scale.
+     Overriding the tokens here is what turns the greenish Material surfaces into the
+     pure-black / white / neutral-grey palette the real ztmetro Settings uses. -->
+<resources>
+    <color name="settingslib_colorSurface">#FF000000</color>
+    <color name="settingslib_colorSurfaceHeader">#FF000000</color>
+    <color name="settingslib_colorSurfaceVariant">#FF1A1A1A</color>
+    <color name="settingslib_colorBackgroundLevel_low">#FF000000</color>
+    <color name="settingslib_colorBackgroundLevel_medium">#FF0A0A0A</color>
+    <color name="settingslib_colorBackgroundLevel_high">#FF141414</color>
+    <color name="settingslib_colorContentLevel_low">#FF999999</color>
+    <color name="settingslib_colorContentLevel_medium">#FFE6E6E6</color>
+    <color name="settingslib_colorContentLevel_high">#FFFFFFFF</color>
+
+    <!-- section headers: 12sp grey caps with WP tracking -->
+    <style name="TextAppearance.CategoryTitle" parent="@android:style/TextAppearance.Material.Body1">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">#FF999999</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+    <style name="TextAppearance.CategoryTitle.SettingsLib" parent="@style/TextAppearance.CategoryTitle" />
+
+    <!-- body text: Open Sans (system sans-serif) at Metro sizes -->
+    <style name="TextAppearance.M3.Sys.Typescale.BodyLarge" parent="@android:style/TextAppearance.Material.Body1">
+        <item name="android:textSize">17sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+    <style name="TextAppearance.M3.Sys.Typescale.BodyMedium" parent="@android:style/TextAppearance.Material.Body2">
+        <item name="android:textSize">13sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+    <style name="TextAppearance.M3.Sys.Typescale.BodySmall" parent="@android:style/TextAppearance.Material.Caption">
+        <item name="android:textSize">12sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+</resources>

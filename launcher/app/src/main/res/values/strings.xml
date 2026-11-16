@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ztmetro start</string>
+
+    <string name="header_caps">ZTMETRO</string>
+    <string name="page_start">start</string>
+    <string name="page_apps">applications</string>
+
+    <string name="sheet_open">open</string>
+    <string name="sheet_make_small">make small</string>
+    <string name="sheet_make_medium">make medium</string>
+    <string name="sheet_make_wide">make wide</string>
+    <string name="sheet_unpin">unpin from start</string>
+    <string name="sheet_pin_small">pin as small tile</string>
+    <string name="sheet_pin_medium">pin as medium tile</string>
+    <string name="sheet_pin_wide">pin as wide tile</string>
+    <string name="sheet_cancel">cancel</string>
+
+    <string name="appearance">appearance</string>
+    <string name="appearance_live_on">live tiles on</string>
+    <string name="appearance_live_off">live tiles off</string>
+    <string name="appearance_live_row">live tiles: %1$s</string>
+    <string name="appearance_system_settings">system settings</string>
+    <string name="on">on</string>
+    <string name="off">off</string>
+
+    <string name="search_hint">search apps</string>
+    <string name="no_results">no apps found</string>
+
+    <string name="brand_short">ZRN</string>
+    <string name="cd_all_apps">all applications</string>
+    <string name="cd_back">back</string>
+    <string name="cd_search">search applications</string>
+
+    <string name="app_missing">app is no longer installed</string>
+    <string name="settings_missing">settings are unavailable</string>
+    <string name="pinned">pinned to start</string>
+    <string name="unpinned">removed from start</string>
+</resources>

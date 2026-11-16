@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro SystemUI RRO — flat Metro Action Centre palette (default config).
+
+  Why these three colours are the shade background: at lineage-23.2 there is no
+  "shade background" drawable. The panel and the notification scrim are painted from
+  ShadeColors.kt (shade/ui/ShadeColors.kt:33-90), fed by ScrimController.java:1695-1699:
+      blur unsupported -> R.color.shade_panel_fallback / notification_scrim_fallback
+      blur supported   -> composite of framework shade_panel_fg/bg + notification_scrim_base
+  so with blur off (expected on a 2 GB ugglite) these literals ARE the shade surface.
+
+  Metro tokens: action_centre #000000, surface_off #1F1F1F, text_primary #FFFFFF,
+  text_secondary_strong #9E9E9E (ztmetro.c:6501-6502, 6315-6316).
+  values-night carries the same literals: the target has night variants
+  (res/values-night/colors.xml:26-31,135-139) which would otherwise win in dark mode.
+-->
+<resources>
+
+    <!-- Flat opaque black: no blur-driven tonal surface, no translucency. -->
+    <color name="shade_panel_fallback">#FF000000</color>
+    <color name="notification_scrim_fallback">#FF000000</color>
+    <color name="notification_scrim_base">#FF000000</color>
+
+    <!-- Notification card fill: Metro surface_off (legacy/custom-view fallback card). -->
+    <color name="notification_legacy_background_color">#FF1F1F1F</color>
+
+    <!-- Header text on the now-black panel: white primary, black "on light bg" twin
+         (ShadeHeaderController.getBgColor/getFgColor, ShadeHeaderController.kt:415-427). -->
+    <color name="shade_header_text_color">#FFFFFFFF</color>
+    <color name="shade_header_text_color_bg">#FF000000</color>
+
+</resources>

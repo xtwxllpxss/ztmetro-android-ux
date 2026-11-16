@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztMetro accent roles — the *colour resources* that stock Material3 / DeviceDefault
+  themes point their accent attributes at.  Hand-maintained (not generated) so the
+  token-pure ztmetro_colors.xml stays a straight projection of
+  design/tokens/ztmetro.tokens.json.
+
+  Target: framework-res, AOSP android-16.0.0_r3. Every name below was grepped in
+  core/res/res/values at that tag; file:line is quoted per entry and re-checked by
+  tools/check_names.py.
+
+  ===========================================================================
+  WHY THE ROLE ATTRIBUTES THEMSELVES ARE NOT HERE
+  ===========================================================================
+  colorPrimary, colorPrimaryDark, colorSecondary, colorAccent,
+  colorControlActivated and colorControlHighlight are <attr> declarations, not
+  colour resources:
+
+      core/res/res/values/attrs.xml:1122  <attr name="colorPrimary" format="color"/>
+      core/res/res/values/attrs.xml:1126  <attr name="colorPrimaryDark" .../>
+      core/res/res/values/attrs.xml:1129  <attr name="colorSecondary" .../>
+      core/res/res/values/attrs.xml:1133  <attr name="colorAccent" .../>
+      core/res/res/values/attrs.xml:1160  <attr name="colorControlActivated" .../>
+      core/res/res/values/attrs.xml:1163  <attr name="colorControlHighlight" .../>
+
+  An overlay can only replace resources, so `<color name="colorPrimary">` would
+  define a NEW colour that nothing references — idmap2 matches by (type, name) and
+  framework-res has no colour of that name, so the entry is dropped silently.
+  (Such pseudo-colours also made the first cut of this file fail to be useful.)
+  The themes point those attrs at real colours; those are what we override below.
+
+  Also: `colorOnPrimary` does NOT exist at API 36 — neither as an attr nor as a
+  colour (`grep 'name="colorOnPrimary"' core/res/res/values/attrs.xml` -> 0 hits).
+  The verified framework equivalents are system_on_primary_light / system_on_primary_dark.
+
+  Two roles are ALREADY handled elsewhere in this overlay and are deliberately not
+  duplicated here:
+    colorControlActivated -> ?attr/colorAccent -> accent_device_default_light/dark
+        (themes_material.xml:403,784; overridden in ztmetro_colors.xml)
+    colorControlHighlight -> ripple_material_dark/light
+        (themes_material.xml:405,786; overridden in ztmetro_colors.xml)
+
+  ===========================================================================
+  BLAST RADIUS
+  ===========================================================================
+  * primary_device_default_settings* are referenced ONLY by the DeviceDefault
+    *Settings* themes (themes_device_defaults.xml:2284,2323,2359,2388,2436,2494,2545)
+    -> this changes the Settings app, nothing else.
+  * system_primary_* / system_on_primary_* / system_accent2_* / system_accent3_*
+    are the Material You roles every M3 app reads -> ROM-wide by design (one accent).
+  * secondary_device_default_settings* / secondary_device_default_* are SURFACE
+    roles (dialog/sheet containers, themes_device_defaults.xml:2286). Tinting them
+    cobalt would make surfaces cobalt, so they stay stock — the same reasoning as
+    evidence/framework-rro/REPORT.md §5 for colorPrimary/colorSecondary surfaces.
+  * primary_dark_device_default_settings* (the Settings status-bar role, :2285) is
+    left stock too: Metro's status bar is black, not accent.
+-->
+<resources>
+
+    <!-- =====================================================================
+         Settings (DeviceDefault.Settings) colourPrimary — the colour that the
+         Material3 MaterialSwitch / M3 Slider inside Settings read as
+         ?attr/colorPrimary, and that Theme.Settings uses as its app-bar fill.
+         Settings' own theme points here explicitly:
+             res/values/themes.xml:68,188,249   -> primary_device_default_settings_light
+             res/values-night/themes.xml:21     -> primary_device_default_settings
+         Stock values (colors_device_defaults.xml):
+             :23  primary_device_default_settings_light = @color/primary_device_default_light
+                  (= @color/system_neutral1_50, a near-white surface tone)
+             :22  primary_device_default_settings       = @color/system_neutral1_900
+         Note there is NO primary_device_default_settings_dark at API 36.
+         ===================================================================== -->
+    <color name="primary_device_default_settings_light">#FF0050EF</color>
+    <color name="primary_device_default_settings">#FF3D7BFF</color>
+
+    <!-- =====================================================================
+         Material You "primary" role (core/res/res/values/colors.xml):
+             :582 system_primary_light = #4C5E8B
+             :637 system_primary_dark  = #B8C6EE
+         and the on-primary foreground:
+             :566 system_on_primary_light = #F9F8FF
+             :621 system_on_primary_dark  = #323F60
+         Same split as accent_device_default_*: base on light, token light1 on dark
+         (color.accent.base #0050EF / color.accent.light1 #3D7BFF).
+         White on #0050EF = 6.2:1; on #3D7BFF = 4.1:1 (icon/handle role, not body
+         text) — the same pair the QS tiles already use.
+         ===================================================================== -->
+    <color name="system_primary_light">#FF0050EF</color>
+    <color name="system_primary_dark">#FF3D7BFF</color>
+    <color name="system_on_primary_light">#FFFFFFFF</color>
+    <color name="system_on_primary_dark">#FFFFFFFF</color>
+
+    <!-- =====================================================================
+         Material You secondary (accent2) and tertiary (accent3) seeds.
+         ztmetro has ONE accent (settings/ztsettings.c:200, 20 named colours but a
+         single active one), so both families are pinned onto the accent1 ramp that
+         ztmetro_colors.xml already emits (light2/light1/base/dark1/dark2).
+         Steps 100/200/500/600/700 are the ones the accent1 override covers; the
+         untouched steps (0,10,50,300,400,800,900,1000) keep their stock neutral
+         tones, which is why only this slice is overridden.
+         Plain names (the monet defaults) live in colors_dynamic.xml:
+             100 :35 / :48   200 :36 / :49   500 :39 / :52   600 :40 / :53   700 :41 / :54
+         Light baselines: colors.xml system_accent2_100_light:274 ...
+         Dark  baselines: colors.xml system_accent2_100_dark:430 ...
+         (accent3 light :294.., dark :456..)
+         ===================================================================== -->
+
+    <!-- accent2 = secondary -->
+    <color name="system_accent2_100">#FF7FA8FF</color>
+    <color name="system_accent2_100_light">#FF7FA8FF</color>
+    <color name="system_accent2_100_dark">#FF7FA8FF</color>
+    <color name="system_accent2_200">#FF3D7BFF</color>
+    <color name="system_accent2_200_light">#FF3D7BFF</color>
+    <color name="system_accent2_200_dark">#FF3D7BFF</color>
+    <color name="system_accent2_500">#FF0050EF</color>
+    <color name="system_accent2_500_light">#FF0050EF</color>
+    <color name="system_accent2_500_dark">#FF0050EF</color>
+    <color name="system_accent2_600">#FF002878</color>
+    <color name="system_accent2_600_light">#FF002878</color>
+    <color name="system_accent2_600_dark">#FF002878</color>
+    <color name="system_accent2_700">#FF00143C</color>
+    <color name="system_accent2_700_light">#FF00143C</color>
+    <color name="system_accent2_700_dark">#FF00143C</color>
+
+    <!-- accent3 = tertiary -->
+    <color name="system_accent3_100">#FF7FA8FF</color>
+    <color name="system_accent3_100_light">#FF7FA8FF</color>
+    <color name="system_accent3_100_dark">#FF7FA8FF</color>
+    <color name="system_accent3_200">#FF3D7BFF</color>
+    <color name="system_accent3_200_light">#FF3D7BFF</color>
+    <color name="system_accent3_200_dark">#FF3D7BFF</color>
+    <color name="system_accent3_500">#FF0050EF</color>
+    <color name="system_accent3_500_light">#FF0050EF</color>
+    <color name="system_accent3_500_dark">#FF0050EF</color>
+    <color name="system_accent3_600">#FF002878</color>
+    <color name="system_accent3_600_light">#FF002878</color>
+    <color name="system_accent3_600_dark">#FF002878</color>
+    <color name="system_accent3_700">#FF00143C</color>
+    <color name="system_accent3_700_light">#FF00143C</color>
+    <color name="system_accent3_700_dark">#FF00143C</color>
+
+</resources>

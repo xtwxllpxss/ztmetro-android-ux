@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Framework status-strip dimensions.
+  Every name exists in frameworks/base core/res/res/values/dimens.xml at
+  lineage-23.2 (797e4324):
+    :44  status_bar_height_default       24dp
+    :48  status_bar_height               @dimen/status_bar_height_portrait
+    :52  status_bar_height_portrait      24dp
+    :106 status_bar_system_icon_size     15dp
+
+  status_bar_height_landscape (:56) is left alone: it already points at
+  status_bar_height_portrait, so it follows the 28dp automatically.
+-->
+<resources>
+    <!-- ztmetro tokens: status_strip_height_dp 28 (design/tokens/ztmetro.tokens.json:271) -->
+    <dimen name="status_bar_height_default">28dp</dimen>
+    <dimen name="status_bar_height">28dp</dimen>
+    <dimen name="status_bar_height_portrait">28dp</dimen>
+
+    <!-- 15dp -> 13dp: smaller system glyphs (wifi, battery, ...) in a 28dp strip.
+         Consumed by StatusBarIconView.reloadDimens()
+         (packages/SystemUI/src/com/android/systemui/statusbar/StatusBarIconView.java:356-360). -->
+    <dimen name="status_bar_system_icon_size">13dp</dimen>
+</resources>

@@ -1,0 +1,28 @@
+== no local aapt2: building on hermes-ubuntu (~/ztux/settings-rro/build)
+== SDK          /home/denis/android-sdk
+== build-tools  Android Asset Packaging Tool (aapt) 2.20-13193326
+== android.jar  /home/denis/android-sdk/platforms/android-36/android.jar
+== JDK          /home/denis/android-jdk
+== source       /home/denis/ztux/settings-rro/build/src
+== aapt2 compile
+== aapt2 link (target: com.android.settings)
+== zipalign
+== sign (throwaway key: /home/denis/.ztmetro-overlay-debug.keystore)
+   apksigner verify: OK
+== verify overlay semantics
+== verify resources
+   package: Package name=org.ztos.overlay.settings id=7f
+   overridden resource entries: 56
+
+APK      /home/denis/ztux/settings-rro/build/out/ztmetro-settings-rro.apk
+package  org.ztos.overlay.settings -> com.android.settings
+entries  56
+sha256   6180aaeae550a58e11417582267065c6fac95d5129b923f394c5b6c3125f535f
+size     17100 bytes
+/home/denis/ztux/settings-rro/build/out/ztmetro-settings-rro.apk
+
+APK      /Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/settings-rro/ztmetro-settings-rro.apk
+package  org.ztos.overlay.settings -> com.android.settings
+sha256   6180aaeae550a58e11417582267065c6fac95d5129b923f394c5b6c3125f535f
+size     17100 bytes
+/Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/settings-rro/ztmetro-settings-rro.apk

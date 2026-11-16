@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro status-strip SystemUI RRO.
+
+  Target: com.android.systemui, LineageOS 23.2 / Android 16, frameworks_base
+  commit 797e43244b96c6a0dff5c81b21c4d4be665b082e (SystemUI subtree
+  c8a86627d717c4219db76b61444e42a2a27da243).
+
+  Only names verified in packages/SystemUI/res/values/{dimens,styles,colors}.xml:
+    status_bar_padding_start        4dp -> 8dp
+    status_bar_padding_top          0dp -> 2dp
+    status_bar_icon_drawing_size   15dp -> 13dp
+    status_bar_icon_drawing_alpha    90% -> 70%
+    TextAppearance.StatusBar.Default 12sp / sans-serif-light / letterSpacing 0
+    system_bar_background_opaque    #ff000000 (pinned; already black)
+
+  * android:hasCode="false".
+  * No android:targetName: SystemUI has no <overlayable> (docs/10b §1). The
+    APK must be preinstalled on a read-only partition (Magisk system/overlay
+    counts as SYSTEM_PARTITION) or idmap creation is refused.
+  * Not static: enable at runtime with
+        su 0 cmd overlay enable org.ztos.overlay.status.systemui
+    (the `shell` uid lacks CHANGE_OVERLAY_PACKAGES on a user build,
+    docs/10b §4). A SystemUI restart/recreate is required after enabling.
+  * priority 20 — above the generic ztmetro SystemUI overlay (priority 10).
+    The two overlays do not share any resource name today.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztos.overlay.status.systemui"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="36" android:targetSdkVersion="36" />
+
+    <application
+        android:hasCode="false"
+        android:label="ztos status strip (SystemUI)" />
+
+    <overlay
+        android:targetPackage="com.android.systemui"
+        android:priority="20" />
+</manifest>

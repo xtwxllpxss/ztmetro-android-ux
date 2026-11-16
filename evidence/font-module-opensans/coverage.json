@@ -1,0 +1,978 @@
+[
+ {
+  "file": "fonts/opensans/OpenSans-Bold.ttf",
+  "bytes": 147264,
+  "sfnt_version": "00010000",
+  "is_truetype_outlines": true,
+  "is_cff": false,
+  "is_variable": false,
+  "tables": [
+   "DSIG",
+   "GDEF",
+   "GPOS",
+   "GSUB",
+   "OS/2",
+   "cmap",
+   "cvt ",
+   "fpgm",
+   "gasp",
+   "glyf",
+   "head",
+   "hhea",
+   "hmtx",
+   "loca",
+   "maxp",
+   "name",
+   "post",
+   "prep"
+  ],
+  "num_glyphs": 1150,
+  "units_per_em": 2048,
+  "bbox": [
+   -1268,
+   -604,
+   2701,
+   2189
+  ],
+  "usWeightClass": 700,
+  "usWidthClass": 5,
+  "fsType": 0,
+  "fsSelection": 416,
+  "names": {
+   "0": "Copyright 2020 The Open Sans Project Authors (https://github.com/googlefonts/opensans)",
+   "1": "Open Sans",
+   "2": "Bold",
+   "3": "3.003;GOOG;OpenSans-Bold",
+   "4": "Open Sans Bold",
+   "5": "Version 3.003; ttfautohint (v1.8.4)",
+   "6": "OpenSans-Bold",
+   "7": "Open Sans is a trademark of Google and may be registered in certain jurisdictions.",
+   "8": "Monotype Imaging Inc.",
+   "9": "Monotype Design Team",
+   "10": "Designed by Monotype design team.",
+   "11": "http://www.google.com/get/noto/",
+   "12": "http://www.monotype.com/studio",
+   "13": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+   "14": "http://scripts.sil.org/OFL"
+  },
+  "cmap": {
+   "version": 0,
+   "num_subtables": 2,
+   "subtables": [
+    {
+     "platform": 0,
+     "encoding": 3,
+     "format": 4,
+     "codepoints": 969,
+     "unsupported": false
+    },
+    {
+     "platform": 3,
+     "encoding": 1,
+     "format": 4,
+     "codepoints": 969,
+     "unsupported": false
+    }
+   ],
+   "unicode_codepoints": 969,
+   "all_subtable_codepoints": 969
+  },
+  "coverage": {
+   "cyrillic_block_total": 256,
+   "cyrillic_block_present": 248,
+   "greek_block_present": 75,
+   "latin_basic_present": 95,
+   "required": {
+    "U+0410": {
+     "name": "CYRILLIC CAPITAL LETTER A",
+     "present": true
+    },
+    "U+0416": {
+     "name": "CYRILLIC CAPITAL LETTER ZHE",
+     "present": true
+    },
+    "U+0430": {
+     "name": "CYRILLIC SMALL LETTER A",
+     "present": true
+    },
+    "U+044F": {
+     "name": "CYRILLIC SMALL LETTER YA",
+     "present": true
+    },
+    "U+0451": {
+     "name": "CYRILLIC SMALL LETTER IO",
+     "present": true
+    }
+   },
+   "extra_ru": {
+    "U+0401": true,
+    "U+0439": true,
+    "U+044A": true,
+    "U+044B": true,
+    "U+044D": true,
+    "U+044E": true,
+    "U+2116": true,
+    "U+00AB": true,
+    "U+00BB": true,
+    "U+2014": true,
+    "U+2026": true
+   },
+   "all_required_present": true
+  }
+ },
+ {
+  "file": "fonts/opensans/OpenSans-BoldItalic.ttf",
+  "bytes": 153308,
+  "sfnt_version": "00010000",
+  "is_truetype_outlines": true,
+  "is_cff": false,
+  "is_variable": false,
+  "tables": [
+   "DSIG",
+   "GDEF",
+   "GPOS",
+   "GSUB",
+   "OS/2",
+   "cmap",
+   "cvt ",
+   "fpgm",
+   "gasp",
+   "glyf",
+   "head",
+   "hhea",
+   "hmtx",
+   "loca",
+   "maxp",
+   "name",
+   "post",
+   "prep"
+  ],
+  "num_glyphs": 1162,
+  "units_per_em": 2048,
+  "bbox": [
+   -1051,
+   -604,
+   2664,
+   2152
+  ],
+  "usWeightClass": 700,
+  "usWidthClass": 5,
+  "fsType": 0,
+  "fsSelection": 417,
+  "names": {
+   "0": "Copyright 2020 The Open Sans Project Authors (https://github.com/googlefonts/opensans)",
+   "1": "Open Sans",
+   "2": "Bold Italic",
+   "3": "3.003;GOOG;OpenSans-BoldItalic",
+   "4": "Open Sans Bold Italic",
+   "5": "Version 3.003; ttfautohint (v1.8.4)",
+   "6": "OpenSans-BoldItalic",
+   "7": "Open Sans is a trademark of Google and may be registered in certain jurisdictions.",
+   "8": "Monotype Imaging Inc.",
+   "9": "Monotype Design Team",
+   "10": "Designed by Monotype design team.",
+   "11": "http://www.google.com/get/noto/",
+   "12": "http://www.monotype.com/studio",
+   "13": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+   "14": "http://scripts.sil.org/OFL"
+  },
+  "cmap": {
+   "version": 0,
+   "num_subtables": 2,
+   "subtables": [
+    {
+     "platform": 0,
+     "encoding": 3,
+     "format": 4,
+     "codepoints": 972,
+     "unsupported": false
+    },
+    {
+     "platform": 3,
+     "encoding": 1,
+     "format": 4,
+     "codepoints": 972,
+     "unsupported": false
+    }
+   ],
+   "unicode_codepoints": 972,
+   "all_subtable_codepoints": 972
+  },
+  "coverage": {
+   "cyrillic_block_total": 256,
+   "cyrillic_block_present": 248,
+   "greek_block_present": 75,
+   "latin_basic_present": 95,
+   "required": {
+    "U+0410": {
+     "name": "CYRILLIC CAPITAL LETTER A",
+     "present": true
+    },
+    "U+0416": {
+     "name": "CYRILLIC CAPITAL LETTER ZHE",
+     "present": true
+    },
+    "U+0430": {
+     "name": "CYRILLIC SMALL LETTER A",
+     "present": true
+    },
+    "U+044F": {
+     "name": "CYRILLIC SMALL LETTER YA",
+     "present": true
+    },
+    "U+0451": {
+     "name": "CYRILLIC SMALL LETTER IO",
+     "present": true
+    }
+   },
+   "extra_ru": {
+    "U+0401": true,
+    "U+0439": true,
+    "U+044A": true,
+    "U+044B": true,
+    "U+044D": true,
+    "U+044E": true,
+    "U+2116": true,
+    "U+00AB": true,
+    "U+00BB": true,
+    "U+2014": true,
+    "U+2026": true
+   },
+   "all_required_present": true
+  }
+ },
+ {
+  "file": "fonts/opensans/OpenSans-Italic.ttf",
+  "bytes": 153256,
+  "sfnt_version": "00010000",
+  "is_truetype_outlines": true,
+  "is_cff": false,
+  "is_variable": false,
+  "tables": [
+   "DSIG",
+   "GDEF",
+   "GPOS",
+   "GSUB",
+   "OS/2",
+   "cmap",
+   "cvt ",
+   "fpgm",
+   "gasp",
+   "glyf",
+   "head",
+   "hhea",
+   "hmtx",
+   "loca",
+   "maxp",
+   "name",
+   "post",
+   "prep"
+  ],
+  "num_glyphs": 1162,
+  "units_per_em": 2048,
+  "bbox": [
+   -990,
+   -548,
+   2517,
+   2175
+  ],
+  "usWeightClass": 400,
+  "usWidthClass": 5,
+  "fsType": 0,
+  "fsSelection": 385,
+  "names": {
+   "0": "Copyright 2020 The Open Sans Project Authors (https://github.com/googlefonts/opensans)",
+   "1": "Open Sans",
+   "2": "Italic",
+   "3": "3.003;GOOG;OpenSans-Italic",
+   "4": "Open Sans Italic",
+   "5": "Version 3.003; ttfautohint (v1.8.4)",
+   "6": "OpenSans-Italic",
+   "7": "Open Sans is a trademark of Google and may be registered in certain jurisdictions.",
+   "8": "Monotype Imaging Inc.",
+   "9": "Monotype Design Team",
+   "10": "Designed by Monotype design team.",
+   "11": "http://www.google.com/get/noto/",
+   "12": "http://www.monotype.com/studio",
+   "13": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+   "14": "http://scripts.sil.org/OFL"
+  },
+  "cmap": {
+   "version": 0,
+   "num_subtables": 2,
+   "subtables": [
+    {
+     "platform": 0,
+     "encoding": 3,
+     "format": 4,
+     "codepoints": 972,
+     "unsupported": false
+    },
+    {
+     "platform": 3,
+     "encoding": 1,
+     "format": 4,
+     "codepoints": 972,
+     "unsupported": false
+    }
+   ],
+   "unicode_codepoints": 972,
+   "all_subtable_codepoints": 972
+  },
+  "coverage": {
+   "cyrillic_block_total": 256,
+   "cyrillic_block_present": 248,
+   "greek_block_present": 75,
+   "latin_basic_present": 95,
+   "required": {
+    "U+0410": {
+     "name": "CYRILLIC CAPITAL LETTER A",
+     "present": true
+    },
+    "U+0416": {
+     "name": "CYRILLIC CAPITAL LETTER ZHE",
+     "present": true
+    },
+    "U+0430": {
+     "name": "CYRILLIC SMALL LETTER A",
+     "present": true
+    },
+    "U+044F": {
+     "name": "CYRILLIC SMALL LETTER YA",
+     "present": true
+    },
+    "U+0451": {
+     "name": "CYRILLIC SMALL LETTER IO",
+     "present": true
+    }
+   },
+   "extra_ru": {
+    "U+0401": true,
+    "U+0439": true,
+    "U+044A": true,
+    "U+044B": true,
+    "U+044D": true,
+    "U+044E": true,
+    "U+2116": true,
+    "U+00AB": true,
+    "U+00BB": true,
+    "U+2014": true,
+    "U+2026": true
+   },
+   "all_required_present": true
+  }
+ },
+ {
+  "file": "fonts/opensans/OpenSans-Light.ttf",
+  "bytes": 143788,
+  "sfnt_version": "00010000",
+  "is_truetype_outlines": true,
+  "is_cff": false,
+  "is_variable": false,
+  "tables": [
+   "DSIG",
+   "GDEF",
+   "GPOS",
+   "GSUB",
+   "OS/2",
+   "cmap",
+   "cvt ",
+   "fpgm",
+   "gasp",
+   "glyf",
+   "head",
+   "hhea",
+   "hmtx",
+   "loca",
+   "maxp",
+   "name",
+   "post",
+   "prep"
+  ],
+  "num_glyphs": 1150,
+  "units_per_em": 2048,
+  "bbox": [
+   -1055,
+   -549,
+   2329,
+   2146
+  ],
+  "usWeightClass": 300,
+  "usWidthClass": 5,
+  "fsType": 0,
+  "fsSelection": 448,
+  "names": {
+   "0": "Copyright 2020 The Open Sans Project Authors (https://github.com/googlefonts/opensans)",
+   "1": "Open Sans Light",
+   "2": "Regular",
+   "3": "3.003;GOOG;OpenSans-Light",
+   "4": "Open Sans Light",
+   "5": "Version 3.003; ttfautohint (v1.8.4)",
+   "6": "OpenSans-Light",
+   "7": "Open Sans is a trademark of Google and may be registered in certain jurisdictions.",
+   "8": "Monotype Imaging Inc.",
+   "9": "Monotype Design Team",
+   "10": "Designed by Monotype design team.",
+   "11": "http://www.google.com/get/noto/",
+   "12": "http://www.monotype.com/studio",
+   "13": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+   "14": "http://scripts.sil.org/OFL",
+   "16": "Open Sans",
+   "17": "Light"
+  },
+  "cmap": {
+   "version": 0,
+   "num_subtables": 2,
+   "subtables": [
+    {
+     "platform": 0,
+     "encoding": 3,
+     "format": 4,
+     "codepoints": 969,
+     "unsupported": false
+    },
+    {
+     "platform": 3,
+     "encoding": 1,
+     "format": 4,
+     "codepoints": 969,
+     "unsupported": false
+    }
+   ],
+   "unicode_codepoints": 969,
+   "all_subtable_codepoints": 969
+  },
+  "coverage": {
+   "cyrillic_block_total": 256,
+   "cyrillic_block_present": 248,
+   "greek_block_present": 75,
+   "latin_basic_present": 95,
+   "required": {
+    "U+0410": {
+     "name": "CYRILLIC CAPITAL LETTER A",
+     "present": true
+    },
+    "U+0416": {
+     "name": "CYRILLIC CAPITAL LETTER ZHE",
+     "present": true
+    },
+    "U+0430": {
+     "name": "CYRILLIC SMALL LETTER A",
+     "present": true
+    },
+    "U+044F": {
+     "name": "CYRILLIC SMALL LETTER YA",
+     "present": true
+    },
+    "U+0451": {
+     "name": "CYRILLIC SMALL LETTER IO",
+     "present": true
+    }
+   },
+   "extra_ru": {
+    "U+0401": true,
+    "U+0439": true,
+    "U+044A": true,
+    "U+044B": true,
+    "U+044D": true,
+    "U+044E": true,
+    "U+2116": true,
+    "U+00AB": true,
+    "U+00BB": true,
+    "U+2014": true,
+    "U+2026": true
+   },
+   "all_required_present": true
+  }
+ },
+ {
+  "file": "fonts/opensans/OpenSans-LightItalic.ttf",
+  "bytes": 151216,
+  "sfnt_version": "00010000",
+  "is_truetype_outlines": true,
+  "is_cff": false,
+  "is_variable": false,
+  "tables": [
+   "DSIG",
+   "GDEF",
+   "GPOS",
+   "GSUB",
+   "OS/2",
+   "cmap",
+   "cvt ",
+   "fpgm",
+   "gasp",
+   "glyf",
+   "head",
+   "hhea",
+   "hmtx",
+   "loca",
+   "maxp",
+   "name",
+   "post",
+   "prep"
+  ],
+  "num_glyphs": 1162,
+  "units_per_em": 2048,
+  "bbox": [
+   -907,
+   -523,
+   2449,
+   2183
+  ],
+  "usWeightClass": 300,
+  "usWidthClass": 5,
+  "fsType": 0,
+  "fsSelection": 385,
+  "names": {
+   "0": "Copyright 2020 The Open Sans Project Authors (https://github.com/googlefonts/opensans)",
+   "1": "Open Sans Light",
+   "2": "Italic",
+   "3": "3.003;GOOG;OpenSans-LightItalic",
+   "4": "Open Sans Light Italic",
+   "5": "Version 3.003; ttfautohint (v1.8.4)",
+   "6": "OpenSans-LightItalic",
+   "7": "Open Sans is a trademark of Google and may be registered in certain jurisdictions.",
+   "8": "Monotype Imaging Inc.",
+   "9": "Monotype Design Team",
+   "10": "Designed by Monotype design team.",
+   "11": "http://www.google.com/get/noto/",
+   "12": "http://www.monotype.com/studio",
+   "13": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+   "14": "http://scripts.sil.org/OFL",
+   "16": "Open Sans",
+   "17": "Light Italic"
+  },
+  "cmap": {
+   "version": 0,
+   "num_subtables": 2,
+   "subtables": [
+    {
+     "platform": 0,
+     "encoding": 3,
+     "format": 4,
+     "codepoints": 972,
+     "unsupported": false
+    },
+    {
+     "platform": 3,
+     "encoding": 1,
+     "format": 4,
+     "codepoints": 972,
+     "unsupported": false
+    }
+   ],
+   "unicode_codepoints": 972,
+   "all_subtable_codepoints": 972
+  },
+  "coverage": {
+   "cyrillic_block_total": 256,
+   "cyrillic_block_present": 248,
+   "greek_block_present": 75,
+   "latin_basic_present": 95,
+   "required": {
+    "U+0410": {
+     "name": "CYRILLIC CAPITAL LETTER A",
+     "present": true
+    },
+    "U+0416": {
+     "name": "CYRILLIC CAPITAL LETTER ZHE",
+     "present": true
+    },
+    "U+0430": {
+     "name": "CYRILLIC SMALL LETTER A",
+     "present": true
+    },
+    "U+044F": {
+     "name": "CYRILLIC SMALL LETTER YA",
+     "present": true
+    },
+    "U+0451": {
+     "name": "CYRILLIC SMALL LETTER IO",
+     "present": true
+    }
+   },
+   "extra_ru": {
+    "U+0401": true,
+    "U+0439": true,
+    "U+044A": true,
+    "U+044B": true,
+    "U+044D": true,
+    "U+044E": true,
+    "U+2116": true,
+    "U+00AB": true,
+    "U+00BB": true,
+    "U+2014": true,
+    "U+2026": true
+   },
+   "all_required_present": true
+  }
+ },
+ {
+  "file": "fonts/opensans/OpenSans-Regular.ttf",
+  "bytes": 147528,
+  "sfnt_version": "00010000",
+  "is_truetype_outlines": true,
+  "is_cff": false,
+  "is_variable": false,
+  "tables": [
+   "DSIG",
+   "GDEF",
+   "GPOS",
+   "GSUB",
+   "OS/2",
+   "cmap",
+   "cvt ",
+   "fpgm",
+   "gasp",
+   "glyf",
+   "head",
+   "hhea",
+   "hmtx",
+   "loca",
+   "maxp",
+   "name",
+   "post",
+   "prep"
+  ],
+  "num_glyphs": 1150,
+  "units_per_em": 2048,
+  "bbox": [
+   -1124,
+   -557,
+   2460,
+   2146
+  ],
+  "usWeightClass": 400,
+  "usWidthClass": 5,
+  "fsType": 0,
+  "fsSelection": 448,
+  "names": {
+   "0": "Copyright 2020 The Open Sans Project Authors (https://github.com/googlefonts/opensans)",
+   "1": "Open Sans",
+   "2": "Regular",
+   "3": "3.003;GOOG;OpenSans-Regular",
+   "4": "Open Sans Regular",
+   "5": "Version 3.003; ttfautohint (v1.8.4)",
+   "6": "OpenSans-Regular",
+   "7": "Open Sans is a trademark of Google and may be registered in certain jurisdictions.",
+   "8": "Monotype Imaging Inc.",
+   "9": "Monotype Design Team",
+   "10": "Designed by Monotype design team.",
+   "11": "http://www.google.com/get/noto/",
+   "12": "http://www.monotype.com/studio",
+   "13": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+   "14": "http://scripts.sil.org/OFL"
+  },
+  "cmap": {
+   "version": 0,
+   "num_subtables": 2,
+   "subtables": [
+    {
+     "platform": 0,
+     "encoding": 3,
+     "format": 4,
+     "codepoints": 969,
+     "unsupported": false
+    },
+    {
+     "platform": 3,
+     "encoding": 1,
+     "format": 4,
+     "codepoints": 969,
+     "unsupported": false
+    }
+   ],
+   "unicode_codepoints": 969,
+   "all_subtable_codepoints": 969
+  },
+  "coverage": {
+   "cyrillic_block_total": 256,
+   "cyrillic_block_present": 248,
+   "greek_block_present": 75,
+   "latin_basic_present": 95,
+   "required": {
+    "U+0410": {
+     "name": "CYRILLIC CAPITAL LETTER A",
+     "present": true
+    },
+    "U+0416": {
+     "name": "CYRILLIC CAPITAL LETTER ZHE",
+     "present": true
+    },
+    "U+0430": {
+     "name": "CYRILLIC SMALL LETTER A",
+     "present": true
+    },
+    "U+044F": {
+     "name": "CYRILLIC SMALL LETTER YA",
+     "present": true
+    },
+    "U+0451": {
+     "name": "CYRILLIC SMALL LETTER IO",
+     "present": true
+    }
+   },
+   "extra_ru": {
+    "U+0401": true,
+    "U+0439": true,
+    "U+044A": true,
+    "U+044B": true,
+    "U+044D": true,
+    "U+044E": true,
+    "U+2116": true,
+    "U+00AB": true,
+    "U+00BB": true,
+    "U+2014": true,
+    "U+2026": true
+   },
+   "all_required_present": true
+  }
+ },
+ {
+  "file": "fonts/opensans/OpenSans-SemiBold.ttf",
+  "bytes": 150592,
+  "sfnt_version": "00010000",
+  "is_truetype_outlines": true,
+  "is_cff": false,
+  "is_variable": false,
+  "tables": [
+   "DSIG",
+   "GDEF",
+   "GPOS",
+   "GSUB",
+   "OS/2",
+   "cmap",
+   "cvt ",
+   "fpgm",
+   "gasp",
+   "glyf",
+   "head",
+   "hhea",
+   "hmtx",
+   "loca",
+   "maxp",
+   "name",
+   "post",
+   "prep"
+  ],
+  "num_glyphs": 1150,
+  "units_per_em": 2048,
+  "bbox": [
+   -1196,
+   -578,
+   2581,
+   2153
+  ],
+  "usWeightClass": 600,
+  "usWidthClass": 5,
+  "fsType": 0,
+  "fsSelection": 448,
+  "names": {
+   "0": "Copyright 2020 The Open Sans Project Authors (https://github.com/googlefonts/opensans)",
+   "1": "Open Sans SemiBold",
+   "2": "Regular",
+   "3": "3.003;GOOG;OpenSans-SemiBold",
+   "4": "Open Sans SemiBold",
+   "5": "Version 3.003; ttfautohint (v1.8.4)",
+   "6": "OpenSans-SemiBold",
+   "7": "Open Sans is a trademark of Google and may be registered in certain jurisdictions.",
+   "8": "Monotype Imaging Inc.",
+   "9": "Monotype Design Team",
+   "10": "Designed by Monotype design team.",
+   "11": "http://www.google.com/get/noto/",
+   "12": "http://www.monotype.com/studio",
+   "13": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+   "14": "http://scripts.sil.org/OFL",
+   "16": "Open Sans",
+   "17": "SemiBold"
+  },
+  "cmap": {
+   "version": 0,
+   "num_subtables": 2,
+   "subtables": [
+    {
+     "platform": 0,
+     "encoding": 3,
+     "format": 4,
+     "codepoints": 969,
+     "unsupported": false
+    },
+    {
+     "platform": 3,
+     "encoding": 1,
+     "format": 4,
+     "codepoints": 969,
+     "unsupported": false
+    }
+   ],
+   "unicode_codepoints": 969,
+   "all_subtable_codepoints": 969
+  },
+  "coverage": {
+   "cyrillic_block_total": 256,
+   "cyrillic_block_present": 248,
+   "greek_block_present": 75,
+   "latin_basic_present": 95,
+   "required": {
+    "U+0410": {
+     "name": "CYRILLIC CAPITAL LETTER A",
+     "present": true
+    },
+    "U+0416": {
+     "name": "CYRILLIC CAPITAL LETTER ZHE",
+     "present": true
+    },
+    "U+0430": {
+     "name": "CYRILLIC SMALL LETTER A",
+     "present": true
+    },
+    "U+044F": {
+     "name": "CYRILLIC SMALL LETTER YA",
+     "present": true
+    },
+    "U+0451": {
+     "name": "CYRILLIC SMALL LETTER IO",
+     "present": true
+    }
+   },
+   "extra_ru": {
+    "U+0401": true,
+    "U+0439": true,
+    "U+044A": true,
+    "U+044B": true,
+    "U+044D": true,
+    "U+044E": true,
+    "U+2116": true,
+    "U+00AB": true,
+    "U+00BB": true,
+    "U+2014": true,
+    "U+2026": true
+   },
+   "all_required_present": true
+  }
+ },
+ {
+  "file": "fonts/opensans/OpenSans-SemiBoldItalic.ttf",
+  "bytes": 157560,
+  "sfnt_version": "00010000",
+  "is_truetype_outlines": true,
+  "is_cff": false,
+  "is_variable": false,
+  "tables": [
+   "DSIG",
+   "GDEF",
+   "GPOS",
+   "GSUB",
+   "OS/2",
+   "cmap",
+   "cvt ",
+   "fpgm",
+   "gasp",
+   "glyf",
+   "head",
+   "hhea",
+   "hmtx",
+   "loca",
+   "maxp",
+   "name",
+   "post",
+   "prep"
+  ],
+  "num_glyphs": 1162,
+  "units_per_em": 2048,
+  "bbox": [
+   -996,
+   -574,
+   2591,
+   2164
+  ],
+  "usWeightClass": 600,
+  "usWidthClass": 5,
+  "fsType": 0,
+  "fsSelection": 385,
+  "names": {
+   "0": "Copyright 2020 The Open Sans Project Authors (https://github.com/googlefonts/opensans)",
+   "1": "Open Sans SemiBold",
+   "2": "Italic",
+   "3": "3.003;GOOG;OpenSans-SemiBoldItalic",
+   "4": "Open Sans SemiBold Italic",
+   "5": "Version 3.003; ttfautohint (v1.8.4)",
+   "6": "OpenSans-SemiBoldItalic",
+   "7": "Open Sans is a trademark of Google and may be registered in certain jurisdictions.",
+   "8": "Monotype Imaging Inc.",
+   "9": "Monotype Design Team",
+   "10": "Designed by Monotype design team.",
+   "11": "http://www.google.com/get/noto/",
+   "12": "http://www.monotype.com/studio",
+   "13": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+   "14": "http://scripts.sil.org/OFL",
+   "16": "Open Sans",
+   "17": "SemiBold Italic"
+  },
+  "cmap": {
+   "version": 0,
+   "num_subtables": 2,
+   "subtables": [
+    {
+     "platform": 0,
+     "encoding": 3,
+     "format": 4,
+     "codepoints": 972,
+     "unsupported": false
+    },
+    {
+     "platform": 3,
+     "encoding": 1,
+     "format": 4,
+     "codepoints": 972,
+     "unsupported": false
+    }
+   ],
+   "unicode_codepoints": 972,
+   "all_subtable_codepoints": 972
+  },
+  "coverage": {
+   "cyrillic_block_total": 256,
+   "cyrillic_block_present": 248,
+   "greek_block_present": 75,
+   "latin_basic_present": 95,
+   "required": {
+    "U+0410": {
+     "name": "CYRILLIC CAPITAL LETTER A",
+     "present": true
+    },
+    "U+0416": {
+     "name": "CYRILLIC CAPITAL LETTER ZHE",
+     "present": true
+    },
+    "U+0430": {
+     "name": "CYRILLIC SMALL LETTER A",
+     "present": true
+    },
+    "U+044F": {
+     "name": "CYRILLIC SMALL LETTER YA",
+     "present": true
+    },
+    "U+0451": {
+     "name": "CYRILLIC SMALL LETTER IO",
+     "present": true
+    }
+   },
+   "extra_ru": {
+    "U+0401": true,
+    "U+0439": true,
+    "U+044A": true,
+    "U+044B": true,
+    "U+044D": true,
+    "U+044E": true,
+    "U+2116": true,
+    "U+00AB": true,
+    "U+00BB": true,
+    "U+2014": true,
+    "U+2026": true
+   },
+   "all_required_present": true
+  }
+ }
+]

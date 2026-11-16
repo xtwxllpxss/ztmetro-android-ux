@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ztMetro bottom bar (the signature 40 dp chrome): back arrow on the left,
+     ALL-CAPS 'ZRN' in the centre, search glyph on the right.
+     Inflated from the module APK and added to the window decor, so it survives
+     the Settings fragment transactions; the content root gets
+     paddingBottom = bar height so the last preference row is never covered. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/metro_bottom_bar"
+    android:tag="ztmetro_bottom_bar"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/metro_bottom_bar_height"
+    android:background="@color/metro_bottom_bar_bg">
+
+    <ImageView
+        android:id="@+id/metro_bottom_back"
+        android:tag="ztmetro_bottom_back"
+        android:layout_width="@dimen/metro_bottom_bar_height"
+        android:layout_height="@dimen/metro_bottom_bar_height"
+        android:layout_gravity="start|center_vertical"
+        android:layout_marginStart="8dp"
+        android:padding="8dp"
+        android:src="@drawable/ic_metro_back"
+        android:contentDescription="@string/metro_bottom_cd_back"
+        android:background="@drawable/metro_bottom_button_bg"
+        android:scaleType="centerInside" />
+
+    <TextView
+        android:id="@+id/metro_bottom_label"
+        android:tag="ztmetro_bottom_label"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:text="@string/metro_bottom_label"
+        style="@style/MetroBottomBarLabel" />
+
+    <ImageView
+        android:id="@+id/metro_bottom_search"
+        android:tag="ztmetro_bottom_search"
+        android:layout_width="@dimen/metro_bottom_bar_height"
+        android:layout_height="@dimen/metro_bottom_bar_height"
+        android:layout_gravity="end|center_vertical"
+        android:layout_marginEnd="8dp"
+        android:padding="8dp"
+        android:src="@drawable/ic_metro_search"
+        android:contentDescription="@string/metro_bottom_cd_search"
+        android:background="@drawable/metro_bottom_button_bg"
+        android:scaleType="centerInside" />
+</FrameLayout>

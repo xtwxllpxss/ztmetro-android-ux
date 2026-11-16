@@ -1,0 +1,18 @@
+N: android=http://schemas.android.com/apk/res/android (line=22)
+  E: manifest (line=22)
+    A: http://schemas.android.com/apk/res/android:versionCode(0x0101021b)=1
+    A: http://schemas.android.com/apk/res/android:versionName(0x0101021c)="1.0" (Raw: "1.0")
+    A: http://schemas.android.com/apk/res/android:compileSdkVersion(0x01010572)=36
+    A: http://schemas.android.com/apk/res/android:compileSdkVersionCodename(0x01010573)="16" (Raw: "16")
+    A: package="org.ztos.overlay.settings" (Raw: "org.ztos.overlay.settings")
+    A: platformBuildVersionCode=36
+    A: platformBuildVersionName=16
+      E: uses-sdk (line=0)
+        A: http://schemas.android.com/apk/res/android:minSdkVersion(0x0101020c)=34
+        A: http://schemas.android.com/apk/res/android:targetSdkVersion(0x01010270)=36
+      E: application (line=27)
+        A: http://schemas.android.com/apk/res/android:label(0x01010001)="ztmetro Settings overlay" (Raw: "ztmetro Settings overlay")
+        A: http://schemas.android.com/apk/res/android:hasCode(0x0101000c)=false
+      E: overlay (line=31)
+        A: http://schemas.android.com/apk/res/android:priority(0x0101001c)=10
+        A: http://schemas.android.com/apk/res/android:targetPackage(0x01010021)="com.android.settings" (Raw: "com.android.settings")

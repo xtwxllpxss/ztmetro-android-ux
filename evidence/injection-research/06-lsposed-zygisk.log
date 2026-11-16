@@ -1,0 +1,88 @@
+# Evidence — Zygisk / LSPosed / KernelSU / APatch on Android 16 (collected 2026-11-16T07:13:50Z)
+
+## Official LSPosed: last release v1.9.2, 2023-10-11 (predates Android 15/16)
+v1.9.2 2023-10-11
+v1.9.1 2023-08-30
+v1.9.0 2023-08-29
+
+## Actively maintained fork: JingMatrix/Vector (formerly JingMatrix/LSPosed), release v2.2 2026-08-04
+v2.2 2026-08-04T09:38:29Z
+# 🎉 Vector 2.2 🎉
+
+Vector 2.2 is a hotfix for 2.1, and it brings libxposed API 102 — where a module can be swapped out without taking the process down with it.
+
+> [!IMPORTANT]
+> If you installed the manager as a separate app, uninstall it before updating: a 2.1 manager cannot talk to a 2.2 daemon. A parasitic manager needs nothing.
+
+### 🩹 What 2.1 got wrong
+*   🪝 **No hooks in release builds.** Modules loaded, and then nothing happened. R8 had merged `XResources` into a shared class that `XposedH
+
+## Vector README compatibility statement
+source: https://github.com/JingMatrix/Vector
+### Compatibility
+
+Vector supports devices running **Android 8.1 through Android 17 Beta**.
+
+> [!TIP]
+> This framework requires a recent installation of Magisk or KernelSU with Zygisk enabled.
+
+---
+
+### Installation
+
+## Vector is a normal Magisk/Zygisk module (unzipped release v2.2)
+Name
+----
+README.md
+README.md.sha256
+action.sh
+action.sh.sha256
+cli
+cli.sha256
+customize.sh
+customize.sh.sha256
+daemon
+daemon.apk
+daemon.apk.sha256
+daemon.sha256
+manager.apk
+manager.apk.sha256
+module.prop
+module.prop.sha256
+sepolicy.rule
+sepolicy.rule.sha256
+service.sh
+service.sh.sha256
+system.prop
+system.prop.sha256
+uninstall.sh
+
+## Magisk built-in Zygisk supports Android 16 QPR2+ (changelog v30.3)
+v30.7 (2026.2.23) | [MagiskInit] Support Android 16 QPR2 sepolicy format
+v30.7 (2026.2.23) | [Zygisk] Support Android 16 QPR2 and higher
+v30.3 (2025.9.29) | [MagiskPolicy] Support new sepolicy binary format introduced in Android 16 QPR2
+v27.0 (2024.2.3) | [Zygisk] Support new signature introduced in U QPR2
+
+## KernelSU is GKI-oriented
+source: https://kernelsu.org/guide/what-is-kernelsu.html
+
+
+## APatch support matrix (ARM64, kernel 3.18-6.12, CONFIG_KALLSYMS)
+source: https://github.com/bmax121/APatch
+## Supported Versions
+
+- Only supports the ARM64 architecture.
+- Only supports Android kernel versions 3.18 - 6.12
+
+Support for Samsung devices with security protection: Planned
+
+## Requirement
+## Requirement
+
+Kernel configs:
+
+- `CONFIG_KALLSYMS=y` and `CONFIG_KALLSYMS_ALL=y`
+
+- `CONFIG_KALLSYMS=y` and `CONFIG_KALLSYMS_ALL=n`: Initial support
+
+## Security Alert

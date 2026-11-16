@@ -1,0 +1,25 @@
+    <family name="sans-serif">
+        <!-- ztmetro-font: Selawik 1.01 (SIL OFL 1.1), Segoe UI metric-compatible.
+             Static faces; weights are declared per entry, no variable axes.
+             Selawik has no italic faces: italic entries use the upright face. -->
+        <font weight="100" style="normal">Selawik-Light.ttf</font>
+        <font weight="200" style="normal">Selawik-Light.ttf</font>
+        <font weight="300" style="normal">Selawik-Light.ttf</font>
+        <font weight="350" style="normal">Selawik-Semilight.ttf</font>
+        <font weight="400" style="normal">Selawik-Regular.ttf</font>
+        <font weight="500" style="normal">Selawik-Semibold.ttf</font>
+        <font weight="600" style="normal">Selawik-Semibold.ttf</font>
+        <font weight="700" style="normal">Selawik-Bold.ttf</font>
+        <font weight="800" style="normal">Selawik-Bold.ttf</font>
+        <font weight="900" style="normal">Selawik-Bold.ttf</font>
+        <font weight="100" style="italic">Selawik-Light.ttf</font>
+        <font weight="200" style="italic">Selawik-Light.ttf</font>
+        <font weight="300" style="italic">Selawik-Light.ttf</font>
+        <font weight="350" style="italic">Selawik-Semilight.ttf</font>
+        <font weight="400" style="italic">Selawik-Regular.ttf</font>
+        <font weight="500" style="italic">Selawik-Semibold.ttf</font>
+        <font weight="600" style="italic">Selawik-Semibold.ttf</font>
+        <font weight="700" style="italic">Selawik-Bold.ttf</font>
+        <font weight="800" style="italic">Selawik-Bold.ttf</font>
+        <font weight="900" style="italic">Selawik-Bold.ttf</font>
+    </family>

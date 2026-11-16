@@ -1,0 +1,154 @@
+# Evidence — Magisk mechanics (collected 2026-11-16T07:13:04Z)
+
+## Magisk latest release (GitHub API, topjohnwu/Magisk)
+v31.1 2026-10-25T02:03:45Z
+This release brings official support for Googlebooks (Aluminium OS), including automatic firmware download suggestions and the ability to patch recovery GPT images directly onto a connected USB drive. Bringing Magisk to Googlebooks also meant supporting Android's Headless System User Mode (HSUM), where user `0` operates strictly as a non-interactive background system user while human users run in secondary user profiles. Adapting Magisk to HSUM created several architectural challenges, as many longstanding features and internal mechanisms were built around the assumption that user `0` is always the primary interactive user.
+
+To address this, the way superuser access is granted to apps has been redesigned, and the traditional interactive root request prompt has been removed. The existing reactive `su` request flow, which relies on intercepting a root call in the background daemon and la
+
+## Version map: overlay/overlayfs/magic-mount entries in official changelog
+source: https://topjohnwu.github.io/Magisk/changes.html
+v30.2 (2025.8.6) | [Core] Fix an edge case breaking modules when overlayfs is involved
+v28.1 (2024.12.6) | [MagiskPolicy] Fix a regression causing overlay.d replaced files to be not accessible
+v28.0 (2024.10.10) | [Core] Remove unnecessary mirror for magic mount
+v26.0 (2023.4.5) | [General] New magic mount backend. It supports loading modules into system with overlayfs files injected
+v26.0 (2023.4.5) | [MagiskInit] Support replacing existing *.rc files in overlay.d
+v19.4 (2019.9.19) | [MagiskInit] Add overlay.d support for root directory overlay for new system-as-root implementation
+v17.3 (2018.10.20) | [Daemon] Prevent logcat failures when /system/bin is magic mounting, could cause MagiskHide to fail
+v14.0 (2017.9.6) | [Magic Mount] Fix a typo in cloning attributes
+v13.1 (2017.7.11) | [Magic Mount] Ditched shell script based mounting, use proper C program to parse and mount files. Speed is SIGNIFICANTLY improved
+v12.0 (2017.3.31) | [Magic Mount] Fix mounting issues with devices that have separate /vendor partitions
+v11.0 (2017.2.6) | [Magic Mount] Support replacing symlinks.
+v11.0 (2017.2.6) | [Magic Mount] Fix the issue when file/folder name contains spaces
+v10.2 (2017.1.2) | [Magic Mount] Remove apps/priv-app from whitelist, should fix all crashes
+v10.2 (2017.1.2) | [Magic Mount] Use a new way to mount system (vendor) mirrors
+v10.2 (2017.1.2) | [Magic Mount] Use universal way to deal with /vendor, handle both separate partition or not
+v10.2 (2017.1.2) | [Magic Mount] Adding anything to any place is now officially supported (including /system root and /vendor root)
+v10.2 (2017.1.2) | [Magic Mount] Use symlinks for mirroring back if possible, reduce bind mounts for adding files
+v10.2 (2017.1.2) | [Magisk Hide] Check init namespace, zygote namespace to prevent Magic Mount breakage (a.k.a root loss)
+v10.2 (2017.1.2) | [Magic Mount] Move dummy skeleton / mirror / mountinfo filesystem tree to tmpfs
+v10.2 (2017.1.2) | [Magic Mount] Rewritten dummy cloning mechanism from scratch, will result in minimal bind mounts, minimal file traversal, eliminate all possible issues that might happen in extreme cases
+v10.2 (2017.1.2) | [Magic Mount] Adding new items to /system/bin, /system/vendor, /system/lib(64) is properly supported (devices with separate vendor partition is not supported yet)
+
+## Module layout (official docs) — https://topjohnwu.github.io/Magisk/guides.html
+## Magisk Modules
+
+A Magisk module is a folder placed in `/data/adb/modules` with the structure below:
+
+```
+/data/adb/modules
+├── .
+├── .
+|
+├── $MODID                  <--- The folder is named with the ID of the module
+│   │
+│   │      *** Module Identity ***
+│   │
+│   ├── module.prop         <--- This file stores the metadata of the module
+│   │
+│   │      *** Main Contents ***
+│   │
+│   ├── system              <--- This folder will be mounted if skip_mount does not exist
+│   │   ├── ...
+│   │   ├── ...
+│   │   └── ...
+│   │
+│   ├── zygisk              <--- This folder contains the module's Zygisk native libraries
+│   │   ├── arm64-v8a.so
+│   │   ├── armeabi-v7a.so
+│   │   ├── riscv64.so
+│   │   ├── x86.so
+│   │   ├── x86_64.so
+│   │   └── unloaded        <--- If exists, the native libraries are incompatible
+│   │
+│   │      *** Status Flags ***
+│   │
+│   ├── skip_mount          <--- If exists, Magisk will NOT mount your system folder
+│   ├── disable             <--- If exists, the module will be disabled
+│   ├── remove              <--- If exists, the module will be removed next reboot
+│   │
+│   │      *** Optional Files ***
+│   │
+│   ├── post-fs-data.sh     <--- This script will be executed in post-fs-data
+│   ├── service.sh          <--- This script will be executed in late_start service
+|   ├── uninstall.sh        <--- This script will be executed when Magisk removes your module
+|   ├── action.sh           <--- This script will be executed when user click the action button in Magisk app
+│   ├── system.prop         <--- Properties in this file will be loaded as system properties by resetprop
+│   ├── sepolicy.rule       <--- Additional custom sepolicy rules
+│   │
+
+## 'The system folder' section
+#### The `system` folder
+
+All files you want to replace/inject should be placed in this folder. This folder will be recursively merged into the real `/system`; that is: existing files in the real `/system` will be replaced by the one in the module's `system`, and new files in the module's `system` will be added to the real `/system`.
+
+If you place a file named `.replace` in any of the folders, instead of merging its contents, that folder will directly replace the one in the real system. This can be very handy for swapping out an entire folder.
+
+If you want to replace files in `/vendor`, `/product`, or `/system_ext`, please place them under `system/vendor`, `system/product`, and `system/system_ext` respectively. Magisk will transparently handle whether these partitions are in a separate partition or not.
+
+If you want to remove a specific file or folder, please place a dummy character device with major number 0 and minor number 0 in the same path. For example, if you want to remove `/system/app/GoogleCamera`, you can `mknod GoogleCamera c 0 0` in `$MODDIR/system/app` (or declare `/system/app/GoogleCamera` in the `REMOVE` variable in `customize.sh`; see [Customization](#customization)).
+
+#### Zygisk
+
+
+## 'Root Directory Overlay System' (overlay.d = boot ramdisk rootdir, NOT /system files)
+## Root Directory Overlay System
+
+Since `/` is read-only on system-as-root devices, Magisk provides an overlay system to enable developers to replace files in rootdir or add new `*.rc` scripts. This feature is designed mostly for custom kernel developers.
+
+Overlay files shall be placed in the `overlay.d` folder in boot image ramdisk, and they follow these rules:
+
+1. Each `*.rc` file (except for `init.rc`) in `overlay.d` will be read and concatenated **AFTER** `init.rc` if it does not exist in the root directory, otherwise it will **REPLACE** the existing one.
+2. Existing files can be replaced by files located at the same relative path
+3. Files that correspond to a non-existing file will be ignored
+
+To add additional files which you can refer to in your custom `*.rc` scripts, add them into `overlay.d/sbin`. The 3 rules above do not apply to anything in this folder; instead, they will be directly copied to Magisk's internal `tmpfs` directory (which used to always be `/sbin`).
+
+Starting from Android 11, the `/sbin` folder may no longer exists, and in that scenario, Magisk uses `/debug_ramdisk` instead. Every occurrence of the pattern `${MAGISKTMP}` in your `*.rc` scripts will be replaced with the Magisk `tmpfs` folder when `magiskinit` injects it into `init.rc`. On pre Android 11 devices, `${MAGISKTMP}` will simply be replaced with `/sbin`, so **NEVER** hardcode `/sbin` in the `*.rc` scripts when referencing these additional files.
+
+Here is an example of how to setup `overlay.d` with a custom `*.rc` script:
+
+```
+ramdisk
+
+## Magic mount timing: post-fs-data
+source: https://topjohnwu.github.io/Magisk/details.html
+### post-fs-data
+
+This triggers on `post-fs-data` when `/data` is decrypted and mounted. The daemon `magiskd` is launched, Safe Mode is evaluated (if the device failed to reach `boot-complete` twice in a row, or if Safe Mode was triggered via key combo or the Magisk app, all modules and Zygisk are disabled), `post-fs-data` scripts and module `system.prop` files are processed, and enabled module files are magic mounted.
+
+
+## AOSP init boot order: post-fs-data before zygote-start
+source: platform_system_core/rootdir/init.rc android16-release
+1:on late-init
+2:    trigger early-fs
+8:    trigger fs
+9:    trigger post-fs
+16:    trigger late-fs
+20:    trigger post-fs-data
+23:    trigger load-bpf-programs
+24:    trigger bpf-progs-loaded
+27:    trigger zygote-start
+
+## Magisk APK inspection (v31.1 release asset)
+-rw-r--r--@ 1 meow  staff  10679283 Nov 16 10:09 Magisk-v31.1.apk
+size 10679283 APK Sig Block 42: True sha256 89cefac0a318afa39fb3880c45c87b036c05bc1ebf02a7a715b7f8d7c26ac6e7
+assets/addon.d.sh present in APK: 1
+
+## Safe mode (official FAQ)
+### Q: I installed a module and it bootlooped my device. Help!
+
+Magisk includes built-in bootloop protection: if your device fails to finish booting (`boot_completed`) **twice in a row**, Magisk will automatically enter **Safe Mode** on the next boot, disabling all modules (by creating a `disable` file in each module folder) and disabling Zygisk so your device can boot normally.
+
+
+## OTA doc statement (A/B only for Magisk-managed root preservation)
+## OTA Upgrade Guides
+
+Magisk does not modify read-only partitions by default, which makes applying official OTAs much simpler. **OTA updates are only supported on devices with A/B partitions (Seamless System Updates).** On A/B devices, the OTA is installed to the inactive slot while the system is running, allowing the Magisk app to install Magisk onto the updated partitions and preserve root across the update. The exact workflow in this document is only tested on Pixel devices, as procedures for other devices may vary.
+
+**NOTE: In order to apply OTAs, you HAVE to make sure you haven't modified any read-only partitions yourself (such as `/system` or `/vendor`) in any way. Even remounting the partition to rw will tamper block verification!!**
+
+### Prerequisites
+
+- Please disable _Automatic system updates_ in developer options, so it won't install OTAs without your acknowledgement.
+

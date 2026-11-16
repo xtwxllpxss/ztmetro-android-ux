@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Clock TextAppearance for the status strip.
+  Verified: packages/SystemUI/res/values/styles.xml:20-25 @ lineage-23.2
+    textSize     @dimen/status_bar_clock_size = 14sp (dimens.xml:178)
+    fontFamily   config_headlineFontFamilyMedium / feature-flagged
+                 "variable-label-large-emphasized"
+    textColor    @color/status_bar_clock_color = #FFFFFFFF (colors.xml:26)
+    letterSpacing  unset (TextView default 0)
+
+  It is used by every strip clock:
+    res/layout/status_bar.xml:96  @id/clock          (left, Lineage default)
+    res/layout/status_bar.xml:213 @id/clock_center
+    res/layout/system_icons.xml:58 @id/clock_right
+
+  Metro target: 12sp, light weight, no tracking — so the parent and both
+  feature-flagged fontFamilies are replaced by one static light family.
+  parent="" is deliberate: dot-notation would otherwise infer a local
+  "TextAppearance.StatusBar" parent that does not exist in this overlay (the
+  target's parent, @*android:style/TextAppearance.StatusBar.Icon, is an empty
+  style anyway — framework styles.xml:277-278).
+  "sans-serif-light" is Roboto Light, the closest stock family to Segoe
+  Light; if the Open Sans/Selawik module is installed its family can be
+  swapped here in one line.
+-->
+<resources>
+    <style name="TextAppearance.StatusBar.Default" parent="">
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0.0</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+    </style>
+</resources>

@@ -1,0 +1,9 @@
+apk:      launcher/build/out/ztmetro-start.apk (evidence/launcher-v3/ztmetro-start.apk)
+size:     53526 bytes
+sha256:   2bc8540c1678434711251796df2e369403334f27f0d357ebdc38efe573b2e9a4
+package:  org.ztmetro.start
+version:  3 (3.0)
+min/target: 29 / 36
+build:    android-sdk, openjdk version "17.0.21" 2026-10-20
+checks:   HOME category, listener service + BIND permission, no uses-permission,
+          no androidx, v3 redraw classes/resources present, <3 MB

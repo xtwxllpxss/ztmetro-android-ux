@@ -1,0 +1,3 @@
+# build-header-module.sh downloads the pinned Xposed API jar and generates the
+# dev signing key in here; neither belongs in git.
+build/

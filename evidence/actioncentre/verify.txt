@@ -1,0 +1,25 @@
+PASS  package is org.ztmetro.actioncentre
+PASS  application label present
+PASS  launcher activity exported in badging
+PASS  minSdk 29
+PASS  targetSdk 36
+PASS  notification listener bind permission
+PASS  listener service registered
+PASS  listener intent action
+PASS  tile activity alias
+PASS  CAMERA permission
+PASS  WRITE_SETTINGS appop permission
+PASS  slide-up animation resource
+PASS  slide-down animation resource
+PASS  launcher is not HOME
+PASS  no BLUETOOTH_CONNECT (dangerous) requested
+PASS  no androidx in classes.dex
+PASS  class ActionCentreActivity in dex
+PASS  class ActionCentreListener in dex
+PASS  class QuickTile in dex
+PASS  class QuickGrid in dex
+PASS  class NotificationRowView in dex
+PASS  class StatusStripView in dex
+PASS  bundled Open Sans Light asset in APK
+PASS  classes.dex packaged
+PASS  APK smaller than 2 MB (296359 bytes)

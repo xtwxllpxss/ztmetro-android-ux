@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Status bar background.
+  Verified: packages/SystemUI/res/values/colors.xml:21-22 @ lineage-23.2
+    <drawable name="system_bar_background">@color/system_bar_background_opaque</drawable>
+    <color name="system_bar_background_opaque">#ff000000</color>
+  used as the window background by res/layout/super_status_bar.xml:37
+    (@id/status_bar_container android:background="@drawable/system_bar_background")
+  and res/layout/navigation_bar.xml:27.
+
+  Old == new: Lineage already paints it solid black. This entry is a deliberate
+  pin, not a visual change — the home-screen "black strip" in the current build
+  is this colour plus the launcher's black canvas. Per-app strip colour is a
+  window/WindowInsetsController decision in app code, not a SystemUI resource.
+-->
+<resources>
+    <color name="system_bar_background_opaque">#ff000000</color>
+</resources>

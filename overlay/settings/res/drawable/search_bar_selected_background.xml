@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro Settings RRO — search field fill (default / light theme).
+
+  The target's res/drawable/search_bar_selected_background.xml is a <ripple> whose
+  content item is @color/settingslib_materialColorSurfaceContainerLowest (a
+  SettingsLib colour — not referenceable from this package). It is the background of
+  the inner LinearLayout in res/layout/search_bar.xml:39, i.e. the visible fill of the
+  home search field; the card shape around it comes from SearchBarStyle_v2
+  (res/values/styles.xml here).
+
+  Metro: a plain white field on the neutral page, accent-tinted ripple kept from
+  ?android:attr/colorControlHighlight (already accent-tinted by the framework RRO).
+  The night twin paints the same field as #1F1F1F so it stays visible on black.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?android:attr/colorControlHighlight">
+    <item android:drawable="@android:color/white" />
+</ripple>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Launcher theme only. Every colour, size and text appearance used by the UI
+  lives in the generated res/values/metro_tokens.xml (compiled from
+  design/tokens/ztmetro.tokens.json by scripts/build-launcher.sh). Do not add
+  token values here.
+-->
+<resources>
+    <style name="Theme.ZtmetroStart" parent="@android:style/Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowBackground">@color/metro_black</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/metro_black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:colorAccent">@color/metro_accent</item>
+        <item name="android:textColorPrimary">@color/metro_text_primary</item>
+        <item name="android:textColorSecondary">@color/metro_text_secondary</item>
+    </style>
+</resources>

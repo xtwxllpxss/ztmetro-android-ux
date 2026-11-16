@@ -1,0 +1,16 @@
+OpenSans-ATTRIBUTION.md
+OpenSans-OFL.txt
+README.md
+customize.sh
+fonts.fragment
+module.prop
+rewrite-fonts.sh
+system/fonts/OpenSans-Bold.ttf
+system/fonts/OpenSans-BoldItalic.ttf
+system/fonts/OpenSans-Italic.ttf
+system/fonts/OpenSans-Light.ttf
+system/fonts/OpenSans-LightItalic.ttf
+system/fonts/OpenSans-Regular.ttf
+system/fonts/OpenSans-SemiBold.ttf
+system/fonts/OpenSans-SemiBoldItalic.ttf
+verify-xml.awk

@@ -1,0 +1,6 @@
+id=ztmetro-overlays
+name=ztMetro overlays
+version=1.0.0
+versionCode=1
+author=xtwxllpxss
+description=Preinstalled RRO overlays for the ztMetro shell: framework-res accent/typography and SystemUI Metro Action Centre. Requires Magisk.

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ztMetro: Settings-local accent + square geometry.
+     Settings does NOT inherit colorPrimary from framework-res: its own themes set
+     colorPrimary=@color/primary_material_dark (Settings.apk styles, e.g. Theme.Settings),
+     and the switch bar tints are Settings/SettingsLib color resources.  Overriding them
+     here is what makes switches/sliders/links cobalt instead of the stock teal. -->
+<resources>
+    <color name="primary_material_dark">#FF0050EF</color>
+    <color name="primary_material_light">#FF0050EF</color>
+    <color name="primary_dark_material_dark">#FF002878</color>
+    <color name="primary_dark_material_light">#FF002878</color>
+    <color name="settingslib_switchbar_switch_thumb_tint">#FFFFFFFF</color>
+    <color name="settingslib_switchbar_switch_track_tint">#FF0050EF</color>
+
+    <dimen name="cardview_default_radius">0dp</dimen>
+    <dimen name="settingslib_switchbar_margin">0dp</dimen>
+
+    <!-- Metro has no rounded cards: every Settings/SettingsLib radius becomes 0dp. -->
+    <dimen name="settingslib_entry_bg_radius">0dp</dimen>
+    <dimen name="settingslib_expressive_radius_extralarge1">0dp</dimen>
+    <dimen name="settingslib_expressive_radius_extralarge2">0dp</dimen>
+    <dimen name="settingslib_expressive_radius_extralarge3">0dp</dimen>
+    <dimen name="settingslib_expressive_radius_extrasmall1">0dp</dimen>
+    <dimen name="settingslib_expressive_radius_extrasmall2">0dp</dimen>
+    <dimen name="settingslib_expressive_radius_large1">0dp</dimen>
+    <dimen name="settingslib_expressive_radius_large2">0dp</dimen>
+    <dimen name="settingslib_expressive_radius_large3">0dp</dimen>
+    <dimen name="settingslib_expressive_radius_medium">0dp</dimen>
+    <dimen name="settingslib_expressive_radius_small">0dp</dimen>
+    <dimen name="settingslib_expressive_radius_none">0dp</dimen>
+    <dimen name="settingslib_preference_corner_radius">0dp</dimen>
+    <dimen name="settingslib_switch_bar_radius">0dp</dimen>
+
+    <!-- Flat dark panel instead of the M3 secondary container tone. -->
+    <color name="settingslib_materialColorSecondaryContainer">#FF1F1F1F</color>
+</resources>

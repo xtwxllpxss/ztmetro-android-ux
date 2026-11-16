@@ -1,0 +1,20 @@
+== customize.sh dry run (sh=/usr/bin/dash) ==
+***********************************************
+ ztmetro-font 1.1.0
+ Open Sans 3.003 (Segoe UI-class, OFL, Cyrillic)
+ system sans-serif, systemless via Magisk
+***********************************************
+- live config: /tmp/ztmetro-dryrun.g8sz9u/system/etc/font_fallback.xml
+- legacy config: /tmp/ztmetro-dryrun.g8sz9u/system/etc/fonts.xml
+ztmetro-font-rewrite: font_fallback.xml -> font_fallback.xml: sans-serif 1 font(s)/1 axis entry(s) -> 20 static Open Sans entries; all other families intact
+- overlay: system/etc/font_fallback.xml (sans-serif -> Open Sans)
+ztmetro-font-rewrite: fonts.xml -> fonts.xml: sans-serif 18 font(s)/54 axis entry(s) -> 20 static Open Sans entries; all other families intact
+- overlay: system/etc/fonts.xml (sans-serif -> Open Sans)
+- installed: 8 Open Sans faces + rewritten font config(s)
+- reboot to apply
+- recovery: Magisk safe mode (hold Vol- during boot) or
+  'adb shell su -c magisk --remove-modules', then reboot
+  parse ok: font_fallback.xml: 3 families, 6 aliases, sans-serif = 20 static Open Sans entries, all payload files present
+  parse ok: fonts.xml: 160 families, 24 aliases, sans-serif = 20 static Open Sans entries, all payload files present
+PASS: customize.sh installed a validated overlay from the AOSP 16 fixtures
+      (MODPATH=/tmp/ztmetro-dryrun.g8sz9u/mod; removed on exit)

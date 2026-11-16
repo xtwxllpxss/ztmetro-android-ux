@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztMetro keyguard — independent LSPosed module for the stock lock screen of
+  LineageOS 23.2 (Android 16 / API 36) on ugglite.
+
+  Module container only: no Activity, no Service, no BroadcastReceiver, no
+  permissions, no new windows.  LSPosed loads classes.dex into the
+  com.android.systemui process and reads the xposed* meta-data below.
+
+  xposedminversion 93: the legacy de.robv.android.xposed API level LSPosed's
+  module docs require; the code itself only uses API-82 calls (same convention
+  as the working settings header module, see settings/header-module).
+
+  xposedscope: com.android.systemui only.  Enabling the scope in LSPosed is what
+  allows the hooks to run; disabling it (or removing the APK and rebooting) is
+  the complete rollback.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztmetro.keyguard"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <application
+        android:allowBackup="false"
+        android:hasCode="true"
+        android:label="@string/app_name"
+        android:supportsRtl="true">
+
+        <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+        <meta-data
+            android:name="xposeddescription"
+            android:value="@string/xposed_description" />
+        <meta-data
+            android:name="xposedminversion"
+            android:value="93" />
+        <meta-data
+            android:name="xposedscope"
+            android:resource="@array/xposed_scope" />
+    </application>
+</manifest>

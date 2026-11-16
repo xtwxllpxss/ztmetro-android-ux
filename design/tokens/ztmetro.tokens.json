@@ -1,0 +1,384 @@
+{
+  "meta": {
+    "name": "ztmetro",
+    "version": "1.0",
+    "date": "2026-11-16",
+    "source": {
+      "root": "upstream/ztOS/ztmetro",
+      "files": [
+        "ztmetro.c — shell: Start grid, tiles, status strip, action centre, motion",
+        "core/zrnmetrocore.h — zmc_* widget framework constants, fonts, tilt",
+        "core/zrnmetrocore.c — zmc_header / zmc_pivot_next / entries / fields, type sizes",
+        "settings/ztsettings.c — 20-colour accent set, accent picker, section headings"
+      ],
+      "licence": "GPL-2.0-or-later (SPDX headers in the C files)"
+    },
+    "reference": {
+      "width_dp": 360,
+      "height_dp": 640,
+      "density_dpi": 320,
+      "origin": "core/zrnmetrocore.c:68 (zmc default 360x640 points); ztmetro.c:127 (all layout is logical points)"
+    },
+    "origin_convention": "Each value cites its C source as file:line, relative to meta.source.root. 'derived [E]' marks a value this repo computes or adapts for Android rather than reading directly from the C code. Numeric origins live in the sibling '_origins' map of the group that owns them; type ramp entries carry their own 'origin'.",
+    "notes": [
+      "The C shell lays out in logical points at output scale; at the 720x1280 / 320 dpi reference 1 point = 1 dp, so the values below are dp (metrics) and sp (type) at fontScale 1.0.",
+      "The accent is user-selectable (20 named colours). 'cobalt' #0050EF is the compiled-in default and the value used for overlay-derived resources.",
+      "ztmetro draws square tiles: no rounded corners anywhere in the Start grid, quick actions or app list.",
+      "Widget type sizes are Cairo/Pango absolute sizes in points, not a CSS-like ramp; names here group them by role.",
+      "Motion values are the shell's own, measured from Lumia captures where the comments say so; Android interpolators are approximations (see README)."
+    ]
+  },
+  "color": {
+    "accent": {
+      "base": "#0050EF",
+      "light1": "#3D7BFF",
+      "light2": "#7FA8FF",
+      "dark1": "#002878",
+      "dark2": "#00143C",
+      "foreground_on_accent": "#FFFFFF",
+      "_origins": {
+        "base": "ztmetro.c:2983 (default 0x0050ef); core/zrnmetrocore.c:68,73; settings/ztsettings.c:200",
+        "light1": "derived [E] — the C code has no light accent: base mixed 25% toward white, for pressed/selected fills",
+        "light2": "derived [E] — base mixed 50% toward white, for ripple/selected backgrounds",
+        "dark1": "derived [E] — accent * 0.5, as in the lock-screen fade endpoint ztmetro.c:6030-6035",
+        "dark2": "derived [E] — accent * 0.25, continuation of the same black-to-accent fade (ztmetro.c:6033-6035)",
+        "foreground_on_accent": "ztmetro.c:3670-3673 (white glyph and label on an accent tile); ztmetro.c:6314-6320; ztmetro.c:6549-6551"
+      }
+    },
+    "neutrals": {
+      "black": "#000000",
+      "text_primary": "#FFFFFF",
+      "text_secondary": "#999999",
+      "text_secondary_strong": "#9E9E9E",
+      "text_tertiary": "#8C8C8C",
+      "text_muted": "#616161",
+      "text_disabled": "#4D4D4D",
+      "surface_empty": "#121212",
+      "surface_off": "#1F1F1F",
+      "surface_key": "#333333",
+      "surface_cell": "#1E1E1E",
+      "surface_field": "#C7C7C7",
+      "surface_field_focused": "#FFFFFF",
+      "field_text": "#000000",
+      "_origins": {
+        "black": "ztmetro.c:6501-6502 (action centre painted black); ztmetro.c:7063-7068 (keyboard base)",
+        "text_primary": "ztmetro.c:3672-3673; core/zrnmetrocore.c:508,547,573 (default text is pure white)",
+        "text_secondary": "core/zrnmetrocore.c:549-550 (entry detail 0.6); core/zrnmetrocore.c:4425-4426",
+        "text_secondary_strong": "ztmetro.c:6395 (notification body 0.62)",
+        "text_tertiary": "ztmetro.c:4731 (search placeholder 0.55); ztmetro.c:7133",
+        "text_muted": "core/zrnmetrocore.c:513 (next pivot title 0.38)",
+        "text_disabled": "derived [E] — unavailable quick actions are white at 30% alpha (ztmetro.c:6321), composited on black; the C code has no opaque disabled grey",
+        "surface_empty": "ztmetro.c:6299 (empty quick action 0.07)",
+        "surface_off": "ztmetro.c:6316 (quick action off 0.122); ztmetro.c:7067 (function key 0.12)",
+        "surface_key": "ztmetro.c:7065 (letter key 0.2)",
+        "surface_cell": "settings/ztsettings.c:1419 (wallpaper cell grey 0xff1e1e1e)",
+        "surface_field": "core/zrnmetrocore.c:3480-3486 (unfocused textbox 0.78, black text)",
+        "surface_field_focused": "core/zrnmetrocore.c:3480-3482 (focused textbox white)",
+        "field_text": "core/zrnmetrocore.c:3489-3491 (black text in the field)",
+        "surface_track": "core/zrnmetrocore.c:622-624 (switch/slider track 0.22)"
+      },
+      "surface_track": "#383838"
+    },
+    "status": {
+      "warning_battery": "#E51400",
+      "destructive": "#F23333",
+      "success": "#66FF80",
+      "error": "#FF8080",
+      "_origins": {
+        "warning_battery": "ztmetro.c:5532 (battery fill below 15%: 0.898,0.078,0.0)",
+        "destructive": "ztmetro.c:6737,6772 (sensor-hub failure / reboot button: 0.95,0.2,0.2)",
+        "success": "ztmetro.c:10162 (unlock success: .4,1,.5)",
+        "error": "ztmetro.c:10163 (unlock failure: 1,.5,.5)"
+      }
+    },
+    "chrome": {
+      "status_strip": "#000000",
+      "nav_bar": "#000000",
+      "action_centre": "#000000",
+      "quick_action_on": "#0050EF",
+      "quick_action_off": "#1F1F1F",
+      "quick_action_empty": "#121212",
+      "action_centre_handle": "#0050EF",
+      "menu_panel": "#FFFFFF",
+      "menu_text": "#000000",
+      "keyboard_background": "#000000",
+      "keyboard_key": "#333333",
+      "keyboard_key_function": "#1F1F1F",
+      "toggle_off": "#333333",
+      "list_letter_accent": "#0050EF",
+      "notification_app_square": "#0050EF",
+      "scrim_alpha": 0.72,
+      "_origins": {
+        "status_strip": "ztmetro.c:128 with no background fill: the row is drawn white on the app/Start canvas (ztmetro.c:5415-5418)",
+        "nav_bar": "ztmetro.c:130, drawn over black (ztmetro.c:6501-6502)",
+        "action_centre": "ztmetro.c:6501-6502",
+        "quick_action_on": "ztmetro.c:6313-6314",
+        "quick_action_off": "ztmetro.c:6315-6316",
+        "quick_action_empty": "ztmetro.c:6297-6299",
+        "action_centre_handle": "ztmetro.c:6546-6548",
+        "menu_panel": "core/zrnmetrocore.c:4412-4414 (white panel, black text, row 50)",
+        "menu_text": "core/zrnmetrocore.c:4415-4417",
+        "keyboard_background": "ztmetro.c:7061-7063",
+        "keyboard_key": "ztmetro.c:7064-7065",
+        "keyboard_key_function": "ztmetro.c:7066-7068",
+        "toggle_off": "core/zrnmetrocore.c:573-581 (switch off 0.2; on is accent)",
+        "list_letter_accent": "ztmetro.c:4512,4519-4522 (letter/icon square in accent); ztmetro.c:159-161 comment",
+        "notification_app_square": "ztmetro.c:6366-6368 (28x28 app square in accent)",
+        "scrim_alpha": "core/zrnmetrocore.c:4405 (menu dims the page with black at 0.72)"
+      }
+    }
+  },
+  "type": {
+    "families": {
+      "display": {
+        "stack": "Segoe UI Semilight, Selawik Semilight, Open Sans, sans-serif",
+        "origin": "core/zrnmetrocore.h:46 (FONT_SEMILIGHT); ztmetro.c:258"
+      },
+      "body": {
+        "stack": "Segoe UI, Selawik, Open Sans, sans-serif",
+        "origin": "core/zrnmetrocore.h:47 (FONT_REGULAR); ztmetro.c:259"
+      },
+      "light": {
+        "stack": "Segoe UI Light, Selawik Light, Open Sans Light, sans-serif",
+        "origin": "core/zrnmetrocore.h:45 (FONT_LIGHT); ztmetro.c:257"
+      },
+      "semibold": {
+        "stack": "Segoe UI Semibold, Selawik Semibold, Open Sans Semibold, sans-serif",
+        "origin": "core/zrnmetrocore.h:48 (FONT_SEMIBOLD); ztmetro.c:260"
+      },
+      "android_fallback": "sans-serif / sans-serif-light / sans-serif-medium (Roboto), derived [E]: no font files are shipped, see README"
+    },
+    "weights": {
+      "light": 300,
+      "semilight": 350,
+      "regular": 400,
+      "semibold": 600
+    },
+    "weights_origin": {
+      "light": "core/zrnmetrocore.h:45 FONT_LIGHT; Android has no Segoe WP, 300 is the closest system weight, derived [E]",
+      "semilight": "core/zrnmetrocore.h:46 FONT_SEMILIGHT; 350 is the CSS/Segoe numeric, mapped to sans-serif-light on Android, derived [E]",
+      "regular": "core/zrnmetrocore.h:47 FONT_REGULAR",
+      "semibold": "core/zrnmetrocore.h:48 FONT_SEMIBOLD; 600, mapped to sans-serif-medium on Android, derived [E]"
+    },
+    "ramp": [
+      {
+        "name": "caption_caps",
+        "semibold_weight": 600,
+        "size_sp_at_density_1x": 11.5,
+        "line_height": 16,
+        "line_height_origin": "derived [E] — Pango natural line for 11.5 pt, rounded; the C code places the line at y=14 and the title at y=24",
+        "usage": "the app's name over every page title, ALL CAPS; quick-action labels at 7.6 and CLEAR ALL at 10 are the same face but are not promoted",
+        "origin": "core/zrnmetrocore.c:509 (FONT_SEMIBOLD 11.5, y=14); core/zrnmetrocore.c:3953"
+      },
+      {
+        "name": "caption",
+        "semibold_weight": 400,
+        "size_sp_at_density_1x": 12,
+        "line_height": 16,
+        "line_height_origin": "derived [E] — 1.33x size, matches the 31 pt gap to a 25.5 title",
+        "usage": "the grey second line under a hub entry; field captions sit at 13, one step up",
+        "origin": "core/zrnmetrocore.c:550 (FONT_REGULAR 12, y+31)"
+      },
+      {
+        "name": "body",
+        "semibold_weight": 400,
+        "size_sp_at_density_1x": 13,
+        "line_height": 18,
+        "line_height_origin": "derived [E] — 1.38x size",
+        "usage": "tile label, notification text, On/Off line, field caption",
+        "origin": "ztmetro.c:3678 (tile label 13); ztmetro.c:6393,6400; core/zrnmetrocore.c:4426"
+      },
+      {
+        "name": "body_large",
+        "semibold_weight": 400,
+        "size_sp_at_density_1x": 17,
+        "line_height": 22,
+        "line_height_origin": "derived [E] — 1.3x size",
+        "usage": "value inside a text box; an option in an open picker",
+        "origin": "core/zrnmetrocore.c:3495 (textbox value 17); core/zrnmetrocore.c:4509 (picker option 17)"
+      },
+      {
+        "name": "subtitle",
+        "semibold_weight": 350,
+        "size_sp_at_density_1x": 20,
+        "line_height": 27,
+        "line_height_origin": "derived [E] — 1.35x size, keeps the 34 pt switch/choice pitch",
+        "usage": "switch title (21), dialog title (20), choice title (20), accent section heading (19)",
+        "origin": "core/zrnmetrocore.c:3459 (switch 21); core/zrnmetrocore.c:4433 (choice 20); settings/ztsettings.c:2531 (section 19)"
+      },
+      {
+        "name": "list_title",
+        "semibold_weight": 350,
+        "size_sp_at_density_1x": 25.5,
+        "line_height": 31,
+        "line_height_origin": "core/zrnmetrocore.c:550-552 — detail line drawn at y+31; row pitch 59",
+        "usage": "hub entry title; one entry is 59 dp from the next",
+        "origin": "core/zrnmetrocore.c:548 (FONT_SEMILIGHT 25.5); core/zrnmetrocore.c:552"
+      },
+      {
+        "name": "app_list_title",
+        "semibold_weight": 350,
+        "size_sp_at_density_1x": 22,
+        "line_height": 28,
+        "line_height_origin": "derived [E] — 1.27x size; the row itself is 55 dp (LIST_ROW_H)",
+        "usage": "app name in the A-Z app list; the letter head is 27",
+        "origin": "ztmetro.c:4525 (FONT_SEMILIGHT 22); ztmetro.c:4517 (letter 27)"
+      },
+      {
+        "name": "page_title",
+        "semibold_weight": 350,
+        "size_sp_at_density_1x": 48,
+        "line_height": 60,
+        "line_height_origin": "derived [E] — 1.25x size; the C header fixes the content start at 108 dp (core/zrnmetrocore.c:491,532)",
+        "usage": "the page title of the two-line zmc_header / zmc_pivot_next header, Semilight",
+        "origin": "core/zrnmetrocore.c:510,514,519 (FONT_SEMILIGHT 48 at y=24); core/zrnmetrocore.h:39"
+      },
+      {
+        "name": "display",
+        "semibold_weight": 300,
+        "size_sp_at_density_1x": 56,
+        "line_height": 67,
+        "line_height_origin": "derived [E] — 1.2x size, single centred line",
+        "usage": "splash word mark ztOS",
+        "origin": "ztmetro.c:6720 (FONT_LIGHT 56, centred)"
+      },
+      {
+        "name": "display_large",
+        "semibold_weight": 300,
+        "size_sp_at_density_1x": 92,
+        "line_height": 110,
+        "line_height_origin": "derived [E] — 1.2x size; the lock clock sits 268 pt above the bottom (ztmetro.c:5942)",
+        "usage": "lock-screen clock; the date under it is 30 Semilight",
+        "origin": "ztmetro.c:5942 (FONT_LIGHT 92); ztmetro.c:5944,5946 (date 30)"
+      }
+    ],
+    "header": {
+      "title_size_sp": 48,
+      "subtitle_size_sp": 11.5,
+      "gap": 10,
+      "origin": {
+        "title_size_sp": "core/zrnmetrocore.c:510 (48 pt Semilight at y=24)",
+        "subtitle_size_sp": "core/zrnmetrocore.c:509 (11.5 pt Semibold caps at y=14)",
+        "gap": "derived [E] — 24 - 14, the vertical offset between the caps line and the title line (core/zrnmetrocore.c:509-510)"
+      }
+    }
+  },
+  "metrics": {
+    "tile_size_dp": 49.5,
+    "tile_gap_dp": 7,
+    "start_columns": 6,
+    "header_height_dp": 104,
+    "status_strip_height_dp": 28,
+    "pivot_bar_height_dp": 90,
+    "corner_radius_dp": 0,
+    "action_centre_row_height_dp": 57,
+    "medium_tile_size_dp": 106,
+    "wide_tile_width_dp": 219,
+    "start_top_pad_dp": 14,
+    "start_margin_dp": 14,
+    "page_margin_dp": 16,
+    "nav_bar_height_dp": 40,
+    "list_icon_dp": 45,
+    "list_row_height_dp": 55,
+    "list_left_dp": 80,
+    "list_top_dp": 17,
+    "action_centre_tile_width_dp": 85.75,
+    "action_centre_side_margin_dp": 4,
+    "action_centre_gap_dp": 3,
+    "action_centre_top_dp": 50,
+    "action_centre_handle_dp": 16,
+    "round_button_dp": 31,
+    "entry_row_pitch_dp": 59,
+    "min_touch_target_dp": 48,
+    "_origins": {
+      "tile_size_dp": "derived [E] — ztmetro.c:3266-3272: gutter=round(360*0.02)=7, margin=14, units=6, unit=(360-28-35)/6=49.5 at the 360 dp reference; ztmetro.c:2996 (units=6)",
+      "tile_gap_dp": "ztmetro.c:3267 (gutter = round(width * 0.02) => 7 at 360 dp)",
+      "start_columns": "ztmetro.c:2996 (units = 6: three medium tiles across); ztmetro.c:141 (MAX_UNITS 8); ztmetro.c:3080 (columns 2..4 => units 4..8)",
+      "header_height_dp": "core/zrnmetrocore.h:39 (ZMC_HEADER_H 104); content starts at 108 (core/zrnmetrocore.c:532)",
+      "status_strip_height_dp": "ztmetro.c:128 (STATUS_H 28)",
+      "pivot_bar_height_dp": "derived [E] — core/zrnmetrocore.c:531,537 (the header's tap band is 0..90, the two-line title block)",
+      "corner_radius_dp": "ztmetro.c:3657-3697 (tiles are cairo_rectangle fills, no arc); quick actions likewise ztmetro.c:6318-6319",
+      "action_centre_row_height_dp": "derived [E] — ztmetro.c:6249-6251: w=(360-8-9)/4=85.75, h=round(w*0.66)=57",
+      "medium_tile_size_dp": "derived [E] — 2*49.5 + 7 (ztmetro.c:3316-3318: w = cw*unit + (cw-1)*gutter)",
+      "wide_tile_width_dp": "derived [E] — 4*49.5 + 3*7 (ztmetro.c:3316-3318)",
+      "start_top_pad_dp": "ztmetro.c:140 (TOP_PAD 14, above the first row)",
+      "start_margin_dp": "derived [E] — ztmetro.c:3268 (margin = 2 * gutter = 14 at 360 dp)",
+      "page_margin_dp": "core/zrnmetrocore.h:37 (ZMC_MARGIN 16; comment: 20 px on a 450 px reference)",
+      "nav_bar_height_dp": "ztmetro.c:130 (NAV_BAR_H 40; 0 when the phone has hardware keys, ztmetro.c:3032-3037)",
+      "list_icon_dp": "ztmetro.c:162 (LIST_ICON 45)",
+      "list_row_height_dp": "ztmetro.c:163 (LIST_ROW_H 55)",
+      "list_left_dp": "ztmetro.c:164 (LIST_LEFT 80)",
+      "list_top_dp": "ztmetro.c:165 (LIST_TOP 17 below the status bar)",
+      "action_centre_tile_width_dp": "derived [E] — ztmetro.c:6249: (360-2*4-3*3)/4 = 85.75",
+      "action_centre_side_margin_dp": "ztmetro.c:6240 (SHADE_SIDE 4)",
+      "action_centre_gap_dp": "ztmetro.c:6241 (SHADE_GAP 3)",
+      "action_centre_top_dp": "ztmetro.c:6239 (SHADE_TOP 50)",
+      "action_centre_handle_dp": "ztmetro.c:6242 (SHADE_HANDLE 16)",
+      "round_button_dp": "ztmetro.c:166 (ROUND 31; the Start arrow and app-list search button)",
+      "entry_row_pitch_dp": "core/zrnmetrocore.c:552 (zmc_entry returns y + 59)",
+      "min_touch_target_dp": "derived [E] — Android accessibility floor, not present in the C code; ztmetro's own round button is 31 dp and AC rows are 57 dp"
+    }
+  },
+  "motion": {
+    "press_in_ms": 90,
+    "press_out_ms": 200,
+    "press_delay_ms": 80,
+    "long_press_ms": 450,
+    "tilt_deg": 14,
+    "tilt_lift_dp": 40,
+    "press_sink_fraction": 0.045,
+    "tile_in_ms": 186,
+    "tile_row_stagger_ms": 50,
+    "tile_out_ms": 85,
+    "turn_gap_ms": 110,
+    "back_gap_ms": 150,
+    "app_in_ms": 350,
+    "app_out_ms": 250,
+    "page_ms": 300,
+    "row_out_ms": 128,
+    "row_in_ms": 180,
+    "row_stagger_ms": 33,
+    "page_gap_ms": 120,
+    "shade_ms": 260,
+    "switch_ms": 260,
+    "edit_ms": 180,
+    "scroll_tau_ms": 380,
+    "toast_ms": 4500,
+    "peek_hold_ms": 320,
+    "peek_stay_ms": 3000,
+    "status_in_ms": 150,
+    "status_out_ms": 70,
+    "_origins": {
+      "press_in_ms": "core/zrnmetrocore.h:35 (ZMC_TILT_IN_MS 90)",
+      "press_out_ms": "core/zrnmetrocore.h:36 (ZMC_TILT_OUT_MS 200)",
+      "press_delay_ms": "ztmetro.c:148 (PRESS_DELAY_MS 80)",
+      "long_press_ms": "ztmetro.c:145 (LONG_PRESS_MS 450)",
+      "tilt_deg": "core/zrnmetrocore.h:32 (ZMC_TILT_DEG 14.0); ztmetro.c:207",
+      "tilt_lift_dp": "core/zrnmetrocore.h:33 (ZMC_TILT_LIFT 40.0)",
+      "press_sink_fraction": "core/zrnmetrocore.h:34 (ZMC_PRESS_SINK 0.045 of the eye distance)",
+      "tile_in_ms": "ztmetro.c:233 (TILE_LIFE_MS 186)",
+      "tile_row_stagger_ms": "ztmetro.c:234 (TILE_ROW_MS 50)",
+      "tile_out_ms": "ztmetro.c:227 (TILE_OUT_LIFE_MS 85)",
+      "turn_gap_ms": "ztmetro.c:250 (TURN_GAP_MS 110)",
+      "back_gap_ms": "ztmetro.c:251 (BACK_GAP_MS 150)",
+      "app_in_ms": "ztmetro.c:252 (APP_IN_MS 350)",
+      "app_out_ms": "ztmetro.c:253 (APP_OUT_MS 250)",
+      "page_ms": "ztmetro.c:179 (PAGE_MS 300)",
+      "row_out_ms": "core/zrnmetrocore.c:50 (ROW_OUT_MS 128)",
+      "row_in_ms": "core/zrnmetrocore.c:51 (ROW_IN_MS 180)",
+      "row_stagger_ms": "core/zrnmetrocore.c:52 (ROW_STAGGER_MS 33)",
+      "page_gap_ms": "core/zrnmetrocore.c:60 (GAP_MS 120)",
+      "shade_ms": "ztmetro.c:138 (SHADE_MS 260)",
+      "switch_ms": "ztmetro.c:197 (SWITCH_MS 260)",
+      "edit_ms": "ztmetro.c:181 (EDIT_MS 180)",
+      "scroll_tau_ms": "ztmetro.c:174 (SCROLL_TAU_MS 380)",
+      "toast_ms": "ztmetro.c:190 (TOAST_MS 4500)",
+      "peek_hold_ms": "ztmetro.c:150 (PEEK_HOLD_MS 320)",
+      "peek_stay_ms": "ztmetro.c:151 (PEEK_STAY_MS 3000)",
+      "status_in_ms": "ztmetro.c:192 (STATUS_IN_MS 150)",
+      "status_out_ms": "ztmetro.c:193 (STATUS_OUT_MS 70)",
+      "_easing_note": "ztmetro.c:1096-1157"
+    },
+    "_easing_note": "ztmetro animates with a Log(10) ease-out and a back-ease-out overshoot (ztmetro.c:1096-1157); Android approximation derived [E]: DecelerateInterpolator for arrival, OvershootInterpolator(1.0) for tile return."
+  }
+}

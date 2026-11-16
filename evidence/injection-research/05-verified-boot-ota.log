@@ -1,0 +1,74 @@
+# Evidence — Verified boot, OTA, device facts (collected 2026-11-16T07:13:49Z)
+
+## Target device in LineageOS is the unified Mi8937 build; ugglite is an asserted variant
+source: https://raw.githubusercontent.com/LineageOS/android_device_xiaomi_Mi8937/lineage-23.2/BoardConfig.mk
+8:SSI_PARTITIONS := product system system_ext
+13:    $(eval BOARD_$(p)IMAGE_FILE_SYSTEM_TYPE := ext4) \
+23:BOARD_AVB_ENABLE := false
+27:TARGET_OTA_ASSERT_DEVICE := ugglite,rolex,riva,Mi8917
+29:TARGET_OTA_ASSERT_DEVICE := land,santoni,ugg,Mi8937
+68:BOARD_CACHEIMAGE_FILE_SYSTEM_TYPE := ext4
+
+## LineageOS-for-microG 23.2 builds exist for Mi8937 (device dir listing)
+source: https://download.lineage.microg.org/Mi8937/
+lineage-23.2-20260516-microG-Mi8937-boot.img
+lineage-23.2-20260516-microG-Mi8937-boot.img.sha256sum
+lineage-23.2-20260516-microG-Mi8937-recovery.img
+lineage-23.2-20260516-microG-Mi8937-recovery.img.sha256sum
+lineage-23.2-20260516-microG-Mi8937-super_empty.img
+lineage-23.2-20260516-microG-Mi8937-super_empty.img.sha256sum
+lineage-23.2-20260516-microG-Mi8937.zip
+lineage-23.2-20260516-microG-Mi8937.zip.sha256sum
+lineage-23.2-20260616-microG-Mi8937-boot.img
+lineage-23.2-20260616-microG-Mi8937-boot.img.sha256sum
+lineage-23.2-20260616-microG-Mi8937-recovery.img
+lineage-23.2-20260616-microG-Mi8937-recovery.img.sha256sum
+
+## Magisk install: which images it patches, optional vbmeta/AVB handling
+source: https://topjohnwu.github.io/Magisk/install.html
+19:The result of **Ramdisk** determines whether your device has ramdisk in the boot partition. If your device does not have boot ramdisk, read the [Magisk in Recovery](#magisk-in-recovery) section before continuing.
+25:If your device has boot ramdisk, you need to patch the partition image that contains the ramdisk (`boot.img`, `init_boot.img`, or `vendor_boot.img`).<br>
+26:If your device does **NOT** have boot ramdisk, you need to patch `recovery.img`.<br>
+31:1. Whether your device has boot ramdisk
+52:6. (Optional) If your device has a separate `vbmeta` partition, you can patch the `vbmeta` partition with command:<br>
+53:   `fastboot flash vbmeta --disable-verity --disable-verification vbmeta.img` (note that it may **wipe your data**)
+131:4. If your device does **NOT** have boot ramdisk, check the **"Recovery Mode"** option
+138:9. If your device does **NOT** have boot ramdisk, reboot to recovery now to enable Magisk (reason stated in [Magisk in Recovery](#magisk-in-recovery)).
+
+## Magisk official OTA guide: A/B only
+source: https://topjohnwu.github.io/Magisk/ota.html
+## OTA Upgrade Guides
+
+Magisk does not modify read-only partitions by default, which makes applying official OTAs much simpler. **OTA updates are only supported on devices with A/B partitions (Seamless System Updates).** On A/B devices, the OTA is installed to the inactive slot while the system is running, allowing the Magisk app to install Magisk onto the updated partitions and preserve root across the update. The exact workflow in this document is only tested on Pixel devices, as procedures for other devices may vary.
+
+**NOTE: In order to apply OTAs, you HAVE to make sure you haven't modified any read-only partitions yourself (such as `/system` or `/vendor`) in any way. Even remounting the partition to rw will tamper block verification!!**
+
+## Magisk ships an addon.d survival script (assets/addon.d.sh in v31.1 APK)
+installed only when Magisk is flashed through a recovery that writes /system/addon.d (see mSurvival README)
+5:# Magisk Survival Script for ROMs with addon.d support
+15:  elif [ "$1" = post-restore ]; then
+75:    # Restore PREINITDEVICE from previous A-only partition
+118:  install_magisk
+136:  pre-backup)
+137:    # Back up PREINITDEVICE from existing partition before OTA on A-only devices
+155:  post-restore)
+
+## LineageOS A-only addon.d infrastructure exists in vendor/lineage
+source: LineageOS/android_vendor_lineage tree lineage-23.2
+prebuilt/common/bin/backuptool.functions
+prebuilt/common/bin/backuptool.sh
+prebuilt/common/bin/backuptool_ab.functions
+prebuilt/common/bin/backuptool_ab.sh
+prebuilt/common/bin/backuptool_postinstall.sh
+
+## LineageOS wiki: addon.d-v2/backuptool_ab do NOT run in recovery on A/B devices (implies A-only recovery OTA does run addon.d)
+source: https://wiki.lineageos.org/devices/Mi8937/update/ (and per-device update pages)
+
+## Boot image availability: the matching boot.img is published per microG build (re-patch source after OTA)
+lineage-23.2-20260516-microG-Mi8937-boot.img
+lineage-23.2-20260616-microG-Mi8937-boot.img
+lineage-23.2-20260812-microG-Mi8937-boot.img
+
+## A-only confirmed in common device config
+source: https://raw.githubusercontent.com/LineageOS/android_device_xiaomi_mithorium-common/lineage-23.2/BoardConfigCommon.mk
+10:AB_OTA_UPDATER := false

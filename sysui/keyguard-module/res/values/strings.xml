@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings are resolved by LSPosed from the module APK; nothing here is
+     looked up from the SystemUI resource table. -->
+<resources>
+    <string name="app_name">ztMetro Keyguard</string>
+    <string name="xposed_description">Metro lock screen for LineageOS 23.2: light clock, date line, accent indications. Fail-safe view hooks only.</string>
+</resources>

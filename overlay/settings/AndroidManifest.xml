@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro Settings RRO — Metro (ztOS) skin for the stock com.android.settings
+  (LineageOS 23.2 / Android 16, ugglite 720x1280).
+
+  Every name overridden here is defined in
+  LineageOS/android_packages_apps_Settings @ lineage-23.2
+  (e1b8cd2dde2edd8c513362efc55a770270dce899); file:line for each is in
+  evidence/settings-rro/REPORT.md and is re-checked by tools/check_names.py.
+
+  Why a preinstalled overlay is allowed to touch every resource: Settings declares
+  NO <overlayable> (docs/10b-overlay-and-hook-facts.md §1), so idmap2 takes the
+  !defines_overlayable branch and accepts any resource as long as the overlay is
+  preinstalled on a read-only partition:
+  frameworks/base/cmds/idmap2/libidmap2/ResourceMapping.cpp:69-75.
+  No android:targetName — there is no group to name.
+
+  android:hasCode="false": an RRO carries resources only, no views, no code.
+  android:isStatic is deliberately absent so the lead can toggle it with
+  "su 0 cmd overlay enable org.ztos.overlay.settings" without a reboot.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztos.overlay.settings"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <application
+        android:hasCode="false"
+        android:label="ztmetro Settings overlay" />
+
+    <overlay
+        android:targetPackage="com.android.settings"
+        android:priority="10" />
+</manifest>

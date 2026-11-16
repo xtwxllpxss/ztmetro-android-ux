@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<familyset>
+  <family name="sans-serif">
+    <font supportedAxes="wght,ital">
+      Roboto-Regular.ttf
+      <axis tag="wdth" stylevalue="100.0"/>
+    </font>
+  </family>
+  <family name="sans-serif-condensed">
+    <font supportedAxes="wght,ital">
+      Roboto-Regular.ttf
+      <axis tag="wdth" stylevalue="75.0"/>
+    </font>
+  </family>
+  <family name="roboto">
+    <font supportedAxes="wght,ital">
+      Roboto-Regular.ttf
+      <axis tag="wdth" stylevalue="100.0"/>
+    </font>
+  </family>
+  <alias name="arial" to="sans-serif"/>
+  <alias name="helvetica" to="sans-serif"/>
+  <alias name="sans-serif-black" to="sans-serif" weight="900"/>
+  <alias name="sans-serif-light" to="sans-serif" weight="300"/>
+  <alias name="sans-serif-medium" to="sans-serif" weight="500"/>
+  <alias name="sans-serif-thin" to="sans-serif" weight="100"/>
+</familyset>

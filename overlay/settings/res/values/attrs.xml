@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro Settings RRO — attribute declarations needed by SearchBarStyle_v2.
+
+  cardCornerRadius / cardElevation are Material Components attrs that live in the
+  com.android.settings resource package (the AAR is linked into the app), so a
+  standalone overlay build has no android.jar symbol for them. Declaring the same
+  name/format here gives the overlay an attr resource that idmap2 can map to the
+  target's attr of the same name and type, which is what makes the style-bag keys in
+  res/values/styles.xml (SearchBarStyle_v2) resolvable in the target.
+
+  Format is the widest one the library accepts for these two attrs (both are read as
+  dimensions) so the declaration cannot narrow the target's own use of them.
+-->
+<resources>
+    <attr name="cardCornerRadius" format="dimension" />
+    <attr name="cardElevation" format="dimension" />
+</resources>

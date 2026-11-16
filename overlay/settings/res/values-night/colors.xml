@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro Settings RRO — night twins.
+
+  Mandatory for every colour the target also declares in res/values-night/:
+  an RRO value only replaces the configuration it declares, and a night-specific
+  target entry outranks an overlay's default entry. The target has night twins for
+  the ten homepage *_bg aliases (res/values-night/colors.xml:21-30) and for
+  contextual_card_background (res/values-night/colors.xml:32).
+
+  Metro dark = the same flat #000000 / #1F1F1F surfaces the SystemUI overlay paints
+  the Action Centre (evidence/sysui-rro/REPORT.md §1.2), so Settings and the shade
+  agree. The accent stays #0050EF in both modes, matching the framework overlay's
+  customColorShadeActive (evidence/framework-rro/REPORT.md §4b).
+-->
+<resources>
+
+    <color name="homepage_blue_variant_bg">#FF0050EF</color>   <!-- values-night:21 -->
+    <color name="homepage_blue_bg">#FF0050EF</color>           <!-- :22 -->
+    <color name="homepage_pink_bg">#FF0050EF</color>           <!-- :23 -->
+    <color name="homepage_orange_bg">#FF0050EF</color>         <!-- :24 -->
+    <color name="homepage_yellow_bg">#FF0050EF</color>         <!-- :25 -->
+    <color name="homepage_green_bg">#FF0050EF</color>          <!-- :26 -->
+    <color name="homepage_grey_bg">#FF0050EF</color>           <!-- :27 -->
+    <color name="homepage_cyan_bg">#FF0050EF</color>           <!-- :28 -->
+    <color name="homepage_red_bg">#FF0050EF</color>            <!-- :29 -->
+    <color name="homepage_purple_bg">#FF0050EF</color>         <!-- :30 -->
+
+    <!-- Metro neutrals.surface_off #1F1F1F: a card slightly above the black page. -->
+    <color name="contextual_card_background">#FF1F1F1F</color> <!-- :32 -->
+
+</resources>

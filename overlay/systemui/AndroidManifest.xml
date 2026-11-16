@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro SystemUI RRO — Metro/Action-Centre skin for stock com.android.systemui
+  (LineageOS 23.2 / Android 16, ugglite 720x1280).
+
+  Target declares NO <overlayable> (docs/10b-overlay-and-hook-facts.md §1), so the
+  overlay must be *preinstalled* on a read-only partition (Magisk
+  system/overlay/... counts as SYSTEM_PARTITION) for idmap2 to accept it:
+  frameworks/base/cmds/idmap2/libidmap2/ResourceMapping.cpp:69-75.
+  No android:targetName for that reason — there is no group to name.
+
+  android:hasCode="false": an RRO carries resources only.
+  android:isStatic is deliberately absent: the overlay is runtime-enableable with
+  "su 0 cmd overlay enable" (user 0) for org.ztos.overlay.systemui.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztos.overlay.systemui"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <application
+        android:hasCode="false"
+        android:label="ztmetro SystemUI overlay" />
+
+    <overlay
+        android:targetPackage="com.android.systemui"
+        android:priority="10" />
+</manifest>

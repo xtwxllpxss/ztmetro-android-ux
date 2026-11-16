@@ -1,0 +1,6 @@
+id=ztmetro-font
+name=ztmetro font — Open Sans (Cyrillic, Segoe UI-class)
+version=1.1.0
+versionCode=10100
+author=xtwxllpxss
+description=System default sans-serif -> Open Sans 3.003 (SIL OFL, full Cyrillic + Greek, Segoe UI-class design). Rewrites the live font_fallback.xml and fonts.xml sans-serif family only; emoji, CJK, mono and serif fallbacks stay stock. Systemless Magisk overlay, no ROM rebuild.

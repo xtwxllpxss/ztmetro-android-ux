@@ -1,0 +1,26 @@
+# Name verification for the status-strip RROs
+# target: LineageOS/android_frameworks_base @ 797e43244b96c6a0dff5c81b21c4d4be665b082e (lineage-23.2)
+# tree: ~/ztux/status/tree (isolated git worktree, sparse checkout of core/res/res/values + packages/SystemUI)
+
+## framework-res (target: android) — definitions
+core/res/res/values/dimens.xml:44:    <dimen name="status_bar_height_default">24dp</dimen>
+core/res/res/values/dimens.xml:48:    <dimen name="status_bar_height">@dimen/status_bar_height_portrait</dimen>
+core/res/res/values/dimens.xml:52:    <dimen name="status_bar_height_portrait">24dp</dimen>
+core/res/res/values/dimens.xml:106:    <dimen name="status_bar_system_icon_size">15dp</dimen>
+
+## SystemUI (target: com.android.systemui) — definitions (base values/ only)
+packages/SystemUI/res/values/dimens.xml:441:    <dimen name="status_bar_icon_drawing_size">15dp</dimen>
+packages/SystemUI/res/values/dimens.xml:449:    <item type="dimen" name="status_bar_icon_drawing_alpha">90%</item>
+packages/SystemUI/res/values/dimens.xml:463:    <dimen name="status_bar_padding_start">4dp</dimen>
+packages/SystemUI/res/values/dimens.xml:469:    <dimen name="status_bar_padding_top">0dp</dimen>
+packages/SystemUI/res/values/colors.xml:22:    <color name="system_bar_background_opaque">#ff000000</color>
+packages/SystemUI/res/values/styles.xml:20:    <style name="TextAppearance.StatusBar.Default" parent="@*android:style/TextAppearance.StatusBar.Icon">
+
+## consumers (quoted in REPORT.md)
+core/res/res/values/dimens.xml:56   status_bar_height_landscape -> @dimen/status_bar_height_portrait (follows 28dp)
+packages/SystemUI/res/values/dimens.xml:605  status_bar_header_height_keyguard -> @dimen/status_bar_height (keyguard strip)
+packages/SystemUI/res/layout/status_bar.xml:37,49,51,210  status_bar_padding_start/top
+packages/SystemUI/res/layout/keyguard_status_bar.xml:24,33,80  height + paddingTop on keyguard strip
+packages/SystemUI/src/com/android/systemui/statusbar/StatusBarIconView.java:350,352  icon drawing size
+packages/SystemUI/src/com/android/systemui/statusbar/StatusBarIconView.java:356-360  system icon size
+packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBarTransitions.java:49  icon alpha fraction

@@ -1,0 +1,178 @@
+# ztmetro SystemUI RRO — target-name verification
+# target repo : LineageOS/android_frameworks_base
+# branch/tag  : lineage-23.2
+# commit      : 797e43244b96c6a0dff5c81b21c4d4be665b082e   (= the commit pinned in design/systemui-resource-map.json)
+# subtree     : packages/SystemUI  (paths below relative to it)
+# generated   : 2026-11-16T07:31:11Z on denis-HP-Pavilion-Laptop-13-an0xxx
+
+## 1. Overridden names — definitions in the target (file:line: value)
+
+### qs_corner_radius
+  res/values/dimens.xml:726:    <dimen name="qs_corner_radius">28dp</dimen>
+### qs_tile_height
+  res/values/dimens.xml:727:    <dimen name="qs_tile_height">80dp</dimen>
+### qs_tile_padding
+  res/values/dimens.xml:758:    <dimen name="qs_tile_padding">12dp</dimen>
+### qs_tile_start_padding
+  res/values/dimens.xml:759:    <dimen name="qs_tile_start_padding">16dp</dimen>
+### qs_tile_margin_horizontal
+  res/values/dimens.xml:728:    <dimen name="qs_tile_margin_horizontal">8dp</dimen>
+### qs_tile_margin_vertical
+  res/values/dimens.xml:729:    <dimen name="qs_tile_margin_vertical">@dimen/qs_tile_margin_horizontal</dimen>
+### qs_tile_text_size
+  res/values/dimens.xml:767:    <dimen name="qs_tile_text_size">14sp</dimen>
+### notification_corner_radius
+  res/values/dimens.xml:348:    <dimen name="notification_corner_radius">28dp</dimen>
+### notification_corner_radius_small
+  res/values/dimens.xml:357:    <dimen name="notification_corner_radius_small">4dp</dimen>
+### overlay_shade_panel_shape_radius
+  res/values/shade_dimens.xml:28:    <dimen name="overlay_shade_panel_shape_radius">
+### aux_spacing_overlay_panel_shape_radius
+  res/values/shade_dimens.xml:32:    <dimen name="aux_spacing_overlay_panel_shape_radius">46dp</dimen>
+### shade_panel_fallback
+  res/values/colors.xml:43:    <color name="shade_panel_fallback">@android:color/system_accent2_200</color>
+  res/values-night/colors.xml:138:    <color name="shade_panel_fallback">@android:color/system_accent2_800</color>
+### notification_scrim_fallback
+  res/values/colors.xml:44:    <color name="notification_scrim_fallback">@android:color/system_surface_dim_light</color>
+  res/values-night/colors.xml:139:    <color name="notification_scrim_fallback">@android:color/system_surface_dim_dark</color>
+### notification_scrim_base
+  res/values/colors.xml:40:    <color name="notification_scrim_base">@android:color/system_accent1_100</color>
+  res/values-night/colors.xml:135:    <color name="notification_scrim_base">@android:color/system_accent1_800</color>
+### notification_legacy_background_color
+  res/values/colors.xml:84:    <color name="notification_legacy_background_color">#ff1a1a1a</color>
+  res/values-night/colors.xml:31:    <color name="notification_legacy_background_color">@color/GM2_grey_900</color>
+### shade_header_text_color
+  res/values/colors.xml:28:    <color name="shade_header_text_color">#FF000000</color>
+  res/values-night/colors.xml:26:    <color name="shade_header_text_color" android:featureFlag="com.android.systemui.shade_header_blur_font_color">#FFFFFFFF</color>
+### shade_header_text_color_bg
+  res/values/colors.xml:30:    <color name="shade_header_text_color_bg">#FFFFFFFF</color>
+  res/values-night/colors.xml:27:    <color name="shade_header_text_color_bg" android:featureFlag="com.android.systemui.shade_header_blur_font_color">#FF000000</color>
+### style TextAppearance.QS.TileLabel
+  res/values/styles.xml:164:    <style name="TextAppearance.QS.TileLabel">
+### style TextAppearance.QS.TileLabel.Secondary
+  res/values/styles.xml:171:    <style name="TextAppearance.QS.TileLabel.Secondary">
+### style TextAppearance.StatusBar.Expanded.Clock
+  res/values/styles.xml:37:    <style name="TextAppearance.StatusBar.Expanded.Clock">
+### style TextAppearance.StatusBar.Expanded.Date
+  res/values/styles.xml:44:    <style name="TextAppearance.StatusBar.Expanded.Date">
+### style TextAppearance.QS.Status
+  res/values/styles.xml:180:    <style name="TextAppearance.QS.Status">
+### style TextAppearance.QS.Status.Clock
+  res/values/styles.xml:188:    <style name="TextAppearance.QS.Status.Clock">
+### style TextAppearance.QS.Status.Build
+  res/values/styles.xml:193:    <style name="TextAppearance.QS.Status.Build">
+### drawable qs_tile_background_shape
+  res/drawable/qs_tile_background_flagged.xml:20:        android:drawable="@drawable/qs_tile_background_shape" />
+  res/drawable/qs_tile_background_flagged.xml:25:                android:drawable="@drawable/qs_tile_background_shape" />
+  res/drawable/qs_tile_background_flagged.xml:29:                        android:drawable="@drawable/qs_tile_background_shape"
+  res/drawable/qs_tile_background.xml:20:        android:drawable="@drawable/qs_tile_background_shape"
+  res/drawable/qs_tile_background.xml:26:                android:drawable="@drawable/qs_tile_background_shape" />
+  res/drawable/qs_tile_background.xml:31:                        android:drawable="@drawable/qs_tile_background_shape" />
+  res/drawable/qs_tile_background.xml:34:                        android:drawable="@drawable/qs_tile_background_shape" />
+
+## 2. Live consumers (code/res that read the overridden entry)
+
+### R\.color\.shade_panel_fallback
+  src/com/android/systemui/shade/ui/ShadeColors.kt:76:        return context.getColor(R.color.shade_panel_fallback)
+  src/com/android/systemui/brightness/ui/compose/BrightnessSlider.kt:572:            @Composable @ReadOnlyComposable get() = colorResource(R.color.shade_panel_fallback)
+### R\.color\.notification_scrim_fallback
+  src/com/android/systemui/shade/ui/ShadeColors.kt:89:        return context.getColor(R.color.notification_scrim_fallback)
+### R\.color\.notification_scrim_base
+  src/com/android/systemui/shade/ui/ShadeColors.kt:82:            context.getColor(R.color.notification_scrim_base),
+### R\.color\.notification_legacy_background_color
+  src/com/android/systemui/statusbar/notification/row/wrapper/NotificationCustomViewWrapper.java:38:        mLegacyColor = row.getContext().getColor(R.color.notification_legacy_background_color);
+### R\.color\.shade_header_text_color
+  src/com/android/systemui/shade/ShadeHeaderController.kt:416:            header.context.getColor(R.color.shade_header_text_color_bg)
+  src/com/android/systemui/shade/ShadeHeaderController.kt:423:            header.context.getColor(R.color.shade_header_text_color)
+### R\.dimen\.qs_corner_radius
+  src/com/android/systemui/qs/tileimpl/QSTileViewImpl.kt:1038:        changeCornerRadius(resources.getDimensionPixelSize(R.dimen.qs_corner_radius).toFloat())
+  src/com/android/systemui/qs/tileimpl/QSTileViewImpl.kt:1056:                resources.getDimensionPixelSize(R.dimen.qs_corner_radius).toFloat(),
+  src/com/android/systemui/qs/tileimpl/QSTileViewImpl.kt:1069:                resources.getDimensionPixelSize(R.dimen.qs_corner_radius).toFloat() - 20,
+### R\.dimen\.qs_tile_height
+  src/com/android/systemui/qs/TileLayout.java:37:    protected int mResourceCellHeightResId = R.dimen.qs_tile_height;
+  src/com/android/systemui/qs/customize/TileAdapter.java:146:        mMinTileViewHeight = context.getResources().getDimensionPixelSize(R.dimen.qs_tile_height);
+  src/com/android/systemui/qs/customize/TileAdapter.java:913:        final int minHeight = mContext.getResources().getDimensionPixelSize(R.dimen.qs_tile_height);
+### R\.dimen\.qs_tile_padding
+  src/com/android/systemui/qs/QuickQSPanel.java:198:            int padding = mContext.getResources().getDimensionPixelSize(R.dimen.qs_tile_padding);
+  src/com/android/systemui/qs/tileimpl/QSTileViewImpl.kt:238:        val padding = resources.getDimensionPixelSize(R.dimen.qs_tile_padding)
+  src/com/android/systemui/qs/tileimpl/QSTileViewImpl.kt:279:        val padding = resources.getDimensionPixelSize(R.dimen.qs_tile_padding)
+  src/com/android/systemui/qs/TileLayout.java:268:        int padding = mContext.getResources().getDimensionPixelSize(R.dimen.qs_tile_padding);
+  src/com/android/systemui/qs/customize/TileAdapter.java:917:        int padding = mContext.getResources().getDimensionPixelSize(R.dimen.qs_tile_padding);
+### R\.dimen\.qs_tile_start_padding
+  src/com/android/systemui/qs/tileimpl/QSTileViewImpl.kt:239:        val startPadding = resources.getDimensionPixelSize(R.dimen.qs_tile_start_padding)
+  src/com/android/systemui/qs/tileimpl/QSTileViewImpl.kt:280:        val startPadding = resources.getDimensionPixelSize(R.dimen.qs_tile_start_padding)
+### R\.dimen\.qs_tile_margin_horizontal
+  src/com/android/systemui/statusbar/notification/stack/NotificationStackScrollLayout.java:1004:        mQsTilePadding = res.getDimensionPixelOffset(R.dimen.qs_tile_margin_horizontal);
+  src/com/android/systemui/qs/panels/ui/compose/infinitegrid/InfiniteGridLayout.kt:106:                horizontalPadding = dimensionResource(R.dimen.qs_tile_margin_horizontal),
+  src/com/android/systemui/qs/panels/ui/compose/infinitegrid/InfiniteGridLayout.kt:129:                columnSpacing = dimensionResource(R.dimen.qs_tile_margin_horizontal),
+  src/com/android/systemui/qs/panels/ui/compose/QuickQuickSettings.kt:61:                horizontalPadding = dimensionResource(R.dimen.qs_tile_margin_horizontal),
+  src/com/android/systemui/qs/panels/ui/compose/QuickQuickSettings.kt:85:                columnSpacing = dimensionResource(R.dimen.qs_tile_margin_horizontal),
+  src/com/android/systemui/qs/TileLayout.java:156:        mCellMarginHorizontal = res.getDimensionPixelSize(R.dimen.qs_tile_margin_horizontal);
+  src/com/android/systemui/qs/customize/QSCustomizerController.java:139:                getResources().getDimensionPixelSize(R.dimen.qs_tile_margin_horizontal) / 2;
+### R\.dimen\.qs_tile_margin_vertical
+  src/com/android/systemui/qs/panels/ui/compose/infinitegrid/InfiniteGridLayout.kt:130:                rowSpacing = dimensionResource(R.dimen.qs_tile_margin_vertical),
+  src/com/android/systemui/qs/panels/ui/compose/TileButtonGroupGrid.kt:69:        verticalArrangement = spacedBy(dimensionResource(R.dimen.qs_tile_margin_vertical)),
+  src/com/android/systemui/qs/panels/ui/compose/QuickQuickSettings.kt:86:                rowSpacing = dimensionResource(R.dimen.qs_tile_margin_vertical),
+  src/com/android/systemui/qs/composefragment/QSFragmentCompose.kt:1511:    Column(verticalArrangement = spacedBy(dimensionResource(R.dimen.qs_tile_margin_vertical))) {
+  src/com/android/systemui/qs/composefragment/QSFragmentCompose.kt:1518:                horizontalArrangement = spacedBy(dimensionResource(R.dimen.qs_tile_margin_vertical)),
+  src/com/android/systemui/qs/composefragment/QSFragmentCompose.kt:1552:        verticalArrangement = spacedBy(dimensionResource(R.dimen.qs_tile_margin_vertical)),
+  src/com/android/systemui/qs/TileLayout.java:158:        mCellMarginVertical= res.getDimensionPixelSize(R.dimen.qs_tile_margin_vertical);
+  src/com/android/systemui/qs/QSPanel.java:127:                R.dimen.qs_tile_margin_vertical);
+### R\.dimen\.qs_tile_text_size
+  src/com/android/systemui/qs/QuickQSPanel.java:195:            FontSizeUtils.updateFontSize(mTempTextView, R.dimen.qs_tile_text_size);
+  src/com/android/systemui/qs/tiles/UserDetailItemView.java:153:        return R.dimen.qs_tile_text_size;
+  src/com/android/systemui/qs/tileimpl/QSTileViewImpl.kt:270:        FontSizeUtils.updateFontSize(label, R.dimen.qs_tile_text_size)
+  src/com/android/systemui/qs/tileimpl/QSTileViewImpl.kt:271:        FontSizeUtils.updateFontSize(secondaryLabel, R.dimen.qs_tile_text_size)
+  src/com/android/systemui/qs/TileLayout.java:265:        FontSizeUtils.updateFontSize(mTempTextView, R.dimen.qs_tile_text_size);
+  src/com/android/systemui/qs/customize/TileAdapter.java:914:        FontSizeUtils.updateFontSize(mTempTextView, R.dimen.qs_tile_text_size);
+### R\.dimen\.notification_corner_radius
+  src/com/android/systemui/media/controls/ui/controller/MediaControlPanel.java:1389:                                R.dimen.notification_corner_radius);
+  src/com/android/systemui/statusbar/featurepods/media/ui/compose/MediaControlPopup.kt:63:                                dimensionResource(R.dimen.notification_corner_radius)
+  src/com/android/systemui/statusbar/featurepods/media/ui/compose/MediaControlPopup.kt:76:                                dimensionResource(R.dimen.notification_corner_radius)
+  src/com/android/systemui/statusbar/notification/promoted/AODPromotedNotification.kt:130:    val borderRadius = dimensionResource(systemuiR.dimen.notification_corner_radius)
+  src/com/android/systemui/statusbar/notification/stack/MediaContainerView.kt:49:            context.resources.getDimensionPixelSize(R.dimen.notification_corner_radius).toFloat()
+  src/com/android/systemui/statusbar/notification/stack/NotificationStackScrollLayout.java:1008:        mCornerRadius = res.getDimensionPixelSize(R.dimen.notification_corner_radius);
+  src/com/android/systemui/statusbar/notification/stack/NotificationStackScrollLayout.java:1047:        int newRadius = getResources().getDimensionPixelSize(R.dimen.notification_corner_radius);
+  src/com/android/systemui/statusbar/notification/stack/StackScrollAlgorithm.java:128:        mSmallCornerRadius = res.getDimension(R.dimen.notification_corner_radius_small);
+### R\.style\.TextAppearance_QS_Status
+  src/com/android/systemui/shade/ShadeHeaderController.kt:335:                clock.setTextAppearance(R.style.TextAppearance_QS_Status)
+  src/com/android/systemui/shade/ShadeHeaderController.kt:336:                date.setTextAppearance(R.style.TextAppearance_QS_Status)
+  src/com/android/systemui/shade/ShadeHeaderController.kt:338:                    R.style.TextAppearance_QS_Status,
+  src/com/android/systemui/shade/ShadeHeaderController.kt:553:        clock.setTextAppearance(R.style.TextAppearance_QS_Status)
+  src/com/android/systemui/shade/ShadeHeaderController.kt:554:        date.setTextAppearance(R.style.TextAppearance_QS_Status)
+  src/com/android/systemui/shade/ShadeHeaderController.kt:556:            R.style.TextAppearance_QS_Status,
+  src/com/android/systemui/qs/QSFooterView.java:135:        FontSizeUtils.updateFontSizeFromStyle(mBuildText, R.style.TextAppearance_QS_Status_Build);
+### R\.style\.TextAppearance_QS_Status_Build
+  src/com/android/systemui/qs/QSFooterView.java:135:        FontSizeUtils.updateFontSizeFromStyle(mBuildText, R.style.TextAppearance_QS_Status_Build);
+### TextAppearance\.QS\.TileLabel
+  res/layout/qs_tile_label.xml:42:        android:textAppearance="@style/TextAppearance.QS.TileLabel"/>
+  res/layout/qs_tile_label.xml:56:        android:textAppearance="@style/TextAppearance.QS.TileLabel.Secondary"
+
+## 3. Consumer audit (correction to design/systemui-resource-map.json)
+
+  Searched: packages/SystemUI/{src,res,res-keyguard,res-product} plus
+  libs/WindowManager/Shell at the same commit; matches exclude the definition itself.
+
+  overlay_shade_panel_shape_radius                 consumers: 0  -> INERT (nothing draws with it)
+  aux_spacing_overlay_panel_shape_radius           consumers: 0  -> INERT (only aliased by the above)
+  TextAppearance.StatusBar.Expanded.Clock          consumers: 0  -> INERT (style kept in overlay only
+                                                                  because the brief names it)
+  TextAppearance.StatusBar.Expanded.Date           consumers: 0  -> INERT (same)
+  TextAppearance.QS.Status.Clock                   consumers: 1  -> LIVE:
+      res/layout/combined_qs_header.xml:88: android:textAppearance="@style/TextAppearance.QS.Status.Clock"
+  (map claimed the 46dp shade-panel radius is the 2025 floating panel corner; the dimen
+   exists but is unused at this commit, so the overlay's 0dp cannot be the whole story.
+   The visible square transition that DOES move is notification_corner_radius, consumed by
+   NotificationStackScrollLayout.java:1008,1047 and StackScrollAlgorithm.java:128.)
+
+## 4. Blur gate for the scrim path
+  ScrimController.java:1695:        return ShadeColors.notificationScrim(mContext, isBlurCurrentlySupported());
+  ScrimController.java:1699:        return ShadeColors.shadePanel(mContext, isBlurCurrentlySupported(), true);
+
+## 5. Night variants that forced res/values-night/colors.xml
+  26:    <color name="shade_header_text_color" android:featureFlag="com.android.systemui.shade_header_blur_font_color">#FFFFFFFF</color>
+  27:    <color name="shade_header_text_color_bg" android:featureFlag="com.android.systemui.shade_header_blur_font_color">#FF000000</color>
+  31:    <color name="notification_legacy_background_color">@color/GM2_grey_900</color>
+  135:    <color name="notification_scrim_base">@android:color/system_accent1_800</color>
+  138:    <color name="shade_panel_fallback">@android:color/system_accent2_800</color>
+  139:    <color name="notification_scrim_fallback">@android:color/system_surface_dim_dark</color>

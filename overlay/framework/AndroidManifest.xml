@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro framework-res runtime resource overlay.
+
+  targetPackage="android": the overlay restyles framework-res, which is what
+  every stock app inherits (Theme.Material / Theme.DeviceDefault / AndroidX
+  views).  Values only, no code, no components.
+
+  * android:hasCode="false" — an RRO may not carry code.
+  * no android:targetName — AOSP android-16.0.0_r3 framework-res declares no
+    <overlayable> (there is no core/res/res/values/overlayable.xml), so the
+    "preinstalled / same signature" branch of idmap2 CheckOverlayable applies
+    and targetName must be omitted.
+  * android:isStatic="true" — immutable + enabled at boot.  Only immutable
+    overlays targeting "android" affect Resources.getSystem() (AOSP RRO docs),
+    and it means no `cmd overlay enable` (which needs CHANGE_OVERLAY_PACKAGES)
+    on the device.
+  * android:priority="2" — only consulted when a partition has no
+    overlay/config/config.xml; harmless otherwise.
+
+  Install path (Magisk systemless injection): system/product/overlay/
+  (product policy is inside idmap2's kDefaultPolicies).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztmetro.overlay.framework"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="36" android:targetSdkVersion="36" />
+
+    <application
+        android:hasCode="false"
+        android:label="ztmetro framework theme" />
+
+    <overlay
+        android:targetPackage="android"
+        android:isStatic="true"
+        android:priority="2" />
+</manifest>

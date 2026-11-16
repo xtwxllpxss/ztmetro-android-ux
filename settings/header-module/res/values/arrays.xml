@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Read by LSPosed to prefill the module scope (LSPosed: xposedscope). -->
+    <string-array name="xposed_scope">
+        <item>com.android.settings</item>
+    </string-array>
+</resources>

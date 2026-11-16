@@ -1,0 +1,13 @@
+README.md
+Selawik-ATTRIBUTION.md
+Selawik-OFL.txt
+customize.sh
+fonts.fragment
+module.prop
+rewrite-fonts.sh
+system/fonts/Selawik-Bold.ttf
+system/fonts/Selawik-Light.ttf
+system/fonts/Selawik-Regular.ttf
+system/fonts/Selawik-Semibold.ttf
+system/fonts/Selawik-Semilight.ttf
+verify-xml.awk

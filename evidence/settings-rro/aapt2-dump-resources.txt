@@ -1,0 +1,190 @@
+Binary APK
+Package name=org.ztos.overlay.settings id=7f
+  type attr id=01 entryCount=2
+    resource 0x7f010000 attr/cardCornerRadius
+      () (attr) type=dimension
+    resource 0x7f010001 attr/cardElevation
+      () (attr) type=dimension
+  type color id=02 entryCount=22
+    resource 0x7f020000 color/contextual_card_background
+      () #fff2f2f2
+      (night) #ff1f1f1f
+    resource 0x7f020001 color/homepage_blue_bg
+      () #ff0050ef
+      (night) #ff0050ef
+    resource 0x7f020002 color/homepage_blue_fg
+      () #ffffffff
+    resource 0x7f020003 color/homepage_blue_variant_bg
+      () #ff0050ef
+      (night) #ff0050ef
+    resource 0x7f020004 color/homepage_blue_variant_fg
+      () #ffffffff
+    resource 0x7f020005 color/homepage_cyan_bg
+      () #ff0050ef
+      (night) #ff0050ef
+    resource 0x7f020006 color/homepage_cyan_fg
+      () #ffffffff
+    resource 0x7f020007 color/homepage_generic_icon_background
+      () #ff0050ef
+    resource 0x7f020008 color/homepage_green_bg
+      () #ff0050ef
+      (night) #ff0050ef
+    resource 0x7f020009 color/homepage_green_fg
+      () #ffffffff
+    resource 0x7f02000a color/homepage_grey_bg
+      () #ff0050ef
+      (night) #ff0050ef
+    resource 0x7f02000b color/homepage_grey_fg
+      () #ffffffff
+    resource 0x7f02000c color/homepage_orange_bg
+      () #ff0050ef
+      (night) #ff0050ef
+    resource 0x7f02000d color/homepage_orange_fg
+      () #ffffffff
+    resource 0x7f02000e color/homepage_pink_bg
+      () #ff0050ef
+      (night) #ff0050ef
+    resource 0x7f02000f color/homepage_pink_fg
+      () #ffffffff
+    resource 0x7f020010 color/homepage_purple_bg
+      () #ff0050ef
+      (night) #ff0050ef
+    resource 0x7f020011 color/homepage_purple_fg
+      () #ffffffff
+    resource 0x7f020012 color/homepage_red_bg
+      () #ff0050ef
+      (night) #ff0050ef
+    resource 0x7f020013 color/homepage_red_fg
+      () #ffffffff
+    resource 0x7f020014 color/homepage_yellow_bg
+      () #ff0050ef
+      (night) #ff0050ef
+    resource 0x7f020015 color/homepage_yellow_fg
+      () #ffffffff
+  type dimen id=03 entryCount=15
+    resource 0x7f030000 dimen/accessibility_illustration_view_radius
+      () 0.000000dp
+    resource 0x7f030001 dimen/audio_streams_qrcode_preview_radius
+      () 0.000000dp
+    resource 0x7f030002 dimen/battery_hints_chip_corner_radius
+      () 0.000000dp
+    resource 0x7f030003 dimen/chartview_transom_radius
+      () 0.000000dp
+    resource 0x7f030004 dimen/chartview_trapezoid_radius
+      () 0.000000dp
+    resource 0x7f030005 dimen/contextual_card_corner_radius
+      () 0.000000dp
+    resource 0x7f030006 dimen/contrast_button_radius
+      () 0.000000dp
+    resource 0x7f030007 dimen/display_block_corner_radius
+      () 0.000000dp
+    resource 0x7f030008 dimen/dream_item_corner_radius
+      () 0.000000dp
+    resource 0x7f030009 dimen/hdr_brightness_preview_corner_radius
+      () 0.000000dp
+    resource 0x7f03000a dimen/keyboard_picker_radius
+      () 0.000000dp
+    resource 0x7f03000b dimen/min_tap_target_size
+      () 52.000000dp
+    resource 0x7f03000c dimen/rect_button_radius
+      () 0.000000dp
+    resource 0x7f03000d dimen/search_bar_container_top_padding
+      () 4.000000dp
+    resource 0x7f03000e dimen/settings_panel_corner_radius
+      () 0.000000dp
+  type drawable id=04 entryCount=2
+    resource 0x7f040000 drawable/preference_background
+      () (file) res/drawable/preference_background.xml type=XML
+      (night) (file) res/drawable-night-v8/preference_background.xml type=XML
+    resource 0x7f040001 drawable/search_bar_selected_background
+      () (file) res/drawable/search_bar_selected_background.xml type=XML
+      (night) (file) res/drawable-night-v8/search_bar_selected_background.xml type=XML
+  type style id=05 entryCount=15
+    resource 0x7f050000 style/SearchBarStyle_v2
+      () (style) size=2
+        cardCornerRadius(0x7f010000)=0.000000dp
+        cardElevation(0x7f010001)=0.000000dp
+    resource 0x7f050001 style/TextAppearance.ConditionCardSummary
+      () (style) size=3
+        0x01010095=12.000000sp
+        0x01010098=?0x01010038
+        0x010103ac="sans-serif"
+    resource 0x7f050002 style/TextAppearance.ContextualCardDismissalText
+      () (style) size=3
+        0x01010095=13.000000sp
+        0x01010098=?0x01010036
+        0x010103ac="sans-serif-medium"
+    resource 0x7f050003 style/TextAppearance.DialogMessage
+      () (style) size=4
+        0x01010095=13.000000sp
+        0x01010098=?0x01010036
+        0x01010218=1.38
+        0x010103ac="sans-serif"
+    resource 0x7f050004 style/TextAppearance.HomepageCardTitle
+      () (style) size=3
+        0x01010095=17.000000sp
+        0x01010098=?0x01010036
+        0x010103ac="sans-serif-light"
+    resource 0x7f050005 style/TextAppearance.NotificationImportanceDetail
+      () (style) size=4
+        0x01010095=12.000000sp
+        0x01010098=?0x01010038
+        0x010100af=0x00000011
+        0x010103ac="sans-serif"
+    resource 0x7f050006 style/TextAppearance.RemoveDialogContent
+      () (style) size=3
+        0x01010095=13.000000sp
+        0x01010098=?0x01010036
+        0x010103ac="sans-serif"
+    resource 0x7f050007 style/TextAppearance.SearchBar
+      () (style) size=5
+        0x01010095=17.000000sp
+        0x01010098=?0x01010036
+        0x010100b3=0x00000011
+        0x0101015d=true
+        0x010103ac="sans-serif-light"
+    resource 0x7f050008 style/TextAppearance.SuggestionSummary
+      () (style) size=3
+        0x01010095=12.000000sp
+        0x01010098=?0x01010038
+        0x010103ac="sans-serif"
+    resource 0x7f050009 style/TextAppearance.SuggestionTitle
+      () (style) size=3
+        0x01010095=20.000000sp
+        0x01010098=?0x01010036
+        0x010103ac="sans-serif-light"
+    resource 0x7f05000a style/TextAppearance.info_label
+      () (style) size=4
+        0x01010095=12.000000sp
+        0x01010097=0x00000000
+        0x01010098=?0x01010038
+        0x010103ac="sans-serif-medium"
+    resource 0x7f05000b style/TextAppearance.info_value
+      () (style) size=4
+        0x01010095=13.000000sp
+        0x01010097=0x00000000
+        0x01010098=?0x01010036
+        0x010103ac="sans-serif"
+    resource 0x7f05000c style/wifi_item
+      () (style) size=7
+        0x010100af=0x00800003
+        0x010100c4=1
+        0x010100f8=0.000000dp
+        0x010103b3=8.000000dp
+        0x010103b4=8.000000dp
+        0x010103b5=0.000000dp
+        0x010103b6=0.000000dp
+    resource 0x7f05000d style/wifi_item_content
+      () (style) size=5
+        0x01010095=17.000000sp
+        0x01010098=?0x01010036
+        0x01010140=52.000000dp
+        0x010103ac="sans-serif-light"
+        0x010103b1=5
+    resource 0x7f05000e style/wifi_item_label
+      () (style) size=5
+        0x01010095=12.000000sp
+        0x01010098=?0x01010038
+        0x010103ac="sans-serif"
+        0x010103b1=5
+        0x010103b3=8.000000dp

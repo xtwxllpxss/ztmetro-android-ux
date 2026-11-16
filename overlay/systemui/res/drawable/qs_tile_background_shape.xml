@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Square Metro tile shape. Overrides packages/SystemUI/res/drawable/qs_tile_background_shape.xml
+  (lineage-23.2):
+
+      <shape ...>
+          <corners android:radius="@dimen/qs_corner_radius" />
+          <solid android:color="#FFFFFF" />
+      </shape>
+
+  The literal 0dp radius is intentional (no cross-package reference): idmap2 maps
+  this file to the target entry by name/type, and QSTileViewImpl tints the compiled
+  GradientDrawable at runtime (QSTileViewImpl.kt:819-837, base id qs_tile_background_base).
+  #FFFFFF is kept because the colour is applied by that runtime tint, not from here.
+
+  qs_tile_background (ripple -> layer-list -> this shape) is NOT overridden, so the
+  ripple/ripple mask, hover and focus behaviour stay stock.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <corners android:radius="0dp" />
+    <solid android:color="#FFFFFFFF" />
+</shape>

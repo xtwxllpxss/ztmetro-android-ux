@@ -1,0 +1,147 @@
+## apksigner verify
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=ztMetro Settings header dev, OU=ztOS, O=ztOS, C=RU
+Signer #1 certificate SHA-256 digest: 500a4a0012ca281fdbc584d614b95154cc944465fc523fc2bc9434ba752b48a0
+Signer #1 certificate SHA-1 digest: 94d28d5dbed3495fe80e3dc0accc3882f2cf2afc
+Signer #1 certificate MD5 digest: 0d52feabb63d4bd733f875e3815dd4fc
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 2048
+Signer #1 public key SHA-256 digest: 356a418d6d668d5d6327f3577cf151decf0309c39458a5356e8553d10e6b6b19
+Signer #1 public key SHA-1 digest: 433c607765f9a465cbfb8981de4dd1e51cc49574
+Signer #1 public key MD5 digest: 48413c189e592a17148be723b20eb959
+
+## aapt2 dump badging
+package: name='org.ztmetro.settingsheader' versionCode='1' versionName='1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+minSdkVersion:'29'
+targetSdkVersion:'36'
+application-label:'ztMetro Settings header'
+application-icon-160:'res/drawable/ic_launcher.xml'
+application: label='ztMetro Settings header' icon='res/drawable/ic_launcher.xml'
+feature-group: label=''
+  uses-feature: name='android.hardware.faketouch'
+  uses-implied-feature: name='android.hardware.faketouch' reason='default feature for all apps'
+supports-screens: 'small' 'normal' 'large' 'xlarge'
+supports-any-density: 'true'
+locales: '--_--'
+densities: '160'
+
+## AndroidManifest xposed metadata
+    A: package="org.ztmetro.settingsheader" (Raw: "org.ztmetro.settingsheader")
+        A: http://schemas.android.com/apk/res/android:minSdkVersion(0x0101020c)=29
+        A: http://schemas.android.com/apk/res/android:targetSdkVersion(0x01010270)=36
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposedmodule" (Raw: "xposedmodule")
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposeddescription" (Raw: "xposeddescription")
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposedminversion" (Raw: "xposedminversion")
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposedscope" (Raw: "xposedscope")
+
+## module resources (must all live in the module APK, not in Settings)
+    resource 0x7f020000 color/metro_header_bg
+      () #ff0050ef
+    resource 0x7f020001 color/metro_header_subtitle
+      () #b3ffffff
+    resource 0x7f020002 color/metro_header_title
+    resource 0x7f030000 dimen/metro_header_height
+    resource 0x7f030001 dimen/metro_header_padding_h
+    resource 0x7f030002 dimen/metro_header_subtitle_size
+    resource 0x7f030003 dimen/metro_header_title_size
+    resource 0x7f040001 drawable/metro_header_bg
+      () (file) res/drawable/metro_header_bg.xml type=XML
+    resource 0x7f050000 id/metro_header
+    resource 0x7f050001 id/metro_header_subtitle
+    resource 0x7f050002 id/metro_header_title
+    resource 0x7f060000 layout/metro_header
+      () (file) res/layout/metro_header.xml type=XML
+    resource 0x7f070001 string/metro_header_subtitle_static
+    resource 0x7f080000 style/MetroHeaderSubtitle
+        0x01010095=@dimen/metro_header_subtitle_size
+        0x01010098=@color/metro_header_subtitle
+    resource 0x7f080001 style/MetroHeaderTitle
+        0x01010095=@dimen/metro_header_title_size
+        0x01010098=@color/metro_header_title
+
+## classes.dex
+Archive:  /home/denis/ztux/header-module/repo/settings/header-module/build/dist/ztmetro-settings-header.apk
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+     2000  1980-01-01 00:00   AndroidManifest.xml
+      952  1980-01-01 00:00   res/drawable/ic_launcher.xml
+      372  1980-01-01 00:00   res/drawable/metro_header_bg.xml
+     1024  1980-01-01 00:00   res/layout/metro_header.xml
+     2656  1980-01-01 00:00   resources.arsc
+       39  1980-01-01 00:00   assets/xposed_init
+    18524  2026-11-16 10:38   classes.dex
+      805  2026-11-16 10:38   META-INF/ZTMETRO-.SF
+     1301  2026-11-16 10:38   META-INF/ZTMETRO-.RSA
+      678  2026-11-16 10:38   META-INF/MANIFEST.MF
+---------                     -------
+    28351                     10 files
+## hook target names referenced by classes.dex
+com.android.settings
+com.android.settings.core.SettingsBaseActivity
+com.android.settings.homepage.SettingsHomepageActivity
+onCreate
+onResume
+setContentView
+setTitle
+Processing '/home/denis/ztux/header-module/repo/settings/header-module/build/classes.dex'...
+Opened '/home/denis/ztux/header-module/repo/settings/header-module/build/classes.dex', DEX version '039'
+DEX file header:
+magic               : 'dex\n039\0'
+checksum            : 8fef6c8a
+signature           : e69d...b46c
+file_size           : 18524
+header_size         : 112
+link_size           : 0
+link_off            : 0 (0x000000)
+string_ids_size     : 317
+string_ids_off      : 112 (0x000070)
+type_ids_size       : 76
+type_ids_off        : 1380 (0x000564)
+proto_ids_size      : 76
+proto_ids_off       : 1684 (0x000694)
+field_ids_size      : 51
+field_ids_off       : 2596 (0x000a24)
+method_ids_size     : 136
+method_ids_off      : 3004 (0x000bbc)
+class_defs_size     : 20
+class_defs_off      : 4092 (0x000ffc)
+data_size           : 13792
+data_off            : 4732 (0x00127c)
+
+Class #0            -
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/HeaderBinder;'
+  Access flags      : 0x0011 (PUBLIC FINAL)
+  Superclass        : 'Ljava/lang/Object;'
+  Interfaces        -
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/HeaderBinder;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/HeaderResources;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/HeaderTitles;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/HeaderViewFactory;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/ModuleContext;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/ModuleEntry;'
+      name          : 'handleLoadPackage'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/R$array;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/R$color;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/R$dimen;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/R$drawable;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/R$id;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/R$layout;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/R$string;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/R$style;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/R;'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/SettingsHeaderHooks$1;'
+      name          : 'afterHookedMethod'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/SettingsHeaderHooks$2;'
+      name          : 'afterHookedMethod'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/SettingsHeaderHooks$3;'
+      name          : 'afterHookedMethod'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/SettingsHeaderHooks$4;'
+      name          : 'afterHookedMethod'
+  Class descriptor  : 'Lorg/ztmetro/settingsheader/SettingsHeaderHooks;'

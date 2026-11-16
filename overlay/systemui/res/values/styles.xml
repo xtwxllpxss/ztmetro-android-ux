@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro SystemUI RRO — Metro typography (Roboto stand-ins for Segoe: the project
+  ships no font files yet, see docs/07-ztmetro-mapping.md §2 and design/tokens).
+
+  IMPORTANT: an RRO replaces a *style bag wholesale*, so every style here re-declares
+  the items the target had (target bodies quoted in evidence/sysui-rro/REPORT.md).
+  parent="" is used where the implicit dot-inherited parent
+  (TextAppearance.StatusBar.Expanded) exists only in the target and is therefore not
+  linkable in a standalone overlay build.
+
+  Live consumers verified in the lineage-23.2 tree:
+    TextAppearance.QS.TileLabel            res/layout/qs_tile_label.xml:42 (+ Secondary :56)
+    TextAppearance.QS.Status               ShadeHeaderController.kt:335-338,553-556
+    TextAppearance.QS.Status.Build         QSFooterView.java:135
+    TextAppearance.StatusBar.Expanded.*    no consumer at 23.2 (inert; kept per spec)
+-->
+<resources>
+
+    <!-- Tile label: Metro body 13sp regular, letter spacing 0, uppercase off. -->
+    <style name="TextAppearance.QS.TileLabel" parent="">
+        <item name="android:textSize">13sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:lineHeight">18sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- Secondary (app) line: Metro has no second line; shrink it out of the way. -->
+    <style name="TextAppearance.QS.TileLabel.Secondary" parent="@style/TextAppearance.QS.TileLabel">
+        <item name="android:textSize">10sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <!-- Two-line expanded clock (Metro Semilight step). Inert at 23.2 [F]. -->
+    <style name="TextAppearance.StatusBar.Expanded.Clock" parent="">
+        <item name="android:textSize">28sp</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="TextAppearance.StatusBar.Expanded.Date" parent="">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <!-- Shade header clock + date + carrier group all use this one style
+         (ShadeHeaderController.kt:335-338): 20sp = Metro "subtitle" token, Semilight,
+         white on the black panel, letter spacing 0. -->
+    <style name="TextAppearance.QS.Status" parent="">
+        <item name="android:textSize">20sp</item>
+        <item name="android:lineHeight">27sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textColor">@color/shade_header_text_color</item>
+    </style>
+
+    <!-- Header clock where a separate style is applied (inert at 23.2 [F]). -->
+    <style name="TextAppearance.QS.Status.Clock" parent="@style/TextAppearance.QS.Status">
+        <item name="android:textSize">30sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
+    <!-- Build/status meta line in the QS footer. -->
+    <style name="TextAppearance.QS.Status.Build" parent="@style/TextAppearance.QS.Status">
+        <item name="android:textSize">11sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textColor">#FF9E9E9E</item>
+    </style>
+
+</resources>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro Settings RRO — square geometry + Metro row metrics.
+
+  Every name is verified in LineageOS/android_packages_apps_Settings
+  lineage-23.2 res/values/dimens.xml (file:line in evidence/settings-rro/REPORT.md).
+  Only names with a live consumer in that tree are overridden; dead dimens are
+  listed in the report instead of shipped here.
+
+  Metro token sources (design/tokens/ztmetro.tokens.json):
+    metrics.corner_radius_dp = 0      -> every *_radius / *_corner_radius below
+    metrics.list_row_height_dp 55     -> min_tap_target_size (48 -> 52, inside 48-55)
+    metrics.page_margin_dp 16         -> stays 16, not overridden
+  Literal 0dp is intentional: zero cross-package references, so nothing has to be
+  resolved through the target's resource table (docs/10b §3a).
+-->
+<resources>
+
+    <!-- .../res/values/dimens.xml:58 — notification importance buttons
+         (drawable/notification_importance_button_background_{selected,unselected}.xml:41,37). -->
+    <dimen name="rect_button_radius">0dp</dimen>
+
+    <!-- :161 — keyboard picker review sheet (drawable/keyboard_review_layout_background.xml:21). -->
+    <dimen name="keyboard_picker_radius">0dp</dimen>
+
+    <!-- :407 — top corners of the floating panel background
+         (drawable/settings_panel_rounded_top_corner_background.xml:20-21). -->
+    <dimen name="settings_panel_corner_radius">0dp</dimen>
+
+    <!-- :547 — display-topology blocks (drawable/display_block_background.xml:26,
+         drawable/display_block_selection_marker_background.xml:24,
+         DisplayBlock.kt:46). -->
+    <dimen name="display_block_corner_radius">0dp</dimen>
+
+    <!-- :550 — HDR brightness preview frame (HdrBrightnessSettings.java:79). -->
+    <dimen name="hdr_brightness_preview_corner_radius">0dp</dimen>
+
+    <!-- :267 — accessibility illustration tiles (PaletteListPreference.java:181). -->
+    <dimen name="accessibility_illustration_view_radius">0dp</dimen>
+
+    <!-- :513 — accessibility contrast buttons (drawable/accessibility_contrast_button_background.xml:29,59). -->
+    <dimen name="contrast_button_radius">0dp</dimen>
+
+    <!-- :441 — daydream cards (drawable/dream_preview_rounded_bg.xml:21; styles.xml:1054). -->
+    <dimen name="dream_item_corner_radius">0dp</dimen>
+
+    <!-- :437 — battery hint chips (drawable/battery_hints_chip_bg.xml:21). -->
+    <dimen name="battery_hints_chip_corner_radius">0dp</dimen>
+
+    <!-- :425 — battery chart transom (BatteryChartView.java:375). -->
+    <dimen name="chartview_transom_radius">0dp</dimen>
+
+    <!-- :430 — battery chart trapezoids (BatteryChartView.java:357). -->
+    <dimen name="chartview_trapezoid_radius">0dp</dimen>
+
+    <!-- :522 — audio-sharing QR preview frame (AudioStreamsQrCodeFragment.java:145,
+         AudioStreamsQrCodeScanFragment.java:130). -->
+    <dimen name="audio_streams_qrcode_preview_radius">0dp</dimen>
+
+    <!-- :312 — was @*android:dimen/config_dialogCornerRadius; pinned to a literal so
+         the Settings cards stay square even if the framework overlay is not installed
+         (styles.xml:581 ContextualCardStyle). -->
+    <dimen name="contextual_card_corner_radius">0dp</dimen>
+
+    <!-- :84 — search bar block sits tighter under the status bar
+         (layout/settings_homepage_container.xml:73). -->
+    <dimen name="search_bar_container_top_padding">4dp</dimen>
+
+    <!-- :22 — the one row height Settings owns. 48dp -> 52dp: Metro list row is 55dp,
+         48 is the Android touch floor; 52 stays inside 48-55 and keeps dialogs usable
+         on a 720x1280 panel. Consumers: layout/wifi_network_config.xml:83-84,
+         layout/general_bt_entity_header.xml:62-63, layout/dialog_edittext.xml:31,
+         layout/preference_widget_qrcode.xml:23, layout/ownerinfo.xml:28, ...
+         (22 layouts in total, see report). -->
+    <dimen name="min_tap_target_size">52dp</dimen>
+
+</resources>

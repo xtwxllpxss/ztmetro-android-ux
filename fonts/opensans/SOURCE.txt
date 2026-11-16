@@ -1,0 +1,35 @@
+# Source pin — Open Sans 3.003
+
+upstream   : https://github.com/googlefonts/opensans
+commit     : 6cbc400d4855abee59d85c4ed871d510399bce7b (2026-11-10)
+path       : fonts/ttf/
+raw base   : https://raw.githubusercontent.com/googlefonts/opensans/6cbc400d4855abee59d85c4ed871d510399bce7b/fonts/ttf/
+license    : OFL.txt at the same commit, copied here as LICENSE.txt
+downloaded : 2026-11-16
+
+Files (all eight are static TTFs, sfnt 00 01 00 00, no fvar):
+
+  OpenSans-Light.ttf
+  OpenSans-LightItalic.ttf
+  OpenSans-Regular.ttf
+  OpenSans-Italic.ttf
+  OpenSans-SemiBold.ttf
+  OpenSans-SemiBoldItalic.ttf
+  OpenSans-Bold.ttf
+  OpenSans-BoldItalic.ttf
+
+Integrity: see SHA256SUMS (`sha256sum -c SHA256SUMS` in this directory) and the
+per-face cmap report in evidence/font-module-opensans/coverage.json.
+
+To re-fetch:
+
+  SHA=6cbc400d4855abee59d85c4ed871d510399bce7b
+  for f in OpenSans-Light.ttf OpenSans-LightItalic.ttf OpenSans-Regular.ttf \
+           OpenSans-Italic.ttf OpenSans-SemiBold.ttf OpenSans-SemiBoldItalic.ttf \
+           OpenSans-Bold.ttf OpenSans-BoldItalic.ttf; do
+    curl -sSL --fail \
+      "https://raw.githubusercontent.com/googlefonts/opensans/$SHA/fonts/ttf/$f" -o "$f"
+  done
+  curl -sSL --fail \
+    "https://raw.githubusercontent.com/googlefonts/opensans/$SHA/OFL.txt" -o LICENSE.txt
+  sha256sum -c SHA256SUMS

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ztmetro Start icon: flat accent field with white tiles. Colours come from the
+     generated token resources, never from a literal here. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="@color/metro_accent"
+        android:pathData="M0,0h108v108h-108z" />
+    <path
+        android:fillColor="@color/metro_on_accent"
+        android:pathData="M18,18h30v30h-30zM56,18h34v30h-34zM18,56h72v34h-72z" />
+</vector>

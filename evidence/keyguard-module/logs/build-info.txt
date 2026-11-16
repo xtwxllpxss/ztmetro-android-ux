@@ -1,0 +1,11 @@
+apk=/home/denis/ztux/keyguard/repo/sysui/keyguard-module/build/dist/ztmetro-keyguard.apk
+size_bytes=20947
+sha256=d7a9ac84802af2668e0f709510a105cba4a8ea00d80b6cb80b07d0612f7a56e2
+min_sdk=29
+target_sdk=36
+package=org.ztmetro.keyguard
+xposed_api_jar=/home/denis/ztux/keyguard/repo/sysui/keyguard-module/build/deps/xposed-api-82.jar
+xposed_api_sha256=f48c635f1c7469fdec0e00ad2ea0b7a6b2f5b55065784a35b7ca3a84615e8e25
+keystore=/home/denis/ztux/keyguard/repo/sysui/keyguard-module/build/keystore/ztmetro-keyguard.jks
+build_tools=/home/denis/android-sdk/build-tools/36.0.0
+verify_log=/home/denis/ztux/keyguard/repo/sysui/keyguard-module/build/verify.txt

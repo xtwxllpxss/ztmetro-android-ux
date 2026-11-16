@@ -1,0 +1,16 @@
+# build on hermes-ubuntu (Linux, no Android SDK)
+# host: Linux 7.0.0-38-generic x86_64
+# date: 2026-11-16T07:48:11Z
+# command: ssh hermes-ubuntu 'cd ~/ztux/font-module/repo && ./scripts/build-font-module.sh'
+
+ztmetro-font-rewrite: fonts.xml.aosp16 -> fonts.after.xml: sans-serif 18 font(s)/54 axis entry(s) -> 20 static Selawik entries; all other families intact
+ztmetro-font-rewrite: font_fallback.aosp16-roboto.xml -> font_fallback.after.xml: sans-serif 1 font(s)/1 axis entry(s) -> 20 static Selawik entries; all other families intact
+  parse ok: fonts.after.xml: 160 families, 24 aliases, sans-serif = 20 static Selawik entries
+  parse ok: font_fallback.after.xml: 3 families, 6 aliases, sans-serif = 20 static Selawik entries
+
+module zip : /home/denis/ztux/font-module/repo/artifacts/ztmetro-font-1.0.0.zip
+sha256     : 9d50fddfb08c7872af71f58546aaa4112bbb117aa1b7ec0a595bc9d7fea469ee
+size       : 134010 bytes
+fonts      : Selawik-Regular, Selawik-Semibold, Selawik-Light, Selawik-Semilight, Selawik-Bold
+entries    : 13 files (module root + system/fonts)
+note       : config XML is generated on-device from the live ROM, not baked into the zip

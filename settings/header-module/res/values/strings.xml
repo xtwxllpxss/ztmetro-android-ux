@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ztMetro Settings header</string>
+    <string name="xposed_description">ztMetro page header (large title + subtitle) for the stock Settings app. Module scope: com.android.settings.</string>
+    <string name="metro_header_subtitle_static">ztMetro</string>
+</resources>

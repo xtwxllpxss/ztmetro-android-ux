@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro Settings RRO — search field fill (night / dark theme).
+
+  Metro neutrals.surface_off #1F1F1F: the field is one step above the black page,
+  same value as the inactive Quick Settings tile in evidence/sysui-rro. The colour is
+  a literal on purpose — a reference to an overlay-only resource would have no id in
+  the target package and would not resolve at inflate time (docs/10b §3a).
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?android:attr/colorControlHighlight">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FF1F1F1F" />
+        </shape>
+    </item>
+</ripple>

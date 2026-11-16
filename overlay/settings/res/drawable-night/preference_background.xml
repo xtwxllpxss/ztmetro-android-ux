@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro Settings RRO — list row background (night / dark theme).
+
+  An overlay value replaces only the configuration it declares, so the dark theme
+  needs its own twin. Flat #000000 = Metro neutrals.black / the SystemUI shade fill;
+  rows then read as one continuous Metro list instead of the stock tonal cards.
+-->
+<color xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#FF000000" />

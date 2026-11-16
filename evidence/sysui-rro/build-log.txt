@@ -1,0 +1,14 @@
+== no local aapt2: building on hermes-ubuntu (~/ztux/sysui-rro/build) ==
+== compile ==
+== link ==
+== align ==
+== sign (throwaway key: /home/denis/.ztmetro-overlay-debug.keystore) ==
+== verify ==
+package: name='org.ztos.overlay.systemui' versionCode='1' versionName='1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+application-label:'ztmetro SystemUI overlay'
+application: label='ztmetro SystemUI overlay' icon=''
+overlay: targetPackage='com.android.systemui' priority='10' isStatic='false'
+entries:      6817                     6 files
+9151c7f6f137296b187183c9fff5dad22241a1c9d22ac12774af0eb50ce01c2e  ztmetro-systemui-rro.apk
+/home/denis/ztux/sysui-rro/build/out/ztmetro-systemui-rro.apk
+/Users/meow/Projects/redmi-note-5a-ztos/build/android-ux-research/repo/evidence/sysui-rro/ztmetro-systemui-rro.apk

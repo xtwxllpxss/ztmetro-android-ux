@@ -1,0 +1,279 @@
+# Evidence — Preinstalled RRO policy (collected 2026-11-16T07:13:05Z)
+
+## AOSP RRO docs statement (no overlayable => preinstalled or same signature)
+source: https://source.android.com/docs/core/runtime/rros
+--- If the target package doesn ---
+ an <overlayable> tag, overlays targeting that app: Must specify targetName . Can overlay only the resources listed within the <overlayable> tag. Can target only one <overlayable> name. You can't enable an overlay targeting a package that exposes overlayable resources but doesn't use android:targetName to target a specific <overlayable> tag. Note: If the target package doesn't have a defined overlayable, the overlay must be preinstalled on the system image or signed with the same signature as the target to overlay the target package's resources. Restrict policies Use the <policy> tag to enforce restrictions on overlayable resources. The type attribute specifies which policies an overlay must fulfill to override the included resources. Supported types include the following. public . Any ove
+--- Only immutable overlays targeting ---
+ority of overlays depending on the Android release version. Devices running Android 11 or higher can use an OverlayConfig file ( config.xml ) instead of manifest attributes. Using an overlay file is the recommended method for overlays. All devices can use manifest attributes ( android:isStatic and android:priority ) to configure static RROs. Note: Only immutable overlays targeting the android package affect resource values retrieved through Resources.getSystem() . Use OverlayConfig In Android 11 or higher, you can use OverlayConfig to configure the mutability, default state, and priority of overlays. To configure an overlay, create or modify the file located at partition/overlay/config/config.xml , where partition is the partition of the overlay to be configured. To be configured, an overl
+--- In Android 11 or higher, you can use OverlayConfig ---
+ml ) instead of manifest attributes. Using an overlay file is the recommended method for overlays. All devices can use manifest attributes ( android:isStatic and android:priority ) to configure static RROs. Note: Only immutable overlays targeting the android package affect resource values retrieved through Resources.getSystem() . Use OverlayConfig In Android 11 or higher, you can use OverlayConfig to configure the mutability, default state, and priority of overlays. To configure an overlay, create or modify the file located at partition/overlay/config/config.xml , where partition is the partition of the overlay to be configured. To be configured, an overlay must reside in the overlay/ directory of the partition in which the overlay is configured. The following code shows an example product
+--- Any overlay on the system partition ---
+ure as the target to overlay the target package's resources. Restrict policies Use the <policy> tag to enforce restrictions on overlayable resources. The type attribute specifies which policies an overlay must fulfill to override the included resources. Supported types include the following. public . Any overlay can override the resource. system . Any overlay on the system partition can override the resources. vendor . Any overlay on the vendor partition can override the resources. product . Any overlay on the product partition can override the resources. oem . Any overlay on the oem partition can override the resources. odm . Any overlay on the odm partition can override the resources. signature . Any overlay signed with the same signature as the target APK can override the resources. act
+--- To be configured, an overlay must reside ---
+es retrieved through Resources.getSystem() . Use OverlayConfig In Android 11 or higher, you can use OverlayConfig to configure the mutability, default state, and priority of overlays. To configure an overlay, create or modify the file located at partition/overlay/config/config.xml , where partition is the partition of the overlay to be configured. To be configured, an overlay must reside in the overlay/ directory of the partition in which the overlay is configured. The following code shows an example product/overlay/config/config.xml . < config > < merge path = "OEM-common-rros-config.xml" / > < overlay package = "com.oem.overlay.device" mutable = "false" enabled = "true" / > < overlay package = "com.oem.green.theme" enabled = "true" / > < / config > " The <overlay> tag requires a package 
+
+## idmap2 enforcement code — libidmap2/ResourceMapping.cpp (android16-release)
+source: https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android16-release/cmds/idmap2/libidmap2/ResourceMapping.cpp
+51:Result<Unit> CheckOverlayable(const TargetResourceContainer& target,
+52:                              const OverlayManifestInfo& overlay_info,
+53:                              const PolicyBitmask& fulfilled_policies,
+54:                              const ResourceId& target_resource) {
+55:  constexpr const PolicyBitmask kDefaultPolicies =
+56:      PolicyFlags::ODM_PARTITION | PolicyFlags::OEM_PARTITION | PolicyFlags::SYSTEM_PARTITION |
+57:      PolicyFlags::VENDOR_PARTITION | PolicyFlags::PRODUCT_PARTITION | PolicyFlags::SIGNATURE |
+58:      PolicyFlags::CONFIG_SIGNATURE;
+59:
+60:  // If the resource does not have an overlayable definition, allow the resource to be overlaid if
+61:  // the overlay is preinstalled, signed with the same signature as the target or signed with the
+62:  // same signature as reference package defined in SystemConfig under 'overlay-config-signature'
+63:  // tag.
+64:  const Result<bool> defines_overlayable = target.DefinesOverlayable();
+65:  if (!defines_overlayable) {
+66:    return Error(defines_overlayable.GetError(), "unable to retrieve overlayable info");
+67:  }
+68:
+69:  if (!*defines_overlayable) {
+70:    return (kDefaultPolicies & fulfilled_policies) != 0
+71:               ? Result<Unit>({})
+72:               : Error(
+73:                     "overlay must be preinstalled, signed with the same signature as the target,"
+74:                     " or signed with the same signature as the package referenced through"
+75:                     " <overlay-config-signature>.");
+76:  }
+77:
+78:  const auto overlayable_info = target.GetOverlayableInfo(target_resource);
+79:  if (!overlayable_info) {
+80:    return overlayable_info.GetError();
+81:  }
+82:
+83:  if (*overlayable_info == nullptr) {
+84:    // Do not allow non-overlayable resources to be overlaid.
+85:    return Error("target resource has no overlayable declaration");
+86:  }
+87:
+88:  if (overlay_info.target_name != (*overlayable_info)->name) {
+89:    // If the overlay supplies a target overlayable name, the resource must belong to the
+90:    // overlayable defined with the specified name to be overlaid.
+91:    return Error(R"(<overlay> android:targetName "%s" does not match overlayable name "%s")",
+92:                 overlay_info.target_name.c_str(), (*overlayable_info)->name.data());
+93:  }
+94:
+95:  // Enforce policy restrictions if the resource is declared as overlayable.
+96:  if (((*overlayable_info)->policy_flags & fulfilled_policies) == 0) {
+97:    return Error(R"(overlay with policies "%s" does not fulfill any overlayable policies "%s")",
+98:                 ConcatPolicies(BitmaskToPolicies(fulfilled_policies)).c_str(),
+99:                 ConcatPolicies(BitmaskToPolicies((*overlayable_info)->policy_flags)).c_str());
+100:  }
+
+## Policy bitmask from overlay partition + signature — IdmapManager.java
+source: .../services/core/java/com/android/server/om/IdmapManager.java
+180:     * Checks if overlayable and policies should be enforced on the specified overlay for backwards
+181:     * compatibility with pre-Q overlays.
+182:     */
+183:    private boolean enforceOverlayable(@NonNull PackageState overlayPackageState,
+184:            @NonNull final AndroidPackage overlayPackage) {
+185:        if (overlayPackage.getTargetSdkVersion() >= VERSION_CODES.Q) {
+186:            // Always enforce policies for overlays targeting Q+.
+187:            return true;
+188:        }
+189:
+190:        if (overlayPackageState.isVendor()) {
+191:            // If the overlay is on a pre-Q vendor partition, do not enforce overlayable
+192:            // restrictions on this overlay because the pre-Q platform has no understanding of
+193:            // overlayable.
+194:            return VENDOR_IS_Q_OR_LATER;
+195:        }
+196:
+197:        // Do not enforce overlayable restrictions on pre-Q overlays that are signed with the
+198:        // platform signature or that are preinstalled.
+199:        return !(overlayPackageState.isSystem() || overlayPackage.isSignedWithPlatformKey());
+200:    }
+201:
+202:    /**
+203:     * Retrieves a bitmask for idmap2 that represents the policies the overlay fulfills.
+204:     */
+205:    private int calculateFulfilledPolicies(@NonNull final AndroidPackage targetPackage,
+206:            @NonNull PackageState overlayPackageState, @NonNull final AndroidPackage overlayPackage,
+207:            @UserIdInt int userId)  {
+208:        int fulfilledPolicies = OverlayablePolicy.PUBLIC;
+209:
+210:        // Overlay matches target signature
+211:        if (mPackageManager.signaturesMatching(targetPackage.getPackageName(),
+212:                overlayPackage.getPackageName(), userId)) {
+213:            fulfilledPolicies |= OverlayablePolicy.SIGNATURE;
+214:        }
+215:
+216:        // Overlay matches actor signature
+217:        if (matchesActorSignature(targetPackage, overlayPackage, userId)) {
+218:            fulfilledPolicies |= OverlayablePolicy.ACTOR_SIGNATURE;
+219:        }
+220:
+221:        // If SystemConfig defines 'overlay-config-signature' package, given that
+222:        // this package is vetted by OverlayManagerService that it's a
+223:        // preinstalled package, check if overlay matches its signature.
+224:        if (!TextUtils.isEmpty(mConfigSignaturePackage)
+225:                && mPackageManager.signaturesMatching(mConfigSignaturePackage,
+226:                                                           overlayPackage.getPackageName(),
+227:                                                           userId)) {
+228:            fulfilledPolicies |= OverlayablePolicy.CONFIG_SIGNATURE;
+229:        }
+230:
+231:        // Vendor partition (/vendor)
+232:        if (overlayPackageState.isVendor()) {
+233:            return fulfilledPolicies | OverlayablePolicy.VENDOR_PARTITION;
+234:        }
+235:
+236:        // Product partition (/product)
+237:        if (overlayPackageState.isProduct()) {
+238:            return fulfilledPolicies | OverlayablePolicy.PRODUCT_PARTITION;
+239:        }
+240:
+241:        // Odm partition (/odm)
+242:        if (overlayPackageState.isOdm()) {
+243:            return fulfilledPolicies | OverlayablePolicy.ODM_PARTITION;
+244:        }
+245:
+246:        // Oem partition (/oem)
+247:        if (overlayPackageState.isOem()) {
+248:            return fulfilledPolicies | OverlayablePolicy.OEM_PARTITION;
+249:        }
+250:
+251:        // System_ext partition (/system_ext) is considered as system
+252:        // Check this last since every partition except for data is scanned as system in the PMS.
+253:        if (overlayPackageState.isSystem() || overlayPackageState.isSystemExt()) {
+254:            return fulfilledPolicies | OverlayablePolicy.SYSTEM_PARTITION;
+255:        }
+256:
+257:        return fulfilledPolicies;
+258:    }
+259:
+260:    private boolean matchesActorSignature(@NonNull AndroidPackage targetPackage,
+261:            @NonNull AndroidPackage overlayPackage, int userId) {
+262:        String targetOverlayableName = overlayPackage.getOverlayTargetOverlayableName();
+
+## OverlayConfig: config.xml path + static overlays become immutable+enabled
+source: .../core/java/com/android/internal/content/om/OverlayConfigParser.java and OverlayConfig.java
+54: * at {@code partition}/overlay/config/config.xml where {@code partition} is the partition of the
+112:    private static final String CONFIG_DEFAULT_FILENAME = CONFIG_DIRECTORY + "/config.xml";
+285:        final File configFile = new File(partition.getOverlayFolder(), CONFIG_DEFAULT_FILENAME);
+176:                overlays.addAll(partitionOverlays);
+177:                continue;
+178:            }
+179:
+180:            // If the configuration file is not present, then use android:isStatic and
+181:            // android:priority to configure the overlays in the partition.
+182:            // TODO(147840005): Remove converting static overlays to immutable, default-enabled
+183:            //  overlays when android:siStatic and android:priority are fully deprecated.
+184:            final ArrayList<ParsedOverlayInfo> partitionOverlayInfos;
+185:            if (scannerFactory != null) {
+186:                partitionOverlayInfos = new ArrayList<>(scanner.getAllParsedInfos());
+187:            } else {
+188:                // Filter out overlays not present in the partition.
+189:                partitionOverlayInfos = new ArrayList<>(packageManagerOverlayInfos.values());
+190:                for (int j = partitionOverlayInfos.size() - 1; j >= 0; j--) {
+191:                    if (!partition.containsFile(partitionOverlayInfos.get(j)
+192:                            .getOriginalPartitionPath())) {
+193:                        partitionOverlayInfos.remove(j);
+194:                    }
+195:                }
+196:            }
+197:
+198:            // Static overlays are configured as immutable, default-enabled overlays.
+199:            final ArrayList<ParsedConfiguration> partitionConfigs = new ArrayList<>();
+200:            for (int j = 0, m = partitionOverlayInfos.size(); j < m; j++) {
+201:                final ParsedOverlayInfo p = partitionOverlayInfos.get(j);
+202:                if (p.isStatic) {
+203:                    partitionConfigs.add(new ParsedConfiguration(p.packageName,
+204:                            true /* enabled */, false /* mutable */, partition.policy, p, null));
+205:                }
+206:            }
+
+## Immutable overlays targeting android are idmapped in zygote (Resources.getSystem)
+488:     * Retrieves a list of immutable framework overlays in order of least precedence to greatest
+489:     * precedence.
+490:     */
+491:    @VisibleForTesting
+492:    public ArrayList<IdmapInvocation> getImmutableFrameworkOverlayIdmapInvocations() {
+493:        final ArrayList<IdmapInvocation> idmapInvocations = new ArrayList<>();
+494:        final ArrayList<Configuration> sortedConfigs = getSortedOverlays();
+495:        for (int i = 0, n = sortedConfigs.size(); i < n; i++) {
+496:            final Configuration overlay = sortedConfigs.get(i);
+497:            if (overlay.parsedConfig.mutable || !overlay.parsedConfig.enabled
+498:                    || !"android".equals(overlay.parsedConfig.parsedInfo.targetPackageName)) {
+499:                continue;
+500:            }
+528:
+529:    /**
+530:     * Creates idmap files for immutable overlays targeting the framework packages. Currently the
+531:     * android package is the only preloaded system package. Only the zygote can invoke this method.
+532:     *
+533:     * @return the paths of the created idmap files
+534:     */
+535:    @NonNull
+536:    public String[] createImmutableFrameworkIdmapsInZygote() {
+537:        final String targetPath = AssetManager.FRAMEWORK_APK_PATH;
+538:        final ArrayList<String> idmapPaths = new ArrayList<>();
+539:        final ArrayList<IdmapInvocation> idmapInvocations =
+540:                getImmutableFrameworkOverlayIdmapInvocations();
+541:
+542:        for (int i = 0, n = idmapInvocations.size(); i < n; i++) {
+543:            final IdmapInvocation invocation = idmapInvocations.get(i);
+544:            final String[] idmaps = createIdmap(targetPath,
+545:                    invocation.overlayPaths.toArray(new String[0]),
+
+## Does the target define overlayables? HTTP probes (404 = no overlayable.xml), LineageOS 23.2 / AOSP 16
+https://raw.githubusercontent.com/LineageOS/android_frameworks_base/lineage-23.2/packages/SystemUI/res/values/overlayable.xml -> 404
+https://raw.githubusercontent.com/LineageOS/android_frameworks_base/lineage-23.2/packages/SystemUI/res-keyguard/values/overlayable.xml -> 404
+https://raw.githubusercontent.com/LineageOS/android_frameworks_base/lineage-23.2/packages/SystemUI/res-product/values/overlayable.xml -> 404
+https://raw.githubusercontent.com/aosp-mirror/platform_frameworks_base/android16-release/core/res/res/values/overlayable.xml -> 404
+https://raw.githubusercontent.com/LineageOS/android_packages_apps_Settings/lineage-23.2/res/values/overlayable.xml -> 404
+
+## Res/values directory listings (no overlayable.xml present)
+SystemUI res/values: 22 []
+Settings res/values: 20 []
+
+## framework-res has no overlayable.xml in any recent AOSP release (HTTP 404)
+android13-release -> 404
+android14-release -> 404
+android15-release -> 404
+android16-release -> 404
+main -> 404
+LineageOS framework-res:
+lineage-22.2 -> 404
+lineage-23.0 -> 404
+lineage-23.2 -> 404
+
+## Which partitions are scanned for overlays, and in what order (AOSP 16)
+source: https://raw.githubusercontent.com/aosp-mirror/platform_frameworks_base/android16-release/core/java/android/content/pm/PackagePartitions.java
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface PartitionType {}
+
+    /**
+     * The list of all system partitions that may contain packages in ascending order of
+     * specificity (the more generic, the earlier in the list a partition appears).
+     */
+    private static final ArrayList<SystemPartition> SYSTEM_PARTITIONS =
+            new ArrayList<>(Arrays.asList(
+                    new SystemPartition(Environment.getRootDirectory(),
+                            PARTITION_SYSTEM, Partition.PARTITION_NAME_SYSTEM,
+                            true /* containsPrivApp */, false /* containsOverlay */),
+                    new SystemPartition(Environment.getVendorDirectory(),
+                            PARTITION_VENDOR, Partition.PARTITION_NAME_VENDOR,
+                            true /* containsPrivApp */, true /* containsOverlay */),
+                    new SystemPartition(Environment.getOdmDirectory(),
+                            PARTITION_ODM, Partition.PARTITION_NAME_ODM,
+                            true /* containsPrivApp */, true /* containsOverlay */),
+                    new SystemPartition(Environment.getOemDirectory(),
+                            PARTITION_OEM, Partition.PARTITION_NAME_OEM,
+                            false /* containsPrivApp */, true /* containsOverlay */),
+                    new SystemPartition(Environment.getProductDirectory(),
+                            PARTITION_PRODUCT, Partition.PARTITION_NAME_PRODUCT,
+                            true /* containsPrivApp */, true /* containsOverlay */),
+                    new SystemPartition(Environment.getSystemExtDirectory(),
+                            PARTITION_SYSTEM_EXT, Partition.PARTITION_NAME_SYSTEM_EXT,
+                            true /* containsPrivApp */, true /* containsOverlay */)));
+
+    /**
+     * A string to represent the fingerprint of this build and all package partitions. Using it to

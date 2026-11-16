@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro Start — HOME launcher APK for stock Android 16 (API 36).
+
+  It owns exactly one Android role: the HOME activity. No runtime permissions
+  are requested. Package visibility for other launchable apps comes from the
+  <queries> element below (the documented alternative to QUERY_ALL_PACKAGES),
+  not from a special permission. Live tiles use a notification listener that
+  the user must grant; until then the service is never bound and tiles stay
+  static.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztmetro.start"
+    android:versionCode="3"
+    android:versionName="3.0">
+
+    <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="36" />
+
+    <!-- Android 11+ package visibility: let the HOME app enumerate launchable apps. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application
+        android:label="@string/app_name"
+        android:icon="@drawable/ic_launcher"
+        android:theme="@style/Theme.ZtmetroStart"
+        android:allowBackup="false"
+        android:supportsRtl="true"
+        android:hardwareAccelerated="true"
+        android:enableOnBackInvokedCallback="true">
+
+        <activity
+            android:name=".StartActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:clearTaskOnLaunch="true"
+            android:stateNotNeeded="true"
+            android:excludeFromRecents="true"
+            android:windowSoftInputMode="adjustResize"
+            android:enableOnBackInvokedCallback="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Live tiles. OFF by default: the system binds this only after the
+             user grants notification access, so the APK requests no permission
+             of its own. BIND_NOTIFICATION_LISTENER_SERVICE is enforced by the
+             system, which is why exported must be true for the binding. -->
+        <service
+            android:name=".StartNotificationListener"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

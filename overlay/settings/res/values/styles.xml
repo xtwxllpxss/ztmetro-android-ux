@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro Settings RRO — Metro typography for the Settings screens.
+
+  An RRO replaces a style *bag* wholesale, so each style below re-declares every item
+  the target set (old bodies quoted in evidence/settings-rro/REPORT.md). parent="" is
+  used wherever the target's implicit or explicit parent lives in the Settings
+  package (TextAppearance, TextAppearance.Small, wifi_item_content): such a parent is
+  not linkable from a standalone overlay build, and a dropped parent is exactly what
+  the overlay wants anyway — the Metro type ramp is absolute, not inherited.
+
+  Font rule (tokens type.families.android_fallback): ztmetro's Segoe UI Semilight /
+  Segoe UI have no shipped font files yet, so titles use sans-serif-light (Android
+  weight 300, the documented stand-in) and body uses sans-serif. No
+  @*android:string/config_*FontFamily reference: that string is a framework resource,
+  a cross-package reference an RRO must not carry (docs/10b §3a).
+
+  Sizes (tokens type.ramp): subtitle 20sp, body_large 17sp, body 13sp, caption 12sp,
+  caption_caps 11.5sp. letterSpacing is 0 everywhere — the token file has no
+  letter-spacing field (same call as evidence/framework-rro/REPORT.md:188-192).
+
+  Consumers below are the actual inflate sites at lineage-23.2, [F] verified.
+-->
+<resources>
+
+    <!-- res/values/styles.xml:340 — the Settings home search field text.
+         Consumer: res/layout/search_bar.xml:44 (@style/TextAppearance.SearchBar),
+         BaseTimeZonePicker.java:155. 20sp -> Metro body_large 17sp Semilight;
+         textColor was @androidprv:color/materialColorOnSurfaceVariant (a private
+         framework colour, unreachable from this package) -> ?android:attr/textColorPrimary
+         so the field stays readable on the black page. -->
+    <style name="TextAppearance.SearchBar" parent="">
+        <item name="android:layout_gravity">center</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <!-- styles.xml:320 — "Suggestions" tile title on the Settings home.
+         Consumer: res/layout/legacy_suggestion_tile.xml:72. 16sp medium -> Metro
+         subtitle 20sp Semilight. -->
+    <style name="TextAppearance.SuggestionTitle" parent="">
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <!-- styles.xml:325 — suggestion summary line. Consumer: legacy_suggestion_tile.xml:83.
+         DeviceDefault.Small (~14sp) -> Metro caption 12sp, secondary colour
+         neutrals.text_secondary #999999 through ?android:attr/textColorSecondary. -->
+    <style name="TextAppearance.SuggestionSummary" parent="">
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <!-- styles.xml:348 — title inside conditional / contextual preference cards.
+         Consumers: res/layout/conditional_card_half_tile.xml:54,
+         res/layout/notification_history.xml:173,198. 16sp medium -> 17sp Semilight. -->
+    <style name="TextAppearance.HomepageCardTitle" parent="">
+        <item name="android:textSize">17sp</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <!-- styles.xml:354 — summary inside a conditional card.
+         Consumers: conditional_card_half_tile.xml:64, conditional_card_full_tile.xml:66.
+         Body1 16sp -> Metro caption 12sp secondary. -->
+    <style name="TextAppearance.ConditionCardSummary" parent="">
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <!-- styles.xml:369 — the "dismiss" label of a contextual card.
+         Consumer: res/layout/contextual_card_dismissal_view.xml:33. 16sp -> 13sp. -->
+    <style name="TextAppearance.ContextualCardDismissalText" parent="">
+        <item name="android:textSize">13sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <!-- styles.xml:375 — SIM/network dialog body text. Consumers:
+         sim_warning_dialog_wifi_connectivity.xml:50,
+         sim_confirm_dialog_multiple_enabled_profiles_supported.xml:31,69, ...
+         Body1 16sp -> Metro body 13sp / 1.38 line height. -->
+    <style name="TextAppearance.DialogMessage" parent="">
+        <item name="android:textSize">13sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:lineSpacingMultiplier">1.38</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <!-- styles.xml:730 — notifications screen importance blurb.
+         Consumers: notification_2025_priority_conversation_preference.xml:70,115,160, ...
+         14sp (dimen notification_importance_description_text) -> Metro caption 12sp.
+         The target body carries android:featureFlag variants; a plain bag replaces
+         them, which is the intent (one Metro ramp, no font feature flags). -->
+    <style name="TextAppearance.NotificationImportanceDetail" parent="">
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <!-- styles.xml:334 — delete-profile dialog body. Consumers:
+         delete_managed_profile_dialog.xml:37,62,70. 16sp -> 13sp. -->
+    <style name="TextAppearance.RemoveDialogContent" parent="">
+        <item name="android:textSize">13sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <!-- styles.xml:292 — the label half of the device-info dialogs
+         (used through styles.xml:34 info_label). 14sp bold -> Metro caption 12sp
+         medium (Metro has no bold role; semibold weight 600 = sans-serif-medium). -->
+    <style name="TextAppearance.info_label" parent="">
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <!-- styles.xml:297 — the value half (styles.xml:41 info_value). 14sp -> 13sp. -->
+    <style name="TextAppearance.info_value" parent="">
+        <item name="android:textSize">13sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <!-- styles.xml:110 — second line of a Wi-Fi/Ethernet row.
+         Consumers: wifi_dialog_row.xml:24,30, ethernet_dialog.xml:102, ... 14sp -> 12sp. -->
+    <style name="wifi_item_label" parent="">
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textAlignment">viewStart</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <!-- styles.xml:126 — the title line of a Wi-Fi/Ethernet row.
+         Consumers: ethernet_dialog.xml:128, wifi_network_config.xml:369,567, ...
+         DeviceDefault.Subhead 16sp -> Metro body_large 17sp Semilight; minHeight
+         = the overlaid min_tap_target_size (52dp), pinned as a literal so the style
+         carries no cross-package reference. -->
+    <style name="wifi_item_content" parent="">
+        <item name="android:textAlignment">viewStart</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:minHeight">52dp</item>
+    </style>
+
+    <!-- styles.xml:100 — the row container itself. 8dp inset on all four sides made
+         every Wi-Fi/Ethernet row a floating card; Metro lists are full-bleed, so the
+         margins go to 0 and the page keeps its own 16dp padding.
+         Consumers: wifi_dialog_row.xml:20, ethernet_dialog.xml:73,96,117,140, ... -->
+    <style name="wifi_item" parent="">
+        <item name="android:layout_marginTop">0dp</item>
+        <item name="android:layout_marginStart">0dp</item>
+        <item name="android:layout_marginEnd">0dp</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">start</item>
+    </style>
+
+    <!-- styles.xml:592 — the shape of the home search bar.
+         Consumer: res/layout/search_bar.xml:20 (style="@style/SearchBarStyle_v2" on the
+         MaterialCardView). The target hardcodes cardCornerRadius 40dp, i.e. no dimen
+         can square it, so the bag is replaced:
+           40dp -> 0dp corner, cardElevation 0dp kept (it was already 0dp).
+         The target's android:theme item (@style/Theme.MaterialComponents.DayNight) is
+         dropped: that style is a resource of THIS package and cannot be referenced
+         from the overlay. That is safe here — res/layout/card_preference_layout.xml:18
+         already inflates a MaterialCardView under the same activity theme with no
+         android:theme override (style ContextualCardStyle, styles.xml:576-583) — and the
+         field fill is supplied by drawable/search_bar_selected_background.xml anyway.
+         cardCornerRadius/cardElevation are Material attrs of this package, declared in
+         res/values/attrs.xml here so the bag keys can be mapped by name; if idmap does
+         not remap a library attr the item is ignored (search bar stays round) and
+         nothing crashes: see REPORT.md §7. -->
+    <style name="SearchBarStyle_v2" parent="">
+        <item name="cardCornerRadius">0dp</item>
+        <item name="cardElevation">0dp</item>
+    </style>
+
+</resources>

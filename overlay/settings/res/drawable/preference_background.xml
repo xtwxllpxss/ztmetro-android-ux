@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro Settings RRO — list row background (default / light theme).
+
+  Same resource as res/drawable/preference_background.xml of the target, which is
+  <color android:color="?android:attr/colorBackground"/> and is wired in through
+  Theme.Settings: <item name="preferenceBackgroundColor">@drawable/preference_background</item>
+  (res/values/themes.xml:60) — so every preference row paints this.
+
+  Metro: one flat surface, no tonal elevation. Light theme = #FFFFFF cards on the
+  neutral page; the night twin (res/drawable-night/) is flat #000000 so Settings
+  matches the black SystemUI shade painted by evidence/sysui-rro.
+  Consumer is the SettingsLib preference layout (outside this package) => [E]; the
+  theme item above is [F].
+-->
+<color xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#FFFFFFFF" />

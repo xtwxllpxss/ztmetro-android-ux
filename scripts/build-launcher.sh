@@ -1,0 +1,353 @@
+#!/usr/bin/env bash
+# Build the ztmetro Start HOME launcher APK (v3, WP redraw) with only the SDK + JDK.
+#
+#   repo/scripts/build-launcher.sh
+#
+# No Gradle, no AndroidX, no network. The design tokens are compiled in at
+# build time: design/tokens/gen_android.py reads ztmetro.tokens.json and the
+# merged res/values/metro_tokens.xml is generated for every build. The signing
+# key is throwaway, generated once under launcher/build/keystore (gitignored).
+set -euo pipefail
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+APP="$ROOT/launcher/app/src/main"
+BUILD="$ROOT/launcher/build"
+OUT="$BUILD/out"
+EVIDENCE="$ROOT/evidence/launcher-v3"
+APK="$OUT/ztmetro-start.apk"
+
+say() { printf '==> %s\n' "$*"; }
+die() { printf 'error: %s\n' "$*" >&2; exit 1; }
+
+command -v python3 >/dev/null 2>&1 || die "python3 is required (token generation)"
+command -v zip >/dev/null 2>&1 || die "zip is required"
+command -v unzip >/dev/null 2>&1 || die "unzip is required"
+
+# --- SDK ---------------------------------------------------------------------
+SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+if [ -z "$SDK" ] || [ ! -f "$SDK/platforms/android-36/android.jar" ]; then
+    for candidate in "$HOME/android-sdk" "$HOME/Android/Sdk" /opt/android-sdk; do
+        if [ -f "$candidate/platforms/android-36/android.jar" ]; then
+            SDK="$candidate"
+            break
+        fi
+    done
+fi
+[ -n "$SDK" ] && [ -f "$SDK/platforms/android-36/android.jar" ] \
+    || die "Android SDK platform android-36 not found (set ANDROID_HOME)"
+ANDROID_JAR="$SDK/platforms/android-36/android.jar"
+
+BT="$SDK/build-tools/36.0.0"
+if [ ! -x "$BT/aapt2" ]; then
+    BT=$(ls -1d "$SDK"/build-tools/* 2>/dev/null | sort -V | tail -n 1)
+fi
+for tool in aapt2 d8 zipalign apksigner; do
+    [ -x "$BT/$tool" ] || die "missing $BT/$tool"
+done
+
+# --- JDK ---------------------------------------------------------------------
+JDK="${JAVA_HOME:-}"
+if [ -z "$JDK" ] || [ ! -x "$JDK/bin/javac" ]; then
+    JDK="$HOME/android-jdk"
+fi
+[ -x "$JDK/bin/javac" ] || die "JDK with javac not found (set JAVA_HOME)"
+export JAVA_HOME="$JDK"
+export PATH="$JDK/bin:$PATH"
+
+# --- clean (keep the keystore: signatures stay stable across rebuilds) ---------
+rm -rf "$BUILD/res" "$BUILD/rjava" "$BUILD/classes" "$BUILD/dex" "$BUILD/gen-tokens"
+rm -f "$BUILD/res.zip" "$BUILD/base.apk" "$BUILD/unsigned.apk" "$BUILD/aligned.apk" \
+      "$BUILD/sources.txt" "$BUILD/verify.dex"
+mkdir -p "$BUILD/gen-tokens" "$BUILD/keystore" "$BUILD/out" "$EVIDENCE"
+
+say "SDK   $SDK"
+say "tools $BT"
+say "JDK   $JDK"
+
+# --- 1. tokens: validate provenance, then merge into res/values/metro_tokens.xml
+say "generating Metro resources from design/tokens/ztmetro.tokens.json"
+python3 "$ROOT/design/tokens/gen_android.py" --out "$BUILD/gen-tokens"
+cp -R "$APP/res/." "$BUILD/res/"
+python3 - "$ROOT" "$BUILD" <<'PY'
+import os
+import sys
+
+root, build = sys.argv[1], sys.argv[2]
+sys.path.insert(0, os.path.join(root, "design", "tokens"))
+import gen_android as gen
+
+tokens_path = os.path.join(root, "design", "tokens", "ztmetro.tokens.json")
+tokens = gen.load_tokens(tokens_path)
+problems = gen.check_origins(tokens)
+if problems:
+    sys.stderr.write("token provenance check failed:\n")
+    for problem in problems:
+        sys.stderr.write("  - %s\n" % problem)
+    sys.exit(2)
+
+
+def body(xml):
+    return xml.split("<resources>", 1)[1].rsplit("</resources>", 1)[0]
+
+
+colors = body(gen.emit_colors(tokens))
+dimens = body(gen.emit_dimens(tokens))
+styles = body(gen.emit_styles(tokens))
+
+# Extra TextAppearances read from the same ramp. AppListTitle/BodyLarge are
+# shared with v1/v2; Pivot and SectionHeader are the v3 20sp pivot and the
+# 12sp caps app-list section head. SectionHeader keeps the caption size/line
+# rhythm but forces the semibold family, as a WP section head is semibold.
+ramp = gen.ramp_by_name(tokens)
+extra_styles = []
+
+
+def ramp_style(entry, suffix, color, weight, all_caps=False):
+    size = float(entry["size_sp_at_density_1x"])
+    multiplier = float(entry["line_height"]) / size
+    if weight <= 350:
+        family = gen.FAMILY_ANDROID["display"]
+    elif weight >= 500:
+        family = gen.FAMILY_ANDROID["semibold"]
+    else:
+        family = gen.FAMILY_ANDROID["body"]
+    lines = [
+        "",
+        "    <!-- %s: %s -->" % (entry["name"], entry["usage"]),
+        '    <style name="TextAppearance.Metro.%s" parent="android:TextAppearance">' % suffix,
+        '        <item name="android:fontFamily">%s</item>' % family,
+        '        <item name="android:textSize">%ssp</item>' % gen.num(size),
+        '        <item name="android:textColor">%s</item>' % color,
+        '        <item name="android:lineSpacingMultiplier">%.3f</item>' % multiplier,
+    ]
+    if all_caps:
+        lines.append('        <item name="android:textAllCaps">true</item>')
+    lines.append("    </style>")
+    return lines
+
+
+extra_styles += ramp_style(ramp["app_list_title"], "AppListTitle",
+                            "@color/metro_text_primary",
+                            ramp["app_list_title"]["semibold_weight"])
+extra_styles += ramp_style(ramp["body_large"], "BodyLarge",
+                           "@color/metro_text_primary",
+                           ramp["body_large"]["semibold_weight"])
+extra_styles += ramp_style(ramp["caption"], "SectionHeader",
+                           "@color/metro_accent", 600, True)
+
+header_gap = gen.num(tokens["type"]["header"]["gap"])
+scrim = tokens["color"]["chrome"]["scrim_alpha"]
+scrim_pct = int(round(float(scrim) * 100))
+tilt_deg = gen.num(tokens["motion"]["tilt_deg"])
+
+xml = "\n".join([
+    '<?xml version="1.0" encoding="utf-8"?>',
+    "<!-- GENERATED by scripts/build-launcher.sh from design/tokens/ztmetro.tokens.json.",
+    "     Do not edit by hand and do not hand-duplicate these numbers in Java or XML.",
+    "     Sources: design/tokens/gen_android.py (colours, dimens, styles);",
+    "     header gap, scrim, pivot/section styles and the v3 launcher extras are",
+    "     read from the same JSON here. -->",
+    "<resources>",
+    colors,
+    dimens,
+    styles,
+    "",
+    "    <!-- type.header.gap -->",
+    '    <dimen name="metro_header_gap">%sdp</dimen>' % header_gap,
+    "    <!-- color.chrome.scrim_alpha -->",
+    '    <fraction name="metro_scrim_alpha">%d%%</fraction>' % scrim_pct,
+    "",
+    "    <!-- Launcher-v3 additions, not ztmetro C facts. Tile spacing is the",
+    "         token spacing (start_margin 14dp, tile_gap 7dp) because the official",
+    "         ztmetro Start frame measures 14dp/7dp at 360dp; the v3 brief's 2-3dp",
+    "         gutters were a misread and are not used. The remaining values are",
+    "         chrome that the C app list/Start draws: 56dp rows, 44% white glyph,",
+    "         13dp list label gap, 48dp circled arrow, 56dp bottom strip. -->",
+    '    <dimen name="metro_v3_tile_pad">8dp</dimen>',
+    '    <dimen name="metro_v3_list_row">56dp</dimen>',
+    '    <dimen name="metro_v3_list_gap">13dp</dimen>',
+    '    <dimen name="metro_v3_search_underline">1dp</dimen>',
+    '    <dimen name="metro_v3_search_pad">8dp</dimen>',
+    '    <dimen name="metro_v3_stroke">1.5dp</dimen>',
+    '    <dimen name="metro_v3_arrow">48dp</dimen>',
+    '    <dimen name="metro_v3_bottom_bar">56dp</dimen>',
+    '    <fraction name="metro_v3_icon_fraction">44%</fraction>',
+    '    <integer name="metro_motion_tilt_deg">%s</integer>' % tilt_deg,
+    '',
+    '    <!-- ztmetro per-app tile palette (core/zrnmetrocore.c:203-208, as',
+    "         measured for the v3 reference frame). Cobalt is the default and",
+    "         is weighted in TileArt; these are not Material pastels. -->",
+    '    <color name="metro_tile_lime">#FFA4C400</color>',
+    '    <color name="metro_tile_green">#FF60A917</color>',
+    '    <color name="metro_tile_emerald">#FF008A00</color>',
+    '    <color name="metro_tile_teal">#FF00ABA9</color>',
+    '    <color name="metro_tile_cyan">#FF1BA1E2</color>',
+    '    <color name="metro_tile_magenta">#FFD80073</color>',
+    '    <color name="metro_tile_crimson">#FFA20025</color>',
+    '    <color name="metro_tile_red">#FFE51400</color>',
+    '    <color name="metro_tile_brown">#FF825A2C</color>',
+    '    <color name="metro_tile_olive">#FF6D8764</color>',
+    '    <color name="metro_tile_steel">#FF647687</color>',
+] + extra_styles + ["</resources>", ""])
+
+out_path = os.path.join(build, "res", "values", "metro_tokens.xml")
+os.makedirs(os.path.dirname(out_path), exist_ok=True)
+with open(out_path, "w", encoding="utf-8", newline="\n") as handle:
+    handle.write(xml)
+print("wrote %s (colors + dimens + styles + launcher extras)" % out_path)
+PY
+
+# --- 2. resources ------------------------------------------------------------
+say "aapt2 compile + link"
+"$BT/aapt2" compile --dir "$BUILD/res" -o "$BUILD/res.zip"
+"$BT/aapt2" link -o "$BUILD/base.apk" \
+    -I "$ANDROID_JAR" \
+    --manifest "$APP/AndroidManifest.xml" \
+    --java "$BUILD/rjava" \
+    --auto-add-overlay \
+    "$BUILD/res.zip"
+
+# --- 3. compile + dex --------------------------------------------------------
+say "javac (Java 8 bytecode against android-36)"
+find "$APP/java" "$BUILD/rjava" -name '*.java' -print > "$BUILD/sources.txt"
+"$JDK/bin/javac" -encoding UTF-8 -source 8 -target 8 -Xlint:-options \
+    -classpath "$ANDROID_JAR" -d "$BUILD/classes" @"$BUILD/sources.txt"
+
+say "d8"
+mkdir -p "$BUILD/dex"
+CLASSES=()
+while IFS= read -r class_file; do
+    CLASSES+=("$class_file")
+done < <(find "$BUILD/classes" -name '*.class' -print)
+"$BT/d8" --release --min-api 29 --lib "$ANDROID_JAR" \
+    --output "$BUILD/dex" "${CLASSES[@]}"
+
+# --- 4. package + align + sign ----------------------------------------------
+say "packaging classes.dex"
+cp "$BUILD/base.apk" "$BUILD/unsigned.apk"
+TZ=UTC touch -t 198001010000.00 "$BUILD/dex/classes.dex"   # stable APK hash across rebuilds
+( cd "$BUILD/dex" && zip -q -X "$BUILD/unsigned.apk" classes.dex )
+"$BT/zipalign" -f 4 "$BUILD/unsigned.apk" "$BUILD/aligned.apk"
+
+KS="$BUILD/keystore/ztmetro-start.p12"
+if [ ! -f "$KS" ]; then
+    say "generating throwaway signing key (gitignored)"
+    "$JDK/bin/keytool" -genkeypair -keystore "$KS" -storetype PKCS12 \
+        -storepass android -keypass android -alias ztmetro \
+        -keyalg RSA -keysize 2048 -validity 10000 \
+        -dname "CN=ztmetro start, O=ztmetro, C=US" >/dev/null 2>&1 \
+        || die "keytool failed"
+fi
+
+say "apksigner"
+"$BT/apksigner" sign \
+    --ks "$KS" --ks-pass pass:android --key-pass pass:android --ks-key-alias ztmetro \
+    --min-sdk-version 29 \
+    --v1-signing-enabled false --v2-signing-enabled true --v3-signing-enabled true \
+    --out "$APK" "$BUILD/aligned.apk"
+"$BT/apksigner" verify --min-sdk-version 29 "$APK"
+
+# --- 5. verify the artifact --------------------------------------------------
+say "verifying APK"
+BADGING=$("$BT/aapt2" dump badging "$APK")
+printf '%s\n' "$BADGING" | sed -n '1,6p'
+printf '%s\n' "$BADGING" | grep -q "application-label:'ztmetro start'" \
+    || die "application label is not 'ztmetro start'"
+printf '%s\n' "$BADGING" | grep -q "application-icon" \
+    || die "no application icon in badging"
+
+XMLTREE=$("$BT/aapt2" dump xmltree --file AndroidManifest.xml "$APK")
+printf '%s\n' "$XMLTREE" | grep -q "android.intent.category.HOME" \
+    || die "HOME category missing from the merged manifest"
+printf '%s\n' "$BADGING" | grep -q "minSdkVersion:'29'" || die "minSdk 29 missing"
+printf '%s\n' "$BADGING" | grep -q "targetSdkVersion:'36'" || die "targetSdk 36 missing"
+printf '%s\n' "$BADGING" | grep -q "versionCode='3'" || die "versionCode 3 missing"
+printf '%s\n' "$BADGING" | grep -q "versionName='3.0'" || die "versionName 3.0 missing"
+
+# v3 keeps the v2 notification listener service (optional live counts) and must
+# still request no permission; the HOME role is the only role it owns.
+printf '%s\n' "$XMLTREE" | grep -q "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" \
+    || die "listener service lacks BIND_NOTIFICATION_LISTENER_SERVICE"
+printf '%s\n' "$XMLTREE" | grep -q "android.service.notification.NotificationListenerService" \
+    || die "NotificationListenerService intent filter missing"
+printf '%s\n' "$XMLTREE" | grep -q "StartNotificationListener" \
+    || die "StartNotificationListener missing from the merged manifest"
+if printf '%s\n' "$XMLTREE" | grep -q "uses-permission"; then
+    die "the launcher must not request any permission"
+fi
+
+unzip -l "$APK" | grep -q " classes.dex" || die "classes.dex missing from APK"
+unzip -p "$APK" classes.dex > "$BUILD/verify.dex"
+if grep -aq "androidx" "$BUILD/verify.dex"; then
+    die "AndroidX classes found in classes.dex"
+fi
+for symbol in StartNotificationListener MetroTileView MetroGridView \
+              MetroListRowView MetroPager MetroCircleGlyphView \
+              MetroSectionHeaderView TileArt; do
+    grep -aq "$symbol" "$BUILD/verify.dex" \
+        || die "$symbol class missing from classes.dex"
+done
+
+# The v3 redraw must actually be in the resource table, not just in Java.
+RESOURCES=$("$BT/aapt2" dump resources "$APK")
+for symbol in metro_tile_gap metro_tile_steel metro_v3_icon_fraction \
+              metro_v3_arrow TextAppearance.Metro.SectionHeader; do
+    printf '%s\n' "$RESOURCES" | grep -q "$symbol" \
+        || die "$symbol missing from the compiled resources"
+done
+
+SIZE_BYTES=$(wc -c < "$APK" | tr -d ' ')
+if [ "$SIZE_BYTES" -ge 3145728 ]; then
+    die "APK is larger than 3 MB ($SIZE_BYTES bytes)"
+fi
+
+if command -v sha256sum >/dev/null 2>&1; then
+    SHA=$(sha256sum "$APK" | awk '{print $1}')
+else
+    SHA=$(shasum -a 256 "$APK" | awk '{print $1}')
+fi
+
+cp "$APK" "$EVIDENCE/ztmetro-start.apk"
+printf '%s  ztmetro-start.apk\n' "$SHA" > "$EVIDENCE/ztmetro-start.apk.sha256"
+printf '%s\n' "$BADGING" > "$EVIDENCE/aapt2-badging.txt"
+printf '%s\n' "$XMLTREE" > "$EVIDENCE/aapt2-manifest.xmltree.txt"
+unzip -lv "$APK" > "$EVIDENCE/apk-contents.txt"
+"$BT/apksigner" verify --min-sdk-version 29 --verbose --print-certs "$APK" \
+    > "$EVIDENCE/apksigner-verify.txt" 2>&1 || die "apksigner verify failed"
+cp "$BUILD/res/values/metro_tokens.xml" "$EVIDENCE/metro_tokens.generated.xml"
+DEX_BYTES=$(wc -c < "$BUILD/verify.dex" | tr -d ' ')
+{
+    printf 'classes.dex: %s bytes\n' "$DEX_BYTES"
+    printf 'androidx occurrences: 0 (build fails if any)\n'
+    printf 'uses-permission elements: 0 (build fails if any)\n'
+    printf 'package classes:\n'
+    for symbol in StartActivity MetroTileView MetroGridView MetroPager \
+                  MetroCircleGlyphView MetroSectionHeaderView MetroListRowView \
+                  TileArt TileStore StartNotificationListener; do
+        if grep -aq "$symbol" "$BUILD/verify.dex"; then
+            printf '  %s: present\n' "$symbol"
+        else
+            printf '  %s: MISSING\n' "$symbol"
+        fi
+    done
+} > "$EVIDENCE/dex-facts.txt"
+{
+    printf 'apk:      launcher/build/out/ztmetro-start.apk (evidence/launcher-v3/ztmetro-start.apk)\n'
+    printf 'size:     %s bytes\n' "$SIZE_BYTES"
+    printf 'sha256:   %s\n' "$SHA"
+    printf 'package:  org.ztmetro.start\n'
+    printf 'version:  3 (3.0)\n'
+    printf 'min/target: 29 / 36\n'
+    printf 'build:    %s, %s\n' "$(basename "$SDK")" "$("$JDK/bin/java" -version 2>&1 | head -n 1)"
+    printf 'checks:   HOME category, listener service + BIND permission, no uses-permission,\n'
+    printf '          no androidx, v3 redraw classes/resources present, <3 MB\n'
+} > "$EVIDENCE/artifact-facts.txt"
+
+say "done"
+printf 'APK:     %s\n' "$APK"
+printf 'evidence:%s\n' "$EVIDENCE/ztmetro-start.apk"
+printf 'size:    %s bytes (%s)\n' "$SIZE_BYTES" "$(du -h "$APK" | awk '{print $1}')"
+printf 'sha256:  %s\n' "$SHA"
+printf 'verify:  HOME category, label/icon, minSdk 29 / targetSdk 36, listener service,\n'
+printf '         no uses-permission, no androidx, v3 classes/resources, <3 MB\n'

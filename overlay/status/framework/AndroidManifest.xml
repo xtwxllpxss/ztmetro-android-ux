@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro status-strip framework RRO.
+
+  Target: "android" (framework-res), LineageOS 23.2 / Android 16,
+  commit 797e43244b96c6a0dff5c81b21c4d4be665b082e.
+
+  What it does (only names verified in core/res/res/values/dimens.xml):
+    status_bar_height / _portrait / _default   24dp -> 28dp
+    status_bar_system_icon_size                15dp -> 13dp
+
+  * android:hasCode="false" — an RRO carries resources only.
+  * No android:targetName — framework-res declares no <overlayable>
+    (docs/10b-overlay-and-hook-facts.md §1), so the preinstalled/same-signature
+    branch of idmap2 CheckOverlayable applies
+    (frameworks/base/cmds/idmap2/libidmap2/ResourceMapping.cpp:69-75).
+  * android:isStatic="true" — required for the values to affect
+    Resources.getSystem()/system_server (status bar insets) and makes the
+    overlay enabled at boot without `cmd overlay enable`.
+  * priority 20 — wins over the generic ztmetro framework overlay (priority 2)
+    if both ever touch the same dimen; they do not overlap today.
+
+  Magisk systemless path: system/product/overlay/ (product policy is inside
+  idmap2's kDefaultPolicies).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztos.overlay.status.framework"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="36" android:targetSdkVersion="36" />
+
+    <application
+        android:hasCode="false"
+        android:label="ztos status strip (framework)" />
+
+    <overlay
+        android:targetPackage="android"
+        android:isStatic="true"
+        android:priority="20" />
+</manifest>

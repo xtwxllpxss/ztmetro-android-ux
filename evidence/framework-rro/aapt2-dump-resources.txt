@@ -1,0 +1,313 @@
+Binary APK
+Package name=org.ztmetro.overlay.framework id=7f
+  type bool id=01 entryCount=2
+    resource 0x7f010000 bool/config_actionMenuItemAllCaps
+      () false
+    resource 0x7f010001 bool/config_buttonTextAllCaps
+      () false
+  type color id=02 entryCount=63
+    resource 0x7f020000 color/accent_device_default
+      () #ff0050ef
+    resource 0x7f020001 color/accent_device_default_dark
+      () #ff3d7bff
+    resource 0x7f020002 color/accent_device_default_light
+      () #ff0050ef
+    resource 0x7f020003 color/accent_material_dark
+      () #ff3d7bff
+    resource 0x7f020004 color/accent_material_light
+      () #ff0050ef
+    resource 0x7f020005 color/customColorOnShadeActive
+      () #ffffffff
+    resource 0x7f020006 color/customColorOnShadeActiveVariant
+      () #ffd9e2ff
+    resource 0x7f020007 color/customColorShadeActive
+      () #ff0050ef
+    resource 0x7f020008 color/customColorShadeDisabled
+      () #ff00143c
+    resource 0x7f020009 color/customColorShadeInactive
+      () #ff1f1f1f
+    resource 0x7f02000a color/primary_device_default_settings
+      () #ff3d7bff
+    resource 0x7f02000b color/primary_device_default_settings_light
+      () #ff0050ef
+    resource 0x7f02000c color/ripple_material_dark
+      () #1f0050ef
+    resource 0x7f02000d color/ripple_material_light
+      () #1f0050ef
+    resource 0x7f02000e color/system_accent1_100
+      () #ff7fa8ff
+    resource 0x7f02000f color/system_accent1_100_dark
+      () #ff7fa8ff
+    resource 0x7f020010 color/system_accent1_100_light
+      () #ff7fa8ff
+    resource 0x7f020011 color/system_accent1_200
+      () #ff3d7bff
+    resource 0x7f020012 color/system_accent1_200_dark
+      () #ff3d7bff
+    resource 0x7f020013 color/system_accent1_200_light
+      () #ff3d7bff
+    resource 0x7f020014 color/system_accent1_500
+      () #ff0050ef
+    resource 0x7f020015 color/system_accent1_500_dark
+      () #ff0050ef
+    resource 0x7f020016 color/system_accent1_500_light
+      () #ff0050ef
+    resource 0x7f020017 color/system_accent1_600
+      () #ff002878
+    resource 0x7f020018 color/system_accent1_600_dark
+      () #ff002878
+    resource 0x7f020019 color/system_accent1_600_light
+      () #ff002878
+    resource 0x7f02001a color/system_accent1_700
+      () #ff00143c
+    resource 0x7f02001b color/system_accent1_700_dark
+      () #ff00143c
+    resource 0x7f02001c color/system_accent1_700_light
+      () #ff00143c
+    resource 0x7f02001d color/system_accent2_100
+      () #ff7fa8ff
+    resource 0x7f02001e color/system_accent2_100_dark
+      () #ff7fa8ff
+    resource 0x7f02001f color/system_accent2_100_light
+      () #ff7fa8ff
+    resource 0x7f020020 color/system_accent2_200
+      () #ff3d7bff
+    resource 0x7f020021 color/system_accent2_200_dark
+      () #ff3d7bff
+    resource 0x7f020022 color/system_accent2_200_light
+      () #ff3d7bff
+    resource 0x7f020023 color/system_accent2_500
+      () #ff0050ef
+    resource 0x7f020024 color/system_accent2_500_dark
+      () #ff0050ef
+    resource 0x7f020025 color/system_accent2_500_light
+      () #ff0050ef
+    resource 0x7f020026 color/system_accent2_600
+      () #ff002878
+    resource 0x7f020027 color/system_accent2_600_dark
+      () #ff002878
+    resource 0x7f020028 color/system_accent2_600_light
+      () #ff002878
+    resource 0x7f020029 color/system_accent2_700
+      () #ff00143c
+    resource 0x7f02002a color/system_accent2_700_dark
+      () #ff00143c
+    resource 0x7f02002b color/system_accent2_700_light
+      () #ff00143c
+    resource 0x7f02002c color/system_accent3_100
+      () #ff7fa8ff
+    resource 0x7f02002d color/system_accent3_100_dark
+      () #ff7fa8ff
+    resource 0x7f02002e color/system_accent3_100_light
+      () #ff7fa8ff
+    resource 0x7f02002f color/system_accent3_200
+      () #ff3d7bff
+    resource 0x7f020030 color/system_accent3_200_dark
+      () #ff3d7bff
+    resource 0x7f020031 color/system_accent3_200_light
+      () #ff3d7bff
+    resource 0x7f020032 color/system_accent3_500
+      () #ff0050ef
+    resource 0x7f020033 color/system_accent3_500_dark
+      () #ff0050ef
+    resource 0x7f020034 color/system_accent3_500_light
+      () #ff0050ef
+    resource 0x7f020035 color/system_accent3_600
+      () #ff002878
+    resource 0x7f020036 color/system_accent3_600_dark
+      () #ff002878
+    resource 0x7f020037 color/system_accent3_600_light
+      () #ff002878
+    resource 0x7f020038 color/system_accent3_700
+      () #ff00143c
+    resource 0x7f020039 color/system_accent3_700_dark
+      () #ff00143c
+    resource 0x7f02003a color/system_accent3_700_light
+      () #ff00143c
+    resource 0x7f02003b color/system_on_primary_dark
+      () #ffffffff
+    resource 0x7f02003c color/system_on_primary_light
+      () #ffffffff
+    resource 0x7f02003d color/system_primary_dark
+      () #ff3d7bff
+    resource 0x7f02003e color/system_primary_light
+      () #ff0050ef
+  type dimen id=03 entryCount=7
+    resource 0x7f030000 dimen/action_bar_default_height_material
+      () 48.000000dp
+    resource 0x7f030001 dimen/config_bottomDialogCornerRadius
+      () 0.000000dp
+    resource 0x7f030002 dimen/config_buttonCornerRadius
+      () 0.000000dp
+    resource 0x7f030003 dimen/config_dialogCornerRadius
+      () 0.000000dp
+    resource 0x7f030004 dimen/config_progressBarCornerRadius
+      () 0.000000dp
+    resource 0x7f030005 dimen/control_corner_material
+      () 0.000000dp
+    resource 0x7f030006 dimen/dialog_corner_radius
+      () 0.000000dp
+  type style id=04 entryCount=20
+    resource 0x7f040000 style/TextAppearance.Material
+      () (style) size=9 parent=0x0103003e
+        0x01010095=13.000000sp
+        0x01010098=?0x01010036
+        0x01010099=?0x01010099
+        0x0101009a=?0x0101009a
+        0x0101009b=?0x0101009b
+        0x01010218=1.3846
+        0x0101038c=false
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00
+    resource 0x7f040001 style/TextAppearance.Material.Body1
+      () (style) size=6 parent=0x010301ed
+        0x01010095=13.000000sp
+        0x01010098=?0x01010036
+        0x01010218=1.3846
+        0x0101038c=false
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00
+    resource 0x7f040002 style/TextAppearance.Material.Body2
+      () (style) size=6 parent=0x010301ed
+        0x01010095=13.000000sp
+        0x01010098=?0x01010036
+        0x01010218=1.3846
+        0x0101038c=false
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00
+    resource 0x7f040003 style/TextAppearance.Material.Button
+      () (style) size=6 parent=0x010301ed
+        0x01010095=13.000000sp
+        0x01010098=?0x01010036
+        0x01010218=1.3846
+        0x0101038c=false
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00
+    resource 0x7f040004 style/TextAppearance.Material.Caption
+      () (style) size=6 parent=0x010301ed
+        0x01010095=12.000000sp
+        0x01010098=?0x01010038
+        0x01010218=1.3333
+        0x0101038c=false
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00
+    resource 0x7f040005 style/TextAppearance.Material.Display1
+      () (style) size=6 parent=0x010301ed
+        0x01010095=25.500000sp
+        0x01010098=?0x01010036
+        0x01010218=1.2157
+        0x0101038c=false
+        0x010103ac="sans-serif-light"
+        0x010104b6=0.000000e+00
+    resource 0x7f040006 style/TextAppearance.Material.Display2
+      () (style) size=6 parent=0x010301ed
+        0x01010095=48.000000sp
+        0x01010098=?0x01010036
+        0x01010218=1.25
+        0x0101038c=false
+        0x010103ac="sans-serif-light"
+        0x010104b6=0.000000e+00
+    resource 0x7f040007 style/TextAppearance.Material.Display3
+      () (style) size=6 parent=0x010301ed
+        0x01010095=56.000000sp
+        0x01010098=?0x01010036
+        0x01010218=1.1964
+        0x0101038c=false
+        0x010103ac="sans-serif-light"
+        0x010104b6=0.000000e+00
+    resource 0x7f040008 style/TextAppearance.Material.Display4
+      () (style) size=6 parent=0x010301ed
+        0x01010095=92.000000sp
+        0x01010098=?0x01010036
+        0x01010218=1.1957
+        0x0101038c=false
+        0x010103ac="sans-serif-light"
+        0x010104b6=0.000000e+00
+    resource 0x7f040009 style/TextAppearance.Material.Headline
+      () (style) size=6 parent=0x010301ed
+        0x01010095=22.000000sp
+        0x01010098=?0x01010036
+        0x01010218=1.2727
+        0x0101038c=false
+        0x010103ac="sans-serif-light"
+        0x010104b6=0.000000e+00
+    resource 0x7f04000a style/TextAppearance.Material.Menu
+      () (style) size=6 parent=0x010301ed
+        0x01010095=17.000000sp
+        0x01010098=?0x01010036
+        0x01010218=1.2941
+        0x0101038c=false
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00
+    resource 0x7f04000b style/TextAppearance.Material.Notification
+      () (style) size=6 parent=0x010301ed
+        0x01010095=13.000000sp
+        0x01010098=?0x01010038
+        0x01010218=1.3846
+        0x0101038c=false
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00
+    resource 0x7f04000c style/TextAppearance.Material.Notification.Line2
+      () (style) size=6 parent=0x010301ed
+        0x01010095=12.000000sp
+        0x01010098=?0x01010038
+        0x01010218=1.3333
+        0x0101038c=false
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00
+    resource 0x7f04000d style/TextAppearance.Material.Notification.Title
+      () (style) size=6 parent=0x010301ed
+        0x01010095=17.000000sp
+        0x01010098=?0x01010036
+        0x01010218=1.2941
+        0x0101038c=false
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00
+    resource 0x7f04000e style/TextAppearance.Material.Subhead
+      () (style) size=6 parent=0x010301ed
+        0x01010095=17.000000sp
+        0x01010098=?0x01010036
+        0x01010218=1.2941
+        0x0101038c=false
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00
+    resource 0x7f04000f style/TextAppearance.Material.Title
+      () (style) size=6 parent=0x010301ed
+        0x01010095=20.000000sp
+        0x01010098=?0x01010036
+        0x01010218=1.35
+        0x0101038c=false
+        0x010103ac="sans-serif-light"
+        0x010104b6=0.000000e+00
+    resource 0x7f040010 style/TextAppearance.Material.Widget.ActionBar.Subtitle
+      () (style) size=6 parent=0x010301ed
+        0x01010095=11.500000sp
+        0x01010098=?0x01010038
+        0x01010218=1.3913
+        0x0101038c=true
+        0x010103ac="sans-serif-medium"
+        0x010104b6=0.000000e+00
+    resource 0x7f040011 style/TextAppearance.Material.Widget.ActionBar.Title
+      () (style) size=6 parent=0x010301ed
+        0x01010095=20.000000sp
+        0x01010098=?0x01010036
+        0x01010218=1.35
+        0x0101038c=false
+        0x010103ac="sans-serif-light"
+        0x010104b6=0.000000e+00
+    resource 0x7f040012 style/TextAppearance.StatusBar.EventContent
+      () (style) size=6 parent=0x010301ed
+        0x01010095=13.000000sp
+        0x01010098=#ff999999
+        0x01010218=1.3846
+        0x0101038c=false
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00
+    resource 0x7f040013 style/TextAppearance.StatusBar.EventContent.Title
+      () (style) size=6 parent=0x010301ed
+        0x01010095=17.000000sp
+        0x01010098=#ffffffff
+        0x01010218=1.2941
+        0x0101038c=false
+        0x010103ac="sans-serif"
+        0x010104b6=0.000000e+00

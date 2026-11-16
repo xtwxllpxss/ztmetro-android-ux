@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro Settings RRO — flat Metro dashboard palette (default config).
+
+  Dashboard tiles on the Settings home page are drawn by
+  drawable/ic_homepage_*.xml: an AdaptiveIconShapeDrawable filled with
+  @color/homepage_<category>_background, with the glyph tinted by
+  @color/homepage_<category>_foreground (e.g. drawable/ic_homepage_network.xml:22,31).
+
+  Both are thin aliases over ten M3 palette pairs (res/values/colors.xml:97-116).
+  Overriding the aliases — not the 20 per-category names — keeps the patch small and
+  is enough: the per-category entries are references into these, so they follow.
+
+  Metro mapping: every tile becomes one accent square with a white glyph
+  (tokens color.accent.base #0050EF, color.accent.foreground_on_accent #FFFFFF;
+  settings/ztsettings.c:1419 / core/zrnmetrocore.c:4425 list-letter practice —
+  one accent, no per-category rainbow). White on #0050EF = 7.4:1, accessible.
+
+  The *_bg aliases have night twins in res/values-night/colors.xml:21-30, so the
+  night twins are shipped in res/values-night/colors.xml here.
+  The *_fg aliases have no night twin, so a single default entry overrides both modes.
+-->
+<resources>
+
+    <!-- glyph (foreground) colours: all white on accent -->
+    <color name="homepage_blue_variant_fg">#FFFFFFFF</color>  <!-- colors.xml:97 -->
+    <color name="homepage_blue_fg">#FFFFFFFF</color>          <!-- :99  -->
+    <color name="homepage_pink_fg">#FFFFFFFF</color>          <!-- :101 -->
+    <color name="homepage_orange_fg">#FFFFFFFF</color>        <!-- :103 -->
+    <color name="homepage_yellow_fg">#FFFFFFFF</color>        <!-- :105 -->
+    <color name="homepage_green_fg">#FFFFFFFF</color>         <!-- :107 -->
+    <color name="homepage_grey_fg">#FFFFFFFF</color>          <!-- :109 -->
+    <color name="homepage_cyan_fg">#FFFFFFFF</color>          <!-- :111 -->
+    <color name="homepage_red_fg">#FFFFFFFF</color>           <!-- :113 -->
+    <color name="homepage_purple_fg">#FFFFFFFF</color>        <!-- :115 -->
+
+    <!-- tile fill: one Metro accent -->
+    <color name="homepage_blue_variant_bg">#FF0050EF</color>   <!-- :98  -->
+    <color name="homepage_blue_bg">#FF0050EF</color>           <!-- :100 -->
+    <color name="homepage_pink_bg">#FF0050EF</color>           <!-- :102 -->
+    <color name="homepage_orange_bg">#FF0050EF</color>         <!-- :104 -->
+    <color name="homepage_yellow_bg">#FF0050EF</color>         <!-- :106 -->
+    <color name="homepage_green_bg">#FF0050EF</color>          <!-- :108 -->
+    <color name="homepage_grey_bg">#FF0050EF</color>           <!-- :110 -->
+    <color name="homepage_cyan_bg">#FF0050EF</color>           <!-- :112 -->
+    <color name="homepage_red_bg">#FF0050EF</color>            <!-- :114 -->
+    <color name="homepage_purple_bg">#FF0050EF</color>         <!-- :116 -->
+
+    <!-- :95 — used by the generic/adaptive icon path (drawable/ic_network_signal_blue.xml:23-27,
+         drawable/ic_homepage_night_display.xml:24, SimActivationNotifier.java:185). -->
+    <color name="homepage_generic_icon_background">#FF0050EF</color>
+
+    <!-- :119 — contextual / card preferences. Lights: Metro neutral surface
+         (card_preference_layout.xml:26, contextual_slice_half_tile.xml:37,
+         styles.xml:633, drawable/contextual_card_background.xml:20). -->
+    <color name="contextual_card_background">#FFF2F2F2</color>
+
+</resources>

@@ -1,0 +1,139 @@
+## apksigner verify
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=ztMetro keyguard dev, OU=ztOS, O=ztOS, C=RU
+Signer #1 certificate SHA-256 digest: b22bb8a4c0a6a2178ac63070c6ff742bd226cc635f2b1ce54f3419f1f6fe252b
+Signer #1 certificate SHA-1 digest: 9b68bb187336601f2f1e1005d2da7752fd4a8f97
+Signer #1 certificate MD5 digest: 33622041b0682f142f0b754e857a794e
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 2048
+Signer #1 public key SHA-256 digest: 3a2aacbec7e7d1e4af646c500bafa15b37244bf4b5808056db7ca41ac31a1b43
+Signer #1 public key SHA-1 digest: d4d404c23a19d4b6ef1a101c9f14c5dd11392e20
+Signer #1 public key MD5 digest: c11820c171c1a986b86bd683db4b1299
+
+## aapt2 dump badging
+package: name='org.ztmetro.keyguard' versionCode='1' versionName='1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+minSdkVersion:'29'
+targetSdkVersion:'36'
+application-label:'ztMetro Keyguard'
+application: label='ztMetro Keyguard' icon=''
+feature-group: label=''
+  uses-feature: name='android.hardware.faketouch'
+  uses-implied-feature: name='android.hardware.faketouch' reason='default feature for all apps'
+supports-screens: 'small' 'normal' 'large' 'xlarge'
+supports-any-density: 'true'
+locales: '--_--'
+densities: '160'
+
+## AndroidManifest xposed metadata
+    A: package="org.ztmetro.keyguard" (Raw: "org.ztmetro.keyguard")
+        A: http://schemas.android.com/apk/res/android:minSdkVersion(0x0101020c)=29
+        A: http://schemas.android.com/apk/res/android:targetSdkVersion(0x01010270)=36
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposedmodule" (Raw: "xposedmodule")
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposeddescription" (Raw: "xposeddescription")
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposedminversion" (Raw: "xposedminversion")
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="xposedscope" (Raw: "xposedscope")
+
+## module resources (scope array, label)
+    resource 0x7f010000 array/xposed_scope
+      () (array) size=1
+        ["com.android.systemui"]
+  type string id=02 entryCount=2
+    resource 0x7f020000 string/app_name
+      () "ztMetro Keyguard"
+    resource 0x7f020001 string/xposed_description
+      () "Metro lock screen for LineageOS 23.2: light clock, date line, accent indications. Fail-safe view hooks only."
+
+## classes.dex
+Archive:  /home/denis/ztux/keyguard/repo/sysui/keyguard-module/build/dist/ztmetro-keyguard.apk
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+     1948  1980-01-01 00:00   AndroidManifest.xml
+      936  1980-01-01 00:00   resources.arsc
+       33  1980-01-01 00:00   assets/xposed_init
+    21124  2026-11-16 11:27   classes.dex
+      502  2026-11-16 11:27   META-INF/ZTMETRO-.SF
+     1278  2026-11-16 11:27   META-INF/ZTMETRO-.RSA
+      375  2026-11-16 11:27   META-INF/MANIFEST.MF
+---------                     -------
+    26196                     7 files
+## hook target names referenced by classes.dex
+com.android.keyguard.KeyguardSliceView
+com.android.systemui.keyguard.ui.binder.KeyguardClockViewBinder
+com.android.systemui.shade.NotificationShadeWindowView
+com.android.systemui.shared.clocks.AnimatableClockView
+com.android.systemui.statusbar.phone.KeyguardIndicationTextView
+keyguard_root_view
+keyguard_slice_view
+## hook target methods referenced by classes.dex
+bind
+KeyguardClockViewBinder
+onAttachedToWindow
+onMeasure
+refreshTime
+setColors
+setNextIndication
+showSlice
+Processing '/home/denis/ztux/keyguard/repo/sysui/keyguard-module/build/classes.dex'...
+Opened '/home/denis/ztux/keyguard/repo/sysui/keyguard-module/build/classes.dex', DEX version '039'
+DEX file header:
+magic               : 'dex\n039\0'
+checksum            : ecbc8ba2
+signature           : 663e...e406
+file_size           : 21124
+header_size         : 112
+link_size           : 0
+link_off            : 0 (0x000000)
+string_ids_size     : 372
+string_ids_off      : 112 (0x000070)
+type_ids_size       : 77
+type_ids_off        : 1600 (0x000640)
+proto_ids_size      : 84
+proto_ids_off       : 1908 (0x000774)
+field_ids_size      : 43
+field_ids_off       : 2916 (0x000b64)
+method_ids_size     : 177
+method_ids_off      : 3260 (0x000cbc)
+class_defs_size     : 17
+class_defs_off      : 4676 (0x001244)
+data_size           : 15904
+data_off            : 5220 (0x001464)
+
+Class #0            -
+  Class descriptor  : 'Lorg/ztmetro/keyguard/KLog;'
+  Access flags      : 0x0010 (FINAL)
+  Superclass        : 'Ljava/lang/Object;'
+  Interfaces        -
+  Static fields     -
+    #0              : (in Lorg/ztmetro/keyguard/KLog;)
+      name          : 'LOGGED'
+      type          : 'Ljava/util/HashSet;'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+  Instance fields   -
+  Direct methods    -
+    #0              : (in Lorg/ztmetro/keyguard/KLog;)
+      name          : '<clinit>'
+      type          : '()V'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/KLog;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/KeyguardHooks$1;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/KeyguardHooks$2;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/KeyguardHooks$3;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/KeyguardHooks$4;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/KeyguardHooks$5;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/KeyguardHooks$6;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/KeyguardHooks$7;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/KeyguardHooks;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/MetroKeyguard$1;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/MetroKeyguard$2;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/MetroKeyguard$3;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/MetroKeyguard;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/ModuleEntry;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/R$array;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/R$string;'
+  Class descriptor  : 'Lorg/ztmetro/keyguard/R;'

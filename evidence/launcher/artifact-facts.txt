@@ -1,0 +1,17 @@
+unzip -l
+Archive:  launcher/build/out/ztmetro-start.apk
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+     3004  1980-01-01 00:00   AndroidManifest.xml
+      724  1980-01-01 00:00   res/drawable/ic_launcher.xml
+     8492  1980-01-01 00:00   resources.arsc
+    42896  1980-01-01 03:00   classes.dex
+---------                     -------
+    55116                     4 files
+
+dex scan
+class descriptors: 41
+androidx occurrences: 0
+android.permission occurrences: 0
+37142 bytes
+971297ef28f1b749095c74f887c41bb85d8a9a54791ea3fd82b0070b15a07701  launcher/build/out/ztmetro-start.apk

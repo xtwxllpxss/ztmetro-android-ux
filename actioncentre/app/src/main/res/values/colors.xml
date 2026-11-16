@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- design/tokens/ztmetro.tokens.json: color.chrome.action_centre,
+         color.chrome.quick_action_on/off, color.accent.base -->
+    <color name="ac_black">#FF000000</color>
+    <color name="ac_accent">#FF0050EF</color>
+    <color name="ac_quick_off">#FF1F1F1F</color>
+    <color name="ac_quick_off_pressed">#FF333333</color>
+    <color name="ac_accent_pressed">#FF1A5FE0</color>
+    <color name="ac_row_pressed">#FF141414</color>
+    <color name="ac_text_primary">#FFFFFFFF</color>
+    <color name="ac_text_secondary">#B3FFFFFF</color>
+    <color name="ac_text_tertiary">#80FFFFFF</color>
+</resources>

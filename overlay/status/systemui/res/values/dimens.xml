@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SystemUI status-strip metrics.
+  Verified in packages/SystemUI/res/values/dimens.xml @ lineage-23.2:
+    :441 status_bar_icon_drawing_size    15dp
+    :449 status_bar_icon_drawing_alpha   90%
+    :463 status_bar_padding_start         4dp
+    :469 status_bar_padding_top           0dp
+
+  Consumers:
+    status_bar_padding_start/top — res/layout/status_bar.xml:37,49,51,210 and
+      res/layout/keyguard_status_bar.xml:33,80 (keyguard strip follows too).
+    status_bar_icon_drawing_size — StatusBarIconView.java:350,352 (notification
+      icons only; system icons use the framework status_bar_system_icon_size).
+    status_bar_icon_drawing_alpha — PhoneStatusBarTransitions.java:49, applied
+      as the icon/battery/clock alpha when the bar is opaque
+      (PhoneStatusBarTransitions.java:97-100,114-119). 70% is the only
+      resource-level way to make white glyphs read as "70% white"; the tint
+      itself is code (see REPORT.md).
+-->
+<resources>
+    <dimen name="status_bar_padding_start">8dp</dimen>
+    <dimen name="status_bar_padding_top">2dp</dimen>
+    <dimen name="status_bar_icon_drawing_size">13dp</dimen>
+    <item type="dimen" name="status_bar_icon_drawing_alpha">70%</item>
+</resources>

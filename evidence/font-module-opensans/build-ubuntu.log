@@ -1,0 +1,15 @@
+  cmap ok: OpenSans-Light.ttf: 969 codepoints, cmap v0, Cyrillic 248/256, U+0410/U+0430/U+0451/U+0416/U+044F present
+  cmap ok: OpenSans-Regular.ttf: 969 codepoints, cmap v0, Cyrillic 248/256, U+0410/U+0430/U+0451/U+0416/U+044F present
+  cmap ok: OpenSans-SemiBold.ttf: 969 codepoints, cmap v0, Cyrillic 248/256, U+0410/U+0430/U+0451/U+0416/U+044F present
+  cmap ok: OpenSans-Bold.ttf: 969 codepoints, cmap v0, Cyrillic 248/256, U+0410/U+0430/U+0451/U+0416/U+044F present
+ztmetro-font-rewrite: fonts.xml.aosp16 -> fonts.after.xml: sans-serif 18 font(s)/54 axis entry(s) -> 20 static Open Sans entries; all other families intact
+ztmetro-font-rewrite: font_fallback.aosp16-roboto.xml -> font_fallback.after.xml: sans-serif 1 font(s)/1 axis entry(s) -> 20 static Open Sans entries; all other families intact
+  parse ok: fonts.after.xml: 160 families, 24 aliases, sans-serif = 20 static Open Sans entries
+  parse ok: font_fallback.after.xml: 3 families, 6 aliases, sans-serif = 20 static Open Sans entries
+
+module zip : /home/denis/ztux/font2/repo/artifacts/ztmetro-font-1.1.0.zip
+sha256     : 33d643465ea5dc7c76f838bb598e9104b12838944a02a25132867f6cacab92fa
+size       : 700774 bytes
+fonts      : OpenSans-Light, OpenSans-Regular, OpenSans-SemiBold, OpenSans-Bold (+ 4 italics)
+entries    : 16 files (module root + system/fonts)
+note       : config XML is generated on-device from the live ROM, not baked into the zip

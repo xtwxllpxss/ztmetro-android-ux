@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztmetro.actioncentre"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="36" />
+
+    <!-- CAMERA is the only dangerous permission: it is required by
+         CameraManager.setTorchMode() for the flashlight tile. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Special appop (not a runtime dangerous permission): rotation lock and
+         the brightness cycle write Settings.System. The user grants it from
+         Settings (or `adb shell appops set ... WRITE_SETTINGS allow`). -->
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <!-- Normal install-time permissions, no prompt: read Wi-Fi / network state. -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
+
+    <application
+        android:allowBackup="false"
+        android:enableOnBackInvokedCallback="false"
+        android:hardwareAccelerated="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.ActionCentre">
+
+        <activity
+            android:name=".ActionCentreActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.ActionCentre">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Tiny tile entry point for the ztmetro Start launcher. It is not a
+             second app-drawer icon: Start (or Tasker/Shortcut) can start the
+             alias explicitly. Add MAIN/LAUNCHER here if a drawer icon is wanted. -->
+        <activity-alias
+            android:name=".TileAlias"
+            android:exported="true"
+            android:icon="@drawable/ic_tile"
+            android:label="@string/tile_name"
+            android:targetActivity=".ActionCentreActivity">
+            <intent-filter>
+                <action android:name="org.ztmetro.actioncentre.OPEN_TILE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Optional: the user enables this in Settings > Notifications >
+             Device & app notifications. The system binds it; the app cannot
+             grant it itself. -->
+        <service
+            android:name=".ActionCentreListener"
+            android:exported="true"
+            android:label="@string/listener_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

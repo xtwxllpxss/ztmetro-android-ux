@@ -1,0 +1,82 @@
+# Evidence — Signatures, shared UID, platform-key limits (collected 2026-11-16T07:13:27Z)
+
+## APK Signature Scheme v2 = whole-file signature (any byte change invalidates it)
+source: https://source.android.com/docs/security/features/apksigning/v2
+ v2 Stay organized with collections Save and categorize content based on your preferences. APK signature scheme v2 is a whole-file signature scheme that increases verification speed and strengthens integrity guarantees by detecting any changes to the protected parts of the APK. Signing using APK signature scheme v2 inserts an APK signing block into the APK file immediately before the ZIP Central Directory section. Inside the APK signing block, v2 signatures and signer identity information are stored in an APK signature scheme v2 block . Figure 1. APK before and after signing APK signature scheme v2 was introduced in Android 7.0 (Nou
+
+## PackageManager scan/update signature enforcement (android16-release)
+source: .../services/core/java/com/android/server/pm/PackageManagerServiceUtils.java
+574:                // capability has not been granted.
+575:                match = pkgSetting.getSigningDetails().hasAncestorOrSelf(parsedSignatures);
+576:            }
+577:
+578:            if (!match) {
+579:                throw new PackageManagerException(INSTALL_FAILED_UPDATE_INCOMPATIBLE,
+580:                        "Existing package " + packageName
+581:                                + " signatures do not match newer version; ignoring!");
+582:            }
+583:        }
+584:        // Check for shared user signatures
+585:        if (sharedUserSetting != null
+586:                && sharedUserSetting.getSigningDetails() != SigningDetails.UNKNOWN) {
+587:            // Already existing package. Make sure signatures match.  In case of signing certificate
+588:            // rotation, the packages with newer certs need to be ok with being sharedUserId with
+589:            // the older ones.  We check to see if either the new package is signed by an older cert
+590:            // with which the current sharedUser is ok, or if it is signed by a newer one, and is ok
+591:            // with being sharedUser with the existing signing cert.
+592:            boolean match = canJoinSharedUserId(packageName, parsedSignatures, sharedUserSetting,
+593:                    pkgSetting.getSigningDetails().getSignatures() != null
+594:                            ? SHARED_USER_ID_JOIN_TYPE_UPDATE : SHARED_USER_ID_JOIN_TYPE_INSTALL);
+595:            if (!match && compareCompat) {
+596:                match = matchSignaturesCompat(
+597:                        packageName, sharedUserSetting.signatures, parsedSignatures);
+598:            }
+599:            if (!match && compareRecover) {
+600:                match =
+601:                        matchSignaturesRecover(packageName,
+602:                                sharedUserSetting.signatures.mSigningDetails,
+603:                                parsedSignatures,
+604:                                SigningDetails.CertCapabilities.SHARED_USER_ID)
+605:                        || matchSignaturesRecover(packageName,
+606:                                parsedSignatures,
+607:                                sharedUserSetting.signatures.mSigningDetails,
+608:                                SigningDetails.CertCapabilities.SHARED_USER_ID);
+609:                compatMatch |= match;
+610:            }
+611:            if (!match) {
+612:                throw new PackageManagerException(INSTALL_FAILED_SHARED_USER_INCOMPATIBLE,
+613:                        "Package " + packageName
+614:                        + " has no signatures that match those in shared user "
+615:                        + sharedUserSetting.name + "; ignoring!");
+616:            }
+617:            // If the lineage of this package diverges from the lineage of the sharedUserId then
+618:            // do not allow the installation to proceed.
+619:            if (!parsedSignatures.hasCommonAncestor(
+620:                    sharedUserSetting.signatures.mSigningDetails)) {
+
+## SystemUI and Settings shared UIDs (AOSP manifests)
+SystemUI: https://raw.githubusercontent.com/aosp-mirror/platform_frameworks_base/android16-release/packages/SystemUI/AndroidManifest.xml
+21:        package="com.android.systemui"
+22:        android:sharedUserId="android.uid.systemui"
+Settings: https://raw.githubusercontent.com/aosp-mirror/platform_packages_apps_settings/android16-release/AndroidManifest.xml
+3:          package="com.android.settings"
+5:          android:sharedUserId="android.uid.system">
+
+## Signature-level permissions held by SystemUI/Settings (framework manifest android16-release)
+5458:    <permission android:name="android.permission.STATUS_BAR_SERVICE"
+5459-        android:protectionLevel="signature|recents" />
+5055:    <permission android:name="android.permission.CHANGE_OVERLAY_PACKAGES"
+5056-        android:protectionLevel="signature|privileged" />
+5567:    <permission android:name="android.permission.INJECT_EVENTS"
+5568-        android:protectionLevel="signature" />
+5522:    <permission android:name="android.permission.INTERNAL_SYSTEM_WINDOW"
+5523-        android:protectionLevel="signature|module|recents" />
+
+## APK Signature Scheme v3 (key rotation, still signs file contents)
+source: https://source.android.com/docs/security/features/apksigning/v3 (HTTP 200)
+
+## microG signature spoofing is a client-facing patch gated by FAKE_PACKAGE_SIGNATURE, not a platform-key bypass
+refs:
+ - https://github.com/microg/GmsCore/pull/1586 (mayFakeSignature in PackageManager; GmsCore pretends to be Play Services)
+ - https://github.com/lineageos4microg/android_vendor_partner_gms/issues/42 (patch needed so FAKE_PACKAGE_SIGNATURE is permitted)
+ - https://gitlab.e.foundation/e/os/android_frameworks_base/-/commit/5c3d737f91a84a348944d4e712954d9a2f681e05

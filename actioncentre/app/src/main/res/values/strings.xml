@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Центр действий</string>
+    <string name="tile_name">Центр действий</string>
+    <string name="listener_name">Центр действий: уведомления</string>
+
+    <string name="tile_wifi">WI-FI</string>
+    <string name="tile_data">МОБ. ДАННЫЕ</string>
+    <string name="tile_bluetooth">BLUETOOTH</string>
+    <string name="tile_airplane">АВИАРЕЖИМ</string>
+    <string name="tile_rotation">АВТОПОВОРОТ</string>
+    <string name="tile_flashlight">ФОНАРИК</string>
+    <string name="tile_brightness">ЯРКОСТЬ %1$d%%</string>
+    <string name="tile_brightness_plain">ЯРКОСТЬ</string>
+    <string name="tile_settings">НАСТРОЙКИ</string>
+
+    <string name="link_clear_all">CLEAR ALL</string>
+    <string name="link_all_settings">ALL SETTINGS</string>
+    <string name="close">Закрыть</string>
+
+    <string name="empty_notifications">Нет уведомлений</string>
+    <string name="listener_missing">Доступ к уведомлениям не выдан</string>
+    <string name="listener_missing_action">Нажмите, чтобы открыть настройки доступа</string>
+    <string name="listener_connecting">Служба уведомлений подключается…</string>
+
+    <string name="toast_listener_missing">Нет доступа к уведомлениям: включите службу в настройках</string>
+    <string name="toast_no_flash">Фонарик недоступен на этом устройстве</string>
+    <string name="toast_camera_busy">Фонарик занят камерой</string>
+    <string name="toast_write_settings">Разрешите изменение системных настроек</string>
+    <string name="toast_brightness">Яркость: %1$d%%</string>
+    <string name="toast_settings_missing">Системные настройки не найдены</string>
+    <string name="toast_camera_denied">Без разрешения камеры фонарик не включить</string>
+</resources>

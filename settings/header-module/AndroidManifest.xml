@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztMetro Settings header — LSPosed module for stock Settings on LineageOS 23.2
+  (Android 16 / API 36).
+
+  This APK is a *module container*: it has no Activity, no Service, no BroadcastReceiver
+  and requests no permissions.  LSPosed loads classes.dex into the com.android.settings
+  process and reads the xposed* meta-data below.
+
+  xposedminversion 93: the legacy de.robv.android.xposed API level LSPosed's module
+  docs require (LSPosed and the Android-16-capable Vector fork, LSPosed v1.10.2+,
+  report an API level >= 93 to legacy modules).  The module itself only uses API-82
+  calls; a lower minSdk-style value would be accepted by LSPosed but is not what the
+  LSPosed documentation specifies.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztmetro.settingsheader"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <application
+        android:allowBackup="false"
+        android:hasCode="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true">
+
+        <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+        <meta-data
+            android:name="xposeddescription"
+            android:value="@string/xposed_description" />
+        <meta-data
+            android:name="xposedminversion"
+            android:value="93" />
+        <meta-data
+            android:name="xposedscope"
+            android:resource="@array/xposed_scope" />
+    </application>
+</manifest>

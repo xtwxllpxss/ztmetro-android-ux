@@ -1,0 +1,6 @@
+  <family name="sans-serif">
+    <font supportedAxes="wght,ital">
+      Roboto-Regular.ttf
+      <axis tag="wdth" stylevalue="100.0"/>
+    </font>
+  </family>

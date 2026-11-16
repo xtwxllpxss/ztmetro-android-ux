@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ztmetro SystemUI RRO — dimensions.
+  Every name below is verified to exist at LineageOS/android_frameworks_base
+  lineage-23.2 (tree c8a86627…) in packages/SystemUI/res/values/ ; the exact
+  file:line and the old value are recorded in evidence/sysui-rro/REPORT.md.
+  Values are Metro tokens from design/tokens/ztmetro.tokens.json (corner_radius_dp 0,
+  tile_gap 7, action_centre_gap 3, body type 13sp).
+-->
+<resources>
+
+    <!-- QS tiles: square, tighter Metro grid. Consumers in QSTileViewImpl.kt,
+         TileLayout.java, qs panels Compose. -->
+    <dimen name="qs_corner_radius">0dp</dimen>
+    <dimen name="qs_tile_height">68dp</dimen>
+    <dimen name="qs_tile_padding">10dp</dimen>
+    <dimen name="qs_tile_start_padding">12dp</dimen>
+    <dimen name="qs_tile_margin_horizontal">4dp</dimen>
+    <dimen name="qs_tile_margin_vertical">4dp</dimen>
+    <dimen name="qs_tile_text_size">13sp</dimen>
+
+    <!-- Notification cards / media containers: square. -->
+    <dimen name="notification_corner_radius">0dp</dimen>
+    <dimen name="notification_corner_radius_small">0dp</dimen>
+
+    <!-- 2025 shade panel radius. NOTE: at lineage-23.2 overlay_shade_panel_shape_radius
+         has no consumer in packages/SystemUI (grep: definition only) — kept at 0dp for
+         completeness; aux_… is the value it aliases. See REPORT.md "inert" rows. -->
+    <dimen name="overlay_shade_panel_shape_radius">0dp</dimen>
+    <dimen name="aux_spacing_overlay_panel_shape_radius">0dp</dimen>
+
+</resources>

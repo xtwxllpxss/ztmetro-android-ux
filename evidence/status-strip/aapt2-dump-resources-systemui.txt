@@ -1,0 +1,22 @@
+Binary APK
+Package name=org.ztos.overlay.status.systemui id=7f
+  type color id=01 entryCount=1
+    resource 0x7f010000 color/system_bar_background_opaque
+      () #ff000000
+  type dimen id=02 entryCount=4
+    resource 0x7f020000 dimen/status_bar_icon_drawing_alpha
+      () 0.700000%
+    resource 0x7f020001 dimen/status_bar_icon_drawing_size
+      () 13.000000dp
+    resource 0x7f020002 dimen/status_bar_padding_start
+      () 8.000000dp
+    resource 0x7f020003 dimen/status_bar_padding_top
+      () 2.000000dp
+  type style id=03 entryCount=1
+    resource 0x7f030000 style/TextAppearance.StatusBar.Default
+      () (style) size=5
+        0x01010095=12.000000sp
+        0x01010097=0x00000000
+        0x01010098=#ffffffff
+        0x010103ac="sans-serif-light"
+        0x010104b6=0.000000e+00
