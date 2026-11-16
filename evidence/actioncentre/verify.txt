@@ -22,13 +22,15 @@ PASS  accessibility config: TYPE_WINDOW_STATE_CHANGED only
 PASS  accessibility config: generic feedback
 PASS  accessibility config: retrieve windows + report view ids
 PASS  accessibility config: can retrieve window content
-PASS  accessibility config: SystemUI package filter
+PASS  accessibility config: all-package events for foreground tracking
+PASS  accessibility config: no package filter (needs previous app)
 PASS  accessibility config: human description reference
 PASS  accessibility description string
 PASS  launcher is not HOME
 PASS  no BLUETOOTH_CONNECT (dangerous) requested
 PASS  dexdump lists ShadeBridgeService
 PASS  dexdump lists onAccessibilityEvent callback
+PASS  dexdump lists geometry detector
 PASS  no androidx in classes.dex
 PASS  class ActionCentreActivity in dex
 PASS  class ActionCentreListener in dex

@@ -51,10 +51,12 @@ Set `ACTIONCENTRE_REMOTE` to use another build host. On a Linux host that has
 
 The panel offers `ВКЛЮЧИТЬ ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ` under the links row. It opens
 `Настройки → Специальные возможности`; the user enables **ztMetro Action Centre**.
-The service sees only SystemUI window-state events; when the shade appears it sends
-BACK and starts this panel 100 ms later. With the service off nothing changes in the
-shade path. See `../evidence/actioncentre/SHADE-BRIDGE.md` for the exact filter,
-logcat lines, the expected 100–300 ms flicker and the rollback.
+Detection is by geometry, not class name: the SystemUI window covering ≥85 % of the
+display is the shade (the device reports it as `android.widget.FrameLayout`); the small
+status-bar window is ignored. The service then sends BACK and starts this panel 100 ms
+later. With the service off nothing changes in the shade path. See
+`../evidence/actioncentre/SHADE-BRIDGE.md` for the exact filter, logcat lines, the
+expected 100–300 ms flicker and the rollback.
 
 ## Honest capability boundary
 

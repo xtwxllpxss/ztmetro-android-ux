@@ -178,6 +178,14 @@ verify_apk() {
             failed=1
         fi
     }
+    check_absent() { # description haystack needle
+        if printf '%s\n' "$2" | grep -qF -- "$3"; then
+            printf 'FAIL  %s\n' "$1" >> "$CHECKS"
+            failed=1
+        else
+            printf 'PASS  %s\n' "$1" >> "$CHECKS"
+        fi
+    }
     check "package is org.ztmetro.actioncentre" "$badging" \
         "package: name='org.ztmetro.actioncentre'"
     check "application label present" "$badging" "application-label:"
@@ -219,8 +227,10 @@ verify_apk() {
         "accessibilityFlags[^=]*=0x0*51([[:space:]]|$)"
     check_re "accessibility config: can retrieve window content" "$shade_xml" \
         "canRetrieveWindowContent[^=]*=true([[:space:]]|$)"
-    check "accessibility config: SystemUI package filter" "$shade_xml" \
-        '"com.android.systemui"'
+    check "accessibility config: all-package events for foreground tracking" \
+        "$shade_xml" "accessibilityEventTypes"
+    check_absent "accessibility config: no package filter (needs previous app)" \
+        "$shade_xml" "android:packageNames"
     check "accessibility config: human description reference" "$shade_xml" \
         "description(0x01010020)=@0x7f"
     check "accessibility description string" "$resources" "shade_bridge_description"
@@ -251,6 +261,12 @@ verify_apk() {
         printf 'PASS  dexdump lists onAccessibilityEvent callback\n' >> "$CHECKS"
     else
         printf 'FAIL  dexdump lists onAccessibilityEvent callback\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -qF "findFullscreenSystemUiWindow" "$EVID/dexdump-classes.txt"; then
+        printf 'PASS  dexdump lists geometry detector\n' >> "$CHECKS"
+    else
+        printf 'FAIL  dexdump lists geometry detector\n' >> "$CHECKS"
         failed=1
     fi
     if grep -aq "androidx" "$BUILD/verify.dex"; then

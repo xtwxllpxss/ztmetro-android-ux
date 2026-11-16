@@ -8,7 +8,7 @@
          label exactly "ztMetro Action Centre": the documented enable path and
          the evidence report refer to it. -->
     <string name="shade_bridge_name">ztMetro Action Centre</string>
-    <string name="shade_bridge_description">Заменяет системную шторку панелью Центра действий: при появлении шторки сворачивает её и открывает панель. Служба видит только окна системного интерфейса и нажимает «Назад»; данные не покидают устройство.</string>
+    <string name="shade_bridge_description">Заменяет системную шторку панелью Центра действий: распознаёт шторку по размеру окна, сворачивает её и открывает панель. Служба отслеживает только смену окон и не читает их содержимое.</string>
     <string name="gesture_enable">ВКЛЮЧИТЬ ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ</string>
     <string name="gesture_enabled">ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ ВКЛЮЧЁН</string>
     <string name="gesture_enable_hint">Специальные возможности → ztMetro Action Centre</string>

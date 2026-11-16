@@ -10,13 +10,13 @@ Android 16, 720x1280 @ 320 dpi (360x640 dp) · Package: `org.ztmetro.actioncentr
 |---|---|
 | APK | `repo/evidence/actioncentre/ztmetro-actioncentre.apk` (build output: `repo/actioncentre/build/out/ztmetro-actioncentre.apk`) |
 | size | **300 525 bytes (293.5 KiB)** — limit 2 MiB |
-| sha256 | `a21e4ab0750660f93fee8ea7582682f540f24f5d4478d3e6f2bd948467f952bf` |
+| sha256 | `ecf690478b7dc22e3936844f613489fcda0dc91d12f56e81589ce61699c6a778` |
 | package / version | `org.ztmetro.actioncentre`, versionCode 1 / versionName 1.0 |
 | SDK | minSdk 29, targetSdk 36, compileSdk 36 |
 | signer | v3 signature, throwaway RSA-2048 key generated under `actioncentre/build/keystore/` (gitignored) |
 | build | `repo/scripts/build-actioncentre.sh`: rsync to `hermes-ubuntu` (this run: `~/ztux/actbridge`), then plain `aapt2` + `javac` (Java 8 bytecode, JDK 17) + `d8 --min-api 29` + `zipalign` + `apksigner`. No Gradle, no AndroidX, no network. |
 
-Static checks that passed (full log: `verify.txt`, 42 PASS / 0 FAIL):
+Static checks that passed (full log: `verify.txt`, 44 PASS / 0 FAIL):
 
 - package name, application label `Центр действий`, launcher activity
   `org.ztmetro.actioncentre.ActionCentreActivity`, minSdk 29 / targetSdk 36;
@@ -26,8 +26,11 @@ Static checks that passed (full log: `verify.txt`, 42 PASS / 0 FAIL):
 - **accessibility bridge** `.ShadeBridgeService` with
   `android.permission.BIND_ACCESSIBILITY_SERVICE`, the
   `android.accessibilityservice.AccessibilityService` action and the
-  `res/xml/shade_bridge.xml` config (window-state events only, SystemUI only,
-  `flagRetrieveInteractiveWindows|flagReportViewIds`); see
+  `res/xml/shade_bridge.xml` config (window-state events only, no package filter
+  so the previous foreground app can be tracked,
+  `flagRetrieveInteractiveWindows|flagReportViewIds`; the shade is detected by
+  window type + ≥85 % display coverage, **not** by class name — on the device it
+  reports as `android.widget.FrameLayout`); see
   [`SHADE-BRIDGE.md`](SHADE-BRIDGE.md);
 - `.TileAlias` activity-alias present and exported;
 - permissions: `CAMERA`, `WRITE_SETTINGS`, `ACCESS_WIFI_STATE`,
@@ -212,12 +215,15 @@ the panel afterwards — `requestRebind` runs on start/resume.
    rebuild re-signs with a new key (fine for sideload, not for Play updates).
 8. **No new tests** were added (per project rules); this report is build +
    static-manifest evidence, not a runtime acceptance.
-9. **Shade bridge is unproven on device.** The event filter is grounded in the live
-   SystemUI APK (`com.android.systemui.shade.NotificationShadeWindowView`), but the
-   actual event delivery, the 100 ms window and background activity start must be
-   confirmed with `adb logcat -s ShadeBridge:V`. Expected flicker 100–300 ms; a single
-   BACK could reach the underlying app if the shade is already gone. See
-   [`SHADE-BRIDGE.md`](SHADE-BRIDGE.md) §5–6.
+9. **Shade bridge detection changed after the device log.** The device showed the shade
+   window as `android.widget.FrameLayout`, so the class-name filter was replaced by
+   geometry: the SystemUI window covering ≥85 % of the display is treated as the shade,
+   small status-bar windows are ignored, and non-SystemUI window-state events are used
+   only to remember the previous foreground package. A full-screen non-shade SystemUI
+   surface could pass the test; the window title is logged for diagnosis. The 100 ms
+   window and background activity start still need `adb logcat -s ShadeBridge:V`.
+   Expected flicker 100–300 ms; a single BACK could reach the underlying app if the shade
+   is already gone. See [`SHADE-BRIDGE.md`](SHADE-BRIDGE.md) §4–6.
 10. **Gesture row is a new visual element** under the WP8.1 links row. It was not in
     the reference frame; if it reads as chrome at acceptance, hide it when the bridge
     is on (it already dims to 50 % white and changes label).
