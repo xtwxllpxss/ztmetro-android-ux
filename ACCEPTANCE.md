@@ -195,3 +195,31 @@ because it may deploy another commit's artifacts ([docs/25](docs/25-conductor.md
 - **No deployed-artifact consistency.** The tree was rebuilt after 15:58 (overlays 16:44, AC 349 900 B); those bytes were not installed or verified (§4). The 40 %-window strip rework is not the build that produced the working panel.
 - **No long-run data.** One PSS/jank/PSI sample on one boot; no lmkd-kill, battery, thermal or multi-hour test. PSS is per-process TOTAL, not additive.
 - **No git commit/push.** This pass only added `repo/ACCEPTANCE.md`; nothing was published.
+
+## End-to-end scenario recording
+
+- Video: [`evidence/scenario/e2e-20261116.mp4`](evidence/scenario/e2e-20261116.mp4) (22 s)
+- Contact sheet: [`evidence/scenario/e2e-sheet.png`](evidence/scenario/e2e-sheet.png)
+
+The recording walks Start -> an app (Calculator tile) -> top-edge gesture -> Metro
+Action Centre over the stock shade -> back to the app -> Settings -> a sub-screen ->
+lock/unlock. The Metro Action Centre frames and the Settings frames are included, so
+the same accent and typography are visible across the launcher, the panel and Settings.
+
+## Verification status (latest runs)
+
+| run | result |
+|---|---|
+| 2026-11-16 17:32 full | **28 / 28 PASS** |
+| 2026-11-16 17:48 full | **28 / 28 PASS** |
+
+## Shade gesture: what is and is not achieved
+
+The strip opens the Metro panel on `ACTION_DOWN` (no `GLOBAL_ACTION_BACK`, no stock
+shade in that path). The stock shade can still paint for ~100-300 ms because
+`DisplayPolicy` reroutes a `SWIPE_FROM_TOP` gesture to the status bar window via
+`WindowState#transferTouch()`. The LSPosed module `org.ztmetro.shadehook` carries the
+fix for that reroute, but on this ROM it loads only into SystemUI, not into
+`system_server`, and the SystemUI fallback target
+(`NotificationPanelViewController#onPanelStateChanged`) is not declared on the class in
+this build. Both are recorded as open items, not as delivered behaviour.
