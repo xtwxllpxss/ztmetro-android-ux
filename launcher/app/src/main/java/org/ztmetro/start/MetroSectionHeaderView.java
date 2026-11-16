@@ -2,6 +2,7 @@ package org.ztmetro.start;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.text.TextPaint;
 import android.view.View;

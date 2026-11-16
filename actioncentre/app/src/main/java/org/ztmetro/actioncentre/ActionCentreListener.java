@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.app.PendingIntent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.service.notification.NotificationListenerService;
@@ -124,6 +125,18 @@ public class ActionCentreListener extends NotificationListenerService {
                 sub = extras.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE);
             }
             String sender = sub == null || sub.length() == 0 ? app : sub.toString();
+            PendingIntent actionIntent = null;
+            String actionTitle = "";
+            // Fallback for the rare notification without a content intent:
+            // the first action is the most useful tap target.
+            if (notification.actions != null && notification.actions.length > 0) {
+                Notification.Action first = notification.actions[0];
+                if (first != null && first.actionIntent != null) {
+                    actionIntent = first.actionIntent;
+                    CharSequence actionLabel = first.title;
+                    actionTitle = actionLabel == null ? "" : actionLabel.toString();
+                }
+            }
             return new Notif(
                     sbn.getKey(),
                     sbn.getPackageName(),
@@ -132,7 +145,9 @@ public class ActionCentreListener extends NotificationListenerService {
                     title == null ? "" : title.toString(),
                     text == null ? "" : text.toString(),
                     sbn.getPostTime(),
-                    notification.contentIntent);
+                    notification.contentIntent,
+                    actionIntent,
+                    actionTitle);
         } catch (Throwable ignored) {
             return null;
         }
@@ -195,13 +210,17 @@ public class ActionCentreListener extends NotificationListenerService {
         return true;
     }
 
-    static void cancelKey(String key) {
+    /** Returns true only when the listener is bound and the cancel call succeeded. */
+    static boolean cancelKey(String key) {
         ActionCentreListener service = instance;
-        if (service != null && key != null) {
-            try {
-                service.cancelNotification(key);
-            } catch (Throwable ignored) {
-            }
+        if (service == null || key == null) {
+            return false;
+        }
+        try {
+            service.cancelNotification(key);
+            return true;
+        } catch (Throwable ignored) {
+            return false;
         }
     }
 }

@@ -2,6 +2,7 @@ package org.ztmetro.actioncentre;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -17,9 +18,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.VelocityTracker;
 import android.view.ViewConfiguration;
 import android.view.Window;
 import android.view.WindowInsets;
@@ -47,6 +50,13 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
      */
     public static final String EXTRA_INSTANT = "extra_instant";
 
+    static final String TAG = "ActionCentre";
+
+    /** Swipe up this far on the panel and it closes (the spec's 60 dp). */
+    private static final int CLOSE_DRAG_DP = 60;
+    /** A faster upward flick also closes; 1200 dp/s at 320 dpi is 2400 px/s. */
+    private static final int CLOSE_FLING_DP_PER_S = 1200;
+
     private static final int REQ_CAMERA = 41;
 
     private static final int TILE_WIFI = 0;
@@ -65,7 +75,13 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
     private QuickGrid grid;
     private ScrollView scroll;
     private LinearLayout notificationList;
+    private View statusStrip;
     private TextView gestureLink;
+    private VelocityTracker closeVelocity;
+    private float closeDownRawY;
+    private boolean closeGestureArmed;
+    private boolean closeGestureDone;
+    private int closeFlingPxPerS;
     private CameraManager cameraManager;
     private CameraManager.TorchCallback torchCallback;
     private boolean torchCallbackRegistered;
@@ -108,6 +124,8 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
         // the global status-strip overlay so it does not add a second row.
         StatusStripService.setPanelVisible(this, true);
         touchSlop = ViewConfiguration.get(this).getScaledTouchSlop();
+        closeFlingPxPerS = Math.round(CLOSE_FLING_DP_PER_S
+                * getResources().getDisplayMetrics().density);
         // Our own 260 ms travel replaces the window animation, so it can follow
         // Settings.Global.ANIMATOR_DURATION_SCALE and the handle drag.
         suppressWindowAnimation();
@@ -131,6 +149,129 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
     @Override
     public void onBackPressed() {
         finish();
+    }
+
+    /**
+     * Swipe-up-to-close, observed before any child gets the gesture. Nothing is
+     * consumed here: the notification list must keep scrolling and rows must
+     * keep tapping/swiping exactly as before. The gesture is only armed where a
+     * vertical scroll cannot happen anyway:
+     *
+     * <ul>
+     *   <li>on our own top status strip (never scrollable), or</li>
+     *   <li>over the list when it is at the top and has nothing left to scroll
+     *       (short list) or the finger is on the empty tail below the last row.</li>
+     * </ul>
+     *
+     * A downward scroll (finger up) inside a scrollable list therefore stays a
+     * scroll; a 60 dp upward drag or an upward fling closes the panel with the
+     * normal 220 ms slide-down. The bottom handle keeps its own 1:1 drag.
+     */
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        trackCloseGesture(event);
+        return super.dispatchTouchEvent(event);
+    }
+
+    private void trackCloseGesture(MotionEvent event) {
+        if (event == null || closing) {
+            return;
+        }
+        float density = getResources().getDisplayMetrics().density;
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                closeGestureDone = false;
+                closeGestureArmed = isCloseGestureStart(event);
+                recycleCloseVelocity();
+                if (!closeGestureArmed) {
+                    return;
+                }
+                closeDownRawY = event.getRawY();
+                closeVelocity = VelocityTracker.obtain();
+                closeVelocity.addMovement(event);
+                return;
+            case MotionEvent.ACTION_MOVE:
+                if (!closeGestureArmed || closeGestureDone) {
+                    return;
+                }
+                if (closeVelocity != null) {
+                    closeVelocity.addMovement(event);
+                }
+                float draggedUp = closeDownRawY - event.getRawY();
+                if (draggedUp > CLOSE_DRAG_DP * density) {
+                    closeGestureDone = true;
+                    triggerSwipeClose("drag up " + Math.round(draggedUp / density) + " dp");
+                }
+                return;
+            case MotionEvent.ACTION_UP:
+                if (closeGestureArmed && !closeGestureDone && closeVelocity != null) {
+                    closeVelocity.addMovement(event);
+                    closeVelocity.computeCurrentVelocity(1000);
+                    float upward = -closeVelocity.getYVelocity();
+                    if (upward > closeFlingPxPerS) {
+                        closeGestureDone = true;
+                        triggerSwipeClose("fling up " + Math.round(upward) + " px/s");
+                    }
+                }
+                closeGestureArmed = false;
+                recycleCloseVelocity();
+                return;
+            case MotionEvent.ACTION_CANCEL:
+                closeGestureArmed = false;
+                recycleCloseVelocity();
+                return;
+            default:
+        }
+    }
+
+    /**
+     * True only where an upward drag cannot be a list scroll (see
+     * {@link #trackCloseGesture(MotionEvent)}). The handle is excluded so its
+     * 1:1 drag is not fought by the close animation.
+     */
+    private boolean isCloseGestureStart(MotionEvent event) {
+        if (root == null || scroll == null || notificationList == null) {
+            return false;
+        }
+        float y = event.getRawY();
+        int[] location = new int[2];
+        if (statusStrip != null && statusStrip.getVisibility() == View.VISIBLE) {
+            statusStrip.getLocationOnScreen(location);
+            if (y >= location[1] && y < location[1] + statusStrip.getHeight()) {
+                return true;
+            }
+        }
+        if (scroll.getScrollY() != 0) {
+            return false;
+        }
+        scroll.getLocationOnScreen(location);
+        int scrollTop = location[1];
+        if (y < scrollTop || y >= scrollTop + scroll.getHeight()) {
+            return false;
+        }
+        notificationList.getLocationOnScreen(location);
+        if (y > location[1] + notificationList.getHeight()) {
+            // Empty tail under the last row: nothing to grab, so close.
+            return true;
+        }
+        return !scroll.canScrollVertically(View.FOCUS_DOWN);
+    }
+
+    private void triggerSwipeClose(String reason) {
+        if (closing) {
+            return;
+        }
+        Log.i(TAG, "swipe-up close: " + reason + " (threshold " + CLOSE_DRAG_DP + " dp / "
+                + CLOSE_FLING_DP_PER_S + " dp/s); sliding panel down "
+                + Motion.ms(this, Motion.SHADE_CLOSE_MS) + " ms");
+        finish();
+    }
+
+    private void recycleCloseVelocity() {
+        if (closeVelocity != null) {
+            closeVelocity.recycle();
+            closeVelocity = null;
+        }
     }
 
     @Override
@@ -173,6 +314,7 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
     @Override
     protected void onDestroy() {
         handler.removeCallbacksAndMessages(null);
+        recycleCloseVelocity();
         if (torchCallbackRegistered && cameraManager != null && torchCallback != null) {
             try {
                 cameraManager.unregisterTorchCallback(torchCallback);
@@ -338,7 +480,8 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
         column.setOrientation(LinearLayout.VERTICAL);
         column.setBackgroundColor(U.BLACK);
 
-        column.addView(new StatusStripView(this),
+        statusStrip = new StatusStripView(this);
+        column.addView(statusStrip,
                 new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT));
 
@@ -392,6 +535,9 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getActionMasked()) {
                     case MotionEvent.ACTION_DOWN:
+                        // Take over from an in-flight open/snap animation so the
+                        // handle tracks the finger 1:1 from the first pixel.
+                        root.animate().cancel();
                         dragStartY = event.getRawY();
                         dragStartTranslation = root.getTranslationY();
                         dragging = false;
@@ -887,21 +1033,83 @@ public class ActionCentreActivity extends Activity implements NotificationRowVie
         }
     }
 
+    /**
+     * A row tap. The notification's contentIntent is sent with an explicit
+     * NEW_TASK fill-in intent: the PendingIntent was created by the posting app
+     * and may target an activity that is not in this app's task, so without the
+     * flag the launch can be dropped (the reported "tap does nothing"). Every
+     * branch logs; the panel only closes when the intent was actually sent.
+     */
     @Override
     public void onOpen(Notif notif) {
-        if (notif.contentIntent != null) {
-            try {
-                notif.contentIntent.send();
-            } catch (Throwable ignored) {
-            }
+        if (notif == null) {
+            return;
         }
+        if (notif.contentIntent == null && notif.actionIntent == null) {
+            Log.w(TAG, "tap key=" + notif.key
+                    + ": no contentIntent and no action; ignoring tap (panel stays)");
+            return;
+        }
+        boolean sent = false;
+        String source = null;
+        if (notif.contentIntent != null) {
+            source = "contentIntent";
+            sent = sendNotificationIntent(notif, notif.contentIntent, source);
+        }
+        if (!sent && notif.actionIntent != null) {
+            if (notif.contentIntent == null) {
+                Log.i(TAG, "tap key=" + notif.key
+                        + ": contentIntent is null; falling back to action[0]"
+                        + (notif.actionTitle.length() == 0 ? "" : " '" + notif.actionTitle + "'"));
+            } else {
+                Log.w(TAG, "tap key=" + notif.key
+                        + ": contentIntent failed; falling back to action[0]");
+            }
+            source = notif.actionTitle.length() == 0 ? "action[0]"
+                    : "action[0] '" + notif.actionTitle + "'";
+            sent = sendNotificationIntent(notif, notif.actionIntent, source);
+        }
+        if (!sent) {
+            Log.w(TAG, "tap key=" + notif.key
+                    + ": delivery failed; leaving panel open (use the row X to dismiss)");
+            return;
+        }
+        Log.i(TAG, "tap key=" + notif.key + " via " + source + ": closing panel");
         finish();
+    }
+
+    private boolean sendNotificationIntent(Notif notif, PendingIntent pendingIntent,
+                                           String source) {
+        try {
+            pendingIntent.send(this, 0,
+                    new Intent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            Log.i(TAG, "tap key=" + notif.key + " via " + source + ": send ok");
+            return true;
+        } catch (PendingIntent.CanceledException e) {
+            Log.w(TAG, "tap key=" + notif.key + " via " + source
+                    + ": send failed: canceled (" + e.getMessage() + ")");
+        } catch (Throwable t) {
+            Log.w(TAG, "tap key=" + notif.key + " via " + source
+                    + ": send failed: " + t);
+        }
+        return false;
     }
 
     @Override
     public void onDismiss(Notif notif) {
-        ActionCentreListener.cancelKey(notif.key);
+        if (notif == null) {
+            return;
+        }
+        boolean cancelled = ActionCentreListener.cancelKey(notif.key);
         NotificationRepository.removeKey(notif.key);
+        if (cancelled) {
+            Log.i(TAG, "dismiss key=" + notif.key
+                    + ": cancelNotification ok; row removed");
+        } else {
+            Log.w(TAG, "dismiss key=" + notif.key
+                    + ": cancelNotification failed (listener absent or cancel threw);"
+                    + " row removed optimistically");
+        }
     }
 
     private void toast(int stringRes) {

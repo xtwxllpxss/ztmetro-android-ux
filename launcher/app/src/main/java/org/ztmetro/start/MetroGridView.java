@@ -127,10 +127,14 @@ final class MetroGridView extends ViewGroup implements MetroTileView.Listener {
         }
         // ztmetro.c:3266-3269: gutter = round(width * 0.02),
         // margin = 2 * gutter, unit = (width - 2*margin - 5*gutter) / 6.
-        // At the 360dp reference this is exactly the 7/14/49.5 tokens; on the
-        // 432dp ugglite panel it becomes 9/18/58.5 instead of stretching the
-        // 360dp values and drifting off the mockup's proportion.
-        gapPx = Math.max(1, Math.round(width * 0.02f));
+        // The C rounds in dp, so do the same: at the 360dp reference this is
+        // exactly the 7/14/49.5 tokens; at the ugglite's 443dp panel it is
+        // 9/18/60.3 instead of stretching the 360dp values (63.4) off the
+        // mockup's proportion.
+        float density = getResources().getDisplayMetrics().density;
+        int widthDp = Math.round(width / density);
+        int gutterDp = Math.max(1, Math.round(widthDp * 0.02f));
+        gapPx = Math.round(gutterDp * density);
         marginPx = 2 * gapPx;
         int available = width - 2 * marginPx - (columns - 1) * gapPx;
         unitPx = Math.max(1f, available / (float) columns);

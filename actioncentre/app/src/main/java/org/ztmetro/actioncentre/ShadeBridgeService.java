@@ -59,6 +59,14 @@ public class ShadeBridgeService extends AccessibilityService {
     private static final long POLL_INTERVAL_MS = 50L;
     /** Wait at most this long for the shade window; then start the panel anyway. */
     private static final long BACK_WAIT_MAX_MS = 250L;
+    /**
+     * Panel-first mechanism (strip present): give the panel this long to draw
+     * its first frame under the shade, then send the one allowed BACK if the
+     * shade is still on screen.
+     */
+    private static final long BACK_AFTER_START_MS = 120L;
+    /** How long the shade-gone timeline is followed after BACK #1 (log only). */
+    private static final long SHADE_SETTLE_MAX_MS = 700L;
     /** Transparent touch strip over the status bar (MetroWinLauncher's A1 trick). */
     private static final int STRIP_HEIGHT_DP = 24;
     /** A downward drag further than this in the strip opens the panel. */
@@ -89,9 +97,18 @@ public class ShadeBridgeService extends AccessibilityService {
     /** ztMetro lock screen over the keyguard; its windows live in its own class. */
     private LockOverlayController lockOverlay;
 
-    /** Detection -> panel-visible timing, shared with ActionCentreActivity. */
+    /**
+     * Exactly one BACK per trigger. In the panel-first path BACK comes after
+     * the panel has started; it is never sent twice.
+     */
+    private boolean backSent;
+    private static volatile boolean stripActive;
+
+    /** Detection -> panel-start -> BACK -> panel-visible timeline (log). */
     private static volatile long detectedAtUptime;
     private static volatile long detectedAtWall;
+    private static volatile long panelStartUptime;
+    private static volatile long backAtUptime;
     private static volatile boolean panelVisibleLogged;
     /** "detection" for the window-state fallback, "strip trigger" for the strip. */
     private static volatile String triggerLabel = "detection";
@@ -113,26 +130,35 @@ public class ShadeBridgeService extends AccessibilityService {
                 if (findFullscreenSystemUiWindow(collapseDisplay, false) == null) {
                     Log.i(TAG, "shade gone after " + elapsed
                             + " ms; starting Action Centre");
-                    startPanel();
+                    startPanel("shade window gone after BACK #1");
                     return;
                 }
                 if (elapsed >= BACK_WAIT_MAX_MS) {
                     Log.i(TAG, "shade still visible at " + elapsed
                             + " ms; starting Action Centre anyway");
-                    startPanel();
+                    startPanel("shade still visible at " + BACK_WAIT_MAX_MS + " ms cap");
                     return;
                 }
                 handler.postDelayed(this, POLL_INTERVAL_MS);
             } catch (Throwable t) {
                 Log.w(TAG, "collapse poll failed", t);
-                startPanel();
+                startPanel("collapse poll failed");
             }
         }
     };
 
-    /** Starts the panel once; no BACK is ever sent from here or later. */
-    private void startPanel() {
+    /**
+     * Starts the panel (instant, NEW_TASK). Called before BACK in the strip
+     * path, so the panel is already drawn under the closing shade.
+     */
+    private void startPanel(String reason) {
         handler.removeCallbacks(collapsePoll);
+        panelStartUptime = SystemClock.uptimeMillis();
+        long elapsed = detectedAtUptime == 0 ? 0
+                : panelStartUptime - detectedAtUptime;
+        Log.i(TAG, "panel start at " + elapsed + " ms (" + reason + "); strip="
+                + (stripActive ? "present" : "absent")
+                + ", instant=true, NEW_TASK");
         try {
             Intent intent = new Intent(ShadeBridgeService.this,
                     ActionCentreActivity.class);
@@ -188,12 +214,14 @@ public class ShadeBridgeService extends AccessibilityService {
             if (isKeyguardLocked()) {
                 setStripTouchable(false);
             }
+            stripActive = true;
             Log.i(TAG, "strip overlay added: " + STRIP_HEIGHT_DP
                     + " dp at top, TYPE_ACCESSIBILITY_OVERLAY");
         } catch (Throwable t) {
             Log.w(TAG, "strip overlay not available", t);
             stripView = null;
             stripParams = null;
+            stripActive = false;
         }
     }
 
@@ -215,6 +243,7 @@ public class ShadeBridgeService extends AccessibilityService {
         }
         stripView = null;
         stripParams = null;
+        stripActive = false;
     }
 
     /** The strip must not eat the lock screen's top edge. */
@@ -282,7 +311,7 @@ public class ShadeBridgeService extends AccessibilityService {
             panelVisibleLogged = false;
             triggerLabel = "strip trigger";
             Log.i(TAG, "strip " + gesture + ": opening Action Centre (instant)");
-            startPanel();
+            startPanel("strip " + gesture);
         } catch (Throwable t) {
             Log.w(TAG, "strip open failed", t);
         }
