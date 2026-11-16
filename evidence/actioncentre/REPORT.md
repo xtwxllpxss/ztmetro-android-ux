@@ -10,13 +10,13 @@ Android 16, 720x1280 @ 320 dpi (360x640 dp) · Package: `org.ztmetro.actioncentr
 |---|---|
 | APK | `repo/evidence/actioncentre/ztmetro-actioncentre.apk` (build output: `repo/actioncentre/build/out/ztmetro-actioncentre.apk`) |
 | size | **304 621 bytes (297.5 KiB)** — limit 2 MiB |
-| sha256 | `f1cc744b7efb28b27157dcf3e14b49514d7f2d64207d9b500c105f57058274c5` |
+| sha256 | `2cc128455fba0e06af4a6bf372eb0a0225800193a3fcf1e1a4b596e700b55fa5` |
 | package / version | `org.ztmetro.actioncentre`, versionCode 1 / versionName 1.0 |
 | SDK | minSdk 29, targetSdk 36, compileSdk 36 |
 | signer | v3 signature, throwaway RSA-2048 key generated under `actioncentre/build/keystore/` (gitignored) |
 | build | `repo/scripts/build-actioncentre.sh`: rsync to `hermes-ubuntu` (this run: `~/ztux/actbridge`), then plain `aapt2` + `javac` (Java 8 bytecode, JDK 17) + `d8 --min-api 29` + `zipalign` + `apksigner`. No Gradle, no AndroidX, no network. |
 
-Static checks that passed (full log: `verify.txt`, 48 PASS / 0 FAIL):
+Static checks that passed (full log: `verify.txt`, 50 PASS / 0 FAIL):
 
 - package name, application label `Центр действий`, launcher activity
   `org.ztmetro.actioncentre.ActionCentreActivity`, minSdk 29 / targetSdk 36;
@@ -28,12 +28,14 @@ Static checks that passed (full log: `verify.txt`, 48 PASS / 0 FAIL):
   `android.accessibilityservice.AccessibilityService` action and the
   `res/xml/shade_bridge.xml` config (window-state events only, no package filter
   so the previous foreground app can be tracked,
-  `flagRetrieveInteractiveWindows|flagReportViewIds`; the shade is detected by
-  window type + ≥85 % display coverage, **not** by class name — on the device it
-  reports as `android.widget.FrameLayout`). BACK #1 is immediate and is the only
-  BACK; the service polls the full-screen SystemUI window for up to 250 ms and
-  starts the activity with `extra_instant=true` when it is gone or at the cap
-  (open travel skipped); see [`SHADE-BRIDGE.md`](SHADE-BRIDGE.md);
+  `flagRetrieveInteractiveWindows|flagReportViewIds`). The common path is a
+  **24 dp transparent `TYPE_ACCESSIBILITY_OVERLAY` strip** above the status bar:
+  a top-edge drag/tap is consumed there, so the stock shade never opens. The
+  window-state path remains as fallback (geometry, not class name: the device
+  reports `android.widget.FrameLayout`): one BACK, poll the full-screen SystemUI
+  window up to 250 ms, then start the activity with `extra_instant=true` when it
+  is gone or at the cap (open travel skipped); see
+  [`SHADE-BRIDGE.md`](SHADE-BRIDGE.md);
 - `.TileAlias` activity-alias present and exported;
 - permissions: `CAMERA`, `WRITE_SETTINGS`, `ACCESS_WIFI_STATE`,
   `ACCESS_NETWORK_STATE` only; **no** `BLUETOOTH_CONNECT`, no location, no
@@ -176,12 +178,14 @@ the panel afterwards — `requestRebind` runs on start/resume.
   and airplane-mode writes are privileged or removed; reflection into hidden
   APIs is unstable and would still require system/root. The tiles open the
   matching system panel/page and show the state the platform exposes.
-- **Being the shade**: this is a task activity, not SystemUI. With the accessibility
-  bridge enabled the system shade gesture is converted into this panel (see
-  [`SHADE-BRIDGE.md`](SHADE-BRIDGE.md)), but the stock shade still paints for the
-  100–300 ms it takes to collapse it, it is not the lock-screen shade, and with the
-  bridge off the stock shade is the fallback. Zero-flicker needs a SystemUI hook
-  (level C/D in `design/components/action-centre.md`), not this APK.
+- **Being the shade**: this is a task activity, not SystemUI. The accessibility
+  bridge owns the top 24 dp with a `TYPE_ACCESSIBILITY_OVERLAY` strip, so the
+  top-edge gesture opens the panel without SystemUI ever drawing the stock shade
+  (see [`SHADE-BRIDGE.md`](SHADE-BRIDGE.md)). A swipe starting below the strip,
+  the lock screen and adb-triggered shades still use the one-BACK fallback, and
+  with the bridge off the stock shade is the fallback. It is still not the
+  lock-screen shade; a genuinely different shade would need a SystemUI hook
+  (level C/D in `design/components/action-centre.md`).
 - **Self-granting the listener**: `BIND_NOTIFICATION_LISTENER_SERVICE` is held by
   the system; only the user (or adb/shell on a debuggable build) can enable it.
 - **Reading Bluetooth state reliably**: `BLUETOOTH_CONNECT` is dangerous and was
@@ -217,21 +221,17 @@ the panel afterwards — `requestRebind` runs on start/resume.
    rebuild re-signs with a new key (fine for sideload, not for Play updates).
 8. **No new tests** were added (per project rules); this report is build +
    static-manifest evidence, not a runtime acceptance.
-9. **Shade bridge detection changed after the device log.** The device showed the shade
-   window as `android.widget.FrameLayout`, so the class-name filter was replaced by
-   geometry: the SystemUI window covering ≥85 % of the display is treated as the shade,
-   small status-bar windows are ignored, and non-SystemUI window-state events are used
-   only to remember the previous foreground package. The first device run showed the
-   panel starting while the shade was still opening; a 600 ms poll then kept the stock
-   shade on screen for half a second, and a later second BACK dismissed the panel once
-   it had focus. Current sequencing: exactly one BACK immediately, then a poll every
-   50 ms for at most 250 ms; the panel starts with `extra_instant=true` when the
-   full-screen SystemUI window is gone or at the cap, and no BACK is ever sent after
-   that (build-enforced single `performGlobalAction` call). The `panel visible` line
-   records the detection → visible wall-clock delta. A full-screen non-shade SystemUI
-   surface could pass the geometry test; the window title is logged for diagnosis.
-   This timing still needs device confirmation with `adb logcat -s ShadeBridge:V`. See
-   [`SHADE-BRIDGE.md`](SHADE-BRIDGE.md) §4–6.
+9. **Shade bridge moved to a top-edge accessibility overlay.** The device showed the
+   shade window as `android.widget.FrameLayout` (geometry fallback) and, later, that a
+   second BACK dismissed the panel once it had focus. Current design: a 24 dp
+   transparent `TYPE_ACCESSIBILITY_OVERLAY` strip consumes the top-edge gesture, so the
+   stock shade never opens on the common path; the geometry fallback remains for other
+   opens (one BACK, 50 ms poll, 250 ms cap, instant panel, no later BACK). Tap behaviour
+   changes: taps on the status strip open the panel instead of reaching clock/battery.
+   A swipe starting below the strip still hits the fallback (residual shade animation),
+   and the overlay may need a device check for touch delivery/keyguard gating. Verify
+   with `adb logcat -s ShadeBridge:V` and screenrecord. See
+   [`SHADE-BRIDGE.md`](SHADE-BRIDGE.md) §2, §5–7.
 10. **Gesture row is a new visual element** under the WP8.1 links row. It was not in
     the reference frame; if it reads as chrome at acceptance, hide it when the bridge
     is on (it already dims to 50 % white and changes label).

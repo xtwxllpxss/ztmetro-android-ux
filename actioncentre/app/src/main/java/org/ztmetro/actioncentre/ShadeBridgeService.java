@@ -60,7 +60,7 @@ public class ShadeBridgeService extends AccessibilityService {
     /** Wait at most this long for the shade window; then start the panel anyway. */
     private static final long BACK_WAIT_MAX_MS = 250L;
     /** Transparent touch strip over the status bar (MetroWinLauncher's A1 trick). */
-    private static final int STRIP_HEIGHT_DP = 20;
+    private static final int STRIP_HEIGHT_DP = 24;
     /** A downward drag further than this in the strip opens the panel. */
     private static final int STRIP_DRAG_DP = 24;
     /** Ignore strip touches while a panel launch is already in flight. */
@@ -85,6 +85,9 @@ public class ShadeBridgeService extends AccessibilityService {
     private KeyguardManager stripKeyguardManager;
     private KeyguardManager.KeyguardLockedStateListener stripKeyguardListener;
     private long lastStripOpenUptime;
+
+    /** ztMetro lock screen over the keyguard; its windows live in its own class. */
+    private LockOverlayController lockOverlay;
 
     /** Detection -> panel-visible timing, shared with ActionCentreActivity. */
     private static volatile long detectedAtUptime;
@@ -143,6 +146,200 @@ public class ShadeBridgeService extends AccessibilityService {
         }
     }
 
+    // ---- top-edge strip: the common path, before SystemUI sees the gesture ----
+
+    /**
+     * Adds a 20 dp full-width transparent window above the status bar. Because
+     * TYPE_ACCESSIBILITY_OVERLAY stacks above TYPE_STATUS_BAR, the top-edge
+     * swipe is delivered here instead of to SystemUI, so the stock shade never
+     * opens for the common gesture.
+     */
+    private void addStripOverlay() {
+        try {
+            removeStripOverlay();
+            stripWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+            if (stripWindowManager == null) {
+                return;
+            }
+            View view = new View(this);
+            view.setBackgroundColor(Color.TRANSPARENT);
+            WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    dpToPx(STRIP_HEIGHT_DP),
+                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                            | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                            | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                            | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    PixelFormat.TRANSPARENT);
+            params.gravity = Gravity.TOP | Gravity.START;
+            params.x = 0;
+            params.y = 0;
+            if (Build.VERSION.SDK_INT >= 28) {
+                params.layoutInDisplayCutoutMode =
+                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
+            }
+            params.setTitle("ztMetro Action Centre strip");
+            view.setOnTouchListener(stripTouchListener);
+            stripWindowManager.addView(view, params);
+            stripView = view;
+            stripParams = params;
+            watchStripKeyguard();
+            if (isKeyguardLocked()) {
+                setStripTouchable(false);
+            }
+            Log.i(TAG, "strip overlay added: " + STRIP_HEIGHT_DP
+                    + " dp at top, TYPE_ACCESSIBILITY_OVERLAY");
+        } catch (Throwable t) {
+            Log.w(TAG, "strip overlay not available", t);
+            stripView = null;
+            stripParams = null;
+        }
+    }
+
+    private void removeStripOverlay() {
+        try {
+            if (stripKeyguardManager != null && stripKeyguardListener != null
+                    && Build.VERSION.SDK_INT >= 33) {
+                stripKeyguardManager.removeKeyguardLockedStateListener(stripKeyguardListener);
+            }
+        } catch (Throwable ignored) {
+        }
+        stripKeyguardManager = null;
+        stripKeyguardListener = null;
+        try {
+            if (stripWindowManager != null && stripView != null) {
+                stripWindowManager.removeViewImmediate(stripView);
+            }
+        } catch (Throwable ignored) {
+        }
+        stripView = null;
+        stripParams = null;
+    }
+
+    /** The strip must not eat the lock screen's top edge. */
+    private void watchStripKeyguard() {
+        if (Build.VERSION.SDK_INT < 33) {
+            return;
+        }
+        try {
+            stripKeyguardManager =
+                    (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+            if (stripKeyguardManager == null) {
+                return;
+            }
+            stripKeyguardListener = new KeyguardManager.KeyguardLockedStateListener() {
+                @Override
+                public void onKeyguardLockedStateChanged(boolean isKeyguardLocked) {
+                    setStripTouchable(!isKeyguardLocked);
+                }
+            };
+            stripKeyguardManager.addKeyguardLockedStateListener(
+                    getMainExecutor(), stripKeyguardListener);
+        } catch (Throwable t) {
+            Log.w(TAG, "strip keyguard watcher failed", t);
+        }
+    }
+
+    private void setStripTouchable(boolean touchable) {
+        try {
+            if (stripView == null || stripParams == null || stripWindowManager == null) {
+                return;
+            }
+            int flags = stripParams.flags;
+            int next = touchable
+                    ? flags & ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                    : flags | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+            if (next != flags) {
+                stripParams.flags = next;
+                stripWindowManager.updateViewLayout(stripView, stripParams);
+                Log.i(TAG, "strip overlay " + (touchable
+                        ? "touchable" : "not touchable (keyguard)"));
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "strip touchable update failed", t);
+        }
+    }
+
+    private void openFromStrip(String gesture) {
+        try {
+            if (isKeyguardLocked()) {
+                Log.d(TAG, "strip " + gesture + " ignored: keyguard locked");
+                return;
+            }
+            long now = SystemClock.uptimeMillis();
+            if (now - lastStripOpenUptime < STRIP_OPEN_THROTTLE_MS) {
+                Log.d(TAG, "strip " + gesture + " ignored: open already in flight");
+                return;
+            }
+            if (isOwnPanelFocused()) {
+                Log.d(TAG, "strip " + gesture + " ignored: Action Centre already focused");
+                return;
+            }
+            lastStripOpenUptime = now;
+            detectedAtUptime = now;
+            detectedAtWall = System.currentTimeMillis();
+            panelVisibleLogged = false;
+            triggerLabel = "strip trigger";
+            Log.i(TAG, "strip " + gesture + ": opening Action Centre (instant)");
+            startPanel();
+        } catch (Throwable t) {
+            Log.w(TAG, "strip open failed", t);
+        }
+    }
+
+    private final View.OnTouchListener stripTouchListener = new View.OnTouchListener() {
+        private float downY;
+        private boolean opened;
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            try {
+                if (event == null) {
+                    return false;
+                }
+                switch (event.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        if (isKeyguardLocked() || isOwnPanelFocused()) {
+                            return false;
+                        }
+                        downY = event.getY();
+                        opened = false;
+                        return true;
+                    case MotionEvent.ACTION_MOVE:
+                        if (!opened) {
+                            float dy = event.getY() - downY;
+                            if (dy > dpToPx(STRIP_DRAG_DP)) {
+                                opened = true;
+                                openFromStrip("drag "
+                                        + Math.round(dy / getResources().getDisplayMetrics().density)
+                                        + " dp");
+                            }
+                        }
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        if (!opened) {
+                            openFromStrip("tap");
+                        }
+                        opened = false;
+                        return true;
+                    case MotionEvent.ACTION_CANCEL:
+                        opened = false;
+                        return true;
+                    default:
+                        return true;
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "strip touch failed", t);
+                return false;
+            }
+        }
+    };
+
+    private int dpToPx(int dp) {
+        return Math.max(1, Math.round(dp * getResources().getDisplayMetrics().density));
+    }
+
     @Override
     protected void onServiceConnected() {
         try {
@@ -150,6 +347,11 @@ public class ShadeBridgeService extends AccessibilityService {
             Log.i(TAG, "service connected; shade = fullscreen " + SYSTEMUI_PACKAGE
                     + " window (class name is not used)");
             addStripOverlay();
+            if (lockOverlay != null) {
+                lockOverlay.stop();
+            }
+            lockOverlay = new LockOverlayController(this);
+            lockOverlay.start();
         } catch (Throwable t) {
             Log.w(TAG, "onServiceConnected failed", t);
         }
@@ -158,6 +360,11 @@ public class ShadeBridgeService extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         try {
+            // Lock overlay first: it needs window-state *and* content-changed
+            // events, while the shade detector below only reads window-state.
+            if (lockOverlay != null) {
+                lockOverlay.onAccessibilityEvent(event);
+            }
             if (event == null
                     || event.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                 return;
@@ -435,6 +642,9 @@ public class ShadeBridgeService extends AccessibilityService {
     public void onInterrupt() {
         try {
             handler.removeCallbacks(collapsePoll);
+            if (lockOverlay != null) {
+                lockOverlay.onInterrupt();
+            }
         } catch (Throwable ignored) {
         }
     }
@@ -444,6 +654,10 @@ public class ShadeBridgeService extends AccessibilityService {
         try {
             handler.removeCallbacks(collapsePoll);
             removeStripOverlay();
+            if (lockOverlay != null) {
+                lockOverlay.stop();
+                lockOverlay = null;
+            }
             Log.i(TAG, "service unbound");
         } catch (Throwable ignored) {
         }
@@ -455,6 +669,10 @@ public class ShadeBridgeService extends AccessibilityService {
         try {
             handler.removeCallbacks(collapsePoll);
             removeStripOverlay();
+            if (lockOverlay != null) {
+                lockOverlay.stop();
+                lockOverlay = null;
+            }
         } catch (Throwable ignored) {
         }
         super.onDestroy();

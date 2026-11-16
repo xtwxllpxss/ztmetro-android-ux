@@ -141,6 +141,12 @@ public final class StartNotificationListener extends NotificationListenerService
         if (current != null && sbn.getPostTime() < current.time) {
             return;
         }
+        if (kind == LiveTiles.KIND_NONE && current != null
+                && current.kind != LiveTiles.KIND_NONE) {
+            // A plain notification from the same app (no message/email/media
+            // category) must not erase the face of an older unread message.
+            return;
+        }
         Latest next = new Latest();
         next.time = sbn.getPostTime();
         next.kind = kind;

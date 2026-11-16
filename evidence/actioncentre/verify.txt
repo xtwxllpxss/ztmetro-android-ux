@@ -34,6 +34,8 @@ PASS  dexdump lists geometry detector
 PASS  dexdump lists panel-visible timing hook
 PASS  instant-launch extra packaged
 PASS  exactly one BACK call in ShadeBridgeService
+PASS  dexdump lists top-edge strip overlay
+PASS  strip uses TYPE_ACCESSIBILITY_OVERLAY
 PASS  no androidx in classes.dex
 PASS  class ActionCentreActivity in dex
 PASS  class ActionCentreListener in dex

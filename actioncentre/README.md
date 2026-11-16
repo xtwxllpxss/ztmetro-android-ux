@@ -30,14 +30,19 @@ evidence back to:
   verification log, sha256)
 
 Set `ACTIONCENTRE_REMOTE` to use another build host. On a Linux host that has
-`android-36` the same script builds locally.
+`android-36` the same script builds locally. `ACTIONCENTRE_REMOTE_DIR` selects the
+remote work directory (the Metro lock overlay run used `ztux/lock`), and
+`EVIDENCE_DIR` selects where the APK and the static-verification files are copied
+(the lock overlay run used `repo/evidence/lock-overlay/`).
 
 ## Source map
 
 | path | role |
 |---|---|
 | `ActionCentreActivity.java` | full-screen panel, tile wiring, settings intents, permission flows, slide transitions |
-| `ShadeBridgeService.java` | optional accessibility service: system shade → BACK → this panel (`res/xml/shade_bridge.xml` config) |
+| `ShadeBridgeService.java` | optional accessibility service: top-edge strip / system shade → this panel, plus the lock overlay hook (`res/xml/shade_bridge.xml` config) |
+| `LockOverlayController.java` | keyguard detection + lock windows: display, bottom swipe strip, lifecycle, fail-safe |
+| `LockOverlayView.java` | the black lock surface: 92 sp clock, date, per-app counts, swipe hint |
 | `QuickGrid.java` / `QuickTile.java` | 4-column square tile grid, custom flat drawing (no ripple, no elevation) |
 | `StatusStripView.java` | our 30 dp operator/battery/clock/date strip |
 | `NotificationRowView.java` | flat notification row, tap-to-open, swipe-left/X dismiss |
@@ -51,14 +56,34 @@ Set `ACTIONCENTRE_REMOTE` to use another build host. On a Linux host that has
 
 The panel offers `ВКЛЮЧИТЬ ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ` under the links row. It opens
 `Настройки → Специальные возможности`; the user enables **ztMetro Action Centre**.
-Detection is by geometry, not class name: the SystemUI window covering ≥85 % of the
-display is the shade (the device reports it as `android.widget.FrameLayout`); the small
-status-bar window is ignored. BACK #1 goes out immediately and is the only BACK; the
-service waits up to 250 ms for the full-screen shade window to disappear, then starts the
-panel with `extra_instant=true` (no open slide, revealed as the shade closes). With the
-service off nothing changes in the shade path. See
-`../evidence/actioncentre/SHADE-BRIDGE.md` for the exact filter, logcat lines, the
-expected timing and the rollback.
+The common path is a 24 dp transparent `TYPE_ACCESSIBILITY_OVERLAY` strip over the status
+bar: a top-edge swipe/tap is consumed there and opens the panel, so the stock shade never
+appears and there is no flicker. Taps on the status strip therefore no longer reach the
+clock/battery. If the shade is opened another way, a geometry fallback (SystemUI window
+covering ≥85 % of the display; the device reports it as `android.widget.FrameLayout`)
+sends exactly one BACK, waits up to 250 ms, then starts the panel with `extra_instant=true`.
+With the service off nothing changes in the shade path. See
+`../evidence/actioncentre/SHADE-BRIDGE.md` for the overlay/flags, logcat lines, timing and
+rollback.
+
+## Lock overlay (optional, same accessibility service)
+
+While `KeyguardManager.isKeyguardLocked()` is true, the service adds a full-screen
+opaque `TYPE_ACCESSIBILITY_OVERLAY` (AOSP layer 31, above the keyguard's
+notification-shade window at layer 17) and draws the ztMetro lock screen over it:
+92 sp Light clock, one 20 sp date line, up to five app icons + counts in the lower
+third, and `↑ СВАЙП ВВЕРХ`. No status row, no Material clock, no notification card,
+no rounded corners. The display window is
+`FLAG_NOT_FOCUSABLE|FLAG_NOT_TOUCHABLE|FLAG_LAYOUT_IN_SCREEN|FLAG_LAYOUT_NO_LIMITS`,
+`PixelFormat.OPAQUE`; the only touchable part is a transparent bottom strip
+(200–280 dp) whose swipe-up removes the overlay and reveals the stock keyguard
+(fingerprint/PIN are entered there — the app never unlocks anything itself).
+
+Same one-time setup as the shade gesture: **Settings → Accessibility → ztMetro
+Action Centre = ON**. The counts row additionally needs the notification listener.
+If the ROM refuses the window, the failure is logged and the stock keyguard stays;
+nothing else is changed. Full facts, fail-safe table and on-device checks:
+`../evidence/lock-overlay/README.md`.
 
 ## Honest capability boundary
 

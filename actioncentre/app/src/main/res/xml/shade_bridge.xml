@@ -2,9 +2,13 @@
 <!--
   Accessibility configuration for ShadeBridgeService.
 
-  Window-state events only (no content-changed events), from all packages: the
-  previous foreground package is needed to tell a shade that opens over a
-  third-party app from one that opens over our own panel. The service reads only
+  Window-state events for the shade detector, plus content-changed events for
+  the lock overlay (LockOverlayController): the keyguard bouncer and an IME
+  appearing over the lock screen arrive as content changes, and the overlay
+  must get out of their way at once. Events come from all packages: the previous
+  foreground package is needed to tell a shade that opens over a third-party app
+  from one that opens over our own panel, and a foreign app window while locked
+  (call, alarm, camera) must take the lock overlay away. The service reads only
   window packages/titles/bounds, never view text. flagRetrieveInteractiveWindows
   is the actual detector: the expanded shade is the SystemUI window whose bounds
   cover the screen, the status bar is the small one. flagReportViewIds is
@@ -12,7 +16,7 @@
   required by getWindows().getRoot() for the window package.
 -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows|flagReportViewIds"
     android:canRetrieveWindowContent="true"

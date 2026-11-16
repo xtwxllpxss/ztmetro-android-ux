@@ -16,7 +16,7 @@ LOG=/data/local/tmp/ztmetro-overlays.log
     i=$((i+1)); sleep 2
   done
   echo "waited ${i}x2s for overlay service"
-  for pkg in org.ztmetro.overlay.framework org.ztos.overlay.systemui org.ztos.overlay.settings org.ztos.overlay.status.systemui org.ztos.overlay.statusbaricons; do
+  for pkg in org.ztmetro.overlay.framework org.ztos.overlay.systemui org.ztos.overlay.settings org.ztos.overlay.status.systemui org.ztos.overlay.statusbaricons org.ztos.overlay.systemui.extra; do
     cmd overlay enable --user 0 "$pkg" 2>&1 || echo "enable failed: $pkg"
   done
   # Keep one accent: SystemUI re-applies its Monet overlays at boot. They target the

@@ -85,6 +85,15 @@ artifact.
 | `ztmetro-start.apk` | 65 814 B | `46682bb48dee863a6f7c85b23a1e6321d93542465f11981c70e25f40a0f02a11` |
 | `ztmetro-actioncentre.apk` | 304 621 B | `d26c4f89cf93ae65ce46459a28379bd17e5d10f42c0d497afd6cd9234d0cd607` |
 
+**Install note (2026-11-16, after the live-tile handoff).** The launcher APK in this
+directory was built in a clean remote checkout, so its throwaway signing key is new
+(`ae5b96…`) and it is *not* an in-place update of the installed v3. The current green
+build — the same motion sources plus the live-tile work, v4, 69 910 B, sha256
+`8767ee7f2de894558796b14b65bde6ecd3f0ec5b42f3f232495df5509a605c6a`, signed with the
+v1/v2/v3 key `5f05e8e4…` — is `evidence/live-tiles/ztmetro-start.apk`; deploy that one.
+Its dex still lists `Motion` and `Turnstile` and its resources still carry the motion
+tokens, so the numbers above are unchanged.
+
 Static checks that passed: no androidx, no new permissions, HOME category and the
 notification listener still in the launcher; tokens in the linked APK are
 `row_out 128`, `row_in 180`, `row_stagger 33`, `press_delay 80`, `press_in 90`,

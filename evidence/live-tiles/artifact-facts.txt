@@ -1,6 +1,6 @@
 apk:      launcher/build/out/ztmetro-start.apk (evidence/live-tiles/ztmetro-start.apk)
 size:     69910 bytes
-sha256:   af62dc84787fbac20028d2d98dc83e0c3b75e4c9433b75a29b1e73e369dc8c95
+sha256:   8767ee7f2de894558796b14b65bde6ecd3f0ec5b42f3f232495df5509a605c6a
 package:  org.ztmetro.start
 version:  4 (4.0)
 min/target: 29 / 36

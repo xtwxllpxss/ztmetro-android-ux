@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Accessibility configuration for StatusStripService.
+
+  The service only draws a window; it does not inspect app content or consume
+  accessibility events. typeWindowStateChanged is requested because every
+  accessibility service must declare a non-empty event mask; the callback is a
+  no-op. No flagRetrieveInteractiveWindows, no canRetrieveWindowContent.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault"
+    android:canRetrieveWindowContent="false"
+    android:description="@string/status_strip_description"
+    android:notificationTimeout="100" />

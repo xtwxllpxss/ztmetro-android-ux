@@ -1,18 +1,17 @@
 # Shade → Action Centre bridge (AccessibilityService)
 
-**Verdict.** `ShadeBridgeService` turns the system shade gesture into our panel without
-SystemUI changes. On this LineageOS 23.2 build the shade window reports as
-`android.widget.FrameLayout`, so detection does **not** use the class name: it finds the
-expanded shade as the SystemUI window whose bounds cover at least 85 % of the display
-(the status bar is the small SystemUI window). It sends **one** `GLOBAL_ACTION_BACK`,
-polls that window every 50 ms for at most **250 ms**, and then starts
-`ActionCentreActivity` with `extra_instant=true` — either when the shade window is gone or
-at the 250 ms cap. There is **no recovery BACK**: a BACK sent after the panel starts would
-dismiss our own focused panel (observed on device). The service is off by default; with it
-off the app adds nothing to the shade path.
-**Scope**: the APK was built and statically verified on `hermes-ubuntu`; the class-name
-mismatch, the geometry trigger and the late-BACK panel dismissal were observed by the lead
-on the device. This revision removes the recovery BACK entirely.
+**Verdict.** `ShadeBridgeService` now owns the top edge: a **24 dp full-width transparent
+`TYPE_ACCESSIBILITY_OVERLAY`** strip sits above the status bar, so a downward gesture that
+starts at the top never reaches SystemUI and **the stock shade does not open at all** — the
+common path has zero stock-shade frames. A drag of more than 24 dp (or a tap) in the strip
+opens `ActionCentreActivity` instantly. The old window-state path is kept only as a
+fallback (shade opened some other way): one BACK, a 50 ms poll up to 250 ms, then the
+instant panel; **no BACK is ever sent after the panel starts**.
+
+**Scope**: built and statically verified on `hermes-ubuntu`; the class-name mismatch, the
+late-BACK panel dismissal and the need for the overlay strip were established by the lead
+on the device. The strip height was raised from MetroWinLauncher's 20 dp to **24 dp** to
+cover the full 24 dp status bar on this 320 dpi build (no 4 dp leak at the bottom edge).
 
 ## 1. Artifact and static proof
 
@@ -20,78 +19,89 @@ on the device. This revision removes the recovery BACK entirely.
 |---|---|
 | APK | [`ztmetro-actioncentre.apk`](ztmetro-actioncentre.apk) (build: `actioncentre/build/out/ztmetro-actioncentre.apk`) |
 | size | **304 621 bytes (297.5 KiB)** |
-| sha256 | `f1cc744b7efb28b27157dcf3e14b49514d7f2d64207d9b500c105f57058274c5` |
+| sha256 | `2cc128455fba0e06af4a6bf372eb0a0225800193a3fcf1e1a4b596e700b55fa5` |
 | package / version | `org.ztmetro.actioncentre` 1 (1.0), unchanged |
 | service | `org.ztmetro.actioncentre.ShadeBridgeService` |
 | config | `res/xml/shade_bridge.xml`, referenced by the service `meta-data` |
+| window | `TYPE_ACCESSIBILITY_OVERLAY`, 24 dp, `FLAG_NOT_FOCUSABLE\|FLAG_NOT_TOUCH_MODAL\|FLAG_LAYOUT_IN_SCREEN\|FLAG_LAYOUT_NO_LIMITS`, `PixelFormat.TRANSPARENT` |
 | bind permission | `android.permission.BIND_ACCESSIBILITY_SERVICE` (service attribute, **no new `uses-permission`**) |
 | build | same script: `aapt2` + `javac` (Java 8) + `d8 --min-api 29` + `zipalign` + `apksigner`; no Gradle/AndroidX/network |
 
-`verify.txt` has **48 PASS / 0 FAIL**, including: service + bind permission + intent action +
-config meta-data; `typeWindowStateChanged` (`0x20`), `feedbackGeneric` (`0x10`), flags
-`0x51`, `canRetrieveWindowContent=true`; **no** `packageNames` filter (needed for previous
-foreground tracking); no new `uses-permission`; `dexdump -f` lists `ShadeBridgeService`,
-`onAccessibilityEvent`, the geometry detector `findFullscreenSystemUiWindow`, the
-panel-visible timing hook `notifyPanelVisible`, the packaged `extra_instant` extra, and a
-regression guard that the service contains **exactly one** `performGlobalAction` call.
+`verify.txt` has **50 PASS / 0 FAIL**, including the service/config checks, `dexdump -f`
+entries for `ShadeBridgeService`, `onAccessibilityEvent`, `findFullscreenSystemUiWindow`,
+`notifyPanelVisible` and `addStripOverlay`, the packaged `extra_instant` extra, a check that
+the strip uses `TYPE_ACCESSIBILITY_OVERLAY`, and a regression guard that the service
+contains **exactly one** `performGlobalAction` call.
 
-## 2. Detection and action sequence
+## 2. Common path: the transparent top strip
 
-The service receives only `TYPE_WINDOW_STATE_CHANGED` (no content events) for all packages.
-Non-SystemUI events only update `lastForegroundPackage`; nothing is read from those apps.
+Added by `onServiceConnected()` into the accessibility service's `WindowManager`:
 
-| # | step | implementation |
+| property | value |
+|---|---|
+| size / position | `MATCH_PARENT` × **24 dp**, `Gravity.TOP`, x=0 y=0 |
+| type | `TYPE_ACCESSIBILITY_OVERLAY` — stacks **above** `TYPE_STATUS_BAR`, so SystemUI never sees the gesture |
+| flags | `NOT_FOCUSABLE` (no key/IME), `NOT_TOUCH_MODAL` (touches outside still reach the app), `LAYOUT_IN_SCREEN`, `LAYOUT_NO_LIMITS`; **not** `NOT_TOUCHABLE` |
+| pixels | `PixelFormat.TRANSPARENT`, view background `Color.TRANSPARENT` (invisible but touchable) |
+| cutout | `LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS` so the strip covers a cutout area too |
+
+Touch handling (all events swallowed while the strip owns the gesture):
+
+| gesture | action |
+|---|---|
+| `ACTION_DOWN` | record y; if keyguard is locked or the panel is already focused, return `false` (let the tap through) |
+| `ACTION_MOVE` with dy > **24 dp** | open the panel once (`extra_instant=true`), keep swallowing the rest of the gesture |
+| `ACTION_UP` without a qualifying drag | open the panel too — a tap on the status strip behaves like WP and shows the panel |
+| `ACTION_CANCEL` | reset |
+
+A 600 ms strip-open throttle and the `isOwnPanelFocused()` check prevent double launches.
+The strip is removed in `onUnbind`/`onDestroy`. While the keyguard is locked it is set
+`FLAG_NOT_TOUCHABLE` (API 33 listener + a touch-time guard), so the lock screen keeps its
+top edge.
+
+**Deliberate behaviour change:** taps on the top 24 dp no longer reach the clock, battery
+or status icons — they open the panel. (A swipe that starts *below* the strip still goes to
+SystemUI and is handled by the fallback below.)
+
+## 3. Fallback: shade opened some other way
+
+Only needed for adb commands, a gesture that starts below the strip, long-press paths, or
+the lock screen. The service sees `TYPE_WINDOW_STATE_CHANGED` from all packages (non-SystemUI
+events only update `lastForegroundPackage`; no text is read). The expanded shade is the
+SystemUI window of type `TYPE_SYSTEM`/`TYPE_APPLICATION` covering ≥ **85 %** of the display
+— the class name is not used (the device reports `android.widget.FrameLayout`).
+
+| # | guard/step | implementation |
 |---|---|---|
-| 1 | shade-window event | `event.getPackageName() == com.android.systemui` |
-| 2 | geometry | `getWindows()`, keep `TYPE_SYSTEM`/`TYPE_APPLICATION`, root package `com.android.systemui` |
-| 3 | fullscreen test | window bounds area ≥ **85 %** of `getMaximumWindowMetrics()`; status-bar-sized windows are ignored |
-| 4 | throttle | 1500 ms since the last successful trigger |
-| 5 | keyguard | `KeyguardManager.isKeyguardLocked()` → skip; unreadable lock state counts as locked |
-| 6 | own panel | focused window's root package is ours → skip |
-| 7 | previous app | `lastForegroundPackage == org.ztmetro.actioncentre` **and** our panel window is still on screen → skip (window check prevents a stale record blocking the bridge after the panel is closed) |
-| 8 | collapse | `performGlobalAction(GLOBAL_ACTION_BACK)` #1 immediately; this is the **only** BACK in the service (build-enforced) |
-| 9 | short wait | poll `getWindows()` every **50 ms**, max **250 ms**, for the full-screen SystemUI window |
-| 10 | open | when it is gone, or at the 250 ms cap, `startActivity(ActionCentreActivity, NEW_TASK\|SINGLE_TOP\|NO_ANIMATION)` with `extra_instant=true`; then stop. No BACK is sent from here on |
-| 11 | instant panel | `ActionCentreActivity` records the extra and skips the open travel entirely (`root.post(openRunnable)` only when not launched from the bridge); window transitions are suppressed on this build, and the close travel is unchanged |
-| 12 | timing | when the panel's window first gains focus, the activity calls `notifyPanelVisible()`; the service logs detection → visible time (uptime delta + wall-clock delta) |
+| 1 | throttle | 1500 ms since the last trigger |
+| 2 | keyguard | `isKeyguardLocked()` → skip; unreadable lock state counts as locked |
+| 3 | own panel | focused window's root package is ours → skip |
+| 4 | previous app | `lastForegroundPackage == org.ztmetro.actioncentre` and our window still on screen → skip |
+| 5 | collapse | `performGlobalAction(GLOBAL_ACTION_BACK)` — the **only** BACK call in the service |
+| 6 | short wait | poll `getWindows()` every 50 ms, max 250 ms, for the full-screen SystemUI window |
+| 7 | open | gone, or at the cap: `startActivity(ActionCentreActivity, NEW_TASK\|SINGLE_TOP\|NO_ANIMATION)` with `extra_instant=true`, then stop |
+| 8 | timing | panel's first window focus calls `notifyPanelVisible()`; logs trigger → visible |
 
-The threshold is area-based: 720×1280 display → a status bar of 720×96 is ~7.5 % and is
-rejected, the expanded shade at 720×1280 (or 720×1216 without the nav bar, ~95 %) passes.
-The wait is deliberately capped at 250 ms: if SystemUI still reports the window at the cap
-the panel starts anyway, rather than waiting with the stock shade on screen. Because the
-poll never sends BACK, the panel cannot be dismissed by the bridge after it is focused.
-The window class and title are logged but never used for the decision. Every callback is
-wrapped in `try/catch`; a bad event is logged and dropped.
+Status-bar-sized SystemUI windows are logged and ignored. Because the poll never sends
+BACK, the bridge cannot dismiss the panel after it is focused.
 
-## 3. How to enable
+## 4. How to enable
 
 1. Open **Центр действий** (launcher icon or the Start tile).
-2. Tap **`ВКЛЮЧИТЬ ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ`** under `CLEAR ALL / ALL SETTINGS`; the row shows
-   `ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ ВКЛЮЧЁН` once on.
+2. Tap **`ВКЛЮЧИТЬ ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ`** under `CLEAR ALL / ALL SETTINGS`.
 3. It opens **`Настройки → Специальные возможности`**.
 4. Tap **`ztMetro Action Centre`**, enable it, confirm the system warning dialog.
-5. Swipe down over any app: the stock shade is collapsed and the panel slides up.
+5. Swipe down from the very top over any app: the panel opens; the stock shade does not.
 
-After installing a new build the service normally rebinds automatically; if it does not,
-toggle it off/on once in Accessibility.
+After installing a new build the service normally rebinds automatically (the strip is
+re-added); if not, toggle it off/on once in Accessibility.
 
-**Android 13+ sideload guard.** Because this APK is installed by adb, the toggle may be
-greyed out as *"Restricted setting"*. Allow it once: **Настройки → Приложения → Центр
-действий → ⋮ → Разрешить ограниченные настройки**, or
-`adb shell appops set org.ztmetro.actioncentre ACCESS_RESTRICTED_SETTINGS allow`, then
-retry step 4.
+**Android 13+ sideload guard.** The toggle may be greyed out as *"Restricted setting"*.
+Allow it once: **Настройки → Приложения → Центр действий → ⋮ → Разрешить ограниченные
+настройки**, or
+`adb shell appops set org.ztmetro.actioncentre ACCESS_RESTRICTED_SETTINGS allow`.
 
-adb enable (optional; **replaces** the enabled-services list — read and preserve existing
-entries, colon-separated):
-
-```sh
-adb shell settings get secure enabled_accessibility_services
-adb shell settings put secure enabled_accessibility_services \
-  "org.ztmetro.actioncentre/org.ztmetro.actioncentre.ShadeBridgeService"
-adb shell settings put secure accessibility_enabled 1
-```
-
-## 4. Logcat — exact lines
+## 5. Logcat — exact lines
 
 Tag is exactly `ShadeBridge`:
 
@@ -103,9 +113,27 @@ On enable:
 
 ```
 I/ShadeBridge: service connected; shade = fullscreen com.android.systemui window (class name is not used)
+I/ShadeBridge: strip overlay added: 24 dp at top, TYPE_ACCESSIBILITY_OVERLAY
 ```
 
-A successful trigger (numbers depend on the display; 720×1280 here):
+**Strip-triggered open — drag from the top edge (the common path):**
+
+```
+I/ShadeBridge: strip drag 27 dp: opening Action Centre (instant)
+I/ShadeBridge: panel visible 120 ms after strip trigger (wall-clock delta 121 ms)
+```
+
+**Strip tap:**
+
+```
+I/ShadeBridge: strip tap: opening Action Centre (instant)
+I/ShadeBridge: panel visible 105 ms after strip trigger (wall-clock delta 106 ms)
+```
+
+Note what is **absent**: no `shade detected`, no `GLOBAL_ACTION_BACK`, no stock-shade
+window — SystemUI never received the gesture.
+
+**Fallback (shade opened some other way):**
 
 ```
 D/ShadeBridge: systemui window-state; inspecting 3 window(s), display=720x1280
@@ -116,67 +144,61 @@ I/ShadeBridge: shade gone after 100 ms; starting Action Centre
 I/ShadeBridge: panel visible 160 ms after detection (wall-clock delta 161 ms)
 ```
 
-If SystemUI still reports the full-screen window at the 250 ms cap, the panel starts
-anyway — there is no second BACK:
+At the 250 ms cap the panel still starts and no BACK is sent:
 
 ```
 I/ShadeBridge: shade still visible at 250 ms; starting Action Centre anyway
 I/ShadeBridge: panel visible 310 ms after detection (wall-clock delta 311 ms)
 ```
 
-Ordinary status-bar windows are ignored (small bounds):
+Keyguard and skips:
 
 ```
-D/ShadeBridge: systemui window type=3 bounds=[0,0][720,96] 7% of display title=StatusBar
-D/ShadeBridge: skip: no SystemUI window covers >= 85% of the display
-```
-
-Decision skips are explicit:
-
-```
+I/ShadeBridge: strip overlay not touchable (keyguard)
+I/ShadeBridge: strip overlay touchable
+D/ShadeBridge: strip tap ignored: keyguard locked
+D/ShadeBridge: strip tap ignored: open already in flight
+D/ShadeBridge: strip tap ignored: Action Centre already focused
 I/ShadeBridge: skip: throttled (N ms < 1500 ms)
 I/ShadeBridge: skip: keyguard locked, shade=type=…
-I/ShadeBridge: skip: Action Centre is the focused window, shade=type=…
-I/ShadeBridge: skip: previous foreground was Action Centre (last=org.ztmetro.actioncentre), shade=type=…
+W/ShadeBridge: strip overlay not available
 W/ShadeBridge: starting Action Centre failed
 ```
 
-## 5. Expected on-screen timing
+## 6. Expected on-screen timing
 
-The owner measures the stock shade's on-screen time. The shade is BACKed immediately and
-starts closing at once. The service waits for its full-screen window to disappear (poll
-every 50 ms) and starts the panel no later than **250 ms** after detection, so the stock
-shade can only be visible for its own close animation, never the old ~600 ms wait. The
-panel launches with no animation and is simply revealed. The `panel visible` log gives the
-detection → visible wall-clock delta for the frame-by-frame screenrecord comparison.
-Zero-flicker still needs a SystemUI hook (the LSPosed attempt that did not fire).
+On the common path the stock shade is **never drawn**: the strip consumes the gesture at
+`TYPE_ACCESSIBILITY_OVERLAY`, so there is no SystemUI animation to race and no 2–3 frame
+flicker. The panel starts with no animation (`extra_instant=true`, `NO_ANIMATION`, open
+travel skipped) and the detection → visible wall-clock delta is logged for the
+screenrecord/ffmpeg comparison. The fallback path still shows the stock shade for its own
+close animation (≤250 ms wait); it is not the normal gesture any more.
 
-## 6. Limitations and risks
+## 7. Limitations and risks
 
-- **Keyguard untouched.** When locked the service does nothing; lock-screen shade stays stock.
-- **Geometry can catch another fullscreen SystemUI surface.** A full-screen SystemUI scrim
-  (e.g. some power-menu/dialog implementations) would also pass the 85 % test. The title is
-  logged; if it happens, disable the service. The status bar and volume dialog are too small
-  to qualify.
-- **Only window-state events.** No content-changed events, no text: the service reads window
-  package/title/bounds only and all packages' foreground package name. Accessibility is still
-  a high-trust grant.
-- **Exactly one BACK, ever.** There is no recovery BACK, so a panel that has started cannot
-  be dismissed by the bridge. The trade-off: if BACK #1 is swallowed and the shade is still
-  full-screen at 250 ms, the panel starts underneath it (logged as `starting Action Centre
-  anyway`); another swipe will trigger again after the 1500 ms throttle.
-- **Panel may appear behind a closing shade.** The wait is capped at 250 ms; the panel is
-  revealed as the shade closes, and the detection → visible log makes the overlap
-  measurable.
-- **Throttle is a safety valve.** A second shade open within 1500 ms stays stock.
-- **Background activity start.** Accessibility services are bound by the system (documented
-  exemption); if a build blocks it, the panel does not appear and
-  `W/ShadeBridge: starting Action Centre failed` is logged.
-- **No runtime re-verification yet.** The 250 ms cap, the single BACK and the
-  instant-open extra must be confirmed on the device with the commands above.
+- **Status-bar taps are captured.** The top 24 dp of every screen (including games and the
+  panel itself, where the touch is passed through) belongs to the strip; clock/battery taps
+  open the panel instead. This is intentional and required for zero shade flicker.
+- **Only the top edge.** A downward swipe that starts below the strip still opens the stock
+  shade; the fallback then converts it, with the residual shade animation.
+- **Overlay can fail to add.** If `WindowManager` refuses the window, `W/ShadeBridge: strip
+  overlay not available` is logged and the geometry fallback still works — just with the
+  old flicker.
+- **Keyguard.** The strip is not touchable while locked (API 33 listener; older builds
+  reject the touch in the listener as well). The window-state fallback also skips keyguard.
+- **Geometry fallback can catch another fullscreen SystemUI surface** (e.g. a power-menu
+  scrim); the window title is logged. The common strip path does not use geometry.
+- **Exactly one BACK.** The fallback never sends a BACK after the panel starts; if BACK #1
+  is swallowed, the panel starts under the still-open shade at the 250 ms cap.
+- **Trust.** Accessibility is a high-trust grant; this service reads window
+  package/title/bounds and the foreground package name, never text, and requests no
+  overlay/dangerous permission.
+- **No runtime re-verification yet.** Strip touch delivery, tap/drag thresholds and the
+  overlay stacking above the status bar must be confirmed on the device.
 
-## 7. Rollback
+## 8. Rollback
 
-Settings → Accessibility → **ztMetro Action Centre** → off. The service unbinds
-(`I/ShadeBridge: service unbound`), pending panel starts are cancelled, and the stock shade
-works as before. Uninstalling also removes it. The app writes nothing to `Settings.Secure`.
+Settings → Accessibility → **ztMetro Action Centre** → off. The service unbinds, the strip
+and its keyguard listener are removed (`I/ShadeBridge: service unbound`), pending launches
+are cancelled, and the stock shade is exactly as before. Uninstalling removes it too; the
+app writes nothing to `Settings.Secure`.

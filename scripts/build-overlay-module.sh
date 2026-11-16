@@ -12,13 +12,17 @@ SE=$ROOT/evidence/settings-rro/ztmetro-settings-rro.apk
 STF=$ROOT/evidence/status-strip/ztmetro-status-framework-rro.apk
 STS=$ROOT/evidence/status-strip/ztmetro-status-systemui-rro.apk
 SBI=$ROOT/evidence/statusbar-icons/ztmetro-statusbar-icons-rro.apk
-for f in "$FW" "$SU" "$SE" "$STF" "$STS" "$SBI"; do [ -f "$f" ] || { echo "missing $f" >&2; exit 1; }; done
+FEX=$ROOT/evidence/volume-power-toast/ztmetro-framework-extra-rro.apk
+SEX=$ROOT/evidence/volume-power-toast/ztmetro-systemui-extra-rro.apk
+for f in "$FW" "$SU" "$SE" "$STF" "$STS" "$SBI" "$FEX" "$SEX"; do [ -f "$f" ] || { echo "missing $f" >&2; exit 1; }; done
 cp "$FW" "$ROOT/modules/ztmetro-overlays/system/product/overlay/ZtMetroFramework.apk"
 cp "$SU" "$ROOT/modules/ztmetro-overlays/system/product/overlay/ztmetro-systemui-rro.apk"
 cp "$SE" "$ROOT/modules/ztmetro-overlays/system/product/overlay/ztmetro-settings-rro.apk"
 cp "$STF" "$ROOT/modules/ztmetro-overlays/system/product/overlay/ztmetro-status-framework-rro.apk"
 cp "$STS" "$ROOT/modules/ztmetro-overlays/system/product/overlay/ztmetro-status-systemui-rro.apk"
 cp "$SBI" "$ROOT/modules/ztmetro-overlays/system/product/overlay/ztmetro-statusbar-icons-rro.apk"
+cp "$FEX" "$ROOT/modules/ztmetro-overlays/system/product/overlay/ztmetro-framework-extra-rro.apk"
+cp "$SEX" "$ROOT/modules/ztmetro-overlays/system/product/overlay/ztmetro-systemui-extra-rro.apk"
 ZIP=$OUT/ztmetro-overlays-1.0.0.zip
 rm -f "$ZIP"
 ( cd "$ROOT/modules/ztmetro-overlays" && zip -qr -X "$ZIP" . )

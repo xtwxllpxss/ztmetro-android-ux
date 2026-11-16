@@ -8,10 +8,14 @@
          label exactly "ztMetro Action Centre": the documented enable path and
          the evidence report refer to it. -->
     <string name="shade_bridge_name">ztMetro Action Centre</string>
-    <string name="shade_bridge_description">Заменяет системную шторку панелью Центра действий: распознаёт шторку по размеру окна, сворачивает её и открывает панель. Служба отслеживает только смену окон и не читает их содержимое.</string>
+    <string name="shade_bridge_description">Заменяет жест системной шторки панелью Центра действий: перехватывает свайп у верхнего края экрана и открывает панель; если системная шторка всё же открылась, сворачивает её. Пока телефон заблокирован, рисует экран блокировки ztMetro поверх системного; свайп вверх у нижнего края возвращает системный экран блокировки. Служба не читает содержимое окон.</string>
     <string name="gesture_enable">ВКЛЮЧИТЬ ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ</string>
     <string name="gesture_enabled">ЖЕСТ ЦЕНТРА ДЕЙСТВИЙ ВКЛЮЧЁН</string>
     <string name="gesture_enable_hint">Специальные возможности → ztMetro Action Centre</string>
+
+    <!-- Lock overlay (LockOverlayView): short affordance at the bottom edge.
+         The bottom strip is the only touchable part of the overlay. -->
+    <string name="lock_swipe_hint">↑ СВАЙП ВВЕРХ</string>
 
     <string name="tile_wifi">WI-FI</string>
     <string name="tile_data">МОБ. ДАННЫЕ</string>

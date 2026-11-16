@@ -6,7 +6,7 @@ no APK replacement:
 
 | module | package | target | APK | sha256 | entries |
 |---|---|---|---|---|---|
-| SystemUI extra | `org.ztos.overlay.systemui.extra` | `com.android.systemui` | [`ztmetro-systemui-extra-rro.apk`](ztmetro-systemui-extra-rro.apk) (13 185 B) | `48f14ebff7f6cda5dda7179ceb45a434097cfe58f4c427dacdf71dfabc4640cc` | **8** (2 dimen, 5 drawable, 1 layout) |
+| SystemUI extra | `org.ztos.overlay.systemui.extra` | `com.android.systemui` | [`ztmetro-systemui-extra-rro.apk`](ztmetro-systemui-extra-rro.apk) (13 280 B) | `7090cf9964a868fb72f15c78fe663edc8cf701cf652cc07e06765e44f53e7964` | **8** (2 dimen, 5 drawable, 1 layout) |
 | framework extra | `org.ztos.overlay.framework.extra` | `android` | [`ztmetro-framework-extra-rro.apk`](ztmetro-framework-extra-rro.apk) (12 795 B) | `f66070a06b66c2bd0d0dba41325f0d8fe13ccbf09b13bc3447b0e416ae2116ba` | **3** (2 drawable, 1 style) |
 
 Both are signed with the project throwaway key (`CN=ztmetro overlay (throwaway)`,
@@ -88,7 +88,7 @@ not addressable by this RRO.**
 |---|---|---|---|---|---|
 | `global_actions_lite_background` | `res/drawable/global_actions_lite_background.xml:19-23` | solid `@androidprv:color/materialColorSurfaceContainerLow`; corners `@dimen/global_actions_corner_radius` = **28 dp** | `#FF000000`; `0dp` | `global_actions_grid_lite.xml:44`; `global_actions_power_dialog_flow.xml:23` | consumed |
 | `global_actions_popup_bg` | `res/drawable/global_actions_popup_bg.xml:17-25` | `?android:attr/colorBackgroundFloating`; `?android:attr/dialogCornerRadius` | `#FF000000`; `0dp` | `GlobalActionsPopupMenu.java:51-52` | consumed |
-| `global_actions_grid_item_lite` | `res/layout/global_actions_grid_item_lite.xml:26-45` | icon tint `@androidprv:color/materialColorOnSurface` (`:33`); label **14sp** (`:42`); label colour `materialColorOnSurface` (`:44`) | icon tint `#FFFFFFFF`; label **13sp** white; icon plate `#FF1F1F1F`, no corners | `GlobalActionsDialogLite.java:2361,2427,3113` | consumed; runtime tint may win §4 |
+| `global_actions_grid_item_lite` | `res/layout/global_actions_grid_item_lite.xml:26-45` | icon tint `@androidprv:color/materialColorOnSurface` (`:33`); label **14sp** (`:42`); label colour `materialColorOnSurface` (`:44`) | icon tint `#FFFFFFFF`; label **13sp** white; icon plate `#FF1F1F1F`, no corners. A `layout-land/` twin keeps the target's 64dp icon / 20dp padding landscape values | `GlobalActionsDialogLite.java:2361,2427,3113` | consumed; runtime tint may win §4 |
 | `global_actions_corner_radius` | `res/values/dimens.xml:1159` | `28dp` | `0dp` | `global_actions_lite_background.xml:22` (already pinned) | consumed / redundant |
 
 The overlay layout uses the **same framework ids** the target code looks up
@@ -196,7 +196,7 @@ repo/scripts/build-overlay-systemui-extra.sh
 # ==> [ztmetro-systemui-extra-rro.apk] ... override entries: 8
 # ==> [ztmetro-framework-extra-rro.apk] ... override entries: 3
 # APK .../evidence/volume-power-toast/ztmetro-systemui-extra-rro.apk
-# sha256 48f14ebf...
+# sha256 7090cf99...
 # APK .../evidence/volume-power-toast/ztmetro-framework-extra-rro.apk
 # sha256 f66070a0...
 ```

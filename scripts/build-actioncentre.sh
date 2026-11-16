@@ -207,6 +207,7 @@ verify_apk() {
         "android.accessibilityservice"
     check "shade bridge config resource in table" "$resources" "xml/shade_bridge"
     check "gesture settings row strings" "$resources" "gesture_enable"
+    check "lock overlay swipe hint string" "$resources" "lock_swipe_hint"
     check "tile activity alias" "$xmltree" ".TileAlias"
     check "CAMERA permission" "$xmltree" "android.permission.CAMERA"
     check "WRITE_SETTINGS appop permission" "$xmltree" "android.permission.WRITE_SETTINGS"
@@ -214,13 +215,14 @@ verify_apk() {
     check "slide-down animation resource" "$resources" "ac_slide_down"
 
     # The accessibility config is binary XML; aapt2 prints packed flag values.
-    # typeWindowStateChanged = 0x20, feedbackGeneric = 0x10,
+    # typeWindowStateChanged = 0x20, typeWindowContentChanged = 0x800
+    # (lock overlay: bouncer/IME detection), feedbackGeneric = 0x10,
     # flagDefault|flagReportViewIds|flagRetrieveInteractiveWindows = 0x51.
     [ -n "$shade_xml" ] || { printf 'FAIL  accessibility config XML readable\n' >> "$CHECKS"; failed=1; }
     check "accessibility config packaged" "$(unzip -l "$APK")" \
         "res/xml/shade_bridge.xml"
-    check_re "accessibility config: TYPE_WINDOW_STATE_CHANGED only" "$shade_xml" \
-        "accessibilityEventTypes[^=]*=0x0*20([[:space:]]|$)"
+    check_re "accessibility config: window-state + content-changed events" "$shade_xml" \
+        "accessibilityEventTypes[^=]*=0x0*820([[:space:]]|$)"
     check_re "accessibility config: generic feedback" "$shade_xml" \
         "accessibilityFeedbackType[^=]*=0x0*10([[:space:]]|$)"
     check_re "accessibility config: retrieve windows + report view ids" "$shade_xml" \
@@ -247,6 +249,10 @@ verify_apk() {
     else
         printf 'PASS  no BLUETOOTH_CONNECT (dangerous) requested\n' >> "$CHECKS"
     fi
+    # The lock overlay must never depend on "draw over other apps": it uses the
+    # accessibility window type, which is above the keyguard without this grant.
+    check_absent "no SYSTEM_ALERT_WINDOW permission" "$xmltree" \
+        "android.permission.SYSTEM_ALERT_WINDOW"
 
     unzip -p "$APK" classes.dex > "$BUILD/verify.dex"
     "$BT/dexdump" -f "$BUILD/verify.dex" > "$EVID/dexdump-classes.txt" 2>&1 || true
@@ -291,6 +297,58 @@ verify_apk() {
         printf 'FAIL  expected exactly one BACK call, found %s\n' "${back_calls:-0}" >> "$CHECKS"
         failed=1
     fi
+    if grep -qF "addStripOverlay" "$EVID/dexdump-classes.txt"; then
+        printf 'PASS  dexdump lists top-edge strip overlay\n' >> "$CHECKS"
+    else
+        printf 'FAIL  dexdump lists top-edge strip overlay\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -qF "TYPE_ACCESSIBILITY_OVERLAY" \
+            "$APP/java/org/ztmetro/actioncentre/ShadeBridgeService.java"; then
+        printf 'PASS  strip uses TYPE_ACCESSIBILITY_OVERLAY\n' >> "$CHECKS"
+    else
+        printf 'FAIL  strip uses TYPE_ACCESSIBILITY_OVERLAY\n' >> "$CHECKS"
+        failed=1
+    fi
+    # Lock overlay: its own class, the accessibility overlay type, the
+    # NOT_FOCUSABLE|NOT_TOUCHABLE main surface, and the only touchable strip.
+    if grep -qF "Lorg/ztmetro/actioncentre/LockOverlayController;" \
+            "$EVID/dexdump-classes.txt"; then
+        printf 'PASS  dexdump lists LockOverlayController\n' >> "$CHECKS"
+    else
+        printf 'FAIL  dexdump lists LockOverlayController\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -qF "Lorg/ztmetro/actioncentre/LockOverlayView;" \
+            "$EVID/dexdump-classes.txt"; then
+        printf 'PASS  dexdump lists LockOverlayView\n' >> "$CHECKS"
+    else
+        printf 'FAIL  dexdump lists LockOverlayView\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "TYPE_ACCESSIBILITY_OVERLAY" \
+            "$APP/java/org/ztmetro/actioncentre/LockOverlayController.java"; then
+        printf 'PASS  lock overlay uses TYPE_ACCESSIBILITY_OVERLAY\n' >> "$CHECKS"
+    else
+        printf 'FAIL  lock overlay uses TYPE_ACCESSIBILITY_OVERLAY\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "FLAG_NOT_TOUCHABLE" \
+            "$APP/java/org/ztmetro/actioncentre/LockOverlayController.java" \
+            && grep -q "FLAG_NOT_FOCUSABLE" \
+            "$APP/java/org/ztmetro/actioncentre/LockOverlayController.java"; then
+        printf 'PASS  lock surface NOT_FOCUSABLE|NOT_TOUCHABLE\n' >> "$CHECKS"
+    else
+        printf 'FAIL  lock surface flags missing\n' >> "$CHECKS"
+        failed=1
+    fi
+    if grep -q "performGlobalAction" \
+            "$APP/java/org/ztmetro/actioncentre/LockOverlayController.java"; then
+        printf 'FAIL  lock overlay must not call performGlobalAction\n' >> "$CHECKS"
+        failed=1
+    else
+        printf 'PASS  lock overlay performs no global action (never unlocks)\n' >> "$CHECKS"
+    fi
     if grep -aq "androidx" "$BUILD/verify.dex"; then
         printf 'FAIL  AndroidX classes found in dex\n' >> "$CHECKS"
         failed=1
@@ -299,7 +357,8 @@ verify_apk() {
     fi
     local symbol
     for symbol in ActionCentreActivity ActionCentreListener ShadeBridgeService \
-                  QuickTile QuickGrid NotificationRowView StatusStripView Motion; do
+                  QuickTile QuickGrid NotificationRowView StatusStripView Motion \
+                  LockOverlayController LockOverlayView; do
         if grep -aq "$symbol" "$BUILD/verify.dex"; then
             printf 'PASS  class %s in dex\n' "$symbol" >> "$CHECKS"
         else
@@ -343,7 +402,7 @@ verify_apk() {
     } > "$EVID/motion-facts.txt"
     {
         printf 'apk:        actioncentre/build/out/%s\n' "$APK_NAME"
-        printf 'evidence:   evidence/actioncentre/%s\n' "$APK_NAME"
+        printf 'evidence:   %s/%s\n' "${EVIDENCE#$ROOT/}" "$APK_NAME"
         printf 'size:       %s bytes\n' "$size"
         printf 'sha256:     %s\n' "$sha"
         printf 'package:    org.ztmetro.actioncentre\n'
@@ -351,6 +410,7 @@ verify_apk() {
         printf 'min/target: %s / 36\n' "$MIN_API"
         printf 'build:      plain javac + aapt2 + d8 + apksigner (no Gradle, no AndroidX)\n'
         printf 'bridge:     ShadeBridgeService (res/xml/shade_bridge.xml), BIND_ACCESSIBILITY_SERVICE, no new permissions\n'
+        printf 'lock:       LockOverlayController: TYPE_ACCESSIBILITY_OVERLAY, NOT_FOCUSABLE|NOT_TOUCHABLE|LAYOUT_IN_SCREEN, bottom strip reveals the stock keyguard\n'
         printf 'fonts:      Open Sans Light/Regular/SemiBold from repo/fonts (OFL, bundled)\n'
         printf 'built on:   %s\n' "$(uname -srm)"
         printf 'jdk:        %s\n' "$("$JDK/bin/java" -version 2>&1 | head -n 1)"
@@ -383,6 +443,13 @@ remote_build() {
     scp -q "$REMOTE:$RWORK/build/out/$APK_NAME" "$OUT/$APK_NAME"
     scp -q "$REMOTE:$RWORK/build/evidence/"* "$EVIDENCE/"
     cp "$OUT/$APK_NAME" "$EVIDENCE/$APK_NAME"
+    # The remote half fills artifact-facts with its own default evidence path;
+    # rewrite it to the directory this run actually copied into.
+    if [ -f "$EVIDENCE/artifact-facts.txt" ]; then
+        sed -i.bak "s|^evidence:.*|evidence:   ${EVIDENCE#$ROOT/}/$APK_NAME|" \
+            "$EVIDENCE/artifact-facts.txt"
+        rm -f "$EVIDENCE/artifact-facts.txt.bak"
+    fi
     local local_sha remote_sha
     local_sha=$(sha256 "$OUT/$APK_NAME")
     remote_sha=$(awk '{print $1}' "$EVIDENCE/$APK_NAME.sha256")

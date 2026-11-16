@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings for the optional WP status-strip accessibility service. Kept in a
+     separate file so the strip does not touch the Action Centre string table. -->
+<resources>
+    <string name="status_strip_name">ztMetro status strip</string>
+    <string name="status_strip_description">Draws the ztMetro 28 dp status strip over the stock status bar: battery, Wi-Fi, signal and clock. Enable it only together with the ztMetro shade bridge.</string>
+</resources>

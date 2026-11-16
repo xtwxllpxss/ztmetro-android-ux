@@ -1,0 +1,8 @@
+shade open         260 ms  ztmetro.c:138 SHADE_MS (animate, ztmetro.c:6558)
+shade close        220 ms  res/anim/ac_slide_down.xml (C uses SHADE_MS 260 both ways)
+drag commit        40 dp   ztmetro.c:11761 (dy > 40)
+drag travel        1:1 with the finger, handle drag
+scale              Settings.Global.ANIMATOR_DURATION_SCALE read at every motion start; 0 = instant
+window             translucent, no window animation: the content slides itself
+easing             (1 - pow(0.1, t)) / 0.9  core/zrnmetrocore.c:1628 (Log(10))
+frames at 60 Hz    open 15.6, close 13.2

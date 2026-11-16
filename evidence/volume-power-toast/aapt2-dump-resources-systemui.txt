@@ -19,3 +19,4 @@ Package name=org.ztos.overlay.systemui.extra id=7f
   type layout id=03 entryCount=1
     resource 0x7f030000 layout/global_actions_grid_item_lite
       () (file) res/layout/global_actions_grid_item_lite.xml type=XML
+      (land) (file) res/layout-land/global_actions_grid_item_lite.xml type=XML
