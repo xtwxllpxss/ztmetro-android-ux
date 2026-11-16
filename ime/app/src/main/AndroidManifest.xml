@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ztMetro keyboard: a self-contained IME. No AndroidX, no permissions.
+     The service is the only component; the system binds it with the
+     signature permission BIND_INPUT_METHOD. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.ztmetro.ime"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="36" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@drawable/ic_ime"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/ZtImeTheme">
+
+        <service
+            android:name=".ZtMetroIme"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_INPUT_METHOD">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/method" />
+        </service>
+    </application>
+</manifest>

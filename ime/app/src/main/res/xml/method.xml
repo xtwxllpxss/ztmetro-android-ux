@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Russian is listed first because the ztOS device UI is Russian; the
+     keyboard itself falls back to the system locale when the IME framework
+     has no current subtype yet. Both subtypes are keyboard-mode only. -->
+<input-method xmlns:android="http://schemas.android.com/apk/res/android"
+    android:supportsSwitchingToNextInputMethod="true">
+
+    <subtype
+        android:imeSubtypeLocale="ru_RU"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="false"
+        android:label="@string/subtype_ru"
+        android:languageTag="ru-RU" />
+
+    <subtype
+        android:imeSubtypeLocale="en_US"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/subtype_en"
+        android:languageTag="en-US" />
+</input-method>
